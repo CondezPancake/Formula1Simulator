@@ -2,7 +2,6 @@ package com.formula1.controller;
 
 import com.formula1.model.Driver;
 import com.formula1.service.DriverService;
-import com.formula1.service.DriverServiceImpl;
 
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -13,19 +12,19 @@ public class DriverController {
     @FXML
     private TableView<Driver> tableDrivers;
 
-    private final DriverService driverService;
+    private final DriverService pilotos;
 
     public DriverController() {
-        this(new DriverServiceImpl());
+        this(new DriverService());
     }
 
-    public DriverController(DriverService driverService) {
-        this.driverService = driverService;
+    public DriverController(DriverService pilotos) {
+        this.pilotos = pilotos;
     }
 
     @FXML
     public void initialize() {
-        tableDrivers.setItems(FXCollections.observableArrayList(driverService.findAll()));
+        tableDrivers.setItems(FXCollections.observableArrayList(pilotos.listar()));
     }
 
     @FXML

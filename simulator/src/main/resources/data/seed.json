@@ -1,0 +1,1125 @@
+{
+  "pilotos": [
+    {
+      "id": 1,
+      "nombre": "Max Verstappen",
+      "equipo": "Red Bull Racing",
+      "rol": "Líder",
+      "experiencia": 9,
+      "habilidades": {
+        "velocidad": 98,
+        "consistencia": 95,
+        "lluvia": 96
+      }
+    },
+    {
+      "id": 2,
+      "nombre": "Sergio Pérez",
+      "equipo": "Red Bull Racing",
+      "rol": "Escudero",
+      "experiencia": 10,
+      "habilidades": {
+        "velocidad": 88,
+        "consistencia": 80,
+        "lluvia": 82
+      }
+    },
+    {
+      "id": 3,
+      "nombre": "Lewis Hamilton",
+      "equipo": "Mercedes-AMG Petronas",
+      "rol": "Líder",
+      "experiencia": 17,
+      "habilidades": {
+        "velocidad": 95,
+        "consistencia": 93,
+        "lluvia": 97
+      }
+    },
+    {
+      "id": 4,
+      "nombre": "George Russell",
+      "equipo": "Mercedes-AMG Petronas",
+      "rol": "Escudero",
+      "experiencia": 5,
+      "habilidades": {
+        "velocidad": 90,
+        "consistencia": 88,
+        "lluvia": 86
+      }
+    },
+    {
+      "id": 5,
+      "nombre": "Charles Leclerc",
+      "equipo": "Ferrari",
+      "rol": "Líder",
+      "experiencia": 6,
+      "habilidades": {
+        "velocidad": 94,
+        "consistencia": 85,
+        "lluvia": 88
+      }
+    },
+    {
+      "id": 6,
+      "nombre": "Carlos Sainz",
+      "equipo": "Ferrari",
+      "rol": "Escudero",
+      "experiencia": 9,
+      "habilidades": {
+        "velocidad": 89,
+        "consistencia": 90,
+        "lluvia": 85
+      }
+    },
+    {
+      "id": 7,
+      "nombre": "Lando Norris",
+      "equipo": "McLaren",
+      "rol": "Líder",
+      "experiencia": 5,
+      "habilidades": {
+        "velocidad": 92,
+        "consistencia": 89,
+        "lluvia": 90
+      }
+    },
+    {
+      "id": 8,
+      "nombre": "Oscar Piastri",
+      "equipo": "McLaren",
+      "rol": "Escudero",
+      "experiencia": 1,
+      "habilidades": {
+        "velocidad": 87,
+        "consistencia": 84,
+        "lluvia": 80
+      }
+    },
+    {
+      "id": 9,
+      "nombre": "Fernando Alonso",
+      "equipo": "Aston Martin",
+      "rol": "Líder",
+      "experiencia": 20,
+      "habilidades": {
+        "velocidad": 93,
+        "consistencia": 94,
+        "lluvia": 95
+      }
+    },
+    {
+      "id": 10,
+      "nombre": "Lance Stroll",
+      "equipo": "Aston Martin",
+      "rol": "Escudero",
+      "experiencia": 7,
+      "habilidades": {
+        "velocidad": 80,
+        "consistencia": 75,
+        "lluvia": 78
+      }
+    },
+    {
+      "id": 11,
+      "nombre": "Esteban Ocon",
+      "equipo": "Alpine",
+      "rol": "Líder",
+      "experiencia": 7,
+      "habilidades": {
+        "velocidad": 84,
+        "consistencia": 82,
+        "lluvia": 83
+      }
+    },
+    {
+      "id": 12,
+      "nombre": "Pierre Gasly",
+      "equipo": "Alpine",
+      "rol": "Escudero",
+      "experiencia": 7,
+      "habilidades": {
+        "velocidad": 85,
+        "consistencia": 81,
+        "lluvia": 84
+      }
+    },
+    {
+      "id": 13,
+      "nombre": "Valtteri Bottas",
+      "equipo": "Alfa Romeo",
+      "rol": "Líder",
+      "experiencia": 11,
+      "habilidades": {
+        "velocidad": 86,
+        "consistencia": 87,
+        "lluvia": 84
+      }
+    },
+    {
+      "id": 14,
+      "nombre": "Zhou Guanyu",
+      "equipo": "Alfa Romeo",
+      "rol": "Escudero",
+      "experiencia": 2,
+      "habilidades": {
+        "velocidad": 78,
+        "consistencia": 76,
+        "lluvia": 74
+      }
+    },
+    {
+      "id": 15,
+      "nombre": "Kevin Magnussen",
+      "equipo": "Haas",
+      "rol": "Líder",
+      "experiencia": 8,
+      "habilidades": {
+        "velocidad": 82,
+        "consistencia": 74,
+        "lluvia": 79
+      }
+    },
+    {
+      "id": 16,
+      "nombre": "Nico Hülkenberg",
+      "equipo": "Haas",
+      "rol": "Escudero",
+      "experiencia": 12,
+      "habilidades": {
+        "velocidad": 84,
+        "consistencia": 83,
+        "lluvia": 86
+      }
+    },
+    {
+      "id": 17,
+      "nombre": "Yuki Tsunoda",
+      "equipo": "AlphaTauri",
+      "rol": "Líder",
+      "experiencia": 4,
+      "habilidades": {
+        "velocidad": 83,
+        "consistencia": 75,
+        "lluvia": 77
+      }
+    },
+    {
+      "id": 18,
+      "nombre": "Daniel Ricciardo",
+      "equipo": "AlphaTauri",
+      "rol": "Escudero",
+      "experiencia": 13,
+      "habilidades": {
+        "velocidad": 86,
+        "consistencia": 82,
+        "lluvia": 85
+      }
+    },
+    {
+      "id": 19,
+      "nombre": "Alexander Albon",
+      "equipo": "Williams",
+      "rol": "Líder",
+      "experiencia": 5,
+      "habilidades": {
+        "velocidad": 85,
+        "consistencia": 84,
+        "lluvia": 82
+      }
+    },
+    {
+      "id": 20,
+      "nombre": "Logan Sargeant",
+      "equipo": "Williams",
+      "rol": "Escudero",
+      "experiencia": 1,
+      "habilidades": {
+        "velocidad": 74,
+        "consistencia": 70,
+        "lluvia": 68
+      }
+    }
+  ],
+  "equipos": [
+    {
+      "nombre": "Red Bull Racing",
+      "pais": "Austria",
+      "motor": "Honda",
+      "pilotos": [
+        1,
+        2
+      ],
+      "imagen": "https://upload.wikimedia.org/wikipedia/commons/b/bb/Red_Bull_Racing_Logo.svg"
+    },
+    {
+      "nombre": "Mercedes-AMG Petronas",
+      "pais": "Alemania",
+      "motor": "Mercedes",
+      "pilotos": [
+        3,
+        4
+      ],
+      "imagen": "https://upload.wikimedia.org/wikipedia/commons/3/32/Mercedes_AMG_Petronas_F1_Team_logo.svg"
+    },
+    {
+      "nombre": "Ferrari",
+      "pais": "Italia",
+      "motor": "Ferrari",
+      "pilotos": [
+        5,
+        6
+      ],
+      "imagen": "https://upload.wikimedia.org/wikipedia/en/d/d4/Scuderia_Ferrari_Logo.svg"
+    },
+    {
+      "nombre": "McLaren",
+      "pais": "Reino Unido",
+      "motor": "Mercedes",
+      "pilotos": [
+        7,
+        8
+      ],
+      "imagen": ""
+    },
+    {
+      "nombre": "Aston Martin",
+      "pais": "Reino Unido",
+      "motor": "Mercedes",
+      "pilotos": [
+        9,
+        10
+      ],
+      "imagen": ""
+    },
+    {
+      "nombre": "Alpine",
+      "pais": "Francia",
+      "motor": "Renault",
+      "pilotos": [
+        11,
+        12
+      ],
+      "imagen": ""
+    },
+    {
+      "nombre": "Alfa Romeo",
+      "pais": "Suiza",
+      "motor": "Ferrari",
+      "pilotos": [
+        13,
+        14
+      ],
+      "imagen": ""
+    },
+    {
+      "nombre": "Haas",
+      "pais": "Estados Unidos",
+      "motor": "Ferrari",
+      "pilotos": [
+        15,
+        16
+      ],
+      "imagen": ""
+    },
+    {
+      "nombre": "AlphaTauri",
+      "pais": "Italia",
+      "motor": "Honda",
+      "pilotos": [
+        17,
+        18
+      ],
+      "imagen": ""
+    },
+    {
+      "nombre": "Williams",
+      "pais": "Reino Unido",
+      "motor": "Mercedes",
+      "pilotos": [
+        19,
+        20
+      ],
+      "imagen": ""
+    }
+  ],
+  "vehiculos": [
+    {
+      "modelo": "RB20",
+      "equipo": "Red Bull Racing",
+      "motor": "Honda",
+      "velocidad_maxima_kmh": 360,
+      "aceleracion_0_100": 2.5,
+      "pilotos": [
+        1,
+        2
+      ],
+      "rendimiento": {
+        "conduccion_normal": {
+          "velocidad_promedio_kmh": 320,
+          "consumo_combustible": {
+            "seco": 1.9,
+            "lluvioso": 2.1,
+            "extremo": 2.4
+          },
+          "desgaste_neumaticos": {
+            "seco": 1.5,
+            "lluvioso": 0.8,
+            "extremo": 2.5
+          }
+        },
+        "conduccion_agresiva": {
+          "velocidad_promedio_kmh": 340,
+          "consumo_combustible": {
+            "seco": 2.4,
+            "lluvioso": 2.6,
+            "extremo": 3.0
+          },
+          "desgaste_neumaticos": {
+            "seco": 2.2,
+            "lluvioso": 1.2,
+            "extremo": 3.5
+          }
+        },
+        "ahorro_combustible": {
+          "velocidad_promedio_kmh": 300,
+          "consumo_combustible": {
+            "seco": 1.6,
+            "lluvioso": 1.8,
+            "extremo": 2.1
+          },
+          "desgaste_neumaticos": {
+            "seco": 1.0,
+            "lluvioso": 0.5,
+            "extremo": 1.8
+          }
+        }
+      },
+      "imagen": ""
+    },
+    {
+      "modelo": "W15",
+      "equipo": "Mercedes-AMG Petronas",
+      "motor": "Mercedes",
+      "velocidad_maxima_kmh": 355,
+      "aceleracion_0_100": 2.6,
+      "pilotos": [
+        3,
+        4
+      ],
+      "rendimiento": {
+        "conduccion_normal": {
+          "velocidad_promedio_kmh": 315,
+          "consumo_combustible": {
+            "seco": 2.0,
+            "lluvioso": 2.2,
+            "extremo": 2.5
+          },
+          "desgaste_neumaticos": {
+            "seco": 1.6,
+            "lluvioso": 0.9,
+            "extremo": 2.6
+          }
+        },
+        "conduccion_agresiva": {
+          "velocidad_promedio_kmh": 335,
+          "consumo_combustible": {
+            "seco": 2.6,
+            "lluvioso": 2.8,
+            "extremo": 3.2
+          },
+          "desgaste_neumaticos": {
+            "seco": 2.3,
+            "lluvioso": 1.4,
+            "extremo": 3.8
+          }
+        },
+        "ahorro_combustible": {
+          "velocidad_promedio_kmh": 295,
+          "consumo_combustible": {
+            "seco": 1.7,
+            "lluvioso": 1.9,
+            "extremo": 2.2
+          },
+          "desgaste_neumaticos": {
+            "seco": 1.1,
+            "lluvioso": 0.6,
+            "extremo": 1.9
+          }
+        }
+      },
+      "imagen": ""
+    },
+    {
+      "modelo": "SF-24",
+      "equipo": "Ferrari",
+      "motor": "Ferrari",
+      "velocidad_maxima_kmh": 357,
+      "aceleracion_0_100": 2.5,
+      "pilotos": [
+        5,
+        6
+      ],
+      "rendimiento": {
+        "conduccion_normal": {
+          "velocidad_promedio_kmh": 317,
+          "consumo_combustible": {
+            "seco": 1.9,
+            "lluvioso": 2.1,
+            "extremo": 2.4
+          },
+          "desgaste_neumaticos": {
+            "seco": 1.5,
+            "lluvioso": 0.8,
+            "extremo": 2.5
+          }
+        },
+        "conduccion_agresiva": {
+          "velocidad_promedio_kmh": 337,
+          "consumo_combustible": {
+            "seco": 2.4,
+            "lluvioso": 2.7,
+            "extremo": 3.1
+          },
+          "desgaste_neumaticos": {
+            "seco": 2.2,
+            "lluvioso": 1.2,
+            "extremo": 3.6
+          }
+        },
+        "ahorro_combustible": {
+          "velocidad_promedio_kmh": 297,
+          "consumo_combustible": {
+            "seco": 1.6,
+            "lluvioso": 1.8,
+            "extremo": 2.1
+          },
+          "desgaste_neumaticos": {
+            "seco": 1.0,
+            "lluvioso": 0.5,
+            "extremo": 1.8
+          }
+        }
+      },
+      "imagen": ""
+    },
+    {
+      "modelo": "MCL38",
+      "equipo": "McLaren",
+      "motor": "Mercedes",
+      "velocidad_maxima_kmh": 356,
+      "aceleracion_0_100": 2.6,
+      "pilotos": [
+        7,
+        8
+      ],
+      "rendimiento": {
+        "conduccion_normal": {
+          "velocidad_promedio_kmh": 316,
+          "consumo_combustible": {
+            "seco": 2.0,
+            "lluvioso": 2.2,
+            "extremo": 2.5
+          },
+          "desgaste_neumaticos": {
+            "seco": 1.5,
+            "lluvioso": 0.8,
+            "extremo": 2.6
+          }
+        },
+        "conduccion_agresiva": {
+          "velocidad_promedio_kmh": 336,
+          "consumo_combustible": {
+            "seco": 2.5,
+            "lluvioso": 2.7,
+            "extremo": 3.1
+          },
+          "desgaste_neumaticos": {
+            "seco": 2.3,
+            "lluvioso": 1.2,
+            "extremo": 3.6
+          }
+        },
+        "ahorro_combustible": {
+          "velocidad_promedio_kmh": 296,
+          "consumo_combustible": {
+            "seco": 1.6,
+            "lluvioso": 1.9,
+            "extremo": 2.2
+          },
+          "desgaste_neumaticos": {
+            "seco": 1.0,
+            "lluvioso": 0.5,
+            "extremo": 1.9
+          }
+        }
+      },
+      "imagen": ""
+    },
+    {
+      "modelo": "AMR24",
+      "equipo": "Aston Martin",
+      "motor": "Mercedes",
+      "velocidad_maxima_kmh": 352,
+      "aceleracion_0_100": 2.7,
+      "pilotos": [
+        9,
+        10
+      ],
+      "rendimiento": {
+        "conduccion_normal": {
+          "velocidad_promedio_kmh": 312,
+          "consumo_combustible": {
+            "seco": 2.0,
+            "lluvioso": 2.2,
+            "extremo": 2.6
+          },
+          "desgaste_neumaticos": {
+            "seco": 1.6,
+            "lluvioso": 0.9,
+            "extremo": 2.7
+          }
+        },
+        "conduccion_agresiva": {
+          "velocidad_promedio_kmh": 332,
+          "consumo_combustible": {
+            "seco": 2.6,
+            "lluvioso": 2.8,
+            "extremo": 3.2
+          },
+          "desgaste_neumaticos": {
+            "seco": 2.4,
+            "lluvioso": 1.3,
+            "extremo": 3.7
+          }
+        },
+        "ahorro_combustible": {
+          "velocidad_promedio_kmh": 292,
+          "consumo_combustible": {
+            "seco": 1.7,
+            "lluvioso": 1.9,
+            "extremo": 2.2
+          },
+          "desgaste_neumaticos": {
+            "seco": 1.1,
+            "lluvioso": 0.5,
+            "extremo": 1.9
+          }
+        }
+      },
+      "imagen": ""
+    },
+    {
+      "modelo": "AT04",
+      "equipo": "AlphaTauri",
+      "motor": "Honda",
+      "velocidad_maxima_kmh": 349,
+      "aceleracion_0_100": 2.8,
+      "pilotos": [
+        17,
+        18
+      ],
+      "rendimiento": {
+        "conduccion_normal": {
+          "velocidad_promedio_kmh": 309,
+          "consumo_combustible": {
+            "seco": 2.1,
+            "lluvioso": 2.3,
+            "extremo": 2.6
+          },
+          "desgaste_neumaticos": {
+            "seco": 1.6,
+            "lluvioso": 0.9,
+            "extremo": 2.7
+          }
+        },
+        "conduccion_agresiva": {
+          "velocidad_promedio_kmh": 329,
+          "consumo_combustible": {
+            "seco": 2.6,
+            "lluvioso": 2.8,
+            "extremo": 3.2
+          },
+          "desgaste_neumaticos": {
+            "seco": 2.4,
+            "lluvioso": 1.3,
+            "extremo": 3.8
+          }
+        },
+        "ahorro_combustible": {
+          "velocidad_promedio_kmh": 289,
+          "consumo_combustible": {
+            "seco": 1.7,
+            "lluvioso": 1.9,
+            "extremo": 2.3
+          },
+          "desgaste_neumaticos": {
+            "seco": 1.1,
+            "lluvioso": 0.5,
+            "extremo": 1.9
+          }
+        }
+      },
+      "imagen": ""
+    },
+    {
+      "modelo": "A524",
+      "equipo": "Alpine",
+      "motor": "Renault",
+      "velocidad_maxima_kmh": 350,
+      "aceleracion_0_100": 2.8,
+      "pilotos": [
+        11,
+        12
+      ],
+      "rendimiento": {
+        "conduccion_normal": {
+          "velocidad_promedio_kmh": 310,
+          "consumo_combustible": {
+            "seco": 2.1,
+            "lluvioso": 2.3,
+            "extremo": 2.6
+          },
+          "desgaste_neumaticos": {
+            "seco": 1.6,
+            "lluvioso": 0.9,
+            "extremo": 2.7
+          }
+        },
+        "conduccion_agresiva": {
+          "velocidad_promedio_kmh": 330,
+          "consumo_combustible": {
+            "seco": 2.6,
+            "lluvioso": 2.8,
+            "extremo": 3.3
+          },
+          "desgaste_neumaticos": {
+            "seco": 2.4,
+            "lluvioso": 1.3,
+            "extremo": 3.8
+          }
+        },
+        "ahorro_combustible": {
+          "velocidad_promedio_kmh": 290,
+          "consumo_combustible": {
+            "seco": 1.7,
+            "lluvioso": 2.0,
+            "extremo": 2.3
+          },
+          "desgaste_neumaticos": {
+            "seco": 1.1,
+            "lluvioso": 0.5,
+            "extremo": 2.0
+          }
+        }
+      },
+      "imagen": ""
+    },
+    {
+      "modelo": "C43",
+      "equipo": "Alfa Romeo",
+      "motor": "Ferrari",
+      "velocidad_maxima_kmh": 348,
+      "aceleracion_0_100": 2.8,
+      "pilotos": [
+        13,
+        14
+      ],
+      "rendimiento": {
+        "conduccion_normal": {
+          "velocidad_promedio_kmh": 308,
+          "consumo_combustible": {
+            "seco": 2.1,
+            "lluvioso": 2.3,
+            "extremo": 2.6
+          },
+          "desgaste_neumaticos": {
+            "seco": 1.7,
+            "lluvioso": 0.9,
+            "extremo": 2.8
+          }
+        },
+        "conduccion_agresiva": {
+          "velocidad_promedio_kmh": 328,
+          "consumo_combustible": {
+            "seco": 2.6,
+            "lluvioso": 2.9,
+            "extremo": 3.3
+          },
+          "desgaste_neumaticos": {
+            "seco": 2.4,
+            "lluvioso": 1.3,
+            "extremo": 3.9
+          }
+        },
+        "ahorro_combustible": {
+          "velocidad_promedio_kmh": 288,
+          "consumo_combustible": {
+            "seco": 1.8,
+            "lluvioso": 2.0,
+            "extremo": 2.3
+          },
+          "desgaste_neumaticos": {
+            "seco": 1.1,
+            "lluvioso": 0.6,
+            "extremo": 2.0
+          }
+        }
+      },
+      "imagen": ""
+    },
+    {
+      "modelo": "VF-24",
+      "equipo": "Haas",
+      "motor": "Ferrari",
+      "velocidad_maxima_kmh": 347,
+      "aceleracion_0_100": 2.9,
+      "pilotos": [
+        15,
+        16
+      ],
+      "rendimiento": {
+        "conduccion_normal": {
+          "velocidad_promedio_kmh": 307,
+          "consumo_combustible": {
+            "seco": 2.1,
+            "lluvioso": 2.3,
+            "extremo": 2.7
+          },
+          "desgaste_neumaticos": {
+            "seco": 1.7,
+            "lluvioso": 0.9,
+            "extremo": 2.8
+          }
+        },
+        "conduccion_agresiva": {
+          "velocidad_promedio_kmh": 327,
+          "consumo_combustible": {
+            "seco": 2.7,
+            "lluvioso": 2.9,
+            "extremo": 3.3
+          },
+          "desgaste_neumaticos": {
+            "seco": 2.4,
+            "lluvioso": 1.3,
+            "extremo": 3.9
+          }
+        },
+        "ahorro_combustible": {
+          "velocidad_promedio_kmh": 287,
+          "consumo_combustible": {
+            "seco": 1.8,
+            "lluvioso": 2.0,
+            "extremo": 2.3
+          },
+          "desgaste_neumaticos": {
+            "seco": 1.1,
+            "lluvioso": 0.6,
+            "extremo": 2.0
+          }
+        }
+      },
+      "imagen": ""
+    },
+    {
+      "modelo": "FW46",
+      "equipo": "Williams",
+      "motor": "Mercedes",
+      "velocidad_maxima_kmh": 346,
+      "aceleracion_0_100": 2.9,
+      "pilotos": [
+        19,
+        20
+      ],
+      "rendimiento": {
+        "conduccion_normal": {
+          "velocidad_promedio_kmh": 306,
+          "consumo_combustible": {
+            "seco": 2.1,
+            "lluvioso": 2.4,
+            "extremo": 2.7
+          },
+          "desgaste_neumaticos": {
+            "seco": 1.7,
+            "lluvioso": 0.9,
+            "extremo": 2.8
+          }
+        },
+        "conduccion_agresiva": {
+          "velocidad_promedio_kmh": 326,
+          "consumo_combustible": {
+            "seco": 2.7,
+            "lluvioso": 2.9,
+            "extremo": 3.4
+          },
+          "desgaste_neumaticos": {
+            "seco": 2.5,
+            "lluvioso": 1.3,
+            "extremo": 3.9
+          }
+        },
+        "ahorro_combustible": {
+          "velocidad_promedio_kmh": 286,
+          "consumo_combustible": {
+            "seco": 1.8,
+            "lluvioso": 2.0,
+            "extremo": 2.4
+          },
+          "desgaste_neumaticos": {
+            "seco": 1.1,
+            "lluvioso": 0.6,
+            "extremo": 2.0
+          }
+        }
+      },
+      "imagen": ""
+    }
+  ],
+  "circuitos": [
+    {
+      "nombre": "Circuito de Mónaco",
+      "pais": "Mónaco",
+      "longitud_km": 3.34,
+      "vueltas": 78,
+      "descripcion": "Uno de los circuitos más prestigiosos y difíciles del calendario, conocido por sus calles angostas y la falta de zonas de adelantamiento.",
+      "record_vuelta": {
+        "tiempo": "1:10.166",
+        "piloto": "Lewis Hamilton",
+        "anio": 2019
+      },
+      "ganadores": [
+        {
+          "temporada": 2021,
+          "piloto": 1
+        },
+        {
+          "temporada": 2022,
+          "piloto": 2
+        },
+        {
+          "temporada": 2023,
+          "piloto": 1
+        }
+      ],
+      "probabilidad_clima": {
+        "seco": 0.75,
+        "lluvioso": 0.2,
+        "extremo": 0.05
+      },
+      "factor_tecnico": 1.984,
+      "factor_consumo": 0.9,
+      "factor_desgaste": 0.85,
+      "imagen": "https://upload.wikimedia.org/wikipedia/commons/4/4e/Monte_Carlo_Formula_1_track_map.svg"
+    },
+    {
+      "nombre": "Silverstone",
+      "pais": "Reino Unido",
+      "longitud_km": 5.89,
+      "vueltas": 52,
+      "descripcion": "Uno de los circuitos más rápidos del calendario, con curvas de alta velocidad como Maggotts y Becketts.",
+      "record_vuelta": {
+        "tiempo": "1:27.097",
+        "piloto": "Max Verstappen",
+        "anio": 2020
+      },
+      "ganadores": [
+        {
+          "temporada": 2021,
+          "piloto": 3
+        },
+        {
+          "temporada": 2022,
+          "piloto": 5
+        },
+        {
+          "temporada": 2023,
+          "piloto": 1
+        }
+      ],
+      "probabilidad_clima": {
+        "seco": 0.55,
+        "lluvioso": 0.35,
+        "extremo": 0.1
+      },
+      "factor_tecnico": 1.397,
+      "factor_consumo": 1.1,
+      "factor_desgaste": 1.2,
+      "imagen": "https://upload.wikimedia.org/wikipedia/commons/5/5e/Silverstone_Circuit_2020_layout.png"
+    },
+    {
+      "nombre": "Circuito de Spa-Francorchamps",
+      "pais": "Bélgica",
+      "longitud_km": 7.0,
+      "vueltas": 44,
+      "descripcion": "Famoso por la curva Eau Rouge y la larga recta de Kemmel, un circuito donde la potencia del motor es clave.",
+      "record_vuelta": {
+        "tiempo": "1:46.286",
+        "piloto": "Valtteri Bottas",
+        "anio": 2018
+      },
+      "ganadores": [
+        {
+          "temporada": 2021,
+          "piloto": 1
+        },
+        {
+          "temporada": 2022,
+          "piloto": 1
+        },
+        {
+          "temporada": 2023,
+          "piloto": 1
+        }
+      ],
+      "probabilidad_clima": {
+        "seco": 0.5,
+        "lluvioso": 0.35,
+        "extremo": 0.15
+      },
+      "factor_tecnico": 1.434,
+      "factor_consumo": 1.12,
+      "factor_desgaste": 1.1,
+      "imagen": "https://upload.wikimedia.org/wikipedia/commons/1/1e/Circuit_Spa_2018.png"
+    },
+    {
+      "nombre": "Circuito de Monza",
+      "pais": "Italia",
+      "longitud_km": 5.79,
+      "vueltas": 53,
+      "descripcion": "Conocido como 'El Templo de la Velocidad', Monza es el circuito más rápido del calendario con largas rectas y chicanes icónicas.",
+      "record_vuelta": {
+        "tiempo": "1:21.046",
+        "piloto": "Rubens Barrichello",
+        "anio": 2004
+      },
+      "ganadores": [
+        {
+          "temporada": 2021,
+          "piloto": 2
+        },
+        {
+          "temporada": 2022,
+          "piloto": 1
+        },
+        {
+          "temporada": 2023,
+          "piloto": 1
+        }
+      ],
+      "probabilidad_clima": {
+        "seco": 0.8,
+        "lluvioso": 0.15,
+        "extremo": 0.05
+      },
+      "factor_tecnico": 1.322,
+      "factor_consumo": 1.15,
+      "factor_desgaste": 1.0,
+      "imagen": "https://upload.wikimedia.org/wikipedia/commons/3/3e/Monza_track_map.svg"
+    },
+    {
+      "nombre": "Interlagos",
+      "pais": "Brasil",
+      "longitud_km": 4.31,
+      "vueltas": 71,
+      "descripcion": "Interlagos es un circuito legendario con cambios de elevación y un trazado técnico que ha sido sede de algunas de las carreras más emocionantes de la historia.",
+      "record_vuelta": {
+        "tiempo": "1:10.540",
+        "piloto": "Valtteri Bottas",
+        "anio": 2018
+      },
+      "ganadores": [
+        {
+          "temporada": 2021,
+          "piloto": 3
+        },
+        {
+          "temporada": 2022,
+          "piloto": 1
+        },
+        {
+          "temporada": 2023,
+          "piloto": 1
+        }
+      ],
+      "probabilidad_clima": {
+        "seco": 0.6,
+        "lluvioso": 0.3,
+        "extremo": 0.1
+      },
+      "factor_tecnico": 1.546,
+      "factor_consumo": 1.02,
+      "factor_desgaste": 1.05,
+      "imagen": "https://upload.wikimedia.org/wikipedia/commons/2/23/Aut%C3%B3dromo_Jos%C3%A9_Carlos_Pace_%28Interlagos%29.svg"
+    },
+    {
+      "nombre": "Circuito de Yas Marina",
+      "pais": "Emiratos Árabes Unidos",
+      "longitud_km": 5.28,
+      "vueltas": 58,
+      "descripcion": "Ubicado en Abu Dhabi, es famoso por ser el circuito donde se definen muchos campeonatos, con un diseño moderno y una espectacular carrera nocturna.",
+      "record_vuelta": {
+        "tiempo": "1:39.283",
+        "piloto": "Lewis Hamilton",
+        "anio": 2019
+      },
+      "ganadores": [
+        {
+          "temporada": 2021,
+          "piloto": 1
+        },
+        {
+          "temporada": 2022,
+          "piloto": 1
+        },
+        {
+          "temporada": 2023,
+          "piloto": 3
+        }
+      ],
+      "probabilidad_clima": {
+        "seco": 0.95,
+        "lluvioso": 0.04,
+        "extremo": 0.01
+      },
+      "factor_tecnico": 1.776,
+      "factor_consumo": 0.98,
+      "factor_desgaste": 0.95,
+      "imagen": "https://upload.wikimedia.org/wikipedia/commons/0/0a/Yas_Marina_Circuit_2021_layout.svg"
+    },
+    {
+      "nombre": "Circuito de Suzuka",
+      "pais": "Japón",
+      "longitud_km": 5.81,
+      "vueltas": 53,
+      "descripcion": "Un circuito desafiante con un diseño en forma de ocho, famoso por sus curvas de alta velocidad como 130R y la 'S' de Senna.",
+      "record_vuelta": {
+        "tiempo": "1:30.983",
+        "piloto": "Lewis Hamilton",
+        "anio": 2019
+      },
+      "ganadores": [
+        {
+          "temporada": 2021,
+          "piloto": 1
+        },
+        {
+          "temporada": 2022,
+          "piloto": 1
+        },
+        {
+          "temporada": 2023,
+          "piloto": 1
+        }
+      ],
+      "probabilidad_clima": {
+        "seco": 0.65,
+        "lluvioso": 0.25,
+        "extremo": 0.1
+      },
+      "factor_tecnico": 1.479,
+      "factor_consumo": 1.05,
+      "factor_desgaste": 1.15,
+      "imagen": "https://upload.wikimedia.org/wikipedia/commons/e/eb/Suzuka_circuit_map--2005.svg"
+    }
+  ]
+}
