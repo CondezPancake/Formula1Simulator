@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.formula1.controller.HomeController"
+      spacing="18">
+    <padding><Insets top="32" right="32" bottom="32" left="32"/></padding>
+
+    <Label text="Simulador de clasificación" styleClass="view-title"/>
+    <Label styleClass="view-subtitle"
+           text="Gestiona la parrilla, configura el monoplaza y disputa una sesión de clasificación."/>
+
+    <HBox spacing="16">
+        <VBox styleClass="card" spacing="4">
+            <Label fx:id="lblPilotos" text="—" styleClass="card-value"/>
+            <Label text="Pilotos" styleClass="card-label"/>
+        </VBox>
+        <VBox styleClass="card" spacing="4">
+            <Label fx:id="lblEquipos" text="—" styleClass="card-value"/>
+            <Label text="Equipos" styleClass="card-label"/>
+        </VBox>
+        <VBox styleClass="card" spacing="4">
+            <Label fx:id="lblVehiculos" text="—" styleClass="card-value"/>
+            <Label text="Vehículos" styleClass="card-label"/>
+        </VBox>
+        <VBox styleClass="card" spacing="4">
+            <Label fx:id="lblCircuitos" text="—" styleClass="card-value"/>
+            <Label text="Circuitos" styleClass="card-label"/>
+        </VBox>
+    </HBox>
+
+    <Button text="Nueva clasificación" styleClass="primary" onAction="#onNuevaClasificacion"/>
+</VBox>
