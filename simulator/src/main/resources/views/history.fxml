@@ -1,11 +1,69 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.LineChart?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" spacing="10">
-    <padding><Insets top="32" right="32" bottom="32" left="32"/></padding>
-    <Label text="Historial" styleClass="view-title"/>
-    <Label text="Disponible en feature/ui-history." styleClass="hint"/>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.formula1.controller.HistoryController" spacing="12">
+    <padding><Insets top="26" right="26" bottom="26" left="26"/></padding>
+
+    <Label text="Historial de sesiones" styleClass="view-title"/>
+    <Label text="Selecciona una sesión para ver su parrilla completa." styleClass="view-subtitle"/>
+
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <Button text="Reutilizar configuración" onAction="#onReutilizar"/>
+        <Button text="Actualizar" onAction="#onRefrescar"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label text="Comparar tiempos en"/>
+        <ComboBox fx:id="selectorCircuito" prefWidth="230"/>
+    </HBox>
+
+    <Label fx:id="lblVacio" styleClass="hint"
+           text="Todavía no hay sesiones guardadas. Disputa una clasificación para verla aquí."/>
+
+    <SplitPane dividerPositions="0.45" VBox.vgrow="ALWAYS">
+        <VBox spacing="6">
+            <Label text="Sesiones" styleClass="section-title"/>
+            <TableView fx:id="tablaSesiones" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colFecha" text="Fecha" prefWidth="140"/>
+                    <TableColumn fx:id="colCircuito" text="Circuito" prefWidth="190"/>
+                    <TableColumn fx:id="colClima" text="Clima" prefWidth="85"/>
+                    <TableColumn fx:id="colPole" text="Pole" prefWidth="150"/>
+                    <TableColumn fx:id="colTiempoPole" text="Tiempo" prefWidth="95"/>
+                    <TableColumn fx:id="colConfig" text="Configuración" prefWidth="300"/>
+                </columns>
+            </TableView>
+        </VBox>
+
+        <VBox spacing="6">
+            <Label text="Parrilla de la sesión" styleClass="section-title"/>
+            <TableView fx:id="tablaResultados" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colPosicion" text="Pos" prefWidth="50"/>
+                    <TableColumn fx:id="colPiloto" text="Piloto" prefWidth="160"/>
+                    <TableColumn fx:id="colEquipo" text="Equipo" prefWidth="170"/>
+                    <TableColumn fx:id="colTiempo" text="Tiempo" prefWidth="100"/>
+                    <TableColumn fx:id="colGap" text="Dif." prefWidth="80"/>
+                </columns>
+            </TableView>
+        </VBox>
+    </SplitPane>
+
+    <LineChart fx:id="grafico" prefHeight="220" legendVisible="true">
+        <xAxis><CategoryAxis label="Sesión"/></xAxis>
+        <yAxis><NumberAxis label="Segundos" forceZeroInRange="false"/></yAxis>
+    </LineChart>
 </VBox>
