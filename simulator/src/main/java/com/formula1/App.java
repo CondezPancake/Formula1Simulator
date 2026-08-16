@@ -1,5 +1,8 @@
 package com.formula1;
 
+import com.formula1.data.MongoConnection;
+import com.formula1.util.Async;
+
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -11,26 +14,30 @@ import java.net.URL;
 
 public class App extends Application {
 
-    private static final String DASHBOARD_VIEW = "/views/dashboard.fxml";
-    private static final String STYLESHEET = "/css/style.css";
+    private static final String VISTA_PRINCIPAL = "/views/shell.fxml";
+    private static final String HOJA_ESTILOS = "/css/style.css";
 
     @Override
-    public void start(Stage stage) throws IOException {
-        Parent root = loadView(DASHBOARD_VIEW);
-        Scene scene = new Scene(root, 1024, 768);
+    public void start(Stage escenario) throws IOException {
+        Parent raiz = FXMLLoader.load(getClass().getResource(VISTA_PRINCIPAL));
+        Scene escena = new Scene(raiz);
 
-        URL stylesheet = getClass().getResource(STYLESHEET);
-        if (stylesheet != null) {
-            scene.getStylesheets().add(stylesheet.toExternalForm());
+        URL estilos = getClass().getResource(HOJA_ESTILOS);
+        if (estilos != null) {
+            escena.getStylesheets().add(estilos.toExternalForm());
         }
 
-        stage.setTitle("Formula 1 Qualifying Simulator");
-        stage.setScene(scene);
-        stage.show();
+        escenario.setTitle("Formula 1 Simulator");
+        escenario.setScene(escena);
+        escenario.setMinWidth(980);
+        escenario.setMinHeight(640);
+        escenario.show();
     }
 
-    private Parent loadView(String fxmlPath) throws IOException {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
-        return loader.load();
+    /** Libera el pool de hilos y la conexión con MongoDB al cerrar. */
+    @Override
+    public void stop() {
+        Async.cerrar();
+        MongoConnection.cerrar();
     }
 }
