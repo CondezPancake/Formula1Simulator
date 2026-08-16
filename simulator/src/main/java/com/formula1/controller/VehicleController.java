@@ -2,7 +2,6 @@ package com.formula1.controller;
 
 import com.formula1.model.Vehicle;
 import com.formula1.service.VehicleService;
-import com.formula1.service.VehicleServiceImpl;
 
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -13,19 +12,19 @@ public class VehicleController {
     @FXML
     private TableView<Vehicle> tableVehicles;
 
-    private final VehicleService vehicleService;
+    private final VehicleService vehiculos;
 
     public VehicleController() {
-        this(new VehicleServiceImpl());
+        this(new VehicleService());
     }
 
-    public VehicleController(VehicleService vehicleService) {
-        this.vehicleService = vehicleService;
+    public VehicleController(VehicleService vehiculos) {
+        this.vehiculos = vehiculos;
     }
 
     @FXML
     public void initialize() {
-        tableVehicles.setItems(FXCollections.observableArrayList(vehicleService.findAll()));
+        tableVehicles.setItems(FXCollections.observableArrayList(vehiculos.listar()));
     }
 
     @FXML
