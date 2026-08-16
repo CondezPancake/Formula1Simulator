@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.formula1.controller.VehicleCompareController" spacing="12">
+    <padding><Insets top="26" right="26" bottom="26" left="26"/></padding>
+
+    <Label text="Comparar vehículos" styleClass="view-title"/>
+    <Label text="Una fila por métrica y una columna por vehículo, para leer las diferencias de un vistazo."
+           styleClass="view-subtitle"/>
+
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <Label text="Modo"/>
+        <ComboBox fx:id="modo" prefWidth="180"/>
+        <Label text="Clima"/>
+        <ComboBox fx:id="clima" prefWidth="140"/>
+        <Region HBox.hgrow="ALWAYS"/>
+    </HBox>
+
+    <Label fx:id="lblVacio" styleClass="hint"
+           text="Vuelve a Vehículos y marca dos o más con Ctrl + clic."/>
+
+    <TableView fx:id="tabla" prefHeight="240">
+        <columns>
+            <TableColumn fx:id="colMetrica" text="Métrica" prefWidth="200"/>
+        </columns>
+    </TableView>
+
+    <BarChart fx:id="grafico" prefHeight="260" legendVisible="true">
+        <xAxis><CategoryAxis/></xAxis>
+        <yAxis><NumberAxis label="km/h" forceZeroInRange="false"/></yAxis>
+    </BarChart>
+</VBox>

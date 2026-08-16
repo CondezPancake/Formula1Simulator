@@ -3,21 +3,43 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox xmlns="http://javafx.com/javafx"
-      xmlns:fx="http://javafx.com/fxml"
-      fx:controller="com.formula1.controller.VehicleController"
-      spacing="10">
-    <padding>
-        <Insets top="20" right="20" bottom="20" left="20"/>
-    </padding>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.formula1.controller.VehicleController" spacing="12">
+    <padding><Insets top="26" right="26" bottom="26" left="26"/></padding>
+
     <Label text="Vehículos" styleClass="view-title"/>
-    <TableView fx:id="tableVehicles" VBox.vgrow="ALWAYS"/>
-    <HBox spacing="10">
-        <Button text="Agregar" onAction="#onAddVehicle"/>
-        <Button text="Eliminar" onAction="#onDeleteVehicle"/>
+    <Label text="Selecciona dos o más con Ctrl + clic para compararlos." styleClass="view-subtitle"/>
+
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <TextField fx:id="buscador" promptText="Buscar por modelo, equipo o motor…" prefWidth="260"/>
+        <Label text="Vel. máx. ≥"/>
+        <Spinner fx:id="velocidadMinima" prefWidth="100"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="Comparar" onAction="#onComparar"/>
+        <Button text="Asignar pilotos" onAction="#onAsignarPilotos"/>
+        <Button text="Nuevo" styleClass="primary" onAction="#onNuevo"/>
+        <Button text="Editar" onAction="#onEditar"/>
+        <Button text="Eliminar" styleClass="danger" onAction="#onEliminar"/>
     </HBox>
+
+    <TableView fx:id="tabla" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="colModelo" text="Modelo" prefWidth="100"/>
+            <TableColumn fx:id="colEquipo" text="Equipo" prefWidth="180"/>
+            <TableColumn fx:id="colMotor" text="Motor" prefWidth="105"/>
+            <TableColumn fx:id="colVelMax" text="Vel. máx." prefWidth="80"/>
+            <TableColumn fx:id="colAceleracion" text="0-100" prefWidth="65"/>
+            <TableColumn fx:id="colVelNormal" text="Media (normal)" prefWidth="110"/>
+            <TableColumn fx:id="colPilotos" text="Pilotos" prefWidth="260"/>
+        </columns>
+    </TableView>
 </VBox>
