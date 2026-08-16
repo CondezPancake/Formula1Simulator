@@ -1,6 +1,7 @@
 package com.formula1.controller;
 
 import com.formula1.model.AerodynamicLoad;
+import com.formula1.model.Driver;
 import com.formula1.model.DrivingMode;
 import com.formula1.model.FuelStrategy;
 import com.formula1.model.LapResult;
@@ -8,6 +9,7 @@ import com.formula1.model.QualifyingSession;
 import com.formula1.model.SimulationConfig;
 import com.formula1.model.TirePressure;
 import com.formula1.service.CircuitService;
+import com.formula1.service.DriverService;
 import com.formula1.service.QualifyingService;
 import com.formula1.service.VehicleService;
 import com.formula1.util.Async;
@@ -36,6 +38,7 @@ public class SimulationController {
 
     @FXML private ComboBox<String> selectorCircuito;
     @FXML private ComboBox<String> selectorVehiculo;
+    @FXML private ComboBox<Driver> selectorPiloto;
     @FXML private ComboBox<DrivingMode> selectorModo;
     @FXML private ComboBox<AerodynamicLoad> selectorAero;
     @FXML private ComboBox<TirePressure> selectorPresion;
@@ -57,15 +60,18 @@ public class SimulationController {
     private final QualifyingService sesiones;
     private final CircuitService circuitos;
     private final VehicleService vehiculos;
+    private final DriverService pilotos;
 
     public SimulationController() {
-        this(new QualifyingService(), new CircuitService(), new VehicleService());
+        this(new QualifyingService(), new CircuitService(), new VehicleService(), new DriverService());
     }
 
-    public SimulationController(QualifyingService sesiones, CircuitService circuitos, VehicleService vehiculos) {
+    public SimulationController(QualifyingService sesiones, CircuitService circuitos,
+                                VehicleService vehiculos, DriverService pilotos) {
         this.sesiones = sesiones;
         this.circuitos = circuitos;
         this.vehiculos = vehiculos;
+        this.pilotos = pilotos;
     }
 
     @FXML
@@ -76,6 +82,11 @@ public class SimulationController {
         selectorAero.getItems().addAll(AerodynamicLoad.values());
         selectorPresion.getItems().addAll(TirePressure.values());
         selectorCombustible.getItems().addAll(FuelStrategy.values());
+
+        // El vehículo delimita los pilotos válidos y evita combinaciones de
+        // escuderías distintas antes de que lleguen a la capa de servicio.
+        selectorVehiculo.valueProperty().addListener((obs, anterior, actual) ->
+                cargarPilotosDelVehiculo(actual));
 
         colPosicion.setCellValueFactory(f -> new SimpleIntegerProperty(f.getValue().getPosicion()));
         colPiloto.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getPiloto()));
@@ -118,6 +129,7 @@ public class SimulationController {
         if (ultima != null) {
             selectorCircuito.setValue(ultima.getCircuito());
             selectorVehiculo.setValue(ultima.getVehiculo());
+            seleccionarPiloto(ultima.getPilotoId());
             selectorModo.setValue(ultima.getModo());
             selectorAero.setValue(ultima.getAerodinamica());
             selectorPresion.setValue(ultima.getPresion());
@@ -140,13 +152,14 @@ public class SimulationController {
 
     @FXML
     private void onSimular() {
-        if (selectorCircuito.getValue() == null || selectorVehiculo.getValue() == null) {
-            Navigator.aviso("Falta configuración", "Elige un circuito y un vehículo.");
+        if (!configuracionCompleta()) {
+            Navigator.aviso("Falta configuración",
+                    "Elige un circuito, un vehículo, un piloto y todos los ajustes.");
             return;
         }
 
         SimulationConfig config = new SimulationConfig(
-                selectorCircuito.getValue(), selectorVehiculo.getValue(),
+                selectorCircuito.getValue(), selectorPiloto.getValue().getId(), selectorVehiculo.getValue(),
                 selectorModo.getValue(), selectorAero.getValue(),
                 selectorPresion.getValue(), selectorCombustible.getValue());
 
@@ -182,6 +195,39 @@ public class SimulationController {
         });
 
         Async.ejecutar(tarea);
+    }
+
+    private boolean configuracionCompleta() {
+        return selectorCircuito.getValue() != null
+                && selectorVehiculo.getValue() != null
+                && selectorPiloto.getValue() != null
+                && selectorModo.getValue() != null
+                && selectorAero.getValue() != null
+                && selectorPresion.getValue() != null
+                && selectorCombustible.getValue() != null;
+    }
+
+    private void cargarPilotosDelVehiculo(String modelo) {
+        selectorPiloto.getItems().clear();
+        selectorPiloto.setValue(null);
+
+        vehiculos.porModelo(modelo).ifPresent(vehiculo ->
+                selectorPiloto.getItems().setAll(vehiculos.pilotosDe(vehiculo)));
+        selectorPiloto.setDisable(selectorPiloto.getItems().isEmpty());
+
+        if (!selectorPiloto.getItems().isEmpty()) {
+            selectorPiloto.setValue(selectorPiloto.getItems().get(0));
+        }
+    }
+
+    /** Recupera por identificador porque el historial se persiste entre ejecuciones. */
+    private void seleccionarPiloto(Integer pilotoId) {
+        if (pilotoId == null) {
+            return;
+        }
+        pilotos.porId(pilotoId)
+                .filter(selectorPiloto.getItems()::contains)
+                .ifPresent(selectorPiloto::setValue);
     }
 
     private void desenlazar() {

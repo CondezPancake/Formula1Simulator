@@ -32,6 +32,10 @@
             <ComboBox fx:id="selectorVehiculo" prefWidth="130"/>
         </VBox>
         <VBox spacing="4">
+            <Label text="Piloto" styleClass="card-label"/>
+            <ComboBox fx:id="selectorPiloto" promptText="Selecciona un piloto" prefWidth="190" disable="true"/>
+        </VBox>
+        <VBox spacing="4">
             <Label text="Conducción" styleClass="card-label"/>
             <ComboBox fx:id="selectorModo" prefWidth="180"/>
         </VBox>

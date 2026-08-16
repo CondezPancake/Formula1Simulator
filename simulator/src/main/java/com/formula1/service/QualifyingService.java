@@ -11,6 +11,7 @@ import com.formula1.model.WeatherCondition;
 import com.formula1.util.DateUtils;
 import com.formula1.util.FormatUtils;
 import com.formula1.util.RandomUtils;
+import com.formula1.util.ValidationUtils;
 
 import javafx.concurrent.Task;
 
@@ -64,14 +65,16 @@ public class QualifyingService {
     }
 
     /**
-     * Simula la sesión completa. El vehículo elegido por el usuario corre con
-     * su configuración; el resto de la parrilla usa la configuración neutra.
+     * Simula la sesión completa. El piloto elegido por el usuario corre con
+     * su configuración; el resto de la parrilla usa la configuración de clasificación.
      *
      * @param progreso callback opcional (piloto procesado, total, mensaje).
      */
     public QualifyingSession simular(SimulationConfig config, WeatherCondition clima, Progreso progreso) {
-        Circuit circuito = circuitos.porNombre(config.getCircuito())
-                .orElseThrow(() -> new ValidationException("El circuito no existe: " + config.getCircuito()));
+        Circuit circuito = validarSeleccion(config);
+        if (clima == null) {
+            throw new ValidationException("Las condiciones climáticas no pueden ser nulas");
+        }
 
         List<Driver> parrilla = pilotos.listar();
         List<LapResult> resultados = new ArrayList<>();
@@ -84,9 +87,9 @@ public class QualifyingService {
             }
             Vehicle coche = vehiculo.get();
 
-            // Solo el coche seleccionado hereda los ajustes del usuario; el
-            // resto de la parrilla aprieta, como en una clasificación real.
-            SimulationConfig configPiloto = coche.getModelo().equals(config.getVehiculo())
+            // La selección pertenece a un piloto, no al monoplaza completo:
+            // así su compañero mantiene la estrategia general de la parrilla.
+            SimulationConfig configPiloto = piloto.getId() == config.getPilotoId()
                     ? config
                     : SimulationConfig.paraClasificacion();
 
@@ -136,8 +139,7 @@ public class QualifyingService {
         return new Task<>() {
             @Override
             protected QualifyingSession call() throws Exception {
-                Circuit circuito = circuitos.porNombre(config.getCircuito())
-                        .orElseThrow(() -> new ValidationException("El circuito no existe: " + config.getCircuito()));
+                Circuit circuito = validarSeleccion(config);
 
                 WeatherCondition clima = generarClima(circuito);
                 updateMessage("Clima de la sesión: " + clima.getEtiqueta());
@@ -164,6 +166,44 @@ public class QualifyingService {
                 }
             }
         };
+    }
+
+    /**
+     * Protege la regla de negocio de HU-08 incluso cuando la simulación se
+     * inicia fuera de JavaFX: el piloto debe existir y conducir el vehículo.
+     */
+    private Circuit validarSeleccion(SimulationConfig config) {
+        if (config == null) {
+            throw new ValidationException("La configuración no puede ser nula");
+        }
+        if (!ValidationUtils.isNotBlank(config.getCircuito())) {
+            throw new ValidationException("Debes seleccionar un circuito");
+        }
+        if (!ValidationUtils.isNotBlank(config.getVehiculo())) {
+            throw new ValidationException("Debes seleccionar un vehículo");
+        }
+        if (config.getModo() == null || config.getAerodinamica() == null
+                || config.getPresion() == null || config.getCombustible() == null) {
+            throw new ValidationException("Debes completar todos los ajustes del vehículo");
+        }
+
+        Circuit circuito = circuitos.porNombre(config.getCircuito())
+                .orElseThrow(() -> new ValidationException("El circuito no existe: " + config.getCircuito()));
+        Vehicle vehiculo = vehiculos.porModelo(config.getVehiculo())
+                .orElseThrow(() -> new ValidationException("El vehículo no existe: " + config.getVehiculo()));
+
+        Integer pilotoId = config.getPilotoId();
+        if (pilotoId == null) {
+            throw new ValidationException("Debes seleccionar un piloto");
+        }
+        Driver piloto = pilotos.porId(pilotoId)
+                .orElseThrow(() -> new ValidationException("El piloto no existe: " + pilotoId));
+        if (!vehiculo.conduce(pilotoId)) {
+            throw new ValidationException(
+                    piloto.getNombre() + " no conduce el vehículo " + vehiculo.getModelo());
+        }
+
+        return circuito;
     }
 
     /** Guarda la sesión y, con ella, la configuración empleada. */

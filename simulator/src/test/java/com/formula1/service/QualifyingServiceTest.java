@@ -21,6 +21,7 @@ import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class QualifyingServiceTest {
@@ -31,7 +32,7 @@ class QualifyingServiceTest {
 
     /** Configuración neutra sobre Monza con el Red Bull. */
     private SimulationConfig config(DrivingMode modo) {
-        return new SimulationConfig("Circuito de Monza", "RB20", modo,
+        return new SimulationConfig("Circuito de Monza", 1, "RB20", modo,
                 AerodynamicLoad.MEDIA, TirePressure.ESTANDAR, FuelStrategy.BALANCEADA);
     }
 
@@ -89,7 +90,7 @@ class QualifyingServiceTest {
     @Test
     void monacoEsMasLentoQueMonzaAunqueSeaMasCorto() {
         Circuit monaco = datos.circuitos().get("Circuito de Mónaco");
-        SimulationConfig enMonaco = new SimulationConfig("Circuito de Mónaco", "RB20", DrivingMode.NORMAL,
+        SimulationConfig enMonaco = new SimulationConfig("Circuito de Mónaco", 1, "RB20", DrivingMode.NORMAL,
                 AerodynamicLoad.MEDIA, TirePressure.ESTANDAR, FuelStrategy.BALANCEADA);
 
         double tMonaco = new LapTimeCalculator(new Random(1)).calcularTiempo(verstappen(), rb20(), monaco, WeatherCondition.SECO, enMonaco);
@@ -152,17 +153,33 @@ class QualifyingServiceTest {
     }
 
     @Test
-    void laConfiguracionSoloAfectaAlCocheElegido() {
-        SimulationConfig agresivo = config(DrivingMode.AGRESIVA);
-        QualifyingSession sesion = sesiones.simular(agresivo, WeatherCondition.SECO, null);
+    void laConfiguracionSoloAfectaAlPilotoElegido() {
+        SimulationConfig normal = config(DrivingMode.NORMAL);
+        QualifyingSession sesion = sesiones.simular(normal, WeatherCondition.SECO, null);
 
-        LapResult conRb20 = sesion.getResultados().stream()
-                .filter(r -> r.getVehiculo().equals("RB20")).findFirst().orElseThrow();
-        LapResult otro = sesion.getResultados().stream()
-                .filter(r -> !r.getVehiculo().equals("RB20")).findFirst().orElseThrow();
+        LapResult verstappen = resultadoDe(sesion, 1);
+        LapResult perez = resultadoDe(sesion, 2);
 
-        assertEquals("RB20", conRb20.getVehiculo());
-        assertTrue(otro.getConsumoEstimado() > 0, "el resto corre con configuración neutra");
+        double consumoSeleccionado = calculadora.consumoPorVuelta(
+                rb20(), monza(), WeatherCondition.SECO, normal);
+        double consumoCompanero = calculadora.consumoPorVuelta(
+                rb20(), monza(), WeatherCondition.SECO, SimulationConfig.paraClasificacion());
+
+        assertEquals(consumoSeleccionado, verstappen.getConsumoEstimado(), 1e-9);
+        assertEquals(consumoCompanero, perez.getConsumoEstimado(), 1e-9);
+        assertEquals(1, sesion.getConfig().getPilotoId());
+    }
+
+    @Test
+    void rechazaUnPilotoQueNoConduceElVehiculoElegido() {
+        SimulationConfig seleccionInvalida = new SimulationConfig(
+                "Circuito de Monza", 3, "RB20", DrivingMode.NORMAL,
+                AerodynamicLoad.MEDIA, TirePressure.ESTANDAR, FuelStrategy.BALANCEADA);
+
+        ValidationException error = assertThrows(ValidationException.class,
+                () -> sesiones.simular(seleccionInvalida, WeatherCondition.SECO, null));
+
+        assertTrue(error.getMessage().contains("no conduce"));
     }
 
     @Test
@@ -181,21 +198,28 @@ class QualifyingServiceTest {
 
     @Test
     void elConsumoYElDesgasteReaccionanALaConfiguracion() {
-        SimulationConfig ahorro = new SimulationConfig("Circuito de Monza", "RB20", DrivingMode.NORMAL,
+        SimulationConfig ahorro = new SimulationConfig("Circuito de Monza", 1, "RB20", DrivingMode.NORMAL,
                 AerodynamicLoad.MEDIA, TirePressure.ESTANDAR, FuelStrategy.AHORRO);
-        SimulationConfig empuje = new SimulationConfig("Circuito de Monza", "RB20", DrivingMode.NORMAL,
+        SimulationConfig empuje = new SimulationConfig("Circuito de Monza", 1, "RB20", DrivingMode.NORMAL,
                 AerodynamicLoad.MEDIA, TirePressure.ESTANDAR, FuelStrategy.AGRESIVA);
 
         assertTrue(calculadora.consumoPorVuelta(rb20(), monza(), WeatherCondition.SECO, ahorro)
                 < calculadora.consumoPorVuelta(rb20(), monza(), WeatherCondition.SECO, empuje));
 
-        SimulationConfig presionBaja = new SimulationConfig("Circuito de Monza", "RB20", DrivingMode.NORMAL,
+        SimulationConfig presionBaja = new SimulationConfig("Circuito de Monza", 1, "RB20", DrivingMode.NORMAL,
                 AerodynamicLoad.MEDIA, TirePressure.BAJA, FuelStrategy.BALANCEADA);
-        SimulationConfig presionAlta = new SimulationConfig("Circuito de Monza", "RB20", DrivingMode.NORMAL,
+        SimulationConfig presionAlta = new SimulationConfig("Circuito de Monza", 1, "RB20", DrivingMode.NORMAL,
                 AerodynamicLoad.MEDIA, TirePressure.ALTA, FuelStrategy.BALANCEADA);
 
         assertTrue(calculadora.desgastePorVuelta(rb20(), monza(), WeatherCondition.SECO, presionBaja)
                 > calculadora.desgastePorVuelta(rb20(), monza(), WeatherCondition.SECO, presionAlta),
                 "menos presión debe desgastar más");
+    }
+
+    private LapResult resultadoDe(QualifyingSession sesion, int pilotoId) {
+        return sesion.getResultados().stream()
+                .filter(resultado -> resultado.getPilotoId() == pilotoId)
+                .findFirst()
+                .orElseThrow();
     }
 }
