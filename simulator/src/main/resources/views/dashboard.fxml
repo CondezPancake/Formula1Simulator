@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.formula1.controller.DashboardController">
+    <top>
+        <Label fx:id="lblTitle" styleClass="dashboard-title" BorderPane.alignment="CENTER">
+            <BorderPane.margin>
+                <Insets top="24" right="24" bottom="12" left="24"/>
+            </BorderPane.margin>
+        </Label>
+    </top>
+    <center>
+        <VBox spacing="12" alignment="CENTER">
+            <padding>
+                <Insets top="12" right="24" bottom="24" left="24"/>
+            </padding>
+            <Button text="Equipos"/>
+            <Button text="Pilotos"/>
+            <Button text="Vehículos"/>
+            <Button text="Circuitos"/>
+            <Button text="Simulación"/>
+        </VBox>
+    </center>
+</BorderPane>
