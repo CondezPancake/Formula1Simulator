@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.formula1.controller.DriverController"
+      spacing="10">
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+    <Label text="Pilotos" styleClass="view-title"/>
+    <TableView fx:id="tableDrivers" VBox.vgrow="ALWAYS"/>
+    <HBox spacing="10">
+        <Button text="Agregar" onAction="#onAddDriver"/>
+        <Button text="Eliminar" onAction="#onDeleteDriver"/>
+    </HBox>
+</VBox>
