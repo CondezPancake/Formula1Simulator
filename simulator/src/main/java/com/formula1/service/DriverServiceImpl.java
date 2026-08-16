@@ -26,9 +26,6 @@ public class DriverServiceImpl implements DriverService {
         if (driver == null || !ValidationUtils.isNotBlank(driver.getNombre())) {
             throw new InvalidDriverException("El nombre del piloto no puede estar vacío");
         }
-        if (!ValidationUtils.isValidDriverNumber(driver.getNumero())) {
-            throw new InvalidDriverException("Número de piloto inválido: " + driver.getNumero());
-        }
         return driverRepository.save(driver);
     }
 

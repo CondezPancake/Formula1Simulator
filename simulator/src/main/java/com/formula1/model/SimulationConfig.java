@@ -1,94 +1,131 @@
 package com.formula1.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import java.util.Objects;
+import java.util.UUID;
+
+/**
+ * Configuración con la que el usuario afronta una sesión de clasificación.
+ *
+ * Se guarda automáticamente al lanzar cada simulación (queda embebida en la
+ * {@link QualifyingSession}), de modo que el historial puede ofrecerla para
+ * reutilizarla sin necesidad de una colección aparte.
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SimulationConfig {
 
-    private String circuitId;
-    private String driverId;
-    private String vehicleId;
-    private DrivingMode drivingMode;
-    private AerodynamicLoad aerodynamicLoad;
-    private double presionNeumaticos;
-    private FuelStrategy fuelStrategy;
+    private String id;
+    private String circuito;
+    private String vehiculo;
+    private DrivingMode modo;
+    private AerodynamicLoad aerodinamica;
+    private TirePressure presion;
+    private FuelStrategy combustible;
+    private String guardadoEn;
 
     public SimulationConfig() {
+        this.id = UUID.randomUUID().toString();
+        this.modo = DrivingMode.NORMAL;
+        this.aerodinamica = AerodynamicLoad.MEDIA;
+        this.presion = TirePressure.ESTANDAR;
+        this.combustible = FuelStrategy.BALANCEADA;
     }
 
-    public SimulationConfig(String circuitId, String driverId, String vehicleId, DrivingMode drivingMode,
-                             AerodynamicLoad aerodynamicLoad, double presionNeumaticos, FuelStrategy fuelStrategy) {
-        this.circuitId = circuitId;
-        this.driverId = driverId;
-        this.vehicleId = vehicleId;
-        this.drivingMode = drivingMode;
-        this.aerodynamicLoad = aerodynamicLoad;
-        this.presionNeumaticos = presionNeumaticos;
-        this.fuelStrategy = fuelStrategy;
+    public SimulationConfig(String circuito, String vehiculo, DrivingMode modo,
+                             AerodynamicLoad aerodinamica, TirePressure presion, FuelStrategy combustible) {
+        this();
+        this.circuito = circuito;
+        this.vehiculo = vehiculo;
+        this.modo = modo;
+        this.aerodinamica = aerodinamica;
+        this.presion = presion;
+        this.combustible = combustible;
     }
 
-    public String getCircuitId() {
-        return circuitId;
+    /** Configuración neutra, usada para los pilotos que no controla el usuario. */
+    public static SimulationConfig porDefecto() {
+        return new SimulationConfig();
     }
 
-    public void setCircuitId(String circuitId) {
-        this.circuitId = circuitId;
+    public String getId() {
+        return id;
     }
 
-    public String getDriverId() {
-        return driverId;
+    public void setId(String id) {
+        this.id = id;
     }
 
-    public void setDriverId(String driverId) {
-        this.driverId = driverId;
+    public String getCircuito() {
+        return circuito;
     }
 
-    public String getVehicleId() {
-        return vehicleId;
+    public void setCircuito(String circuito) {
+        this.circuito = circuito;
     }
 
-    public void setVehicleId(String vehicleId) {
-        this.vehicleId = vehicleId;
+    public String getVehiculo() {
+        return vehiculo;
     }
 
-    public DrivingMode getDrivingMode() {
-        return drivingMode;
+    public void setVehiculo(String vehiculo) {
+        this.vehiculo = vehiculo;
     }
 
-    public void setDrivingMode(DrivingMode drivingMode) {
-        this.drivingMode = drivingMode;
+    public DrivingMode getModo() {
+        return modo;
     }
 
-    public AerodynamicLoad getAerodynamicLoad() {
-        return aerodynamicLoad;
+    public void setModo(DrivingMode modo) {
+        this.modo = modo;
     }
 
-    public void setAerodynamicLoad(AerodynamicLoad aerodynamicLoad) {
-        this.aerodynamicLoad = aerodynamicLoad;
+    public AerodynamicLoad getAerodinamica() {
+        return aerodinamica;
     }
 
-    public double getPresionNeumaticos() {
-        return presionNeumaticos;
+    public void setAerodinamica(AerodynamicLoad aerodinamica) {
+        this.aerodinamica = aerodinamica;
     }
 
-    public void setPresionNeumaticos(double presionNeumaticos) {
-        this.presionNeumaticos = presionNeumaticos;
+    public TirePressure getPresion() {
+        return presion;
     }
 
-    public FuelStrategy getFuelStrategy() {
-        return fuelStrategy;
+    public void setPresion(TirePressure presion) {
+        this.presion = presion;
     }
 
-    public void setFuelStrategy(FuelStrategy fuelStrategy) {
-        this.fuelStrategy = fuelStrategy;
+    public FuelStrategy getCombustible() {
+        return combustible;
+    }
+
+    public void setCombustible(FuelStrategy combustible) {
+        this.combustible = combustible;
+    }
+
+    public String getGuardadoEn() {
+        return guardadoEn;
+    }
+
+    public void setGuardadoEn(String guardadoEn) {
+        this.guardadoEn = guardadoEn;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof SimulationConfig)) return false;
+        return Objects.equals(id, ((SimulationConfig) o).id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 
     @Override
     public String toString() {
-        return "SimulationConfig{" +
-                "circuitId='" + circuitId + '\'' +
-                ", driverId='" + driverId + '\'' +
-                ", vehicleId='" + vehicleId + '\'' +
-                ", drivingMode=" + drivingMode +
-                ", aerodynamicLoad=" + aerodynamicLoad +
-                ", fuelStrategy=" + fuelStrategy +
-                '}';
+        return modo + " · Aero " + aerodinamica + " · Presión " + presion + " · " + combustible;
     }
 }

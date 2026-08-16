@@ -1,38 +1,61 @@
 package com.formula1.model;
 
-import java.util.HashMap;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * Piloto de la parrilla.
+ *
+ * El identificador es el entero 1..20 de la especificación, al que apuntan
+ * {@code equipos.pilotos}, {@code vehiculos.pilotos} y los ganadores
+ * históricos de cada circuito. El equipo se referencia por su nombre, que
+ * es también la clave natural de {@link Team}.
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Driver {
 
-    private String id;
+    /** Claves de la tabla de habilidades, en escala 0-100. */
+    public static final String HABILIDAD_VELOCIDAD = "velocidad";
+    public static final String HABILIDAD_CONSISTENCIA = "consistencia";
+    public static final String HABILIDAD_LLUVIA = "lluvia";
+
+    private int id;
     private String nombre;
-    private int numero;
-    private String teamId;
+    private String equipo;
     private DriverRole rol;
     private int experiencia;
     private Map<String, Integer> habilidades;
 
     public Driver() {
-        this.habilidades = new HashMap<>();
+        this.habilidades = new LinkedHashMap<>();
     }
 
-    public Driver(String id, String nombre, int numero, String teamId, DriverRole rol, int experiencia) {
+    public Driver(int id, String nombre, String equipo, DriverRole rol, int experiencia) {
         this();
         this.id = id;
         this.nombre = nombre;
-        this.numero = numero;
-        this.teamId = teamId;
+        this.equipo = equipo;
         this.rol = rol;
         this.experiencia = experiencia;
     }
 
-    public String getId() {
+    /** Devuelve una habilidad concreta, o 50 (valor medio) si no está definida. */
+    public int getHabilidad(String clave) {
+        return habilidades.getOrDefault(clave, 50);
+    }
+
+    public void setHabilidad(String clave, int valor) {
+        this.habilidades.put(clave, valor);
+    }
+
+    public int getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(int id) {
         this.id = id;
     }
 
@@ -44,20 +67,12 @@ public class Driver {
         this.nombre = nombre;
     }
 
-    public int getNumero() {
-        return numero;
+    public String getEquipo() {
+        return equipo;
     }
 
-    public void setNumero(int numero) {
-        this.numero = numero;
-    }
-
-    public String getTeamId() {
-        return teamId;
-    }
-
-    public void setTeamId(String teamId) {
-        this.teamId = teamId;
+    public void setEquipo(String equipo) {
+        this.equipo = equipo;
     }
 
     public DriverRole getRol() {
@@ -88,8 +103,7 @@ public class Driver {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Driver)) return false;
-        Driver driver = (Driver) o;
-        return Objects.equals(id, driver.id);
+        return id == ((Driver) o).id;
     }
 
     @Override
@@ -99,12 +113,6 @@ public class Driver {
 
     @Override
     public String toString() {
-        return "Driver{" +
-                "id='" + id + '\'' +
-                ", nombre='" + nombre + '\'' +
-                ", numero=" + numero +
-                ", teamId='" + teamId + '\'' +
-                ", rol=" + rol +
-                '}';
+        return nombre;
     }
 }

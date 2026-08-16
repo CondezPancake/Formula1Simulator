@@ -23,7 +23,7 @@ public class CircuitServiceImpl implements CircuitService {
 
     @Override
     public Circuit register(Circuit circuit) {
-        if (circuit == null || !ValidationUtils.isPositive(circuit.getLongitud()) || circuit.getVueltas() <= 0) {
+        if (circuit == null || !ValidationUtils.isPositive(circuit.getLongitudKm()) || circuit.getVueltas() <= 0) {
             throw new InvalidSimulationException("El circuito debe tener longitud y número de vueltas mayores que 0");
         }
         return circuitRepository.save(circuit);
