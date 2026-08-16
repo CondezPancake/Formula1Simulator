@@ -1,38 +1,27 @@
 package com.formula1.controller;
 
-import com.formula1.model.Result;
-import com.formula1.service.SimulationService;
-import com.formula1.simulation.SimulationFacade;
-
-import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
-import javafx.scene.control.TableView;
 
+/**
+ * Controlador de la vista de simulación de clasificación.
+ *
+ * El motor de cálculo y la ejecución en segundo plano se implementan en
+ * feature/qualifying-engine y feature/ui-simulation; aquí solo queda el
+ * enlace con la vista para mantener la aplicación arrancable.
+ */
 public class SimulationController {
-
-    @FXML
-    private TableView<Result> tableResults;
 
     @FXML
     private Button btnStartQualifying;
 
-    private final SimulationService simulationService;
-
-    public SimulationController() {
-        this(new SimulationFacade());
-    }
-
-    public SimulationController(SimulationService simulationService) {
-        this.simulationService = simulationService;
-    }
-
     @FXML
     public void initialize() {
-        tableResults.setItems(FXCollections.observableArrayList());
+        // Sin estado que inicializar todavía.
     }
 
     @FXML
     private void onStartQualifying() {
+        // Pendiente: lanzar la sesión de clasificación en un Task.
     }
 }
