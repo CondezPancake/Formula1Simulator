@@ -1,35 +1,33 @@
 package com.formula1.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Escudería. El nombre es la clave natural: es único en la parrilla y es a
+ * lo que apuntan {@link Driver#getEquipo()} y {@link Vehicle#getEquipo()}.
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Team {
 
-    private String id;
     private String nombre;
     private String pais;
-    private List<String> driverIds;
-    private List<String> vehicleIds;
+    private String motor;
+    private List<Integer> pilotos;
+    private String imagen;
 
     public Team() {
-        this.driverIds = new ArrayList<>();
-        this.vehicleIds = new ArrayList<>();
+        this.pilotos = new ArrayList<>();
     }
 
-    public Team(String id, String nombre, String pais) {
+    public Team(String nombre, String pais, String motor) {
         this();
-        this.id = id;
         this.nombre = nombre;
         this.pais = pais;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
+        this.motor = motor;
     }
 
     public String getNombre() {
@@ -48,41 +46,44 @@ public class Team {
         this.pais = pais;
     }
 
-    public List<String> getDriverIds() {
-        return driverIds;
+    public String getMotor() {
+        return motor;
     }
 
-    public void setDriverIds(List<String> driverIds) {
-        this.driverIds = driverIds;
+    public void setMotor(String motor) {
+        this.motor = motor;
     }
 
-    public List<String> getVehicleIds() {
-        return vehicleIds;
+    public List<Integer> getPilotos() {
+        return pilotos;
     }
 
-    public void setVehicleIds(List<String> vehicleIds) {
-        this.vehicleIds = vehicleIds;
+    public void setPilotos(List<Integer> pilotos) {
+        this.pilotos = pilotos;
+    }
+
+    public String getImagen() {
+        return imagen;
+    }
+
+    public void setImagen(String imagen) {
+        this.imagen = imagen;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Team)) return false;
-        Team team = (Team) o;
-        return Objects.equals(id, team.id);
+        return Objects.equals(nombre, ((Team) o).nombre);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return Objects.hash(nombre);
     }
 
     @Override
     public String toString() {
-        return "Team{" +
-                "id='" + id + '\'' +
-                ", nombre='" + nombre + '\'' +
-                ", pais='" + pais + '\'' +
-                '}';
+        return nombre;
     }
 }

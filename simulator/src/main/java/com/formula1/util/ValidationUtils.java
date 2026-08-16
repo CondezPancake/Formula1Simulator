@@ -16,8 +16,4 @@ public final class ValidationUtils {
     public static boolean isInRange(double value, double min, double max) {
         return value >= min && value <= max;
     }
-
-    public static boolean isValidDriverNumber(int numero) {
-        return numero > 0 && numero <= 99;
-    }
 }

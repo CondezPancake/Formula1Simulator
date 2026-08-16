@@ -23,7 +23,7 @@ public class VehicleServiceImpl implements VehicleService {
 
     @Override
     public Vehicle register(Vehicle vehicle) {
-        if (vehicle == null || !ValidationUtils.isPositive(vehicle.getVelocidadMaxima())) {
+        if (vehicle == null || !ValidationUtils.isPositive(vehicle.getVelocidadMaximaKmh())) {
             throw new InvalidVehicleConfigurationException("La velocidad máxima del vehículo debe ser mayor que 0");
         }
         return vehicleRepository.save(vehicle);
