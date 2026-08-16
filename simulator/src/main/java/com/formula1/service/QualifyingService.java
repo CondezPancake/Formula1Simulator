@@ -84,10 +84,11 @@ public class QualifyingService {
             }
             Vehicle coche = vehiculo.get();
 
-            // Solo el coche seleccionado hereda los ajustes del usuario.
+            // Solo el coche seleccionado hereda los ajustes del usuario; el
+            // resto de la parrilla aprieta, como en una clasificación real.
             SimulationConfig configPiloto = coche.getModelo().equals(config.getVehiculo())
                     ? config
-                    : SimulationConfig.porDefecto();
+                    : SimulationConfig.paraClasificacion();
 
             double tiempo = calculadora.calcularTiempo(piloto, coche, circuito, clima, configPiloto);
 

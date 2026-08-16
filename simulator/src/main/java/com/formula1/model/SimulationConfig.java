@@ -43,9 +43,22 @@ public class SimulationConfig {
         this.combustible = combustible;
     }
 
-    /** Configuración neutra, usada para los pilotos que no controla el usuario. */
+    /** Configuración neutra: punto de partida de un formulario vacío. */
     public static SimulationConfig porDefecto() {
         return new SimulationConfig();
+    }
+
+    /**
+     * Configuración del resto de la parrilla.
+     *
+     * En una clasificación todos los equipos aprietan, así que los rivales
+     * corren en modo agresivo. Si usaran la configuración neutra, elegir
+     * modo agresivo abriría una diferencia irreal de varios segundos con
+     * el resto en lugar de las décimas que se ven en la realidad.
+     */
+    public static SimulationConfig paraClasificacion() {
+        return new SimulationConfig(null, null, DrivingMode.AGRESIVA,
+                AerodynamicLoad.MEDIA, TirePressure.ESTANDAR, FuelStrategy.AGRESIVA);
     }
 
     public String getId() {
