@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 220" width="900" height="220" role="img" aria-labelledby="title">
+  <title id="title">Formula1Simulator</title>
+  <defs>
+    <pattern id="checker" width="18" height="18" patternUnits="userSpaceOnUse">
+      <rect width="18" height="18" fill="#f4f4f6"/>
+      <rect width="9" height="9" fill="#101018"/>
+      <rect x="9" y="9" width="9" height="9" fill="#101018"/>
+    </pattern>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#15151e"/>
+      <stop offset="1" stop-color="#1c1c28"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="900" height="220" rx="24" fill="url(#bg)"/>
+
+  <g transform="translate(40,30) rotate(-6 65 80)">
+    <rect x="0" y="0" width="130" height="160" rx="10" fill="url(#checker)"/>
+    <rect x="0" y="0" width="130" height="160" rx="10" fill="none" stroke="#e10600" stroke-width="4"/>
+  </g>
+
+  <g stroke="#e10600" stroke-width="9" stroke-linecap="round" opacity="0.85">
+    <line x1="205" y1="76" x2="252" y2="76"/>
+    <line x1="205" y1="58" x2="242" y2="58"/>
+    <line x1="205" y1="40" x2="232" y2="40"/>
+  </g>
+
+  <text x="270" y="92" font-family="'Segoe UI', Arial, sans-serif" font-size="52" font-weight="700" fill="#f4f4f6" letter-spacing="1">FORMULA1</text>
+  <text x="270" y="146" font-family="'Segoe UI', Arial, sans-serif" font-size="42" font-weight="700" fill="#e10600" letter-spacing="3">SIMULATOR</text>
+
+  <text x="272" y="175" font-family="'Segoe UI', Arial, sans-serif" font-size="15" letter-spacing="4" fill="#9a9aa5">SISTEMA DE SIMULACIÓN DE CLASIFICACIÓN F1</text>
+
+  <g transform="translate(272,188)">
+    <rect width="46" height="7" rx="3.5" fill="#e10600"/>
+    <rect x="54" width="46" height="7" rx="3.5" fill="#3a3a48"/>
+    <rect x="108" width="46" height="7" rx="3.5" fill="#3a3a48"/>
+  </g>
+</svg>
