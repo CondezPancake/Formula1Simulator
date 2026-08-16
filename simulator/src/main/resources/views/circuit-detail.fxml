@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<ScrollPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.formula1.controller.CircuitDetailController"
+            fitToWidth="true" styleClass="contenido">
+    <VBox spacing="14">
+        <padding><Insets top="26" right="26" bottom="26" left="26"/></padding>
+
+        <HBox spacing="12" alignment="CENTER_LEFT">
+            <Label fx:id="lblNombre" text="—" styleClass="view-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Volver" onAction="#onVolver"/>
+        </HBox>
+
+        <HBox spacing="16">
+            <VBox styleClass="card" spacing="4">
+                <Label fx:id="lblPais" text="—" styleClass="card-value"/>
+                <Label text="País" styleClass="card-label"/>
+            </VBox>
+            <VBox styleClass="card" spacing="4">
+                <Label fx:id="lblLongitud" text="—" styleClass="card-value"/>
+                <Label text="Longitud" styleClass="card-label"/>
+            </VBox>
+            <VBox styleClass="card" spacing="4">
+                <Label fx:id="lblVueltas" text="—" styleClass="card-value"/>
+                <Label text="Vueltas" styleClass="card-label"/>
+            </VBox>
+            <VBox styleClass="card" spacing="4">
+                <Label fx:id="lblFactor" text="—" styleClass="card-value"/>
+                <Label text="Factor técnico" styleClass="card-label"/>
+            </VBox>
+        </HBox>
+
+        <Label fx:id="lblDescripcion" text="" wrapText="true" styleClass="view-subtitle"/>
+
+        <Label text="Récord de vuelta" styleClass="section-title"/>
+        <Label fx:id="lblRecord" text="—"/>
+
+        <Label text="Clima promedio" styleClass="section-title"/>
+        <Label fx:id="lblClima" text="—"/>
+
+        <Label text="Ganadores anteriores" styleClass="section-title"/>
+        <ListView fx:id="listaGanadores" prefHeight="110"/>
+
+        <Label text="Impacto del circuito en el rendimiento" styleClass="section-title"/>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Label text="Vehículo"/>
+            <ComboBox fx:id="selectorVehiculo" prefWidth="140"/>
+            <Label text="Clima"/>
+            <ComboBox fx:id="selectorClima" prefWidth="140"/>
+        </HBox>
+        <TableView fx:id="tablaImpacto" prefHeight="150">
+            <columns>
+                <TableColumn fx:id="colModo" text="Modo" prefWidth="180"/>
+                <TableColumn fx:id="colConsumo" text="Consumo" prefWidth="140"/>
+                <TableColumn fx:id="colDesgaste" text="Desgaste" prefWidth="140"/>
+                <TableColumn fx:id="colConsumoCarrera" text="Consumo estimado total" prefWidth="200"/>
+            </columns>
+        </TableView>
+    </VBox>
+</ScrollPane>
