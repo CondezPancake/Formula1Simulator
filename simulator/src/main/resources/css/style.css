@@ -200,6 +200,51 @@
     -fx-background-color: #e10600;
 }
 
+.weather-panel {
+    -fx-background-color: #191925;
+    -fx-background-radius: 10;
+    -fx-padding: 14;
+}
+
+.weather-title {
+    -fx-font-size: 17px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #35b9ff;
+}
+
+.weather-card {
+    -fx-background-color: #20202f;
+    -fx-background-radius: 8;
+    -fx-padding: 9 11 9 11;
+    -fx-min-width: 130;
+}
+
+.weather-value {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #ffffff;
+}
+
+.weather-state {
+    -fx-background-color: #1d3440;
+    -fx-background-radius: 12;
+    -fx-padding: 5 12 5 12;
+    -fx-text-fill: #75d5ff;
+    -fx-font-weight: bold;
+}
+
+.progress-bar.metric-grip > .bar {
+    -fx-background-color: #44d17a;
+}
+
+.progress-bar.metric-traction > .bar {
+    -fx-background-color: #35b9ff;
+}
+
+.progress-bar.metric-braking > .bar {
+    -fx-background-color: #ff9f43;
+}
+
 .tab-pane .tab-header-area .tab-header-background {
     -fx-background-color: #15151e;
 }

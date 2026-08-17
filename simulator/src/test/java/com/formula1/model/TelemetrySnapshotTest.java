@@ -29,7 +29,7 @@ class TelemetrySnapshotTest {
                 () -> assertThrows(IllegalArgumentException.class,
                         () -> new TelemetrySnapshot("Piloto", "Auto", 10, 20,
                                 170, 340, 7_500, -1, 5, 90, 105,
-                                2, 40, 0.2, "Pista seca")));
+                                2, 40, 0.2, climaValido())));
     }
 
     private TelemetrySnapshot muestraValida(int segmento, int totalSegmentos,
@@ -38,6 +38,11 @@ class TelemetrySnapshotTest {
         return new TelemetrySnapshot(
                 "Piloto", "Auto", segmento, totalSegmentos,
                 velocidad, velocidadMaxima, rpm, 50, 5,
-                90, 105, 2, 40, 0.2, "Pista seca");
+                90, 105, 2, 40, 0.2, climaValido());
+    }
+
+    private WeatherSnapshot climaValido() {
+        return new WeatherSnapshot(10, 20, DynamicWeatherState.SECO,
+                24, 45, 10, 0, 36, 94, 94, 93);
     }
 }

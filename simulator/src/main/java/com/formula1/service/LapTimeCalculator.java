@@ -5,7 +5,9 @@ import com.formula1.model.Driver;
 import com.formula1.model.SimulationConfig;
 import com.formula1.model.Vehicle;
 import com.formula1.model.WeatherCondition;
+import com.formula1.model.WeatherSnapshot;
 
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -53,23 +55,25 @@ public class LapTimeCalculator {
 
     public double calcularTiempo(Driver piloto, Vehicle vehiculo, Circuit circuito,
                                   WeatherCondition clima, SimulationConfig config) {
-        Vehicle.Performance rendimiento = vehiculo.rendimientoDe(config.getModo());
-        double velocidad = rendimiento.getVelocidadPromedioKmh();
-        if (velocidad <= 0) {
-            throw new ValidationException("El vehículo " + vehiculo.getModelo() + " no tiene velocidad definida");
-        }
-
-        double tiempoBase = 3600.0 * circuito.getLongitudKm() / velocidad;
-
-        double tiempo = tiempoBase
-                * circuito.getFactorTecnico()
+        double tiempo = tiempoConfigurado(vehiculo, circuito, config)
                 * clima.getFactorTiempo()
-                * config.getAerodinamica().getFactorTiempo()
-                * config.getPresion().getFactorTiempo()
-                * config.getCombustible().getFactorTiempo()
                 * factorPiloto(piloto, clima);
 
         return tiempo * (1 + variacion());
+    }
+
+    /** Calcula una vuelta con el clima que corresponde a cada segmento. */
+    public double calcularTiempo(Driver piloto, Vehicle vehiculo, Circuit circuito,
+                                 List<WeatherSnapshot> clima, SimulationConfig config) {
+        validarEvolucion(clima);
+        double factorClimatico = clima.stream()
+                .mapToDouble(muestra -> muestra.factorTiempo()
+                        * factorPiloto(piloto, muestra.condicionEquivalente()))
+                .average()
+                .orElseThrow();
+        return tiempoConfigurado(vehiculo, circuito, config)
+                * factorClimatico
+                * (1 + variacion());
     }
 
     /**
@@ -98,12 +102,55 @@ public class LapTimeCalculator {
                 * config.getCombustible().getFactorConsumo();
     }
 
+    /** Consumo medio ponderado por los estados atravesados durante la vuelta. */
+    public double consumoPorVuelta(Vehicle vehiculo, Circuit circuito,
+                                    List<WeatherSnapshot> clima, SimulationConfig config) {
+        validarEvolucion(clima);
+        return clima.stream()
+                .mapToDouble(muestra -> consumoPorVuelta(
+                        vehiculo, circuito, muestra.condicionEquivalente(), config)
+                        * muestra.factorConsumo())
+                .average()
+                .orElseThrow();
+    }
+
     /** Desgaste de neumáticos por vuelta, incluyendo el efecto de la pista. */
     public double desgastePorVuelta(Vehicle vehiculo, Circuit circuito, WeatherCondition clima, SimulationConfig config) {
         return vehiculo.rendimientoDe(config.getModo()).desgasteCon(clima)
                 * circuito.getFactorDesgaste()
                 * config.getAerodinamica().getFactorDesgaste()
                 * config.getPresion().getFactorDesgaste();
+    }
+
+    /** Desgaste medio considerando agarre y temperatura de pista variables. */
+    public double desgastePorVuelta(Vehicle vehiculo, Circuit circuito,
+                                     List<WeatherSnapshot> clima, SimulationConfig config) {
+        validarEvolucion(clima);
+        return clima.stream()
+                .mapToDouble(muestra -> desgastePorVuelta(
+                        vehiculo, circuito, muestra.condicionEquivalente(), config)
+                        * muestra.factorDesgaste())
+                .average()
+                .orElseThrow();
+    }
+
+    private double tiempoConfigurado(Vehicle vehiculo, Circuit circuito, SimulationConfig config) {
+        Vehicle.Performance rendimiento = vehiculo.rendimientoDe(config.getModo());
+        double velocidad = rendimiento.getVelocidadPromedioKmh();
+        if (velocidad <= 0) {
+            throw new ValidationException("El vehículo " + vehiculo.getModelo() + " no tiene velocidad definida");
+        }
+        return (3600.0 * circuito.getLongitudKm() / velocidad)
+                * circuito.getFactorTecnico()
+                * config.getAerodinamica().getFactorTiempo()
+                * config.getPresion().getFactorTiempo()
+                * config.getCombustible().getFactorTiempo();
+    }
+
+    private void validarEvolucion(List<WeatherSnapshot> clima) {
+        if (clima == null || clima.isEmpty()) {
+            throw new ValidationException("La evolución climática no puede estar vacía");
+        }
     }
 
     private double variacion() {

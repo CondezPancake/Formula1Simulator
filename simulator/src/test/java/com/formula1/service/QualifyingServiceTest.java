@@ -15,6 +15,7 @@ import com.formula1.model.TirePressure;
 import com.formula1.model.TelemetrySnapshot;
 import com.formula1.model.Vehicle;
 import com.formula1.model.WeatherCondition;
+import com.formula1.model.WeatherSnapshot;
 import com.formula1.util.FormatUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -57,7 +58,8 @@ class QualifyingServiceTest {
         datos = DataStore.enMemoria();
         // Semilla fija -> sin ruido aleatorio, resultados reproducibles.
         calculadora = new LapTimeCalculator(new Random(7));
-        sesiones = new QualifyingService(datos, calculadora);
+        sesiones = new QualifyingService(
+                datos, calculadora, new DynamicWeatherService(new Random(11)));
     }
 
     @Test
@@ -165,9 +167,9 @@ class QualifyingServiceTest {
         LapResult perez = resultadoDe(sesion, 2);
 
         double consumoSeleccionado = calculadora.consumoPorVuelta(
-                rb20(), monza(), WeatherCondition.SECO, normal);
+                rb20(), monza(), sesion.getEvolucionClimatica(), normal);
         double consumoCompanero = calculadora.consumoPorVuelta(
-                rb20(), monza(), WeatherCondition.SECO, SimulationConfig.paraClasificacion());
+                rb20(), monza(), sesion.getEvolucionClimatica(), SimulationConfig.paraClasificacion());
 
         assertEquals(consumoSeleccionado, verstappen.getConsumoEstimado(), 1e-9);
         assertEquals(consumoCompanero, perez.getConsumoEstimado(), 1e-9);
@@ -228,7 +230,7 @@ class QualifyingServiceTest {
         assertEquals("Max Verstappen", ultima.piloto());
         assertEquals("RB20", ultima.vehiculo());
         assertEquals(3, ultima.sectorActual());
-        assertEquals("Pista seca", ultima.estadoPista());
+        assertEquals(sesion.getEvolucionClimatica().get(19), ultima.clima());
         assertEquals(seleccionado.getTiempoSegundos(), ultima.tiempoVueltaSegundos(), 1e-9);
         assertEquals(seleccionado.getTiempoSegundos() - monza().getRecordVuelta().getTiempoSegundos(),
                 ultima.deltaSegundos(), 1e-9);
@@ -236,6 +238,7 @@ class QualifyingServiceTest {
 
         for (int i = 0; i < telemetria.size(); i++) {
             TelemetrySnapshot muestra = telemetria.get(i);
+            assertEquals(sesion.getEvolucionClimatica().get(i), muestra.clima());
             assertEquals(evolucion.get(i).velocidadKmh(), muestra.velocidadKmh(), 1e-9,
                     "evolucion y telemetria deben provenir de la misma muestra");
             assertTrue(muestra.velocidadKmh() >= 0
@@ -255,6 +258,36 @@ class QualifyingServiceTest {
                         >= anterior.desgasteNeumaticosPorcentaje());
             }
         }
+    }
+
+    @Test
+    void elClimaDinamicoFormaParteDelResultadoDeLaSesion() {
+        QualifyingSession sesion = sesiones.simular(
+                config(DrivingMode.NORMAL), WeatherCondition.LLUVIOSO, null);
+
+        assertEquals(QualifyingService.SEGMENTOS_EVOLUCION,
+                sesion.getEvolucionClimatica().size());
+        WeatherSnapshot inicial = sesion.getEvolucionClimatica().get(0);
+        WeatherSnapshot finalSesion = sesion.getEvolucionClimatica().get(19);
+        assertTrue(inicial.temperaturaC() != finalSesion.temperaturaC());
+        assertTrue(inicial.gripPorcentaje() != finalSesion.gripPorcentaje());
+    }
+
+    @Test
+    void laLluviaIntensaProduceUnaVueltaMasLentaQueUnaPistaSeca() {
+        WeatherSnapshot seco = new WeatherSnapshot(1, 1,
+                com.formula1.model.DynamicWeatherState.SECO,
+                25, 45, 10, 0, 37, 95, 95, 94);
+        WeatherSnapshot lluvia = new WeatherSnapshot(1, 1,
+                com.formula1.model.DynamicWeatherState.LLUVIA_INTENSA,
+                17, 95, 100, 90, 16, 50, 45, 42);
+
+        double tiempoSeco = new LapTimeCalculator(new Random(4)).calcularTiempo(
+                verstappen(), rb20(), monza(), List.of(seco), config(DrivingMode.NORMAL));
+        double tiempoLluvia = new LapTimeCalculator(new Random(4)).calcularTiempo(
+                verstappen(), rb20(), monza(), List.of(lluvia), config(DrivingMode.NORMAL));
+
+        assertTrue(tiempoLluvia > tiempoSeco * 1.15);
     }
 
     @Test

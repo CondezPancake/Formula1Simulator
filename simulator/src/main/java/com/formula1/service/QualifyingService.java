@@ -11,6 +11,7 @@ import com.formula1.model.SimulationSnapshot;
 import com.formula1.model.TelemetrySnapshot;
 import com.formula1.model.Vehicle;
 import com.formula1.model.WeatherCondition;
+import com.formula1.model.WeatherSnapshot;
 import com.formula1.util.DateUtils;
 import com.formula1.util.FormatUtils;
 import com.formula1.util.MathUtils;
@@ -46,15 +47,22 @@ public class QualifyingService {
     private final CircuitService circuitos;
     private final LapTimeCalculator calculadora;
     private final TelemetryCalculator calculadoraTelemetria;
+    private final DynamicWeatherService climaDinamico;
 
     public QualifyingService() {
         this(DataStore.getInstance(), new LapTimeCalculator());
     }
 
     public QualifyingService(DataStore datos, LapTimeCalculator calculadora) {
+        this(datos, calculadora, new DynamicWeatherService());
+    }
+
+    QualifyingService(DataStore datos, LapTimeCalculator calculadora,
+                      DynamicWeatherService climaDinamico) {
         this.datos = datos;
         this.calculadora = calculadora;
         this.calculadoraTelemetria = new TelemetryCalculator();
+        this.climaDinamico = climaDinamico;
         this.pilotos = new DriverService(datos);
         this.vehiculos = new VehicleService(datos);
         this.circuitos = new CircuitService(datos);
@@ -97,6 +105,8 @@ public class QualifyingService {
 
         List<Driver> parrilla = participantesConSeleccionPrimero(config.getPilotoId());
         List<LapResult> resultados = new ArrayList<>();
+        List<WeatherSnapshot> evolucionClimatica = climaDinamico.generar(
+                circuito, clima, SEGMENTOS_EVOLUCION);
 
         for (int i = 0; i < parrilla.size(); i++) {
             Driver piloto = parrilla.get(i);
@@ -112,17 +122,20 @@ public class QualifyingService {
                     ? config
                     : SimulationConfig.paraClasificacion();
 
-            double tiempo = calculadora.calcularTiempo(piloto, coche, circuito, clima, configPiloto);
+            double tiempo = calculadora.calcularTiempo(
+                    piloto, coche, circuito, evolucionClimatica, configPiloto);
 
             LapResult resultado = new LapResult(piloto.getId(), piloto.getNombre(),
                     piloto.getEquipo(), coche.getModelo(), tiempo);
-            resultado.setConsumoEstimado(calculadora.consumoPorVuelta(coche, circuito, clima, configPiloto));
-            resultado.setDesgasteEstimado(calculadora.desgastePorVuelta(coche, circuito, clima, configPiloto));
+            resultado.setConsumoEstimado(calculadora.consumoPorVuelta(
+                    coche, circuito, evolucionClimatica, configPiloto));
+            resultado.setDesgasteEstimado(calculadora.desgastePorVuelta(
+                    coche, circuito, evolucionClimatica, configPiloto));
             resultados.add(resultado);
 
             if (piloto.getId() == config.getPilotoId()
                     && (evolucion != null || telemetria != null)) {
-                emitirMuestras(piloto, coche, circuito, clima, configPiloto,
+                emitirMuestras(piloto, coche, circuito, evolucionClimatica, configPiloto,
                         resultado, evolucion, telemetria);
             }
 
@@ -136,6 +149,7 @@ public class QualifyingService {
 
         QualifyingSession sesion = new QualifyingSession(circuito.getNombre(), clima, config);
         sesion.setResultados(resultados);
+        sesion.setEvolucionClimatica(evolucionClimatica);
         sesion.setFecha(DateUtils.format(DateUtils.now()));
         config.setGuardadoEn(sesion.getFecha());
         return sesion;
@@ -232,17 +246,33 @@ public class QualifyingService {
      * básica y la telemetría detallada.
      */
     private void emitirMuestras(Driver piloto, Vehicle vehiculo, Circuit circuito,
-                                WeatherCondition clima, SimulationConfig config,
+                                List<WeatherSnapshot> clima, SimulationConfig config,
                                 LapResult resultado, Evolucion evolucion, Telemetria telemetria) {
         double velocidadMedia = 3600 * circuito.getLongitudKm() / resultado.getTiempoSegundos();
+        double sumaTiempo = clima.stream().mapToDouble(WeatherSnapshot::factorTiempo).sum();
+        double sumaConsumo = clima.stream().mapToDouble(WeatherSnapshot::factorConsumo).sum();
+        double sumaDesgaste = clima.stream().mapToDouble(WeatherSnapshot::factorDesgaste).sum();
+        double factorTiempoMedio = sumaTiempo / clima.size();
+        double tiempoAcumulado = 0;
+        double consumoAcumulado = 0;
+        double desgasteAcumulado = 0;
 
         for (int segmento = 1; segmento <= SEGMENTOS_EVOLUCION; segmento++) {
             double progreso = segmento / (double) SEGMENTOS_EVOLUCION;
+            WeatherSnapshot climaActual = clima.get(segmento - 1);
             double variacionVelocidad = 1
                     + 0.08 * Math.sin(2 * Math.PI * progreso)
                     - 0.03 * Math.cos(4 * Math.PI * progreso);
             double velocidad = MathUtils.clamp(
-                    velocidadMedia * variacionVelocidad, 0, vehiculo.getVelocidadMaximaKmh());
+                    velocidadMedia * variacionVelocidad
+                            * factorTiempoMedio / climaActual.factorTiempo(),
+                    0, vehiculo.getVelocidadMaximaKmh());
+            tiempoAcumulado += resultado.getTiempoSegundos()
+                    * climaActual.factorTiempo() / sumaTiempo;
+            consumoAcumulado += resultado.getConsumoEstimado()
+                    * climaActual.factorConsumo() / sumaConsumo;
+            desgasteAcumulado += resultado.getDesgasteEstimado()
+                    * climaActual.factorDesgaste() / sumaDesgaste;
 
             if (evolucion != null) {
                 evolucion.actualizar(new SimulationSnapshot(
@@ -252,15 +282,20 @@ public class QualifyingService {
                         SEGMENTOS_EVOLUCION,
                         velocidad,
                         vehiculo.getVelocidadMaximaKmh(),
-                        resultado.getConsumoEstimado() * progreso,
+                        consumoAcumulado,
                         resultado.getConsumoEstimado(),
-                        resultado.getDesgasteEstimado() * progreso,
+                        desgasteAcumulado,
                         resultado.getDesgasteEstimado()));
             }
             if (telemetria != null) {
                 telemetria.actualizar(calculadoraTelemetria.calcular(
-                        piloto, vehiculo, circuito, clima, config, resultado,
-                        segmento, SEGMENTOS_EVOLUCION, progreso, velocidad));
+                        piloto, vehiculo, circuito, climaActual, config, resultado,
+                        segmento, SEGMENTOS_EVOLUCION, progreso, velocidad,
+                        resultado.getConsumoEstimado() <= 0
+                                ? 100
+                                : MathUtils.clamp(100 * (1 - consumoAcumulado
+                                        / resultado.getConsumoEstimado()), 0, 100),
+                        desgasteAcumulado, tiempoAcumulado));
             }
         }
     }

@@ -21,11 +21,13 @@ public class QualifyingSession {
     private WeatherCondition clima;
     private SimulationConfig config;
     private List<LapResult> resultados;
+    private List<WeatherSnapshot> evolucionClimatica;
     private String fecha;
 
     public QualifyingSession() {
         this.id = UUID.randomUUID().toString();
         this.resultados = new ArrayList<>();
+        this.evolucionClimatica = new ArrayList<>();
     }
 
     public QualifyingSession(String circuito, WeatherCondition clima, SimulationConfig config) {
@@ -79,6 +81,16 @@ public class QualifyingSession {
 
     public void setResultados(List<LapResult> resultados) {
         this.resultados = resultados;
+    }
+
+    public List<WeatherSnapshot> getEvolucionClimatica() {
+        return evolucionClimatica;
+    }
+
+    public void setEvolucionClimatica(List<WeatherSnapshot> evolucionClimatica) {
+        this.evolucionClimatica = evolucionClimatica == null
+                ? new ArrayList<>()
+                : new ArrayList<>(evolucionClimatica);
     }
 
     public String getFecha() {

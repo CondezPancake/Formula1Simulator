@@ -11,6 +11,7 @@ import com.formula1.model.SimulationConfig;
 import com.formula1.model.SimulationSnapshot;
 import com.formula1.model.TelemetrySnapshot;
 import com.formula1.model.TirePressure;
+import com.formula1.model.WeatherSnapshot;
 import com.formula1.service.CircuitService;
 import com.formula1.service.DriverService;
 import com.formula1.service.QualifyingService;
@@ -25,6 +26,7 @@ import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.chart.BarChart;
+import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
@@ -90,6 +92,22 @@ public class SimulationController {
     @FXML private ProgressBar barraDesgasteTelemetria;
     @FXML private ProgressBar barraTempNeumaticos;
     @FXML private ProgressBar barraTempMotor;
+    @FXML private Tab tabClima;
+    @FXML private Label lblEstadoClimaDinamico;
+    @FXML private Label lblTempAmbiente;
+    @FXML private Label lblHumedad;
+    @FXML private Label lblProbLluvia;
+    @FXML private Label lblIntensidadLluvia;
+    @FXML private Label lblTempPista;
+    @FXML private Label lblGrip;
+    @FXML private Label lblTraccion;
+    @FXML private Label lblFrenado;
+    @FXML private Label lblNeumaticoClima;
+    @FXML private Label lblEstrategiaClima;
+    @FXML private ProgressBar barraGrip;
+    @FXML private ProgressBar barraTraccion;
+    @FXML private ProgressBar barraFrenado;
+    @FXML private LineChart<Number, Number> graficoClima;
     @FXML private TableView<LapResult> tabla;
     @FXML private TableColumn<LapResult, Number> colPosicion;
     @FXML private TableColumn<LapResult, String> colPiloto;
@@ -105,6 +123,8 @@ public class SimulationController {
     private final VehicleService vehiculos;
     private final DriverService pilotos;
     private QualifyingSession ultimaSesion;
+    private XYChart.Series<Number, Number> serieGrip;
+    private XYChart.Series<Number, Number> serieLluvia;
 
     public SimulationController() {
         this(new QualifyingService(), new CircuitService(), new VehicleService(), new DriverService());
@@ -214,10 +234,14 @@ public class SimulationController {
         reiniciarEvolucion();
         reiniciarEstadisticas();
         reiniciarTelemetria();
-        panelResultados.getSelectionModel().select(tabTelemetria);
+        reiniciarClimaDinamico();
+        panelResultados.getSelectionModel().select(tabClima);
         Task<QualifyingSession> tarea = sesiones.crearTarea(config,
                 muestra -> Platform.runLater(() -> mostrarEvolucion(muestra)),
-                muestra -> Platform.runLater(() -> mostrarTelemetria(muestra)));
+                muestra -> Platform.runLater(() -> {
+                    mostrarTelemetria(muestra);
+                    mostrarClimaDinamico(muestra.clima());
+                }));
 
         // Enlazar en vez de asignar: el Task publica sus cambios en el hilo
         // de JavaFX, así que la interfaz se actualiza sola y sin bloquearse.
@@ -230,7 +254,7 @@ public class SimulationController {
         tarea.setOnSucceeded(e -> {
             desenlazar();
             QualifyingSession sesion = tarea.getValue();
-            lblClima.setText("Clima de la sesión: " + sesion.getClima().getEtiqueta());
+            lblClima.setText(resumenClimatico(sesion));
             tabla.setItems(FXCollections.observableArrayList(sesion.getResultados()));
             mostrarEstadisticas(sesion);
             LapResult pole = sesion.getPole();
@@ -321,6 +345,64 @@ public class SimulationController {
         barraDesgasteTelemetria.setProgress(muestra.desgasteNeumaticosPorcentaje() / 100);
         barraTempNeumaticos.setProgress(muestra.temperaturaNeumaticosC() / 125);
         barraTempMotor.setProgress(muestra.temperaturaMotorC() / 125);
+    }
+
+    private void reiniciarClimaDinamico() {
+        lblEstadoClimaDinamico.setText("Esperando evolución climática");
+        lblTempAmbiente.setText("— °C");
+        lblHumedad.setText("— %");
+        lblProbLluvia.setText("— %");
+        lblIntensidadLluvia.setText("— %");
+        lblTempPista.setText("— °C");
+        lblGrip.setText("— %");
+        lblTraccion.setText("— %");
+        lblFrenado.setText("— %");
+        lblNeumaticoClima.setText("—");
+        lblEstrategiaClima.setText("—");
+        barraGrip.setProgress(0);
+        barraTraccion.setProgress(0);
+        barraFrenado.setProgress(0);
+        graficoClima.setAnimated(false);
+        graficoClima.getData().clear();
+        serieGrip = new XYChart.Series<>();
+        serieGrip.setName("Grip");
+        serieLluvia = new XYChart.Series<>();
+        serieLluvia.setName("Lluvia");
+        graficoClima.getData().add(serieGrip);
+        graficoClima.getData().add(serieLluvia);
+    }
+
+    /** Actualiza el panel y su tendencia con una única muestra inmutable. */
+    private void mostrarClimaDinamico(WeatherSnapshot muestra) {
+        lblEstadoClimaDinamico.setText(
+                muestra.estado().getEtiqueta() + " · " + muestra.estadoPista());
+        lblTempAmbiente.setText(String.format("%.1f °C", muestra.temperaturaC()));
+        lblHumedad.setText(String.format("%.0f %%", muestra.humedadPorcentaje()));
+        lblProbLluvia.setText(String.format("%.0f %%", muestra.probabilidadLluviaPorcentaje()));
+        lblIntensidadLluvia.setText(String.format("%.0f %%", muestra.intensidadLluviaPorcentaje()));
+        lblTempPista.setText(String.format("%.1f °C", muestra.temperaturaPistaC()));
+        lblGrip.setText(String.format("%.0f %%", muestra.gripPorcentaje()));
+        lblTraccion.setText(String.format("%.0f %%", muestra.traccionPorcentaje()));
+        lblFrenado.setText(String.format("%.0f %%", muestra.frenadoPorcentaje()));
+        lblNeumaticoClima.setText(muestra.neumaticoRecomendado());
+        lblEstrategiaClima.setText(muestra.estrategiaRecomendada());
+        barraGrip.setProgress(muestra.gripPorcentaje() / 100);
+        barraTraccion.setProgress(muestra.traccionPorcentaje() / 100);
+        barraFrenado.setProgress(muestra.frenadoPorcentaje() / 100);
+        serieGrip.getData().add(new XYChart.Data<>(muestra.segmento(), muestra.gripPorcentaje()));
+        serieLluvia.getData().add(new XYChart.Data<>(
+                muestra.segmento(), muestra.intensidadLluviaPorcentaje()));
+    }
+
+    private String resumenClimatico(QualifyingSession sesion) {
+        if (sesion.getEvolucionClimatica().isEmpty()) {
+            return "Clima de la sesión: " + sesion.getClima().getEtiqueta();
+        }
+        WeatherSnapshot inicial = sesion.getEvolucionClimatica().get(0);
+        WeatherSnapshot finalSesion = sesion.getEvolucionClimatica()
+                .get(sesion.getEvolucionClimatica().size() - 1);
+        return "Clima: " + inicial.estado().getEtiqueta()
+                + " → " + finalSesion.estado().getEtiqueta();
     }
 
     private void reiniciarEstadisticas() {

@@ -22,12 +22,14 @@ public record TelemetrySnapshot(
         int sectorActual,
         double tiempoVueltaSegundos,
         double deltaSegundos,
-        String estadoPista) {
+        WeatherSnapshot clima) {
 
     public TelemetrySnapshot {
         requireText(piloto, "El piloto es obligatorio");
         requireText(vehiculo, "El vehículo es obligatorio");
-        requireText(estadoPista, "El estado de pista es obligatorio");
+        if (clima == null) {
+            throw new IllegalArgumentException("La muestra climática es obligatoria");
+        }
         if (totalSegmentos <= 0 || segmento < 1 || segmento > totalSegmentos) {
             throw new IllegalArgumentException("El segmento debe pertenecer a la vuelta");
         }
@@ -59,6 +61,10 @@ public record TelemetrySnapshot(
 
     public double rpmRelativas() {
         return Math.min(1, rpm / 15_000.0);
+    }
+
+    public String estadoPista() {
+        return clima.estadoPista();
     }
 
     private static void requireText(String value, String message) {

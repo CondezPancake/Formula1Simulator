@@ -6,7 +6,7 @@ import com.formula1.model.LapResult;
 import com.formula1.model.SimulationConfig;
 import com.formula1.model.TelemetrySnapshot;
 import com.formula1.model.Vehicle;
-import com.formula1.model.WeatherCondition;
+import com.formula1.model.WeatherSnapshot;
 import com.formula1.util.MathUtils;
 
 /**
@@ -16,18 +16,16 @@ import com.formula1.util.MathUtils;
 final class TelemetryCalculator {
 
     TelemetrySnapshot calcular(Driver piloto, Vehicle vehiculo, Circuit circuito,
-                                WeatherCondition clima, SimulationConfig config,
+                                WeatherSnapshot clima, SimulationConfig config,
                                 LapResult resultado, int segmento, int totalSegmentos,
-                                double progreso, double velocidad) {
+                                double progreso, double velocidad,
+                                double combustibleRestante, double desgasteAcumulado,
+                                double tiempoAcumulado) {
         double velocidadRelativa = velocidad / vehiculo.getVelocidadMaximaKmh();
         int rpm = (int) Math.round(MathUtils.clamp(
                 4_000 + 9_000 * velocidadRelativa + 350 * Math.sin(progreso * 6 * Math.PI),
                 4_000, 15_000));
 
-        // El depósito se expresa como porcentaje de la carga asignada a esta vuelta.
-        double combustibleRestante = 100 * (1 - progreso);
-        double desgaste = MathUtils.clamp(resultado.getDesgasteEstimado() * progreso, 0, 100);
-        double tiempoVuelta = resultado.getTiempoSegundos() * progreso;
         double referencia = circuito.getRecordVuelta() == null
                 ? resultado.getTiempoSegundos()
                 : circuito.getRecordVuelta().getTiempoSegundos();
@@ -35,21 +33,16 @@ final class TelemetryCalculator {
         return new TelemetrySnapshot(
                 piloto.getNombre(), vehiculo.getModelo(), segmento, totalSegmentos,
                 velocidad, vehiculo.getVelocidadMaximaKmh(), rpm,
-                combustibleRestante, desgaste,
+                combustibleRestante, MathUtils.clamp(desgasteAcumulado, 0, 100),
                 temperaturaNeumaticos(clima, config, velocidadRelativa, progreso),
-                temperaturaMotor(config, velocidadRelativa, progreso),
+                temperaturaMotor(clima, config, velocidadRelativa, progreso),
                 Math.min(3, ((segmento - 1) * 3 / totalSegmentos) + 1),
-                tiempoVuelta, tiempoVuelta - referencia * progreso,
-                estadoPista(clima));
+                tiempoAcumulado, tiempoAcumulado - referencia * progreso,
+                clima);
     }
 
-    private double temperaturaNeumaticos(WeatherCondition clima, SimulationConfig config,
+    private double temperaturaNeumaticos(WeatherSnapshot clima, SimulationConfig config,
                                           double velocidadRelativa, double progreso) {
-        double baseClima = switch (clima) {
-            case SECO -> 78;
-            case LLUVIOSO -> 62;
-            case EXTREMO -> 50;
-        };
         double ajusteModo = switch (config.getModo()) {
             case AGRESIVA -> 8;
             case NORMAL -> 0;
@@ -60,26 +53,22 @@ final class TelemetryCalculator {
             case ESTANDAR -> 0;
             case ALTA -> -3;
         };
-        return MathUtils.clamp(baseClima + ajusteModo + ajustePresion
-                + 16 * velocidadRelativa + 3 * Math.sin(progreso * 4 * Math.PI), 35, 125);
+        double enfriamientoLluvia = 18 * (clima.intensidadLluviaPorcentaje() / 100);
+        return MathUtils.clamp(58 + 0.35 * clima.temperaturaPistaC()
+                + ajusteModo + ajustePresion + 18 * velocidadRelativa
+                - enfriamientoLluvia + 3 * Math.sin(progreso * 4 * Math.PI), 35, 125);
     }
 
-    private double temperaturaMotor(SimulationConfig config, double velocidadRelativa,
+    private double temperaturaMotor(WeatherSnapshot clima, SimulationConfig config,
+                                     double velocidadRelativa,
                                      double progreso) {
         double ajusteModo = switch (config.getModo()) {
             case AGRESIVA -> 7;
             case NORMAL -> 0;
             case AHORRO -> -5;
         };
-        return MathUtils.clamp(86 + ajusteModo + 30 * velocidadRelativa
+        double ajusteAmbiente = (clima.temperaturaC() - 20) * 0.12;
+        return MathUtils.clamp(86 + ajusteModo + ajusteAmbiente + 30 * velocidadRelativa
                 + 2 * Math.sin(progreso * 2 * Math.PI), 75, 125);
-    }
-
-    private String estadoPista(WeatherCondition clima) {
-        return switch (clima) {
-            case SECO -> "Pista seca";
-            case LLUVIOSO -> "Pista mojada";
-            case EXTREMO -> "Adherencia crítica";
-        };
     }
 }
