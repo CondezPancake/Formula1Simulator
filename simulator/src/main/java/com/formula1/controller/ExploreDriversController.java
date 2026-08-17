@@ -8,6 +8,7 @@ import com.formula1.util.TeamColors;
 
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
+import javafx.geometry.Rectangle2D;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -21,6 +22,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.Shape;
 
 import java.util.List;
 import java.util.Locale;
@@ -34,7 +36,14 @@ import java.util.Locale;
 public class ExploreDriversController {
 
     private static final double ANCHO_FOTO = 242;
-    private static final double ALTO_FOTO = 150;
+    /** Algo mas alta que en el mockup: recorta menos los retratos cuadrados. */
+    private static final double ALTO_FOTO = 170;
+    /**
+     * 0 = recorte pegado arriba, 0,5 = centrado. Se queda cerca del borde
+     * superior porque en un retrato la cabeza esta arriba: bajarlo mas la
+     * recortaba en las fotos de plano corto.
+     */
+    private static final double SESGO_VERTICAL = 0.1;
 
     @FXML private TextField buscador;
     @FXML private FlowPane chips;
@@ -116,6 +125,7 @@ public class ExploreDriversController {
         foto.setPrefSize(ANCHO_FOTO, ALTO_FOTO);
         foto.setMinSize(ANCHO_FOTO, ALTO_FOTO);
         foto.setMaxSize(ANCHO_FOTO, ALTO_FOTO);
+        foto.setClip(esquinasSuperioresRedondeadas());
 
         imagenDe(piloto).ifPresentOrElse(
                 foto.getChildren()::add,
@@ -142,6 +152,19 @@ public class ExploreDriversController {
 
         foto.getChildren().addAll(dorsal, distintivo);
         return foto;
+    }
+
+    /**
+     * Redondea solo arriba, para que la foto siga la curva de la tarjeta sin
+     * separarse del cuerpo por abajo. Un {@code Rectangle} redondea las cuatro
+     * esquinas, de ahí la unión con otro recto que cubre la mitad inferior.
+     */
+    private Shape esquinasSuperioresRedondeadas() {
+        Rectangle redondeado = new Rectangle(ANCHO_FOTO, ALTO_FOTO);
+        redondeado.setArcWidth(14);
+        redondeado.setArcHeight(14);
+        Rectangle inferior = new Rectangle(0, ALTO_FOTO / 2, ANCHO_FOTO, ALTO_FOTO / 2);
+        return Shape.union(redondeado, inferior);
     }
 
     private VBox cuerpo(Driver piloto, String color) {
@@ -205,22 +228,35 @@ public class ExploreDriversController {
         }
         Image imagen = new Image(recurso);
         ImageView vista = new ImageView(imagen);
-        vista.setPreserveRatio(true);
 
-        // Se escala por el lado que se queda corto y se recorta el sobrante.
-        double escala = Math.max(ANCHO_FOTO / imagen.getWidth(), ALTO_FOTO / imagen.getHeight());
-        double ancho = imagen.getWidth() * escala;
-        double alto = imagen.getHeight() * escala;
-        vista.setFitWidth(ancho);
-        vista.setFitHeight(alto);
+        // Se recorta sobre la imagen de origen, no sobre el nodo ya escalado:
+        // asi la vista mide exactamente la caja y no puede desbordarla. Las
+        // fotos van de 224x224 a 3444x4429, y recortarlas a una proporcion
+        // comun es lo que hace que todas las tarjetas se vean iguales.
+        double ancho = imagen.getWidth();
+        double alto = imagen.getHeight();
+        double proporcion = ANCHO_FOTO / ALTO_FOTO;
 
-        Rectangle recorte = new Rectangle(ANCHO_FOTO, ALTO_FOTO);
-        recorte.setX((ancho - ANCHO_FOTO) / 2);
-        // Sesgo hacia arriba: en un retrato la cara está por encima del centro.
-        recorte.setY((alto - ALTO_FOTO) * 0.25);
-        recorte.setArcWidth(8);
-        recorte.setArcHeight(8);
-        vista.setClip(recorte);
+        double recorteAncho;
+        double recorteAlto;
+        if (ancho / alto > proporcion) {
+            recorteAlto = alto;                       // sobra a los lados
+            recorteAncho = alto * proporcion;
+        } else {
+            recorteAncho = ancho;                     // sobra arriba y abajo
+            recorteAlto = ancho / proporcion;
+        }
+
+        vista.setViewport(new Rectangle2D(
+                (ancho - recorteAncho) / 2,                   // centrado
+                (alto - recorteAlto) * SESGO_VERTICAL,        // la cara va arriba
+                recorteAncho, recorteAlto));
+        vista.setFitWidth(ANCHO_FOTO);
+        vista.setFitHeight(ALTO_FOTO);
+        // El recorte ya tiene la proporcion exacta, asi que ajustar a la caja
+        // no deforma nada.
+        vista.setPreserveRatio(false);
+        vista.setSmooth(true);
         return java.util.Optional.of(vista);
     }
 
