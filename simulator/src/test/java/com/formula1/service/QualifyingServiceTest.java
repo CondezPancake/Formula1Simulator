@@ -12,6 +12,7 @@ import com.formula1.model.SimulationConfig;
 import com.formula1.model.SimulationSnapshot;
 import com.formula1.model.SessionStatistics;
 import com.formula1.model.TirePressure;
+import com.formula1.model.TelemetrySnapshot;
 import com.formula1.model.Vehicle;
 import com.formula1.model.WeatherCondition;
 import com.formula1.util.FormatUtils;
@@ -207,6 +208,52 @@ class QualifyingServiceTest {
         for (int i = 1; i < muestras.size(); i++) {
             assertTrue(muestras.get(i).consumoAcumulado() >= muestras.get(i - 1).consumoAcumulado());
             assertTrue(muestras.get(i).desgasteAcumulado() >= muestras.get(i - 1).desgasteAcumulado());
+        }
+    }
+
+    @Test
+    void laTelemetriaCubreLaVueltaYRespetaLimitesFisicos() {
+        List<SimulationSnapshot> evolucion = new ArrayList<>();
+        List<TelemetrySnapshot> telemetria = new ArrayList<>();
+
+        QualifyingSession sesion = sesiones.simular(
+                config(DrivingMode.NORMAL), WeatherCondition.SECO, null,
+                evolucion::add, telemetria::add);
+
+        assertEquals(QualifyingService.SEGMENTOS_EVOLUCION, telemetria.size());
+        assertEquals(evolucion.size(), telemetria.size(), "cada segmento comparte una lectura");
+
+        LapResult seleccionado = resultadoDe(sesion, 1);
+        TelemetrySnapshot ultima = telemetria.get(telemetria.size() - 1);
+        assertEquals("Max Verstappen", ultima.piloto());
+        assertEquals("RB20", ultima.vehiculo());
+        assertEquals(3, ultima.sectorActual());
+        assertEquals("Pista seca", ultima.estadoPista());
+        assertEquals(seleccionado.getTiempoSegundos(), ultima.tiempoVueltaSegundos(), 1e-9);
+        assertEquals(seleccionado.getTiempoSegundos() - monza().getRecordVuelta().getTiempoSegundos(),
+                ultima.deltaSegundos(), 1e-9);
+        assertEquals(0, ultima.combustibleRestantePorcentaje(), 1e-9);
+
+        for (int i = 0; i < telemetria.size(); i++) {
+            TelemetrySnapshot muestra = telemetria.get(i);
+            assertEquals(evolucion.get(i).velocidadKmh(), muestra.velocidadKmh(), 1e-9,
+                    "evolucion y telemetria deben provenir de la misma muestra");
+            assertTrue(muestra.velocidadKmh() >= 0
+                    && muestra.velocidadKmh() <= muestra.velocidadMaximaKmh());
+            assertTrue(muestra.rpm() >= 4_000 && muestra.rpm() <= 15_000);
+            assertTrue(muestra.temperaturaNeumaticosC() >= 35
+                    && muestra.temperaturaNeumaticosC() <= 125);
+            assertTrue(muestra.temperaturaMotorC() >= 75
+                    && muestra.temperaturaMotorC() <= 125);
+            assertTrue(muestra.sectorActual() >= 1 && muestra.sectorActual() <= 3);
+            if (i > 0) {
+                TelemetrySnapshot anterior = telemetria.get(i - 1);
+                assertTrue(muestra.tiempoVueltaSegundos() >= anterior.tiempoVueltaSegundos());
+                assertTrue(muestra.combustibleRestantePorcentaje()
+                        <= anterior.combustibleRestantePorcentaje());
+                assertTrue(muestra.desgasteNeumaticosPorcentaje()
+                        >= anterior.desgasteNeumaticosPorcentaje());
+            }
         }
     }
 

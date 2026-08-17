@@ -98,7 +98,7 @@
         </HBox>
     </VBox>
 
-    <TabPane VBox.vgrow="ALWAYS" tabClosingPolicy="UNAVAILABLE">
+    <TabPane fx:id="panelResultados" VBox.vgrow="ALWAYS" tabClosingPolicy="UNAVAILABLE">
         <tabs>
             <Tab text="Clasificación">
                 <TableView fx:id="tabla">
@@ -146,6 +146,76 @@
                             <NumberAxis fx:id="ejeMetrica" forceZeroInRange="false"/>
                         </yAxis>
                     </BarChart>
+                </VBox>
+            </Tab>
+            <Tab fx:id="tabTelemetria" text="Telemetría en vivo">
+                <VBox spacing="12" styleClass="telemetry-panel">
+                    <HBox spacing="12" alignment="CENTER_LEFT">
+                        <VBox spacing="2">
+                            <Label text="LIVE TELEMETRY" styleClass="telemetry-title"/>
+                            <Label fx:id="lblTelemetriaPiloto"
+                                   text="Esperando datos del vehículo seleccionado" styleClass="hint"/>
+                        </VBox>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label fx:id="lblEstadoPista" text="Estado de pista —" styleClass="track-state"/>
+                    </HBox>
+
+                    <HBox spacing="12">
+                        <VBox spacing="6" styleClass="telemetry-card" HBox.hgrow="ALWAYS">
+                            <Label text="VELOCIDAD" styleClass="card-label"/>
+                            <Label fx:id="lblVelocidadTelemetria" text="0 km/h" styleClass="telemetry-value"/>
+                            <ProgressBar fx:id="barraVelocidadTelemetria" progress="0" maxWidth="Infinity"
+                                         styleClass="metric-speed"/>
+                        </VBox>
+                        <VBox spacing="6" styleClass="telemetry-card" HBox.hgrow="ALWAYS">
+                            <Label text="RPM" styleClass="card-label"/>
+                            <Label fx:id="lblRpm" text="0 rpm" styleClass="telemetry-value"/>
+                            <ProgressBar fx:id="barraRpm" progress="0" maxWidth="Infinity"
+                                         styleClass="metric-rpm"/>
+                        </VBox>
+                        <VBox spacing="6" styleClass="telemetry-card" HBox.hgrow="ALWAYS">
+                            <Label text="COMBUSTIBLE DE VUELTA" styleClass="card-label"/>
+                            <Label fx:id="lblCombustible" text="100.0 %" styleClass="telemetry-value"/>
+                            <ProgressBar fx:id="barraCombustible" progress="1" maxWidth="Infinity"
+                                         styleClass="metric-fuel"/>
+                        </VBox>
+                    </HBox>
+
+                    <HBox spacing="12">
+                        <VBox spacing="6" styleClass="telemetry-card" HBox.hgrow="ALWAYS">
+                            <Label text="DESGASTE DE NEUMÁTICOS" styleClass="card-label"/>
+                            <Label fx:id="lblDesgasteTelemetria" text="0.0 %" styleClass="telemetry-value"/>
+                            <ProgressBar fx:id="barraDesgasteTelemetria" progress="0" maxWidth="Infinity"
+                                         styleClass="metric-wear"/>
+                        </VBox>
+                        <VBox spacing="6" styleClass="telemetry-card" HBox.hgrow="ALWAYS">
+                            <Label text="TEMP. NEUMÁTICOS" styleClass="card-label"/>
+                            <Label fx:id="lblTempNeumaticos" text="0.0 °C" styleClass="telemetry-value"/>
+                            <ProgressBar fx:id="barraTempNeumaticos" progress="0" maxWidth="Infinity"
+                                         styleClass="metric-temperature"/>
+                        </VBox>
+                        <VBox spacing="6" styleClass="telemetry-card" HBox.hgrow="ALWAYS">
+                            <Label text="TEMP. MOTOR" styleClass="card-label"/>
+                            <Label fx:id="lblTempMotor" text="0.0 °C" styleClass="telemetry-value"/>
+                            <ProgressBar fx:id="barraTempMotor" progress="0" maxWidth="Infinity"
+                                         styleClass="metric-engine"/>
+                        </VBox>
+                    </HBox>
+
+                    <HBox spacing="12">
+                        <VBox spacing="4" styleClass="telemetry-summary" HBox.hgrow="ALWAYS">
+                            <Label text="SECTOR ACTUAL" styleClass="card-label"/>
+                            <Label fx:id="lblSector" text="S—" styleClass="telemetry-value"/>
+                        </VBox>
+                        <VBox spacing="4" styleClass="telemetry-summary" HBox.hgrow="ALWAYS">
+                            <Label text="TIEMPO DE VUELTA" styleClass="card-label"/>
+                            <Label fx:id="lblTiempoVuelta" text="0:00.000" styleClass="telemetry-value"/>
+                        </VBox>
+                        <VBox spacing="4" styleClass="telemetry-summary" HBox.hgrow="ALWAYS">
+                            <Label text="DELTA VS. RÉCORD" styleClass="card-label"/>
+                            <Label fx:id="lblDelta" text="±0.000" styleClass="telemetry-value"/>
+                        </VBox>
+                    </HBox>
                 </VBox>
             </Tab>
         </tabs>

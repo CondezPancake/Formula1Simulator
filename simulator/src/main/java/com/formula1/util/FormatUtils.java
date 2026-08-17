@@ -39,6 +39,14 @@ public final class FormatUtils {
         return String.format(Locale.ROOT, "+%.3f", gap);
     }
 
+    /** Delta en vivo: negativo es mas rapido y positivo es mas lento. */
+    public static String formatDelta(double delta) {
+        if (Math.abs(delta) < 0.0005) {
+            return "±0.000";
+        }
+        return String.format(Locale.ROOT, "%+.3f", delta);
+    }
+
     public static String formatPercentage(double value) {
         return String.format(Locale.ROOT, "%.0f%%", value * 100);
     }

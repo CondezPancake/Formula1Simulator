@@ -143,6 +143,63 @@
     -fx-text-fill: #ffffff;
 }
 
+.telemetry-panel {
+    -fx-background-color: #191925;
+    -fx-background-radius: 10;
+    -fx-padding: 16;
+}
+
+.telemetry-title {
+    -fx-font-size: 17px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #e10600;
+}
+
+.telemetry-card, .telemetry-summary {
+    -fx-background-color: #20202f;
+    -fx-background-radius: 8;
+    -fx-padding: 11 14 11 14;
+    -fx-min-width: 210;
+}
+
+.telemetry-value {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #ffffff;
+}
+
+.track-state {
+    -fx-background-color: #263525;
+    -fx-background-radius: 12;
+    -fx-padding: 5 12 5 12;
+    -fx-text-fill: #88e37d;
+    -fx-font-weight: bold;
+}
+
+.delta-faster {
+    -fx-text-fill: #61d36b;
+}
+
+.delta-slower {
+    -fx-text-fill: #ff5a4d;
+}
+
+.progress-bar.metric-rpm > .bar {
+    -fx-background-color: #9b6dff;
+}
+
+.progress-bar.metric-fuel > .bar {
+    -fx-background-color: #44d17a;
+}
+
+.progress-bar.metric-temperature > .bar {
+    -fx-background-color: #ff9f43;
+}
+
+.progress-bar.metric-engine > .bar {
+    -fx-background-color: #e10600;
+}
+
 .tab-pane .tab-header-area .tab-header-background {
     -fx-background-color: #15151e;
 }

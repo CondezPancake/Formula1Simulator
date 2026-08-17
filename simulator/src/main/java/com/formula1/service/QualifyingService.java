@@ -8,6 +8,7 @@ import com.formula1.model.QualifyingSession;
 import com.formula1.model.SessionStatistics;
 import com.formula1.model.SimulationConfig;
 import com.formula1.model.SimulationSnapshot;
+import com.formula1.model.TelemetrySnapshot;
 import com.formula1.model.Vehicle;
 import com.formula1.model.WeatherCondition;
 import com.formula1.util.DateUtils;
@@ -44,6 +45,7 @@ public class QualifyingService {
     private final VehicleService vehiculos;
     private final CircuitService circuitos;
     private final LapTimeCalculator calculadora;
+    private final TelemetryCalculator calculadoraTelemetria;
 
     public QualifyingService() {
         this(DataStore.getInstance(), new LapTimeCalculator());
@@ -52,6 +54,7 @@ public class QualifyingService {
     public QualifyingService(DataStore datos, LapTimeCalculator calculadora) {
         this.datos = datos;
         this.calculadora = calculadora;
+        this.calculadoraTelemetria = new TelemetryCalculator();
         this.pilotos = new DriverService(datos);
         this.vehiculos = new VehicleService(datos);
         this.circuitos = new CircuitService(datos);
@@ -82,6 +85,11 @@ public class QualifyingService {
 
     QualifyingSession simular(SimulationConfig config, WeatherCondition clima,
                               Progreso progreso, Evolucion evolucion) {
+        return simular(config, clima, progreso, evolucion, null);
+    }
+
+    QualifyingSession simular(SimulationConfig config, WeatherCondition clima,
+                              Progreso progreso, Evolucion evolucion, Telemetria telemetria) {
         Circuit circuito = validarSeleccion(config);
         if (clima == null) {
             throw new ValidationException("Las condiciones climáticas no pueden ser nulas");
@@ -112,8 +120,10 @@ public class QualifyingService {
             resultado.setDesgasteEstimado(calculadora.desgastePorVuelta(coche, circuito, clima, configPiloto));
             resultados.add(resultado);
 
-            if (piloto.getId() == config.getPilotoId() && evolucion != null) {
-                emitirEvolucion(piloto, coche, circuito, resultado, evolucion);
+            if (piloto.getId() == config.getPilotoId()
+                    && (evolucion != null || telemetria != null)) {
+                emitirMuestras(piloto, coche, circuito, clima, configPiloto,
+                        resultado, evolucion, telemetria);
             }
 
             if (progreso != null) {
@@ -155,6 +165,11 @@ public class QualifyingService {
     }
 
     public Task<QualifyingSession> crearTarea(SimulationConfig config, Evolucion evolucion) {
+        return crearTarea(config, evolucion, null);
+    }
+
+    public Task<QualifyingSession> crearTarea(SimulationConfig config, Evolucion evolucion,
+                                              Telemetria telemetria) {
         return new Task<>() {
             @Override
             protected QualifyingSession call() throws Exception {
@@ -166,6 +181,13 @@ public class QualifyingService {
 
                 Evolucion evolucionConRitmo = evolucion == null ? null : muestra -> {
                     evolucion.actualizar(muestra);
+                    if (telemetria == null) {
+                        dormir(RITMO_EVOLUCION_MS);
+                    }
+                };
+                Telemetria telemetriaConRitmo = telemetria == null ? null : muestra -> {
+                    telemetria.actualizar(muestra);
+                    // Ambas lecturas corresponden al mismo segmento; se pausa una sola vez.
                     dormir(RITMO_EVOLUCION_MS);
                 };
 
@@ -177,7 +199,8 @@ public class QualifyingService {
                             updateMessage(mensaje);
                             dormir(RITMO_MS);
                         },
-                        evolucionConRitmo);
+                        evolucionConRitmo,
+                        telemetriaConRitmo);
 
                 updateProgress(1, 1);
                 LapResult pole = sesion.getPole();
@@ -205,11 +228,12 @@ public class QualifyingService {
     }
 
     /**
-     * Divide la vuelta del piloto seleccionado en muestras. El consumo y el
-     * desgaste convergen exactamente a los valores guardados en el resultado.
+     * Divide la vuelta seleccionada en muestras compartidas por la evolución
+     * básica y la telemetría detallada.
      */
-    private void emitirEvolucion(Driver piloto, Vehicle vehiculo, Circuit circuito,
-                                 LapResult resultado, Evolucion evolucion) {
+    private void emitirMuestras(Driver piloto, Vehicle vehiculo, Circuit circuito,
+                                WeatherCondition clima, SimulationConfig config,
+                                LapResult resultado, Evolucion evolucion, Telemetria telemetria) {
         double velocidadMedia = 3600 * circuito.getLongitudKm() / resultado.getTiempoSegundos();
 
         for (int segmento = 1; segmento <= SEGMENTOS_EVOLUCION; segmento++) {
@@ -220,17 +244,24 @@ public class QualifyingService {
             double velocidad = MathUtils.clamp(
                     velocidadMedia * variacionVelocidad, 0, vehiculo.getVelocidadMaximaKmh());
 
-            evolucion.actualizar(new SimulationSnapshot(
-                    piloto.getNombre(),
-                    vehiculo.getModelo(),
-                    segmento,
-                    SEGMENTOS_EVOLUCION,
-                    velocidad,
-                    vehiculo.getVelocidadMaximaKmh(),
-                    resultado.getConsumoEstimado() * progreso,
-                    resultado.getConsumoEstimado(),
-                    resultado.getDesgasteEstimado() * progreso,
-                    resultado.getDesgasteEstimado()));
+            if (evolucion != null) {
+                evolucion.actualizar(new SimulationSnapshot(
+                        piloto.getNombre(),
+                        vehiculo.getModelo(),
+                        segmento,
+                        SEGMENTOS_EVOLUCION,
+                        velocidad,
+                        vehiculo.getVelocidadMaximaKmh(),
+                        resultado.getConsumoEstimado() * progreso,
+                        resultado.getConsumoEstimado(),
+                        resultado.getDesgasteEstimado() * progreso,
+                        resultado.getDesgasteEstimado()));
+            }
+            if (telemetria != null) {
+                telemetria.actualizar(calculadoraTelemetria.calcular(
+                        piloto, vehiculo, circuito, clima, config, resultado,
+                        segmento, SEGMENTOS_EVOLUCION, progreso, velocidad));
+            }
         }
     }
 
@@ -329,5 +360,11 @@ public class QualifyingService {
     @FunctionalInterface
     public interface Evolucion {
         void actualizar(SimulationSnapshot muestra);
+    }
+
+    /** Se invoca en el hilo de simulación; la UI debe despachar al hilo de JavaFX. */
+    @FunctionalInterface
+    public interface Telemetria {
+        void actualizar(TelemetrySnapshot muestra);
     }
 }

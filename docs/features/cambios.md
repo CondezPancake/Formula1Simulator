@@ -16,7 +16,7 @@ Una épica se considera **Terminada** solamente cuando todas sus historias está
 | E01 | Gestión de datos de Fórmula 1 | **Terminada** |
 | E02 | Configuración de la simulación | **Terminada** |
 | E03 | Motor de simulación | **Terminada** |
-| E04 | Visualización de resultados | **En desarrollo** |
+| E04 | Visualización de resultados | **Terminada** |
 | E05 | Integración y persistencia | **En desarrollo** |
 | E06 | Motor probabilístico de simulación | **Terminada** |
 | E07 | Clima dinámico | **En desarrollo** |
@@ -68,14 +68,14 @@ Una épica se considera **Terminada** solamente cuando todas sus historias está
 
 ## E04 — Visualización de resultados
 
-**Estado de la épica: En desarrollo**
+**Estado de la épica: Terminada**
 
 | Historia | Nombre | Estado |
 |---|---|---|
 | HU-20 | Visualizar clasificación | **Terminada** |
 | HU-21 | Visualizar estadísticas | **Terminada** |
 | HU-22 | Visualizar clima | **Terminada** |
-| HU-23 | Visualizar telemetría | **En desarrollo** |
+| HU-23 | Visualizar telemetría | **Terminada** |
 
 ## E05 — Integración y persistencia
 
@@ -118,7 +118,7 @@ Una épica se considera **Terminada** solamente cuando todas sus historias está
 
 | Historia | Nombre | Estado |
 |---|---|---|
-| HU-31 | Visualizar telemetría | **En desarrollo** |
+| HU-31 | Visualizar telemetría | **Terminada** |
 | HU-32 | Visualizar evolución de la vuelta | **En desarrollo** |
 | HU-33 | Comparar sectores | **En desarrollo** |
 
@@ -150,12 +150,12 @@ Una épica se considera **Terminada** solamente cuando todas sus historias está
 
 | Elemento | Terminadas | En desarrollo | Total |
 |---|---:|---:|---:|
-| Épicas | 5 | 7 | 12 |
-| Historias de usuario | 27 | 9 | 36 |
+| Épicas | 6 | 6 | 12 |
+| Historias de usuario | 29 | 7 | 36 |
 
 ## Auditoría de requisitos cumplidos
 
-Esta auditoría corresponde al estado del proyecto después de HU-21. Un requisito se marca como cumplido solamente cuando existe implementación verificable; una declaración en el README no se considera evidencia suficiente por sí sola.
+Esta auditoría corresponde al estado del proyecto después de HU-23. Un requisito se marca como cumplido solamente cuando existe implementación verificable; una declaración en el README no se considera evidencia suficiente por sí sola.
 
 ### Resumen
 
@@ -223,11 +223,11 @@ RNF-21 no está completo porque todavía no existen todas las entidades avanzada
 | Control | Estado y evidencia |
 |---|---|
 | Compilación | Código principal y pruebas compilan con Java 17. |
-| Pruebas automatizadas | 43 pruebas ejecutadas correctamente. |
+| Pruebas automatizadas | 47 pruebas ejecutadas correctamente. |
 | Integridad de vistas | `ViewsLoadTest` carga los diez archivos FXML y detecta IDs, acciones o imports inválidos. |
-| Pruebas del motor | Fórmula, clima, ordenamiento, configuración, HU-08, HU-19 y estadísticas de HU-21 están cubiertos. |
+| Pruebas del motor | Fórmula, clima, ordenamiento, configuración, HU-08, HU-19, estadísticas de HU-21 y telemetría de HU-23 están cubiertos. |
 | Validación en capas | La interfaz previene entradas incompletas y los servicios protegen nuevamente las reglas de negocio. |
-| Inmutabilidad e invariantes | `SimulationSnapshot` es inmutable y rechaza segmentos o métricas inválidas. |
+| Inmutabilidad e invariantes | `SimulationSnapshot` y `TelemetrySnapshot` son inmutables y rechazan segmentos o métricas inválidas. |
 | Seguridad entre hilos | `Task`, un pool compartido y `Platform.runLater` evitan bloquear o actualizar JavaFX desde un hilo incorrecto. |
 | Persistencia resiliente | MongoDB funciona como almacenamiento duradero y `ConcurrentHashMap` permite continuar en modo memoria. |
 | Patrones exigidos por el alcance vigente | Repository para persistencia y Singleton para conexión y almacén compartido. |
@@ -237,6 +237,6 @@ RNF-21 no está completo porque todavía no existen todas las entidades avanzada
 ## Observaciones de alcance
 
 - El alcance vigente descrito por el README es `f1project.md`; `ProyectoFormula1.md` se conserva dentro de `docs/legacy` y contiene funcionalidades adicionales.
-- OpenF1, Q1/Q2/Q3 y la telemetría avanzada fueron retirados del alcance actual según el historial del README.
+- OpenF1 y Q1/Q2/Q3 continúan fuera del alcance vigente. La telemetría se reincorporó como extensión mediante HU-23.
 - La simulación actual genera un clima para toda la sesión, pero no lo modifica durante ella; por eso HU-14 está terminada y HU-29 continúa en desarrollo.
-- La evolución básica de velocidad, consumo y desgaste está implementada. La telemetría avanzada y los datos por sector de HU-31 a HU-33 continúan en desarrollo.
+- HU-23 también satisface HU-31 porque implementa su dashboard detallado en tiempo real. La evolución histórica de vueltas y la comparación de sectores de HU-32 y HU-33 continúan en desarrollo.

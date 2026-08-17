@@ -9,6 +9,7 @@ import com.formula1.model.QualifyingSession;
 import com.formula1.model.SessionStatistics;
 import com.formula1.model.SimulationConfig;
 import com.formula1.model.SimulationSnapshot;
+import com.formula1.model.TelemetrySnapshot;
 import com.formula1.model.TirePressure;
 import com.formula1.service.CircuitService;
 import com.formula1.service.DriverService;
@@ -33,6 +34,8 @@ import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 
 /**
  * Configura y lanza una sesión de clasificación.
@@ -68,6 +71,25 @@ public class SimulationController {
     @FXML private Label lblPromedioEstadistica;
     @FXML private Label lblDiferenciaEstadistica;
     @FXML private Label lblParticipantesEstadistica;
+    @FXML private TabPane panelResultados;
+    @FXML private Tab tabTelemetria;
+    @FXML private Label lblTelemetriaPiloto;
+    @FXML private Label lblEstadoPista;
+    @FXML private Label lblVelocidadTelemetria;
+    @FXML private Label lblRpm;
+    @FXML private Label lblCombustible;
+    @FXML private Label lblDesgasteTelemetria;
+    @FXML private Label lblTempNeumaticos;
+    @FXML private Label lblTempMotor;
+    @FXML private Label lblSector;
+    @FXML private Label lblTiempoVuelta;
+    @FXML private Label lblDelta;
+    @FXML private ProgressBar barraVelocidadTelemetria;
+    @FXML private ProgressBar barraRpm;
+    @FXML private ProgressBar barraCombustible;
+    @FXML private ProgressBar barraDesgasteTelemetria;
+    @FXML private ProgressBar barraTempNeumaticos;
+    @FXML private ProgressBar barraTempMotor;
     @FXML private TableView<LapResult> tabla;
     @FXML private TableColumn<LapResult, Number> colPosicion;
     @FXML private TableColumn<LapResult, String> colPiloto;
@@ -191,8 +213,11 @@ public class SimulationController {
 
         reiniciarEvolucion();
         reiniciarEstadisticas();
+        reiniciarTelemetria();
+        panelResultados.getSelectionModel().select(tabTelemetria);
         Task<QualifyingSession> tarea = sesiones.crearTarea(config,
-                muestra -> Platform.runLater(() -> mostrarEvolucion(muestra)));
+                muestra -> Platform.runLater(() -> mostrarEvolucion(muestra)),
+                muestra -> Platform.runLater(() -> mostrarTelemetria(muestra)));
 
         // Enlazar en vez de asignar: el Task publica sus cambios en el hilo
         // de JavaFX, así que la interfaz se actualiza sola y sin bloquearse.
@@ -250,6 +275,52 @@ public class SimulationController {
         barraVelocidad.setProgress(muestra.velocidadRelativa());
         barraConsumo.setProgress(muestra.progreso());
         barraDesgaste.setProgress(muestra.progreso());
+    }
+
+    private void reiniciarTelemetria() {
+        lblTelemetriaPiloto.setText("Esperando datos del vehículo seleccionado");
+        lblEstadoPista.setText("Estado de pista —");
+        lblVelocidadTelemetria.setText("0 km/h");
+        lblRpm.setText("0 rpm");
+        lblCombustible.setText("100.0 %");
+        lblDesgasteTelemetria.setText("0.0 %");
+        lblTempNeumaticos.setText("0.0 °C");
+        lblTempMotor.setText("0.0 °C");
+        lblSector.setText("S—");
+        lblTiempoVuelta.setText("0:00.000");
+        lblDelta.setText("±0.000");
+        lblDelta.getStyleClass().removeAll("delta-faster", "delta-slower");
+        barraVelocidadTelemetria.setProgress(0);
+        barraRpm.setProgress(0);
+        barraCombustible.setProgress(1);
+        barraDesgasteTelemetria.setProgress(0);
+        barraTempNeumaticos.setProgress(0);
+        barraTempMotor.setProgress(0);
+    }
+
+    /** Representa una lectura ya calculada; no ejecuta lógica del motor en JavaFX. */
+    private void mostrarTelemetria(TelemetrySnapshot muestra) {
+        lblTelemetriaPiloto.setText(muestra.piloto() + " · " + muestra.vehiculo());
+        lblEstadoPista.setText(muestra.estadoPista());
+        lblVelocidadTelemetria.setText(String.format("%.0f km/h", muestra.velocidadKmh()));
+        lblRpm.setText(String.format("%,d rpm", muestra.rpm()));
+        lblCombustible.setText(String.format("%.1f %%", muestra.combustibleRestantePorcentaje()));
+        lblDesgasteTelemetria.setText(String.format("%.1f %%", muestra.desgasteNeumaticosPorcentaje()));
+        lblTempNeumaticos.setText(String.format("%.1f °C", muestra.temperaturaNeumaticosC()));
+        lblTempMotor.setText(String.format("%.1f °C", muestra.temperaturaMotorC()));
+        lblSector.setText("S" + muestra.sectorActual());
+        lblTiempoVuelta.setText(FormatUtils.formatLapTime(muestra.tiempoVueltaSegundos()));
+        lblDelta.setText(FormatUtils.formatDelta(muestra.deltaSegundos()));
+
+        lblDelta.getStyleClass().removeAll("delta-faster", "delta-slower");
+        lblDelta.getStyleClass().add(muestra.deltaSegundos() <= 0
+                ? "delta-faster" : "delta-slower");
+        barraVelocidadTelemetria.setProgress(muestra.velocidadRelativa());
+        barraRpm.setProgress(muestra.rpmRelativas());
+        barraCombustible.setProgress(muestra.combustibleRestantePorcentaje() / 100);
+        barraDesgasteTelemetria.setProgress(muestra.desgasteNeumaticosPorcentaje() / 100);
+        barraTempNeumaticos.setProgress(muestra.temperaturaNeumaticosC() / 125);
+        barraTempMotor.setProgress(muestra.temperaturaMotorC() / 125);
     }
 
     private void reiniciarEstadisticas() {
