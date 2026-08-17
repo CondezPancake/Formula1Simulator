@@ -153,6 +153,88 @@ Una épica se considera **Terminada** solamente cuando todas sus historias está
 | Épicas | 5 | 7 | 12 |
 | Historias de usuario | 26 | 10 | 36 |
 
+## Auditoría de requisitos cumplidos
+
+Esta auditoría corresponde al estado del proyecto después de HU-19. Un requisito se marca como cumplido solamente cuando existe implementación verificable; una declaración en el README no se considera evidencia suficiente por sí sola.
+
+### Resumen
+
+| Grupo | Cumplidos | Definidos en `ProyectoFormula1.md` |
+|---|---:|---:|
+| Requisitos funcionales | 18 | 21 |
+| RNF generales | 8 | 12 |
+| RNF de POO y calidad | 24 | 26 |
+| **Total RNF** | **32** | **38** |
+
+### Requisitos funcionales cumplidos
+
+| Requisitos | Cumplimiento verificado |
+|---|---|
+| RF-01 a RF-04 | CRUD completo de equipos, pilotos, vehículos y circuitos mediante controladores, servicios y repositorios. |
+| RF-05 | Relaciones entre pilotos, equipos y vehículos, con validación de pertenencia a la escudería. |
+| RF-06 | Selección de circuito, piloto y vehículo; se rechazan combinaciones piloto/vehículo inválidas. |
+| RF-07 a RF-10 | Configuración de conducción, aerodinámica, presión de neumáticos y combustible. |
+| RF-11 | Generación de clima según la distribución configurada para el circuito. |
+| RF-12 | Cálculo de rendimiento considerando piloto, vehículo, circuito, clima y configuración. |
+| RF-13 | Cálculo probabilístico del tiempo de vuelta. |
+| RF-14 | Ordenamiento de participantes por tiempo y cálculo de posiciones y diferencias. |
+| RF-15 | Presentación de la clasificación final en JavaFX. |
+| RF-18 | Persistencia de entidades y sesiones en MongoDB, con operación alternativa en memoria. |
+| RF-19 | Almacenamiento de resultados de clasificación. |
+| RF-20 | Consulta de sesiones almacenadas, parrillas y configuraciones anteriores. |
+
+RF-16 todavía no se considera cumplido: existen gráficos de comparación de vehículos e historial, pero falta la visualización gráfica del rendimiento de los participantes de la sesión actual solicitada por HU-21.
+
+RF-17 y RF-21 dependen de OpenF1, integración que fue retirada del alcance vigente y no está implementada.
+
+### Requisitos no funcionales generales cumplidos
+
+| Requisito | Cumplimiento verificado |
+|---|---|
+| RNF-01 | Código compilado para Java 17 mediante la propiedad `maven.compiler.release`. |
+| RNF-03 | Persistencia duradera implementada con el driver de MongoDB y el patrón Repository. |
+| RNF-06 | Organización por responsabilidades en `model`, `data`, `service`, `controller` y `util`. |
+| RNF-07 | Validaciones previas al guardado y antes de ejecutar la simulación. |
+| RNF-09 | Carga, simulación y operaciones de persistencia fuera del hilo principal de JavaFX. |
+| RNF-10 | Flujo completo de configuración y simulación desde la interfaz, sin acceso manual a MongoDB. |
+| RNF-11 | Dependencias y compilación reproducibles mediante Maven y Java 17. |
+| RNF-12 | Repositorio Git conectado a GitHub y commits descriptivos con convenciones del equipo. |
+
+RNF-02 está cumplido en JavaFX, pero no completamente en el uso de imágenes SVG dentro de la aplicación. RNF-04 depende de OpenF1. RNF-05 mantiene separación de responsabilidades, pero no posee las capas `api` y `simulation` independientes descritas en el documento. RNF-08 cubre errores de entrada y persistencia, pero no errores de OpenF1.
+
+### Requisitos de POO y calidad cumplidos
+
+| Requisitos | Cumplimiento verificado |
+|---|---|
+| RNF-18 | POO con encapsulamiento, abstracciones, herencia lógica de JavaFX y polimorfismo mediante interfaces. |
+| RNF-19 y RNF-20 | Atributos encapsulados, getters/setters controlados y uso justificado de `this`. |
+| RNF-22 y RNF-23 | Visibilidad mínima necesaria y herencia usada únicamente para contratos del framework. |
+| RNF-25 y RNF-26 | Sobrecarga útil e interfaces como `CrudRepository`, `Progreso` y `Evolucion`. |
+| RNF-27 y RNF-28 | Lambdas y Streams empleados en filtros, búsquedas, ordenamiento, callbacks y agrupaciones. |
+| RNF-29 y RNF-30 | Pool de hilos, `Task` de JavaFX y actualizaciones visuales mediante el JavaFX Application Thread. |
+| RNF-31 a RNF-33 | Excepciones para datos, configuración y persistencia; `ValidationException` y `DataAccessException`. |
+| RNF-34 | No se utiliza `System.exit` para controlar el flujo de la aplicación. |
+| RNF-35 a RNF-39 | Packages cohesionados, utilidades enfocadas, imports explícitos, separación de capas y responsabilidad principal por clase. |
+| RNF-40 a RNF-43 | Comentarios sobre decisiones no evidentes, métodos enfocados, comportamiento dentro de objetos y lógica reutilizable. |
+
+RNF-21 no está completo porque todavía no existen todas las entidades avanzadas, especialmente eventos. RNF-24 tampoco está completo: los modos de conducción funcionan, pero todavía no están modelados como implementaciones polimórficas de una abstracción `DrivingStrategy`.
+
+## Controles de calidad aplicados
+
+| Control | Estado y evidencia |
+|---|---|
+| Compilación | Código principal y pruebas compilan con Java 17. |
+| Pruebas automatizadas | 42 pruebas ejecutadas correctamente. |
+| Integridad de vistas | `ViewsLoadTest` carga los diez archivos FXML y detecta IDs, acciones o imports inválidos. |
+| Pruebas del motor | Fórmula, clima, ordenamiento, configuración, HU-08 y evolución de HU-19 están cubiertos. |
+| Validación en capas | La interfaz previene entradas incompletas y los servicios protegen nuevamente las reglas de negocio. |
+| Inmutabilidad e invariantes | `SimulationSnapshot` es inmutable y rechaza segmentos o métricas inválidas. |
+| Seguridad entre hilos | `Task`, un pool compartido y `Platform.runLater` evitan bloquear o actualizar JavaFX desde un hilo incorrecto. |
+| Persistencia resiliente | MongoDB funciona como almacenamiento duradero y `ConcurrentHashMap` permite continuar en modo memoria. |
+| Patrones exigidos por el alcance vigente | Repository para persistencia y Singleton para conexión y almacén compartido. |
+| Reproducibilidad | Semillas fijas en pruebas y formatos técnicos independientes de la configuración regional. |
+| Trazabilidad | Documentos por funcionalidad, matriz de épicas/HU y commits descriptivos en Git. |
+
 ## Observaciones de alcance
 
 - El alcance vigente descrito por el README es `f1project.md`; `ProyectoFormula1.md` se conserva dentro de `docs/legacy` y contiene funcionalidades adicionales.
