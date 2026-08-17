@@ -15,26 +15,30 @@
       fx:controller="com.formula1.controller.CircuitController" spacing="12">
     <padding><Insets top="26" right="26" bottom="26" left="26"/></padding>
 
-    <Label text="Circuitos" styleClass="view-title"/>
+    <Label text="Gestión" styleClass="view-title"/>
     <Label text="Doble clic sobre un circuito para ver su ficha completa." styleClass="view-subtitle"/>
 
     <HBox spacing="10" alignment="CENTER_LEFT">
         <TextField fx:id="buscador" promptText="Buscar por nombre o ubicación…" prefWidth="320"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Button text="Ver detalle" onAction="#onVerDetalle"/>
-        <Button text="Nuevo" styleClass="primary" onAction="#onNuevo"/>
-        <Button text="Editar" onAction="#onEditar"/>
-        <Button text="Eliminar" styleClass="danger" onAction="#onEliminar"/>
+        <Button text="+ Agregar nuevo" styleClass="primary" onAction="#onNuevo"/>
+    </HBox>
+
+    <HBox spacing="10" alignment="CENTER_LEFT" styleClass="section-header">
+        <Label text="CIRCUITOS" styleClass="section-title"/>
+        <Label fx:id="lblConteo" styleClass="count-badge"/>
     </HBox>
 
     <TableView fx:id="tabla" VBox.vgrow="ALWAYS">
         <columns>
-            <TableColumn fx:id="colNombre" text="Circuito" prefWidth="250"/>
-            <TableColumn fx:id="colPais" text="País" prefWidth="180"/>
-            <TableColumn fx:id="colLongitud" text="Long. (km)" prefWidth="90"/>
-            <TableColumn fx:id="colVueltas" text="Vueltas" prefWidth="70"/>
-            <TableColumn fx:id="colRecord" text="Récord" prefWidth="100"/>
-            <TableColumn fx:id="colFactor" text="F. técnico" prefWidth="85"/>
+            <TableColumn fx:id="colNombre" text="Circuito" prefWidth="230"/>
+            <TableColumn fx:id="colPais" text="País" prefWidth="160"/>
+            <TableColumn fx:id="colLongitud" text="Long. (km)" prefWidth="85"/>
+            <TableColumn fx:id="colVueltas" text="Vueltas" prefWidth="65"/>
+            <TableColumn fx:id="colRecord" text="Récord" prefWidth="95"/>
+            <TableColumn fx:id="colFactor" text="F. técnico" prefWidth="80"/>
+            <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="160"/>
         </columns>
     </TableView>
 </VBox>

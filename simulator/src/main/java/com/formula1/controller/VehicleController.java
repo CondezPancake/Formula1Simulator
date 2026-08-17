@@ -11,11 +11,16 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.Spinner;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 
 import java.util.stream.Collectors;
 
@@ -29,8 +34,10 @@ public class VehicleController {
     @FXML private TableColumn<Vehicle, Number> colAceleracion;
     @FXML private TableColumn<Vehicle, Number> colVelNormal;
     @FXML private TableColumn<Vehicle, String> colPilotos;
+    @FXML private TableColumn<Vehicle, Void> colAcciones;
     @FXML private TextField buscador;
     @FXML private Spinner<Integer> velocidadMinima;
+    @FXML private Label lblConteo;
 
     private final VehicleService vehiculos;
     private final TeamService equipos;
@@ -59,6 +66,7 @@ public class VehicleController {
                 vehiculos.pilotosDe(f.getValue()).stream()
                         .map(p -> p.getNombre())
                         .collect(Collectors.joining(", "))));
+        colAcciones.setCellFactory(col -> celdaAcciones());
 
         velocidadMinima.setValueFactory(
                 new javafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory(0, 400, 0, 5));
@@ -70,7 +78,30 @@ public class VehicleController {
     private void refrescar() {
         Integer minima = velocidadMinima.getValue() == null || velocidadMinima.getValue() == 0
                 ? null : velocidadMinima.getValue();
-        tabla.setItems(FXCollections.observableArrayList(vehiculos.buscar(buscador.getText(), minima)));
+        var items = vehiculos.buscar(buscador.getText(), minima);
+        tabla.setItems(FXCollections.observableArrayList(items));
+        lblConteo.setText(String.valueOf(items.size()));
+    }
+
+    private TableCell<Vehicle, Void> celdaAcciones() {
+        return new TableCell<>() {
+            private final Button editar = new Button("Editar");
+            private final Button eliminar = new Button("Eliminar");
+            private final HBox caja = new HBox(6, editar, eliminar);
+            {
+                caja.setAlignment(Pos.CENTER_LEFT);
+                editar.getStyleClass().add("icon-button");
+                eliminar.getStyleClass().addAll("icon-button", "danger");
+                editar.setOnAction(e -> editar(getTableView().getItems().get(getIndex())));
+                eliminar.setOnAction(e -> eliminar(getTableView().getItems().get(getIndex())));
+            }
+
+            @Override
+            protected void updateItem(Void valor, boolean vacio) {
+                super.updateItem(valor, vacio);
+                setGraphic(vacio ? null : caja);
+            }
+        };
     }
 
     @FXML
@@ -78,25 +109,13 @@ public class VehicleController {
         Forms.vehiculo(null, equipos.listar()).ifPresent(this::guardar);
     }
 
-    @FXML
-    private void onEditar() {
-        Vehicle seleccionado = tabla.getSelectionModel().getSelectedItem();
-        if (seleccionado == null) {
-            Navigator.aviso("Sin selección", "Elige un vehículo de la tabla.");
-            return;
-        }
-        Forms.vehiculo(seleccionado, equipos.listar()).ifPresent(this::guardar);
+    private void editar(Vehicle vehiculo) {
+        Forms.vehiculo(vehiculo, equipos.listar()).ifPresent(this::guardar);
     }
 
-    @FXML
-    private void onEliminar() {
-        Vehicle seleccionado = tabla.getSelectionModel().getSelectedItem();
-        if (seleccionado == null) {
-            Navigator.aviso("Sin selección", "Elige un vehículo de la tabla.");
-            return;
-        }
-        if (Navigator.confirmar("¿Eliminar el " + seleccionado.getModelo() + "?")) {
-            vehiculos.eliminar(seleccionado.getModelo());
+    private void eliminar(Vehicle vehiculo) {
+        if (Navigator.confirmar("¿Eliminar el " + vehiculo.getModelo() + "?")) {
+            vehiculos.eliminar(vehiculo.getModelo());
             refrescar();
         }
     }

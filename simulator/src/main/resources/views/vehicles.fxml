@@ -16,7 +16,7 @@
       fx:controller="com.formula1.controller.VehicleController" spacing="12">
     <padding><Insets top="26" right="26" bottom="26" left="26"/></padding>
 
-    <Label text="Vehículos" styleClass="view-title"/>
+    <Label text="Gestión" styleClass="view-title"/>
     <Label text="Selecciona dos o más con Ctrl + clic para compararlos." styleClass="view-subtitle"/>
 
     <HBox spacing="10" alignment="CENTER_LEFT">
@@ -26,20 +26,24 @@
         <Region HBox.hgrow="ALWAYS"/>
         <Button text="Comparar" onAction="#onComparar"/>
         <Button text="Asignar pilotos" onAction="#onAsignarPilotos"/>
-        <Button text="Nuevo" styleClass="primary" onAction="#onNuevo"/>
-        <Button text="Editar" onAction="#onEditar"/>
-        <Button text="Eliminar" styleClass="danger" onAction="#onEliminar"/>
+        <Button text="+ Agregar nuevo" styleClass="primary" onAction="#onNuevo"/>
+    </HBox>
+
+    <HBox spacing="10" alignment="CENTER_LEFT" styleClass="section-header">
+        <Label text="VEHÍCULOS" styleClass="section-title"/>
+        <Label fx:id="lblConteo" styleClass="count-badge"/>
     </HBox>
 
     <TableView fx:id="tabla" VBox.vgrow="ALWAYS">
         <columns>
-            <TableColumn fx:id="colModelo" text="Modelo" prefWidth="100"/>
-            <TableColumn fx:id="colEquipo" text="Equipo" prefWidth="180"/>
-            <TableColumn fx:id="colMotor" text="Motor" prefWidth="105"/>
-            <TableColumn fx:id="colVelMax" text="Vel. máx." prefWidth="80"/>
-            <TableColumn fx:id="colAceleracion" text="0-100" prefWidth="65"/>
-            <TableColumn fx:id="colVelNormal" text="Media (normal)" prefWidth="110"/>
-            <TableColumn fx:id="colPilotos" text="Pilotos" prefWidth="260"/>
+            <TableColumn fx:id="colModelo" text="Modelo" prefWidth="95"/>
+            <TableColumn fx:id="colEquipo" text="Equipo" prefWidth="170"/>
+            <TableColumn fx:id="colMotor" text="Motor" prefWidth="100"/>
+            <TableColumn fx:id="colVelMax" text="Vel. máx." prefWidth="75"/>
+            <TableColumn fx:id="colAceleracion" text="0-100" prefWidth="60"/>
+            <TableColumn fx:id="colVelNormal" text="Media (normal)" prefWidth="105"/>
+            <TableColumn fx:id="colPilotos" text="Pilotos" prefWidth="230"/>
+            <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="160"/>
         </columns>
     </TableView>
 </VBox>

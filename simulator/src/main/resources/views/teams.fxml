@@ -12,18 +12,21 @@
 <?import javafx.scene.layout.VBox?>
 
 <VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-      fx:controller="com.formula1.controller.TeamController" spacing="12">
+      fx:controller="com.formula1.controller.TeamController" spacing="14">
     <padding><Insets top="26" right="26" bottom="26" left="26"/></padding>
 
-    <Label text="Equipos" styleClass="view-title"/>
+    <Label text="Gestión" styleClass="view-title"/>
     <Label text="Escuderías con su motor y sus pilotos." styleClass="view-subtitle"/>
 
     <HBox spacing="10" alignment="CENTER_LEFT">
         <TextField fx:id="buscador" promptText="Buscar por nombre, país o motor…" prefWidth="320"/>
         <Region HBox.hgrow="ALWAYS"/>
-        <Button text="Nuevo" styleClass="primary" onAction="#onNuevo"/>
-        <Button text="Editar" onAction="#onEditar"/>
-        <Button text="Eliminar" styleClass="danger" onAction="#onEliminar"/>
+        <Button text="+ Agregar nuevo" styleClass="primary" onAction="#onNuevo"/>
+    </HBox>
+
+    <HBox spacing="10" alignment="CENTER_LEFT" styleClass="section-header">
+        <Label text="EQUIPOS" styleClass="section-title"/>
+        <Label fx:id="lblConteo" styleClass="count-badge"/>
     </HBox>
 
     <TableView fx:id="tabla" VBox.vgrow="ALWAYS">
@@ -32,7 +35,8 @@
             <TableColumn fx:id="colPais" text="País" prefWidth="130"/>
             <TableColumn fx:id="colMotor" text="Motor" prefWidth="120"/>
             <TableColumn fx:id="colNumPilotos" text="Nº" prefWidth="45"/>
-            <TableColumn fx:id="colPilotos" text="Pilotos" prefWidth="320"/>
+            <TableColumn fx:id="colPilotos" text="Pilotos" prefWidth="300"/>
+            <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="160"/>
         </columns>
     </TableView>
 </VBox>
