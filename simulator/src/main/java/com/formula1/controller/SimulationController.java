@@ -490,9 +490,9 @@ public class SimulationController {
         colEventoNombre.setCellValueFactory(f -> new SimpleStringProperty(
                 f.getValue().tipo().getEtiqueta()));
         colEventoCategoria.setCellValueFactory(f -> new SimpleStringProperty(
-                f.getValue().categoria().name()));
+                f.getValue().categoria().getEtiqueta()));
         colEventoAlcance.setCellValueFactory(f -> new SimpleStringProperty(
-                f.getValue().alcance().name()));
+                f.getValue().alcance().getEtiqueta()));
         colEventoSector.setCellValueFactory(f -> new SimpleStringProperty(
                 f.getValue().sector().getEtiqueta()));
         colEventoImpacto.setCellValueFactory(f -> new SimpleStringProperty(

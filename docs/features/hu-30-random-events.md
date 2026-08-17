@@ -4,6 +4,8 @@
 
 HU-30 queda implementada con 28 eventos reales más `NO_EVENT`. El sistema decide primero la categoría y después selecciona por peso solamente entre los eventos compatibles con el estado de la vuelta. Los eventos no se limitan a mensajes: modifican tiempo, velocidad, grip, desgaste, temperaturas, clima, validez de la vuelta y estado del piloto.
 
+Las etiquetas presentadas en JavaFX están completamente en español y no exponen nombres técnicos con guiones bajos. Los identificadores internos del enum se conservan para mantener compatibilidad con sesiones ya guardadas.
+
 La configuración normal es:
 
 | Categoría | Probabilidad base |
@@ -31,7 +33,7 @@ El catálogo usa especializaciones para eventos de rendimiento, pista y accident
 
 ## Accidente
 
-`Crash / Accident` pertenece a la categoría excepcional y tiene un peso menor que `Red Flag`. Su riesgo aumenta con lluvia, poco grip, desgaste, estrategia agresiva, temperatura/vehículo y errores previos, y disminuye con habilidad y consistencia.
+`Accidente` pertenece a la categoría excepcional y tiene un peso menor que `Bandera roja`. Su riesgo aumenta con lluvia, poco grip, desgaste, estrategia agresiva, temperatura/vehículo y errores previos, y disminuye con habilidad y consistencia.
 
 Al ocurrir:
 
@@ -58,10 +60,10 @@ Al ocurrir:
 | Semilla | Constructores con `new Random()` o `new Random(seed)`; dos managers con igual seed producen impactos idénticos. |
 | Accidente excepcional | Prueba estadística exige frecuencia menor al 1 % en condiciones normales. |
 | Accidente integrado | Prueba de sesión fuerza accidentes y verifica resultados, telemetría, sector, invalidez y ausencia de pole. |
-| Compatibilidad regresiva | 68 pruebas pasan, incluida la carga de las diez vistas FXML, el round-trip JSON de un accidente y 250 carreras consecutivas. |
+| Compatibilidad regresiva | La suite comprueba vistas FXML, round-trip JSON, etiquetas localizadas e identificadores persistidos estables. |
 
 ## Verificación
 
 - Compilación de producción con Java 17: correcta.
 - Compilación de pruebas: correcta.
-- JUnit: **68 pruebas, 68 correctas, 0 fallos**.
+- JUnit: **72 pruebas, 72 correctas, 0 fallos**.

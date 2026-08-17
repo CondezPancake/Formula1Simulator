@@ -59,5 +59,5 @@ El selector utiliza referencias a métodos en lugar de un bloque condicional por
 
 - Compilación de producción con Java 17: correcta.
 - Compilación de pruebas: correcta.
-- JUnit: **71 pruebas, 71 correctas, 0 fallos**.
+- JUnit: **72 pruebas, 72 correctas, 0 fallos**.
 - Incluye carga real de los once FXML, persistencia JSON, compatibilidad con sesiones antiguas y 250 carreras consecutivas.

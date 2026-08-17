@@ -224,7 +224,7 @@ RNF-24 no está completo: los modos de conducción funcionan, pero todavía no e
 | Control | Estado y evidencia |
 |---|---|
 | Compilación | Código principal y pruebas compilan con Java 17. |
-| Pruebas automatizadas | 71 pruebas ejecutadas correctamente, incluida una regresión de 250 carreras consecutivas. |
+| Pruebas automatizadas | 72 pruebas ejecutadas correctamente, incluida una regresión de 250 carreras consecutivas. |
 | Integridad de vistas | `ViewsLoadTest` carga los diez archivos FXML y detecta IDs, acciones o imports inválidos. |
 | Pruebas del motor | Fórmula, clima dinámico, ordenamiento, configuración, HU-08, HU-19, estadísticas de HU-21, telemetría de HU-23, eventos de HU-30 y evolución de HU-32 están cubiertos. |
 | Validación en capas | La interfaz previene entradas incompletas y los servicios protegen nuevamente las reglas de negocio. |
@@ -241,5 +241,6 @@ RNF-24 no está completo: los modos de conducción funcionan, pero todavía no e
 - OpenF1 y Q1/Q2/Q3 continúan fuera del alcance vigente. La telemetría se reincorporó como extensión mediante HU-23.
 - HU-29 genera y persiste 20 estados climáticos por sesión; grip, tracción, frenado, temperaturas, consumo, desgaste y tiempo reaccionan a ellos.
 - HU-30 incorpora 28 eventos + `NO_EVENT`, probabilidades configurables, selección ponderada contextual, cooldown, sectores y accidentes con vuelta invalidada, posible abandono y banderas.
+- Las etiquetas visibles de HU-30 están localizadas al español para eventos, categorías y alcance; los identificadores internos permanecen estables para no romper datos guardados.
 - HU-23 también satisface HU-31 porque implementa su dashboard detallado en tiempo real.
 - HU-32 grafica y persiste 20 muestras de velocidad, tiempo, desgaste, combustible, temperaturas y delta. La comparación entre pilotos de HU-33 continúa en desarrollo.

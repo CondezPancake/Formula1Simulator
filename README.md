@@ -7,7 +7,7 @@
   <img alt="JavaFX" src="https://img.shields.io/badge/JavaFX-17.0.10-e10600?style=flat-square&logo=java&logoColor=white">
   <img alt="Maven" src="https://img.shields.io/badge/Maven-build-e10600?style=flat-square&logo=apachemaven&logoColor=white">
   <img alt="MongoDB" src="https://img.shields.io/badge/MongoDB-5.1.1-e10600?style=flat-square&logo=mongodb&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-71%20passing-2ea043?style=flat-square">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-72%20passing-2ea043?style=flat-square">
 </p>
 
 # Formula1Simulator
@@ -45,7 +45,7 @@ La aplicación **arranca y es plenamente usable con o sin MongoDB**: si no hay s
 | Archivos `.java` | 75 |
 | Paquetes | 6 |
 | Patrones de diseño | 2 (Repository, Singleton) |
-| Tests | 71, todos en verde |
+| Tests | 72, todos en verde |
 
 ## Funcionalidades
 
@@ -128,7 +128,7 @@ Formula1Simulator/
         │   ├── views/      # 11 vistas FXML
         │   ├── css/style.css
         │   └── data/seed.json
-        └── test/java/      # 71 tests
+        └── test/java/      # 72 tests
 ```
 
 ## Instalación y ejecución
