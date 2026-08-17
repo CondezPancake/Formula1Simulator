@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.formula1.controller.ExploreDriversController" spacing="14">
+    <padding><Insets top="26" right="26" bottom="26" left="26"/></padding>
+
+    <Label text="Explorar" styleClass="view-title"/>
+    <Label text="Catálogo de pilotos de la parrilla." styleClass="view-subtitle"/>
+
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <TextField fx:id="buscador" promptText="Buscar piloto, equipo…" prefWidth="280"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label fx:id="lblConteo" styleClass="hint"/>
+    </HBox>
+
+    <FlowPane fx:id="chips" hgap="8" vgap="8"/>
+
+    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="edge-to-edge">
+        <FlowPane fx:id="tarjetas" hgap="16" vgap="16"/>
+    </ScrollPane>
+</VBox>
