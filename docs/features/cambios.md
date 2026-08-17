@@ -22,7 +22,7 @@ Una épica se considera **Terminada** solamente cuando todas sus historias está
 | E07 | Clima dinámico | **Terminada** |
 | E08 | Sistema de eventos aleatorios | **Terminada** |
 | E09 | Telemetría visual | **Terminada** |
-| E10 | Evolución dinámica de pista | **En desarrollo** |
+| E10 | Evolución dinámica de pista | **Terminada** |
 | E11 | Sistema de estrategia | **Terminada** |
 | E12 | Análisis automático de la sesión | **En desarrollo** |
 
@@ -124,11 +124,11 @@ Una épica se considera **Terminada** solamente cuando todas sus historias está
 
 ## E10 — Evolución dinámica de pista
 
-**Estado de la épica: En desarrollo**
+**Estado de la épica: Terminada**
 
 | Historia | Nombre | Estado |
 |---|---|---|
-| HU-34 | Evolución del grip | **En desarrollo** |
+| HU-34 | Evolución del grip | **Terminada** |
 
 ## E11 — Sistema de estrategia
 
@@ -224,11 +224,11 @@ RNF-24 no está completo: los modos de conducción funcionan, pero todavía no e
 | Control | Estado y evidencia |
 |---|---|
 | Compilación | Código principal y pruebas compilan con Java 17. |
-| Pruebas automatizadas | 79 pruebas ejecutadas correctamente, incluida una regresión de 250 carreras consecutivas. |
-| Integridad de vistas | `ViewsLoadTest` carga los doce archivos FXML y detecta IDs, acciones o imports inválidos. |
-| Pruebas del motor | Fórmula, clima dinámico, ordenamiento, configuración, HU-08, HU-19, estadísticas de HU-21, telemetría de HU-23, eventos de HU-30, evolución de HU-32 y comparación de HU-33 están cubiertos. |
+| Pruebas automatizadas | 88 pruebas ejecutadas correctamente, incluida una regresión de 250 carreras consecutivas. |
+| Integridad de vistas | `ViewsLoadTest` carga los trece archivos FXML y detecta IDs, acciones o imports inválidos. |
+| Pruebas del motor | Fórmula, clima dinámico, ordenamiento, configuración, HU-08, HU-19, estadísticas de HU-21, telemetría de HU-23, eventos de HU-30, evolución de HU-32, comparación de HU-33 y pista dinámica de HU-34 están cubiertos. |
 | Validación en capas | La interfaz previene entradas incompletas y los servicios protegen nuevamente las reglas de negocio. |
-| Inmutabilidad e invariantes | `SimulationSnapshot`, `TelemetrySnapshot`, `WeatherSnapshot`, `EventOccurrence`, `EventImpact` y `SectorTimes` son inmutables; la sesión tampoco expone la lista mutable de evolución. |
+| Inmutabilidad e invariantes | `SimulationSnapshot`, `TelemetrySnapshot`, `WeatherSnapshot`, `EventOccurrence`, `EventImpact`, `SectorTimes` y `TrackEvolutionSnapshot` son inmutables; la sesión tampoco expone listas mutables de evolución. |
 | Seguridad entre hilos | `Task`, un pool compartido y `Platform.runLater` evitan bloquear o actualizar JavaFX desde un hilo incorrecto. |
 | Persistencia resiliente | MongoDB funciona como almacenamiento duradero y `ConcurrentHashMap` permite continuar en modo memoria. |
 | Patrones exigidos por el alcance vigente | Repository para persistencia y Singleton para conexión y almacén compartido. |
@@ -245,3 +245,4 @@ RNF-24 no está completo: los modos de conducción funcionan, pero todavía no e
 - HU-23 también satisface HU-31 porque implementa su dashboard detallado en tiempo real.
 - HU-32 grafica y persiste 20 muestras de velocidad, tiempo, desgaste, combustible, temperaturas y delta.
 - HU-33 calcula y persiste S1, S2 y S3 para cada vuelta válida, compara toda la parrilla e identifica automáticamente al piloto más rápido de cada sector.
+- HU-34 acumula goma en seco, la elimina con lluvia y aplica el grip resultante al motor antes de calcular cada vuelta; la evolución completa queda persistida y visible.

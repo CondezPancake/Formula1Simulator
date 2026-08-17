@@ -23,6 +23,7 @@ public class QualifyingSession {
     private List<LapResult> resultados;
     private List<WeatherSnapshot> evolucionClimatica;
     private List<TelemetrySnapshot> evolucionVuelta;
+    private List<TrackEvolutionSnapshot> evolucionPista;
     private List<EventOccurrence> eventos;
     private String fecha;
 
@@ -31,6 +32,7 @@ public class QualifyingSession {
         this.resultados = new ArrayList<>();
         this.evolucionClimatica = new ArrayList<>();
         this.evolucionVuelta = new ArrayList<>();
+        this.evolucionPista = new ArrayList<>();
         this.eventos = new ArrayList<>();
     }
 
@@ -120,6 +122,17 @@ public class QualifyingSession {
         this.evolucionVuelta = evolucionVuelta == null
                 ? new ArrayList<>()
                 : new ArrayList<>(evolucionVuelta);
+    }
+
+    /** Evolución de goma y grip, con una lectura consolidada por vuelta. */
+    public List<TrackEvolutionSnapshot> getEvolucionPista() {
+        return evolucionPista == null ? List.of() : List.copyOf(evolucionPista);
+    }
+
+    public void setEvolucionPista(List<TrackEvolutionSnapshot> evolucionPista) {
+        this.evolucionPista = evolucionPista == null
+                ? new ArrayList<>()
+                : new ArrayList<>(evolucionPista);
     }
 
     public String getFecha() {

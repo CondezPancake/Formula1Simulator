@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.chart.LineChart?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.formula1.controller.TrackEvolutionController"
+      spacing="12" styleClass="track-evolution-panel">
+    <VBox spacing="2">
+        <Label text="TRACK EVOLUTION" styleClass="weather-title"/>
+        <Label text="La goma mejora la adherencia en seco y la lluvia limpia la pista"
+               styleClass="hint"/>
+    </VBox>
+
+    <HBox spacing="12">
+        <VBox spacing="4" styleClass="stat-card" HBox.hgrow="ALWAYS">
+            <Label text="GRIP INICIAL" styleClass="card-label"/>
+            <Label fx:id="lblGripInicial" text="— %" styleClass="stat-value"/>
+        </VBox>
+        <VBox spacing="4" styleClass="stat-card" HBox.hgrow="ALWAYS">
+            <Label text="GRIP FINAL" styleClass="card-label"/>
+            <Label fx:id="lblGripFinal" text="— %" styleClass="stat-value"/>
+        </VBox>
+        <VBox spacing="4" styleClass="stat-card" HBox.hgrow="ALWAYS">
+            <Label text="CAMBIO DE SESIÓN" styleClass="card-label"/>
+            <Label fx:id="lblCambioGrip" text="—" styleClass="stat-value"/>
+        </VBox>
+    </HBox>
+
+    <LineChart fx:id="grafico" prefHeight="235">
+        <xAxis>
+            <NumberAxis label="Vuelta completada" forceZeroInRange="false" tickUnit="1"/>
+        </xAxis>
+        <yAxis>
+            <NumberAxis label="Porcentaje" lowerBound="0" upperBound="100"
+                        autoRanging="false" forceZeroInRange="false"/>
+        </yAxis>
+    </LineChart>
+
+    <TableView fx:id="tabla" prefHeight="190" VBox.vgrow="ALWAYS">
+        <placeholder>
+            <Label text="La evolución aparecerá al terminar la clasificación"/>
+        </placeholder>
+        <columns>
+            <TableColumn fx:id="colVuelta" text="Vuelta" prefWidth="65"/>
+            <TableColumn fx:id="colPiloto" text="Piloto" prefWidth="170"/>
+            <TableColumn fx:id="colGripInicial" text="Grip inicial" prefWidth="105"/>
+            <TableColumn fx:id="colGripFinal" text="Grip final" prefWidth="105"/>
+            <TableColumn fx:id="colGoma" text="Goma" prefWidth="145"/>
+            <TableColumn fx:id="colLluvia" text="Lluvia media" prefWidth="110"/>
+            <TableColumn fx:id="colTendencia" text="Evolución" prefWidth="210"/>
+        </columns>
+    </TableView>
+</VBox>

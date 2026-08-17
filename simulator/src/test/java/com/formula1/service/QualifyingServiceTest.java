@@ -333,6 +333,21 @@ class QualifyingServiceTest {
     }
 
     @Test
+    void laSesionConservaUnaEvolucionDePistaPorPiloto() {
+        QualifyingSession sesion = sesiones.simular(
+                config(DrivingMode.NORMAL), WeatherCondition.SECO, null);
+
+        assertEquals(20, sesion.getEvolucionPista().size());
+        for (int i = 0; i < sesion.getEvolucionPista().size(); i++) {
+            assertEquals(i + 1, sesion.getEvolucionPista().get(i).vuelta());
+        }
+        assertEquals(sesion.getEvolucionClimatica().get(0).gripPorcentaje(),
+                sesion.getEvolucionPista().get(0).gripInicialPorcentaje(), 1e-9);
+        assertThrows(UnsupportedOperationException.class,
+                () -> sesion.getEvolucionPista().clear());
+    }
+
+    @Test
     void laLluviaIntensaProduceUnaVueltaMasLentaQueUnaPistaSeca() {
         WeatherSnapshot seco = new WeatherSnapshot(1, 1,
                 com.formula1.model.DynamicWeatherState.SECO,

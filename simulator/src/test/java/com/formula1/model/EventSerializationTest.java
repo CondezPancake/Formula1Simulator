@@ -86,4 +86,26 @@ class EventSerializationTest {
 
         assertFalse(result.hasSectorTimes());
     }
+
+    @Test
+    void sessionKeepsTrackEvolutionAfterSerializationRoundTrip() throws Exception {
+        TrackEvolutionSnapshot sample = new TrackEvolutionSnapshot(
+                1, "Max Verstappen", 84, 85, 0, 0.55, 0);
+        QualifyingSession original = new QualifyingSession(
+                "Circuito de Monza", WeatherCondition.SECO, new SimulationConfig());
+        original.setEvolucionPista(List.of(sample));
+
+        QualifyingSession copy = mapper.readValue(
+                mapper.writeValueAsString(original), QualifyingSession.class);
+
+        assertEquals(List.of(sample), copy.getEvolucionPista());
+    }
+
+    @Test
+    void oldSessionWithoutTrackEvolutionRemainsCompatible() throws Exception {
+        QualifyingSession session = mapper.readValue(
+                "{\"circuito\":\"Circuito de Monza\"}", QualifyingSession.class);
+
+        assertEquals(List.of(), session.getEvolucionPista());
+    }
 }

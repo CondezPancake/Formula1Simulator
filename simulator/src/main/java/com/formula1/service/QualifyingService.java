@@ -17,6 +17,7 @@ import com.formula1.model.SimulationConfig;
 import com.formula1.model.SimulationSnapshot;
 import com.formula1.model.TelemetrySnapshot;
 import com.formula1.model.TrackSector;
+import com.formula1.model.TrackEvolutionSnapshot;
 import com.formula1.model.Vehicle;
 import com.formula1.model.WeatherCondition;
 import com.formula1.model.WeatherSnapshot;
@@ -56,6 +57,7 @@ public class QualifyingService {
     private final LapTimeCalculator calculadora;
     private final TelemetryCalculator calculadoraTelemetria;
     private final SectorTimeCalculator calculadoraSectores;
+    private final TrackEvolutionService evolucionPista;
     private final DynamicWeatherService climaDinamico;
     private final EventManager eventos;
     private final EventContextFactory fabricaContextoEventos;
@@ -86,6 +88,7 @@ public class QualifyingService {
         this.calculadora = calculadora;
         this.calculadoraTelemetria = new TelemetryCalculator();
         this.calculadoraSectores = new SectorTimeCalculator();
+        this.evolucionPista = new TrackEvolutionService();
         this.climaDinamico = climaDinamico;
         this.eventos = eventos;
         this.fabricaContextoEventos = new EventContextFactory();
@@ -134,8 +137,11 @@ public class QualifyingService {
         List<LapResult> resultados = new ArrayList<>();
         List<EventOccurrence> eventosSesion = new ArrayList<>();
         List<TelemetrySnapshot> evolucionVuelta = new ArrayList<>();
-        List<WeatherSnapshot> evolucionClimatica = climaDinamico.generar(
+        List<TrackEvolutionSnapshot> historialPista = new ArrayList<>();
+        List<WeatherSnapshot> climaBase = climaDinamico.generar(
                 circuito, clima, SEGMENTOS_EVOLUCION);
+        List<WeatherSnapshot> climaSeleccionado = List.of();
+        double gomaPista = 0;
         eventos.startSession();
 
         for (int i = 0; i < parrilla.size(); i++) {
@@ -152,20 +158,26 @@ public class QualifyingService {
                     ? config
                     : SimulationConfig.paraClasificacion();
 
+            TrackEvolutionService.Evolution pistaContexto = evolucionPista.evolucionar(
+                    climaBase, gomaPista, i + 1, piloto.getNombre());
             double desgastePrevio = calculadora.desgastePorVuelta(
-                    coche, circuito, evolucionClimatica, configPiloto);
+                    coche, circuito, pistaContexto.clima(), configPiloto);
             EventContext contexto = fabricaContextoEventos.create(
-                    i + 1, piloto, coche, configPiloto, evolucionClimatica, desgastePrevio);
+                    i + 1, piloto, coche, configPiloto, pistaContexto.clima(), desgastePrevio);
             List<EventOccurrence> eventosVuelta = eventos.resolve(contexto);
-            evolucionClimatica = efectosEventos.applyGlobalWeather(
-                    evolucionClimatica, eventosVuelta);
+            climaBase = efectosEventos.applyGlobalWeather(climaBase, eventosVuelta);
+            TrackEvolutionService.Evolution pistaVuelta = evolucionPista.evolucionar(
+                    climaBase, gomaPista, i + 1, piloto.getNombre());
+            List<WeatherSnapshot> climaVuelta = pistaVuelta.clima();
+            gomaPista = pistaVuelta.gomaFinalPorcentaje();
+            historialPista.add(pistaVuelta.resumen());
 
             double tiempoBase = calculadora.calcularTiempo(
-                    piloto, coche, circuito, evolucionClimatica, configPiloto);
+                    piloto, coche, circuito, climaVuelta, configPiloto);
             double consumoBase = calculadora.consumoPorVuelta(
-                    coche, circuito, evolucionClimatica, configPiloto);
+                    coche, circuito, climaVuelta, configPiloto);
             double desgasteBase = calculadora.desgastePorVuelta(
-                    coche, circuito, evolucionClimatica, configPiloto);
+                    coche, circuito, climaVuelta, configPiloto);
 
             LapResult resultado = new LapResult(piloto.getId(), piloto.getNombre(),
                     piloto.getEquipo(), coche.getModelo(), tiempoBase);
@@ -174,7 +186,7 @@ public class QualifyingService {
             if (resultado.isVueltaValida()) {
                 resultado.setSectorTimes(calculadoraSectores.calcular(
                         tiempoBase, resultado.getTiempoSegundos(),
-                        evolucionClimatica, eventosVuelta));
+                        climaVuelta, eventosVuelta));
             }
             resultados.add(resultado);
             eventosVuelta.stream()
@@ -182,13 +194,14 @@ public class QualifyingService {
                     .forEach(eventosSesion::add);
 
             if (piloto.getId() == config.getPilotoId()) {
+                climaSeleccionado = climaVuelta;
                 Telemetria capturarEvolucion = muestra -> {
                     evolucionVuelta.add(muestra);
                     if (telemetria != null) {
                         telemetria.actualizar(muestra);
                     }
                 };
-                emitirMuestras(piloto, coche, circuito, evolucionClimatica, configPiloto,
+                emitirMuestras(piloto, coche, circuito, climaVuelta, configPiloto,
                         resultado, tiempoBase, eventosVuelta, evolucion, capturarEvolucion);
             }
 
@@ -202,8 +215,9 @@ public class QualifyingService {
 
         QualifyingSession sesion = new QualifyingSession(circuito.getNombre(), clima, config);
         sesion.setResultados(resultados);
-        sesion.setEvolucionClimatica(evolucionClimatica);
+        sesion.setEvolucionClimatica(climaSeleccionado.isEmpty() ? climaBase : climaSeleccionado);
         sesion.setEvolucionVuelta(evolucionVuelta);
+        sesion.setEvolucionPista(historialPista);
         sesion.setEventos(eventosSesion);
         sesion.setFecha(DateUtils.format(DateUtils.now()));
         config.setGuardadoEn(sesion.getFecha());

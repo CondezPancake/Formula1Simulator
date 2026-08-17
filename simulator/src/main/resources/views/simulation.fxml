@@ -231,6 +231,9 @@
             <Tab text="Comparación de sectores">
                 <fx:include fx:id="comparacionSectores" source="sector-comparison.fxml"/>
             </Tab>
+            <Tab text="Evolución de pista">
+                <fx:include fx:id="evolucionPista" source="track-evolution.fxml"/>
+            </Tab>
             <Tab text="Eventos">
                 <VBox spacing="8">
                     <HBox spacing="10" alignment="CENTER_LEFT">

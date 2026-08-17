@@ -214,6 +214,22 @@
     -fx-font-weight: bold;
 }
 
+.track-evolution-panel {
+    -fx-background-color: #191925;
+    -fx-background-radius: 10;
+    -fx-padding: 14;
+}
+
+.track-evolution-panel .default-color0.chart-series-line {
+    -fx-stroke: #61d36b;
+    -fx-stroke-width: 2.2px;
+}
+
+.track-evolution-panel .default-color1.chart-series-line {
+    -fx-stroke: #c9974f;
+    -fx-stroke-width: 2.2px;
+}
+
 .progress-bar.metric-rpm > .bar {
     -fx-background-color: #9b6dff;
 }
