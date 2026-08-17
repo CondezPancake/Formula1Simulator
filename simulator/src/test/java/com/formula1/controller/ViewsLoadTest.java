@@ -103,6 +103,21 @@ class ViewsLoadTest {
     }
 
     @Test
+    void cargaExplorar() {
+        cargar("explore-drivers");
+        cargar("explore-vehicles");
+        cargar("explore-circuits");
+    }
+
+    @Test
+    void cargaLasSecciones() {
+        cargar("gestion");
+        cargar("explorar");
+        cargar("config");
+        cargar("config-historial");
+    }
+
+    @Test
     void cargaLasVistasDeAnalisis() {
         cargar("vehicle-compare");
         cargar("circuit-detail");
