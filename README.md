@@ -7,7 +7,7 @@
   <img alt="JavaFX" src="https://img.shields.io/badge/JavaFX-17.0.10-e10600?style=flat-square&logo=java&logoColor=white">
   <img alt="Maven" src="https://img.shields.io/badge/Maven-build-e10600?style=flat-square&logo=apachemaven&logoColor=white">
   <img alt="MongoDB" src="https://img.shields.io/badge/MongoDB-5.1.1-e10600?style=flat-square&logo=mongodb&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-94%20passing-2ea043?style=flat-square">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-96%20passing-2ea043?style=flat-square">
 </p>
 
 # Formula1Simulator
@@ -25,6 +25,7 @@ La especificación que sigue el proyecto es [`f1project.md`](f1project.md).
 - [Cómo funciona la simulación](#cómo-funciona-la-simulación)
 - [Tecnologías](#tecnologías)
 - [Arquitectura](#arquitectura)
+- [Interfaz](#interfaz)
 - [Estructura del proyecto](#estructura-del-proyecto)
 - [Instalación y ejecución](#instalación-y-ejecución)
 - [Datos](#datos)
@@ -42,10 +43,10 @@ La aplicación **arranca y es plenamente usable con o sin MongoDB**: si no hay s
 
 | | |
 |---|---|
-| Archivos `.java` | 85 |
+| Archivos `.java` | 90 |
 | Paquetes | 6 |
 | Patrones de diseño | 2 (Repository, Singleton) |
-| Tests | 94, todos en verde |
+| Tests | 96, todos en verde |
 
 ## Funcionalidades
 
@@ -104,6 +105,32 @@ Seis paquetes y **dos patrones de diseño**, los exigidos por el alcance princip
 
 Un único pool de dos hilos demonio (`util.Async`). La carga inicial y la simulación corren en `javafx.concurrent.Task`, con la interfaz **enlazada** a sus propiedades de progreso y mensaje. Ningún acceso a datos ni cálculo ocurre en el hilo de JavaFX.
 
+### Interfaz
+
+La interfaz reproduce el mockup de Figma del equipo, cuyas capturas están en
+`docs/assets/F1_Recursos_Multimedia/Mockup_Design/`. La paleta y la geometría no
+son aproximaciones: los colores se muestrearon de esos PNG y las medidas salen de
+la metadata del archivo de Figma.
+
+- **Cabecera persistente de 54 px** con el evento, el estado de la sesión
+  (`LISTO` / `LIVE` / `FINALIZADA`), el contador de segmento, el clima real y las
+  banderas de pista, que se encienden con los eventos de la simulación.
+- **Nav superior de 4 secciones** — `CARRERA · EXPLORAR · GESTIÓN · CONFIG. & HISTORIAL` —
+  y cada sección lleva su propia barra de sub-tabs.
+- **Color oficial por escudería** (`util.TeamColors`) en el borde de las tarjetas de
+  Explorar y en la franja izquierda de cada fila de la parrilla.
+- Cifras y tiempos en tipografía monoespaciada; títulos y reloj en una condensada.
+
+El diseño está trazado sobre 1920 px de ancho; por debajo de ~1280 la cabecera se
+apelmaza, de ahí el mínimo que fija `App`.
+
+Como el mockup describe una **carrera** y esta aplicación simula una
+**clasificación**, hay elementos sin equivalente en el dominio. En vez de dejarlos
+como adorno fijo, cada uno se ató al dato más cercano que sí existe: el contador de
+vuelta muestra el segmento de vuelta (1-20), las banderas usan las de `TrackFlag`
+(no hay Safety Car ni VSC en el modelo), y las columnas de neumático, boxes y DRS
+se sustituyeron por desgaste, estado de vuelta y evento.
+
 ## Estructura del proyecto
 
 ```text
@@ -125,10 +152,10 @@ Formula1Simulator/
         │   ├── controller/ # controladores JavaFX y componentes visuales
         │   └── util/       # formato, validación, aleatoriedad, hilos
         ├── main/resources/
-        │   ├── views/      # 14 vistas FXML
+        │   ├── views/      # 21 vistas FXML
         │   ├── css/style.css
         │   └── data/seed.json
-        └── test/java/      # 94 tests
+        └── test/java/      # 96 tests
 ```
 
 ## Instalación y ejecución
@@ -183,5 +210,5 @@ El archivo se genera con `tools/gen_seed.py` para que los datos sean reproducibl
 
 ## Pendiente
 
-- **Diseño de Figma**: las vistas usan la paleta del proyecto pero aún no reproducen el diseño de Figma (no se pudo extraer por el límite del plan). Las vistas no llevan estilos en línea, así que adaptarlas será cambiar `style.css`.
-- Imágenes de equipos, vehículos y trazados: los datos incluyen las URL pero la interfaz todavía no las muestra.
+- **Pestañas de análisis** (clima dinámico, eventos, evolución de vuelta, sectores, evolución de pista, análisis) y **comparación de vehículos**: ya heredan la paleta y los componentes nuevos, pero su composición todavía no está trabajada al detalle del resto.
+- Imágenes de **equipos y vehículos**: `seed.json` trae las URL de 3 logos y ninguna foto de coche; además los trazados son SVG remotos y JavaFX no renderiza SVG sin `javafx-web`. Las tarjetas usan un marcador propio mientras tanto.
