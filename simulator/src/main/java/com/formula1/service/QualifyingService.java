@@ -55,6 +55,7 @@ public class QualifyingService {
     private final CircuitService circuitos;
     private final LapTimeCalculator calculadora;
     private final TelemetryCalculator calculadoraTelemetria;
+    private final SectorTimeCalculator calculadoraSectores;
     private final DynamicWeatherService climaDinamico;
     private final EventManager eventos;
     private final EventContextFactory fabricaContextoEventos;
@@ -84,6 +85,7 @@ public class QualifyingService {
         this.datos = datos;
         this.calculadora = calculadora;
         this.calculadoraTelemetria = new TelemetryCalculator();
+        this.calculadoraSectores = new SectorTimeCalculator();
         this.climaDinamico = climaDinamico;
         this.eventos = eventos;
         this.fabricaContextoEventos = new EventContextFactory();
@@ -169,6 +171,11 @@ public class QualifyingService {
                     piloto.getEquipo(), coche.getModelo(), tiempoBase);
             efectosEventos.applyResult(resultado, tiempoBase, consumoBase,
                     desgasteBase, eventosVuelta);
+            if (resultado.isVueltaValida()) {
+                resultado.setSectorTimes(calculadoraSectores.calcular(
+                        tiempoBase, resultado.getTiempoSegundos(),
+                        evolucionClimatica, eventosVuelta));
+            }
             resultados.add(resultado);
             eventosVuelta.stream()
                     .filter(EventOccurrence::ocurrio)

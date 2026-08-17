@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class EventSerializationTest {
 
@@ -61,5 +62,28 @@ class EventSerializationTest {
                 "{\"circuito\":\"Circuito de Monza\"}", QualifyingSession.class);
 
         assertEquals(List.of(), session.getEvolucionVuelta());
+    }
+
+    @Test
+    void sessionKeepsSectorTimesAfterSerializationRoundTrip() throws Exception {
+        LapResult result = new LapResult(1, "Max Verstappen", "Red Bull", "RB20", 70.234);
+        result.setSectorTimes(new SectorTimes(22.341, 24.512, 23.381));
+        QualifyingSession original = new QualifyingSession(
+                "Circuito de Monza", WeatherCondition.SECO, new SimulationConfig());
+        original.setResultados(List.of(result));
+
+        QualifyingSession copy = mapper.readValue(
+                mapper.writeValueAsString(original), QualifyingSession.class);
+
+        assertEquals(result.getSectorTimes(), copy.getResultados().get(0).getSectorTimes());
+    }
+
+    @Test
+    void oldResultWithoutSectorTimesRemainsCompatible() throws Exception {
+        LapResult result = mapper.readValue(
+                "{\"pilotoId\":1,\"piloto\":\"Max Verstappen\",\"tiempoSegundos\":70.234}",
+                LapResult.class);
+
+        assertFalse(result.hasSectorTimes());
     }
 }

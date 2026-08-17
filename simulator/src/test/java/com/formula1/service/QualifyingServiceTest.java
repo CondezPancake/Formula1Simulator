@@ -156,6 +156,21 @@ class QualifyingServiceTest {
     }
 
     @Test
+    void cadaVueltaValidaConservaTresSectoresQueSumanElTiempoTotal() {
+        QualifyingSession sesion = sesiones.simular(
+                config(DrivingMode.NORMAL), WeatherCondition.SECO, null);
+
+        for (LapResult resultado : sesion.getResultados()) {
+            assertTrue(resultado.hasSectorTimes());
+            assertTrue(resultado.getSectorTimes().sector1Seconds() > 0);
+            assertTrue(resultado.getSectorTimes().sector2Seconds() > 0);
+            assertTrue(resultado.getSectorTimes().sector3Seconds() > 0);
+            assertEquals(resultado.getTiempoSegundos(),
+                    resultado.getSectorTimes().tiempoTotal(), 1e-9);
+        }
+    }
+
+    @Test
     void laParrillaTieneUnaDispersionRealista() {
         QualifyingSession sesion = sesiones.simular(config(DrivingMode.NORMAL), WeatherCondition.SECO, null);
         double colista = sesion.getResultados().get(19).getGap();
@@ -373,6 +388,7 @@ class QualifyingServiceTest {
         assertTrue(session.getEventos().stream().allMatch(event -> event.tipo() == EventType.CRASH));
         assertTrue(session.getResultados().stream().noneMatch(LapResult::isVueltaValida));
         assertTrue(session.getResultados().stream().allMatch(result -> result.getTiempoSegundos() == 0));
+        assertTrue(session.getResultados().stream().noneMatch(LapResult::hasSectorTimes));
         assertTrue(session.getResultados().stream().allMatch(result -> result.getSectorIncidente()
                 != com.formula1.model.TrackSector.NONE));
         assertNull(session.getPole());

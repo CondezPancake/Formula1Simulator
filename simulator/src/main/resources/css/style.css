@@ -203,6 +203,17 @@
     -fx-stroke-width: 2.2px;
 }
 
+.sector-comparison-panel {
+    -fx-background-color: #191925;
+    -fx-background-radius: 10;
+    -fx-padding: 14;
+}
+
+.sector-winner, .best-sector {
+    -fx-text-fill: #61d36b;
+    -fx-font-weight: bold;
+}
+
 .progress-bar.metric-rpm > .bar {
     -fx-background-color: #9b6dff;
 }

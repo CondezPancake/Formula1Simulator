@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.formula1.controller.SectorComparisonController"
+      spacing="12" styleClass="sector-comparison-panel">
+    <VBox spacing="2">
+        <Label text="SECTOR COMPARISON" styleClass="telemetry-title"/>
+        <Label text="Comparación de parciales entre todos los pilotos con vuelta válida"
+               styleClass="hint"/>
+    </VBox>
+
+    <HBox spacing="12">
+        <VBox spacing="4" styleClass="stat-card" HBox.hgrow="ALWAYS">
+            <Label text="MEJOR S1" styleClass="card-label"/>
+            <Label fx:id="lblBestSector1" text="Mejor Sector 1 —" styleClass="sector-winner"/>
+        </VBox>
+        <VBox spacing="4" styleClass="stat-card" HBox.hgrow="ALWAYS">
+            <Label text="MEJOR S2" styleClass="card-label"/>
+            <Label fx:id="lblBestSector2" text="Mejor Sector 2 —" styleClass="sector-winner"/>
+        </VBox>
+        <VBox spacing="4" styleClass="stat-card" HBox.hgrow="ALWAYS">
+            <Label text="MEJOR S3" styleClass="card-label"/>
+            <Label fx:id="lblBestSector3" text="Mejor Sector 3 —" styleClass="sector-winner"/>
+        </VBox>
+    </HBox>
+
+    <TableView fx:id="tabla" VBox.vgrow="ALWAYS">
+        <placeholder>
+            <Label text="Los parciales aparecerán al terminar la clasificación"/>
+        </placeholder>
+        <columns>
+            <TableColumn fx:id="colPosicion" text="Pos" prefWidth="55"/>
+            <TableColumn fx:id="colPiloto" text="Piloto" prefWidth="190"/>
+            <TableColumn fx:id="colEquipo" text="Equipo" prefWidth="180"/>
+            <TableColumn fx:id="colSector1" text="Sector 1" prefWidth="110"/>
+            <TableColumn fx:id="colSector2" text="Sector 2" prefWidth="110"/>
+            <TableColumn fx:id="colSector3" text="Sector 3" prefWidth="110"/>
+            <TableColumn fx:id="colTotal" text="Total" prefWidth="110"/>
+        </columns>
+    </TableView>
+</VBox>

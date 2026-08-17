@@ -111,6 +111,7 @@ class ViewsLoadTest {
     @Test
     void cargaSimulacionEHistorial() {
         cargar("lap-evolution");
+        cargar("sector-comparison");
         cargar("simulation");
         cargar("history");
     }

@@ -25,6 +25,7 @@ public class LapResult {
     private double gap;
     private double consumoEstimado;
     private double desgasteEstimado;
+    private SectorTimes sectorTimes;
     private LapStatus estadoVuelta;
     private TrackSector sectorIncidente;
     private List<EventOccurrence> eventos;
@@ -113,6 +114,19 @@ public class LapResult {
 
     public void setDesgasteEstimado(double desgasteEstimado) {
         this.desgasteEstimado = desgasteEstimado;
+    }
+
+    public SectorTimes getSectorTimes() {
+        return sectorTimes;
+    }
+
+    public void setSectorTimes(SectorTimes sectorTimes) {
+        this.sectorTimes = sectorTimes;
+    }
+
+    @JsonIgnore
+    public boolean hasSectorTimes() {
+        return sectorTimes != null;
     }
 
     public LapStatus getEstadoVuelta() {
