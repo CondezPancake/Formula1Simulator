@@ -63,6 +63,36 @@
 
     <Separator/>
 
+    <VBox spacing="8" styleClass="evolution-panel">
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Label text="Evolución del vehículo seleccionado" styleClass="section-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label text="Los valores provienen del cálculo de la vuelta" styleClass="hint"/>
+        </HBox>
+        <HBox spacing="12">
+            <VBox spacing="6" styleClass="evolution-card" HBox.hgrow="ALWAYS">
+                <Label text="Vuelta del piloto" styleClass="card-label"/>
+                <Label fx:id="lblPilotoEvolucion" text="Esperando inicio de vuelta" styleClass="metric-value"/>
+                <ProgressBar fx:id="progresoVuelta" progress="0" maxWidth="Infinity"/>
+            </VBox>
+            <VBox spacing="6" styleClass="evolution-card" HBox.hgrow="ALWAYS">
+                <Label text="Velocidad" styleClass="card-label"/>
+                <Label fx:id="lblVelocidad" text="0 km/h" styleClass="metric-value"/>
+                <ProgressBar fx:id="barraVelocidad" progress="0" maxWidth="Infinity" styleClass="metric-speed"/>
+            </VBox>
+            <VBox spacing="6" styleClass="evolution-card" HBox.hgrow="ALWAYS">
+                <Label text="Consumo acumulado" styleClass="card-label"/>
+                <Label fx:id="lblConsumoEvolucion" text="0.00 / 0.00 u" styleClass="metric-value"/>
+                <ProgressBar fx:id="barraConsumo" progress="0" maxWidth="Infinity" styleClass="metric-consumption"/>
+            </VBox>
+            <VBox spacing="6" styleClass="evolution-card" HBox.hgrow="ALWAYS">
+                <Label text="Desgaste acumulado" styleClass="card-label"/>
+                <Label fx:id="lblDesgasteEvolucion" text="0.00 / 0.00 u" styleClass="metric-value"/>
+                <ProgressBar fx:id="barraDesgaste" progress="0" maxWidth="Infinity" styleClass="metric-wear"/>
+            </VBox>
+        </HBox>
+    </VBox>
+
     <TableView fx:id="tabla" VBox.vgrow="ALWAYS">
         <columns>
             <TableColumn fx:id="colPosicion" text="Pos" prefWidth="50"/>

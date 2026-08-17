@@ -9,6 +9,7 @@ import com.formula1.model.FuelStrategy;
 import com.formula1.model.LapResult;
 import com.formula1.model.QualifyingSession;
 import com.formula1.model.SimulationConfig;
+import com.formula1.model.SimulationSnapshot;
 import com.formula1.model.TirePressure;
 import com.formula1.model.Vehicle;
 import com.formula1.model.WeatherCondition;
@@ -16,6 +17,7 @@ import com.formula1.util.FormatUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -180,6 +182,31 @@ class QualifyingServiceTest {
                 () -> sesiones.simular(seleccionInvalida, WeatherCondition.SECO, null));
 
         assertTrue(error.getMessage().contains("no conduce"));
+    }
+
+    @Test
+    void laEvolucionConvergeAlResultadoCalculado() {
+        List<SimulationSnapshot> muestras = new ArrayList<>();
+
+        QualifyingSession sesion = sesiones.simular(
+                config(DrivingMode.NORMAL), WeatherCondition.SECO, null, muestras::add);
+
+        assertEquals(QualifyingService.SEGMENTOS_EVOLUCION, muestras.size());
+        SimulationSnapshot ultima = muestras.get(muestras.size() - 1);
+        LapResult seleccionado = resultadoDe(sesion, 1);
+
+        assertEquals("Max Verstappen", ultima.piloto());
+        assertEquals("RB20", ultima.vehiculo());
+        assertEquals(1.0, ultima.progreso(), 1e-9);
+        assertEquals(seleccionado.getConsumoEstimado(), ultima.consumoAcumulado(), 1e-9);
+        assertEquals(seleccionado.getDesgasteEstimado(), ultima.desgasteAcumulado(), 1e-9);
+        assertTrue(ultima.velocidadKmh() > 0);
+        assertTrue(ultima.velocidadKmh() <= ultima.velocidadMaximaKmh());
+
+        for (int i = 1; i < muestras.size(); i++) {
+            assertTrue(muestras.get(i).consumoAcumulado() >= muestras.get(i - 1).consumoAcumulado());
+            assertTrue(muestras.get(i).desgasteAcumulado() >= muestras.get(i - 1).desgasteAcumulado());
+        }
     }
 
     @Test

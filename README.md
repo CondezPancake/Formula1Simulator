@@ -7,7 +7,7 @@
   <img alt="JavaFX" src="https://img.shields.io/badge/JavaFX-17.0.10-e10600?style=flat-square&logo=java&logoColor=white">
   <img alt="Maven" src="https://img.shields.io/badge/Maven-build-e10600?style=flat-square&logo=apachemaven&logoColor=white">
   <img alt="MongoDB" src="https://img.shields.io/badge/MongoDB-5.1.1-e10600?style=flat-square&logo=mongodb&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-40%20passing-2ea043?style=flat-square">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-42%20passing-2ea043?style=flat-square">
 </p>
 
 # Formula1Simulator
@@ -45,7 +45,7 @@ La aplicación **arranca y es plenamente usable con o sin MongoDB**: si no hay s
 | Archivos `.java` | 46 |
 | Paquetes | 5 |
 | Patrones de diseño | 2 (Repository, Singleton) |
-| Tests | 40, todos en verde |
+| Tests | 42, todos en verde |
 
 ## Funcionalidades
 
@@ -53,7 +53,7 @@ La aplicación **arranca y es plenamente usable con o sin MongoDB**: si no hay s
 
 **Análisis** — Comparación de dos o más vehículos en una tabla transpuesta con gráfico de barras. Ficha de circuito con récord de vuelta, ganadores históricos, clima promedio e impacto de la pista sobre consumo y desgaste.
 
-**Simulación** — Clima aleatorio según la distribución del circuito, cálculo del tiempo de los 20 pilotos, parrilla ordenada con la pole destacada y diferencias respecto a ella. Corre en segundo plano con barra de progreso, sin congelar la ventana.
+**Simulación** — Clima aleatorio según la distribución del circuito, cálculo del tiempo de los 20 pilotos, parrilla ordenada con la pole destacada y diferencias respecto a ella. La vuelta del piloto seleccionado muestra en vivo velocidad, consumo acumulado y desgaste. Todo corre en segundo plano sin congelar la ventana.
 
 **Historial** — Sesiones guardadas con su parrilla, comparación de tiempos de pole entre sesiones del mismo circuito, y configuraciones previas reutilizables.
 

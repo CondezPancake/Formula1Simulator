@@ -6,10 +6,12 @@ import com.formula1.model.Driver;
 import com.formula1.model.LapResult;
 import com.formula1.model.QualifyingSession;
 import com.formula1.model.SimulationConfig;
+import com.formula1.model.SimulationSnapshot;
 import com.formula1.model.Vehicle;
 import com.formula1.model.WeatherCondition;
 import com.formula1.util.DateUtils;
 import com.formula1.util.FormatUtils;
+import com.formula1.util.MathUtils;
 import com.formula1.util.RandomUtils;
 import com.formula1.util.ValidationUtils;
 
@@ -32,6 +34,8 @@ public class QualifyingService {
      * cálculo corre en otro hilo.
      */
     private static final long RITMO_MS = 80;
+    private static final long RITMO_EVOLUCION_MS = 60;
+    static final int SEGMENTOS_EVOLUCION = 20;
 
     private final DataStore datos;
     private final DriverService pilotos;
@@ -71,12 +75,17 @@ public class QualifyingService {
      * @param progreso callback opcional (piloto procesado, total, mensaje).
      */
     public QualifyingSession simular(SimulationConfig config, WeatherCondition clima, Progreso progreso) {
+        return simular(config, clima, progreso, null);
+    }
+
+    QualifyingSession simular(SimulationConfig config, WeatherCondition clima,
+                              Progreso progreso, Evolucion evolucion) {
         Circuit circuito = validarSeleccion(config);
         if (clima == null) {
             throw new ValidationException("Las condiciones climáticas no pueden ser nulas");
         }
 
-        List<Driver> parrilla = pilotos.listar();
+        List<Driver> parrilla = participantesConSeleccionPrimero(config.getPilotoId());
         List<LapResult> resultados = new ArrayList<>();
 
         for (int i = 0; i < parrilla.size(); i++) {
@@ -100,6 +109,10 @@ public class QualifyingService {
             resultado.setConsumoEstimado(calculadora.consumoPorVuelta(coche, circuito, clima, configPiloto));
             resultado.setDesgasteEstimado(calculadora.desgastePorVuelta(coche, circuito, clima, configPiloto));
             resultados.add(resultado);
+
+            if (piloto.getId() == config.getPilotoId() && evolucion != null) {
+                emitirEvolucion(piloto, coche, circuito, resultado, evolucion);
+            }
 
             if (progreso != null) {
                 progreso.avanzar(i + 1, parrilla.size(),
@@ -136,6 +149,10 @@ public class QualifyingService {
      * hilo de interfaz, así que no hace falta {@code Platform.runLater}.
      */
     public Task<QualifyingSession> crearTarea(SimulationConfig config) {
+        return crearTarea(config, null);
+    }
+
+    public Task<QualifyingSession> crearTarea(SimulationConfig config, Evolucion evolucion) {
         return new Task<>() {
             @Override
             protected QualifyingSession call() throws Exception {
@@ -145,11 +162,20 @@ public class QualifyingService {
                 updateMessage("Clima de la sesión: " + clima.getEtiqueta());
                 Thread.sleep(RITMO_MS * 2);
 
-                QualifyingSession sesion = simular(config, clima, (hecho, total, mensaje) -> {
-                    updateProgress(hecho, total);
-                    updateMessage(mensaje);
-                    dormir();
-                });
+                Evolucion evolucionConRitmo = evolucion == null ? null : muestra -> {
+                    evolucion.actualizar(muestra);
+                    dormir(RITMO_EVOLUCION_MS);
+                };
+
+                QualifyingSession sesion = simular(
+                        config,
+                        clima,
+                        (hecho, total, mensaje) -> {
+                            updateProgress(hecho, total);
+                            updateMessage(mensaje);
+                            dormir(RITMO_MS);
+                        },
+                        evolucionConRitmo);
 
                 updateProgress(1, 1);
                 LapResult pole = sesion.getPole();
@@ -158,14 +184,52 @@ public class QualifyingService {
                 return sesion;
             }
 
-            private void dormir() {
+            private void dormir(long milisegundos) {
                 try {
-                    Thread.sleep(RITMO_MS);
+                    Thread.sleep(milisegundos);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
             }
         };
+    }
+
+    private List<Driver> participantesConSeleccionPrimero(int pilotoSeleccionadoId) {
+        List<Driver> participantes = new ArrayList<>(pilotos.listar());
+        participantes.sort(Comparator
+                .comparing((Driver piloto) -> piloto.getId() != pilotoSeleccionadoId)
+                .thenComparingInt(Driver::getId));
+        return participantes;
+    }
+
+    /**
+     * Divide la vuelta del piloto seleccionado en muestras. El consumo y el
+     * desgaste convergen exactamente a los valores guardados en el resultado.
+     */
+    private void emitirEvolucion(Driver piloto, Vehicle vehiculo, Circuit circuito,
+                                 LapResult resultado, Evolucion evolucion) {
+        double velocidadMedia = 3600 * circuito.getLongitudKm() / resultado.getTiempoSegundos();
+
+        for (int segmento = 1; segmento <= SEGMENTOS_EVOLUCION; segmento++) {
+            double progreso = segmento / (double) SEGMENTOS_EVOLUCION;
+            double variacionVelocidad = 1
+                    + 0.08 * Math.sin(2 * Math.PI * progreso)
+                    - 0.03 * Math.cos(4 * Math.PI * progreso);
+            double velocidad = MathUtils.clamp(
+                    velocidadMedia * variacionVelocidad, 0, vehiculo.getVelocidadMaximaKmh());
+
+            evolucion.actualizar(new SimulationSnapshot(
+                    piloto.getNombre(),
+                    vehiculo.getModelo(),
+                    segmento,
+                    SEGMENTOS_EVOLUCION,
+                    velocidad,
+                    vehiculo.getVelocidadMaximaKmh(),
+                    resultado.getConsumoEstimado() * progreso,
+                    resultado.getConsumoEstimado(),
+                    resultado.getDesgasteEstimado() * progreso,
+                    resultado.getDesgasteEstimado()));
+        }
     }
 
     /**
@@ -222,5 +286,11 @@ public class QualifyingService {
     @FunctionalInterface
     public interface Progreso {
         void avanzar(int hechos, int total, String mensaje);
+    }
+
+    /** Se invoca en el hilo de simulación; la UI debe despachar al hilo de JavaFX. */
+    @FunctionalInterface
+    public interface Evolucion {
+        void actualizar(SimulationSnapshot muestra);
     }
 }

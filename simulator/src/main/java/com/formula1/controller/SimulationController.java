@@ -7,6 +7,7 @@ import com.formula1.model.FuelStrategy;
 import com.formula1.model.LapResult;
 import com.formula1.model.QualifyingSession;
 import com.formula1.model.SimulationConfig;
+import com.formula1.model.SimulationSnapshot;
 import com.formula1.model.TirePressure;
 import com.formula1.service.CircuitService;
 import com.formula1.service.DriverService;
@@ -15,6 +16,7 @@ import com.formula1.service.VehicleService;
 import com.formula1.util.Async;
 import com.formula1.util.FormatUtils;
 
+import javafx.application.Platform;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -47,6 +49,14 @@ public class SimulationController {
     @FXML private ProgressBar progreso;
     @FXML private Label lblEstado;
     @FXML private Label lblClima;
+    @FXML private Label lblPilotoEvolucion;
+    @FXML private Label lblVelocidad;
+    @FXML private Label lblConsumoEvolucion;
+    @FXML private Label lblDesgasteEvolucion;
+    @FXML private ProgressBar progresoVuelta;
+    @FXML private ProgressBar barraVelocidad;
+    @FXML private ProgressBar barraConsumo;
+    @FXML private ProgressBar barraDesgaste;
     @FXML private TableView<LapResult> tabla;
     @FXML private TableColumn<LapResult, Number> colPosicion;
     @FXML private TableColumn<LapResult, String> colPiloto;
@@ -163,7 +173,9 @@ public class SimulationController {
                 selectorModo.getValue(), selectorAero.getValue(),
                 selectorPresion.getValue(), selectorCombustible.getValue());
 
-        Task<QualifyingSession> tarea = sesiones.crearTarea(config);
+        reiniciarEvolucion();
+        Task<QualifyingSession> tarea = sesiones.crearTarea(config,
+                muestra -> Platform.runLater(() -> mostrarEvolucion(muestra)));
 
         // Enlazar en vez de asignar: el Task publica sus cambios en el hilo
         // de JavaFX, así que la interfaz se actualiza sola y sin bloquearse.
@@ -195,6 +207,31 @@ public class SimulationController {
         });
 
         Async.ejecutar(tarea);
+    }
+
+    private void reiniciarEvolucion() {
+        lblPilotoEvolucion.setText("Esperando inicio de vuelta");
+        lblVelocidad.setText("0 km/h");
+        lblConsumoEvolucion.setText("0.00 / 0.00 u");
+        lblDesgasteEvolucion.setText("0.00 / 0.00 u");
+        progresoVuelta.setProgress(0);
+        barraVelocidad.setProgress(0);
+        barraConsumo.setProgress(0);
+        barraDesgaste.setProgress(0);
+    }
+
+    /** Actualiza exclusivamente controles JavaFX; el motor entrega datos inmutables. */
+    private void mostrarEvolucion(SimulationSnapshot muestra) {
+        lblPilotoEvolucion.setText(muestra.piloto() + " · " + muestra.vehiculo());
+        lblVelocidad.setText(String.format("%.0f km/h", muestra.velocidadKmh()));
+        lblConsumoEvolucion.setText(String.format("%.2f / %.2f u",
+                muestra.consumoAcumulado(), muestra.consumoTotal()));
+        lblDesgasteEvolucion.setText(String.format("%.2f / %.2f u",
+                muestra.desgasteAcumulado(), muestra.desgasteTotal()));
+        progresoVuelta.setProgress(muestra.progreso());
+        barraVelocidad.setProgress(muestra.velocidadRelativa());
+        barraConsumo.setProgress(muestra.progreso());
+        barraDesgaste.setProgress(muestra.progreso());
     }
 
     private boolean configuracionCompleta() {

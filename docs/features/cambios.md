@@ -15,7 +15,7 @@ Una épica se considera **Terminada** solamente cuando todas sus historias está
 |---|---|---|
 | E01 | Gestión de datos de Fórmula 1 | **Terminada** |
 | E02 | Configuración de la simulación | **Terminada** |
-| E03 | Motor de simulación | **En desarrollo** |
+| E03 | Motor de simulación | **Terminada** |
 | E04 | Visualización de resultados | **En desarrollo** |
 | E05 | Integración y persistencia | **En desarrollo** |
 | E06 | Motor probabilístico de simulación | **Terminada** |
@@ -55,7 +55,7 @@ Una épica se considera **Terminada** solamente cuando todas sus historias está
 
 ## E03 — Motor de simulación
 
-**Estado de la épica: En desarrollo**
+**Estado de la épica: Terminada**
 
 | Historia | Nombre | Estado |
 |---|---|---|
@@ -64,7 +64,7 @@ Una épica se considera **Terminada** solamente cuando todas sus historias está
 | HU-16 | Calcular tiempo de vuelta | **Terminada** |
 | HU-17 | Ejecutar clasificación | **Terminada** |
 | HU-18 | Generar clasificación | **Terminada** |
-| HU-19 | Mostrar evolución | **En desarrollo** |
+| HU-19 | Mostrar evolución | **Terminada** |
 
 ## E04 — Visualización de resultados
 
@@ -150,12 +150,12 @@ Una épica se considera **Terminada** solamente cuando todas sus historias está
 
 | Elemento | Terminadas | En desarrollo | Total |
 |---|---:|---:|---:|
-| Épicas | 4 | 8 | 12 |
-| Historias de usuario | 25 | 11 | 36 |
+| Épicas | 5 | 7 | 12 |
+| Historias de usuario | 26 | 10 | 36 |
 
 ## Observaciones de alcance
 
 - El alcance vigente descrito por el README es `f1project.md`; `ProyectoFormula1.md` se conserva dentro de `docs/legacy` y contiene funcionalidades adicionales.
 - OpenF1, Q1/Q2/Q3 y la telemetría avanzada fueron retirados del alcance actual según el historial del README.
 - La simulación actual genera un clima para toda la sesión, pero no lo modifica durante ella; por eso HU-14 está terminada y HU-29 continúa en desarrollo.
-- Se muestran progreso, consumo y desgaste, pero no su evolución en tiempo real ni datos por sector; por eso HU-19 y HU-31 a HU-33 continúan en desarrollo.
+- La evolución básica de velocidad, consumo y desgaste está implementada. La telemetría avanzada y los datos por sector de HU-31 a HU-33 continúan en desarrollo.
