@@ -35,4 +35,11 @@ class FormatUtilsTest {
         assertEquals("+0.412", FormatUtils.formatGap(0.412));
         assertEquals("—", FormatUtils.formatGap(0.0));
     }
+
+    @Test
+    void formateaElDeltaConSuSentido() {
+        assertEquals("-0.412", FormatUtils.formatDelta(-0.412));
+        assertEquals("+0.412", FormatUtils.formatDelta(0.412));
+        assertEquals("±0.000", FormatUtils.formatDelta(0.0));
+    }
 }

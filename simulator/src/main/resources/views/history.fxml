@@ -19,15 +19,43 @@
       fx:controller="com.formula1.controller.HistoryController" spacing="12">
     <padding><Insets top="26" right="26" bottom="26" left="26"/></padding>
 
-    <Label text="Historial de sesiones" styleClass="view-title"/>
-    <Label text="Selecciona una sesión para ver su parrilla completa." styleClass="view-subtitle"/>
+    <HBox spacing="10" alignment="CENTER_LEFT" styleClass="section-header">
+        <Label text="HISTORIAL DE SESIONES" styleClass="view-title"/>
+        <Label fx:id="lblConteoSesiones" styleClass="hint"/>
+    </HBox>
+
+    <!-- Balance del piloto elegido en cada sesión, calculado sobre la parrilla
+         guardada: no hay ningún campo de resumen en el modelo. -->
+    <HBox spacing="14">
+        <VBox styleClass="metric-tile" HBox.hgrow="ALWAYS" spacing="3">
+            <Label text="VICTORIAS" styleClass="tile-label"/>
+            <Label fx:id="lblVictorias" text="—" styleClass="tile-value,v-wear"/>
+        </VBox>
+        <VBox styleClass="metric-tile" HBox.hgrow="ALWAYS" spacing="3">
+            <Label text="PODIOS" styleClass="tile-label"/>
+            <Label fx:id="lblPodios" text="—" styleClass="tile-value,v-accel"/>
+        </VBox>
+        <VBox styleClass="metric-tile" HBox.hgrow="ALWAYS" spacing="3">
+            <Label text="POSICIÓN MEDIA" styleClass="tile-label"/>
+            <Label fx:id="lblPosicionMedia" text="—" styleClass="tile-value,v-fuel"/>
+        </VBox>
+        <VBox styleClass="metric-tile" HBox.hgrow="ALWAYS" spacing="3">
+            <Label text="MEJOR VUELTA" styleClass="tile-label"/>
+            <Label fx:id="lblMejorVuelta" text="—" styleClass="tile-value,v-time"/>
+            <Label fx:id="lblMejorVueltaCircuito" styleClass="explore-card-foot"/>
+        </VBox>
+    </HBox>
 
     <HBox spacing="10" alignment="CENTER_LEFT">
+        <Label text="ORDENAR:" styleClass="tile-label"/>
+        <Button fx:id="chipFecha" text="FECHA" styleClass="filter-chip,chip-selected" onAction="#onOrdenarFecha"/>
+        <Button fx:id="chipPosicion" text="POSICIÓN" styleClass="filter-chip" onAction="#onOrdenarPosicion"/>
+        <Button fx:id="chipTiempo" text="MEJOR TIEMPO" styleClass="filter-chip" onAction="#onOrdenarTiempo"/>
+        <Region HBox.hgrow="ALWAYS"/>
         <Button text="Reutilizar configuración" onAction="#onReutilizar"/>
         <Button text="Actualizar" onAction="#onRefrescar"/>
-        <Region HBox.hgrow="ALWAYS"/>
-        <Label text="Comparar tiempos en"/>
-        <ComboBox fx:id="selectorCircuito" prefWidth="230"/>
+        <Label text="Comparar en" styleClass="tile-label"/>
+        <ComboBox fx:id="selectorCircuito" prefWidth="210"/>
     </HBox>
 
     <Label fx:id="lblVacio" styleClass="hint"
@@ -35,7 +63,8 @@
 
     <SplitPane dividerPositions="0.45" VBox.vgrow="ALWAYS">
         <VBox spacing="6">
-            <Label text="Sesiones" styleClass="section-title"/>
+            <padding><Insets top="10" right="10" bottom="4" left="2"/></padding>
+            <Label text="SESIONES" styleClass="card-label"/>
             <TableView fx:id="tablaSesiones" VBox.vgrow="ALWAYS">
                 <columns>
                     <TableColumn fx:id="colFecha" text="Fecha" prefWidth="140"/>
@@ -49,7 +78,8 @@
         </VBox>
 
         <VBox spacing="6">
-            <Label text="Parrilla de la sesión" styleClass="section-title"/>
+            <padding><Insets top="10" right="2" bottom="4" left="10"/></padding>
+            <Label text="PARRILLA DE LA SESIÓN" styleClass="card-label"/>
             <TableView fx:id="tablaResultados" VBox.vgrow="ALWAYS">
                 <columns>
                     <TableColumn fx:id="colPosicion" text="Pos" prefWidth="50"/>

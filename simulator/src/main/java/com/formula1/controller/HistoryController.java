@@ -11,12 +11,16 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -24,6 +28,11 @@ import java.util.stream.Collectors;
  * sesiones del mismo circuito y reutilización de configuraciones previas.
  */
 public class HistoryController {
+
+    /** Más recientes primero; la fecha es un texto ISO, así que ordena bien. */
+    private static final Comparator<QualifyingSession> POR_FECHA =
+            Comparator.comparing(QualifyingSession::getFecha,
+                    Comparator.nullsLast(Comparator.reverseOrder()));
 
     @FXML private TableView<QualifyingSession> tablaSesiones;
     @FXML private TableColumn<QualifyingSession, String> colFecha;
@@ -44,7 +53,18 @@ public class HistoryController {
     @FXML private LineChart<String, Number> grafico;
     @FXML private Label lblVacio;
 
+    @FXML private Label lblConteoSesiones;
+    @FXML private Label lblVictorias;
+    @FXML private Label lblPodios;
+    @FXML private Label lblPosicionMedia;
+    @FXML private Label lblMejorVuelta;
+    @FXML private Label lblMejorVueltaCircuito;
+    @FXML private Button chipFecha;
+    @FXML private Button chipPosicion;
+    @FXML private Button chipTiempo;
+
     private final QualifyingService sesiones;
+    private Comparator<QualifyingSession> orden = POR_FECHA;
 
     public HistoryController() {
         this(new QualifyingService());
@@ -69,11 +89,32 @@ public class HistoryController {
                 f.getValue().getConfig() == null ? "—" : f.getValue().getConfig().toString()));
 
         colPosicion.setCellValueFactory(f -> new SimpleIntegerProperty(f.getValue().getPosicion()));
+        colPosicion.setCellFactory(c -> new javafx.scene.control.TableCell<>() {
+            @Override
+            protected void updateItem(Number valor, boolean vacia) {
+                super.updateItem(valor, vacia);
+                getStyleClass().removeAll("pos-badge", "p1", "p2", "p3");
+                if (vacia || valor == null) {
+                    setText(null);
+                    return;
+                }
+                setText("P" + valor.intValue());
+                getStyleClass().add("pos-badge");
+                switch (valor.intValue()) {
+                    case 1 -> getStyleClass().add("p1");
+                    case 2 -> getStyleClass().add("p2");
+                    case 3 -> getStyleClass().add("p3");
+                    default -> { }
+                }
+            }
+        });
+        colTiempoPole.getStyleClass().add("mono-col");
         colPiloto.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getPiloto()));
         colEquipo.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getEquipo()));
         colTiempo.setCellValueFactory(f -> new SimpleStringProperty(
-                FormatUtils.formatLapTime(f.getValue().getTiempoSegundos())));
-        colGap.setCellValueFactory(f -> new SimpleStringProperty(FormatUtils.formatGap(f.getValue().getGap())));
+                FormatUtils.formatLapResult(f.getValue())));
+        colGap.setCellValueFactory(f -> new SimpleStringProperty(
+                f.getValue().isVueltaValida() ? FormatUtils.formatGap(f.getValue().getGap()) : "—"));
 
         tablaSesiones.getSelectionModel().selectedItemProperty().addListener((obs, antes, ahora) ->
                 tablaResultados.setItems(ahora == null
@@ -86,9 +127,13 @@ public class HistoryController {
     }
 
     private void refrescar() {
-        List<QualifyingSession> historial = sesiones.historial();
+        List<QualifyingSession> historial = sesiones.historial().stream()
+                .sorted(orden)
+                .collect(Collectors.toList());
         tablaSesiones.setItems(FXCollections.observableArrayList(historial));
         lblVacio.setVisible(historial.isEmpty());
+        lblConteoSesiones.setText(historial.size() + " SESIONES");
+        mostrarBalance(historial);
 
         List<String> circuitos = historial.stream()
                 .map(QualifyingSession::getCircuito)
@@ -98,6 +143,76 @@ public class HistoryController {
         if (!circuitos.isEmpty()) {
             selectorCircuito.setValue(circuitos.get(0));
         }
+    }
+
+    /**
+     * Victorias, podios y posición media del piloto que se eligió en cada
+     * sesión. No hay ningún resumen guardado: se recorre la parrilla buscando
+     * al piloto de la configuración, que puede no estar fijado.
+     */
+    private void mostrarBalance(List<QualifyingSession> historial) {
+        List<LapResult> propios = historial.stream()
+                .map(this::resultadoPropio)
+                .flatMap(Optional::stream)
+                .collect(Collectors.toList());
+
+        long victorias = propios.stream().filter(r -> r.getPosicion() == 1).count();
+        long podios = propios.stream().filter(r -> r.getPosicion() <= 3).count();
+        lblVictorias.setText(String.valueOf(victorias));
+        lblPodios.setText(String.valueOf(podios));
+        lblPosicionMedia.setText(propios.isEmpty() ? "—"
+                : String.format(Locale.ROOT, "%.1f",
+                        propios.stream().mapToInt(LapResult::getPosicion).average().orElse(0)));
+
+        historial.stream()
+                .filter(s -> s.getPole() != null)
+                .min(Comparator.comparingDouble(s -> s.getPole().getTiempoSegundos()))
+                .ifPresentOrElse(mejor -> {
+                    lblMejorVuelta.setText(FormatUtils.formatLapTime(mejor.getPole().getTiempoSegundos()));
+                    lblMejorVueltaCircuito.setText(mejor.getCircuito());
+                }, () -> {
+                    lblMejorVuelta.setText("—");
+                    lblMejorVueltaCircuito.setText("");
+                });
+    }
+
+    /** Vuelta del piloto que el usuario configuró para esa sesión. */
+    private Optional<LapResult> resultadoPropio(QualifyingSession sesion) {
+        if (sesion.getConfig() == null || sesion.getConfig().getPilotoId() == null) {
+            return Optional.empty();
+        }
+        int propio = sesion.getConfig().getPilotoId();
+        return sesion.getResultados().stream()
+                .filter(r -> r.getPilotoId() == propio)
+                .findFirst();
+    }
+
+    private void ordenarPor(Comparator<QualifyingSession> comparador, Button activo) {
+        orden = comparador;
+        for (Button chip : new Button[]{chipFecha, chipPosicion, chipTiempo}) {
+            chip.getStyleClass().remove("chip-selected");
+        }
+        activo.getStyleClass().add("chip-selected");
+        refrescar();
+    }
+
+    @FXML
+    private void onOrdenarFecha() {
+        ordenarPor(POR_FECHA, chipFecha);
+    }
+
+    @FXML
+    private void onOrdenarPosicion() {
+        ordenarPor(Comparator.comparingInt(
+                s -> resultadoPropio(s).map(LapResult::getPosicion).orElse(Integer.MAX_VALUE)),
+                chipPosicion);
+    }
+
+    @FXML
+    private void onOrdenarTiempo() {
+        ordenarPor(Comparator.comparingDouble(
+                s -> s.getPole() == null ? Double.MAX_VALUE : s.getPole().getTiempoSegundos()),
+                chipTiempo);
     }
 
     /** Evolución del tiempo de pole en las sesiones de un mismo circuito. */

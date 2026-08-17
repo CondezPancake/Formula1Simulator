@@ -17,6 +17,7 @@ public class SimulationConfig {
 
     private String id;
     private String circuito;
+    private Integer pilotoId;
     private String vehiculo;
     private DrivingMode modo;
     private AerodynamicLoad aerodinamica;
@@ -32,10 +33,11 @@ public class SimulationConfig {
         this.combustible = FuelStrategy.BALANCEADA;
     }
 
-    public SimulationConfig(String circuito, String vehiculo, DrivingMode modo,
+    public SimulationConfig(String circuito, Integer pilotoId, String vehiculo, DrivingMode modo,
                              AerodynamicLoad aerodinamica, TirePressure presion, FuelStrategy combustible) {
         this();
         this.circuito = circuito;
+        this.pilotoId = pilotoId;
         this.vehiculo = vehiculo;
         this.modo = modo;
         this.aerodinamica = aerodinamica;
@@ -57,7 +59,7 @@ public class SimulationConfig {
      * el resto en lugar de las décimas que se ven en la realidad.
      */
     public static SimulationConfig paraClasificacion() {
-        return new SimulationConfig(null, null, DrivingMode.AGRESIVA,
+        return new SimulationConfig(null, null, null, DrivingMode.AGRESIVA,
                 AerodynamicLoad.MEDIA, TirePressure.ESTANDAR, FuelStrategy.AGRESIVA);
     }
 
@@ -75,6 +77,14 @@ public class SimulationConfig {
 
     public void setCircuito(String circuito) {
         this.circuito = circuito;
+    }
+
+    public Integer getPilotoId() {
+        return pilotoId;
+    }
+
+    public void setPilotoId(Integer pilotoId) {
+        this.pilotoId = pilotoId;
     }
 
     public String getVehiculo() {
@@ -139,6 +149,10 @@ public class SimulationConfig {
 
     @Override
     public String toString() {
-        return modo + " · Aero " + aerodinamica + " · Presión " + presion + " · " + combustible;
+        String seleccion = pilotoId == null
+                ? vehiculo
+                : "Piloto #" + pilotoId + " · " + vehiculo;
+        return seleccion + " · " + modo + " · Aero " + aerodinamica
+                + " · Presión " + presion + " · " + combustible;
     }
 }

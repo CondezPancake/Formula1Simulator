@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+
+<TabPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+         styleClass="subnav" tabClosingPolicy="UNAVAILABLE">
+    <tabs>
+        <Tab text="EQUIPOS">
+            <fx:include source="teams.fxml"/>
+        </Tab>
+        <Tab text="PILOTOS">
+            <fx:include source="drivers.fxml"/>
+        </Tab>
+        <Tab text="VEHÍCULOS">
+            <fx:include source="vehicles.fxml"/>
+        </Tab>
+        <Tab text="CIRCUITOS">
+            <fx:include source="circuits.fxml"/>
+        </Tab>
+    </tabs>
+</TabPane>

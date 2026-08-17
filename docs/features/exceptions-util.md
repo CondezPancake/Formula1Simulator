@@ -1,31 +1,24 @@
-# feature/exceptions-util
+# Utilidades y excepciones
 
-## Qué se implementó
+## Qué contiene hoy
 
-Excepciones de dominio (RNF-33) y utilidades transversales (RNF-36) usadas por el resto de capas.
+El proyecto conserva una capa pequeña de utilidades transversales y dos excepciones de aplicación:
 
-## Clases
+- `service.ValidationException`: errores de reglas de negocio o selección inválida antes de simular.
+- `data.DataAccessException`: errores de lectura/escritura persistente.
+- `util.DateUtils`: fecha de sesión.
+- `util.FormatUtils`: tiempos, gaps, deltas y porcentajes.
+- `util.MathUtils`: límites y cálculos numéricos simples.
+- `util.RandomUtils`: aleatoriedad acotada.
+- `util.ValidationUtils`: validaciones de texto, rangos y números positivos.
+- `util.Async`: pool compartido para tareas fuera del hilo JavaFX.
 
-`com.formula1.exception`:
-- `InvalidDriverException`, `InvalidVehicleConfigurationException`, `InvalidSimulationException`, `OpenF1ConnectionException`, `DatabaseException` — todas `extends RuntimeException`, con constructor `(String message)` y `(String message, Throwable cause)`. No son checked para no forzar `throws` en cascada en un proyecto de alcance acotado.
+## Decisiones
 
-`com.formula1.util`:
-- `DateUtils` — `now()`, `format(LocalDateTime, [pattern])`.
-- `ValidationUtils` — `isNotBlank`, `isPositive`, `isInRange`, `isValidDriverNumber` (soporta RNF-07: velocidad > 0, longitud > 0, vueltas > 0, nombre ≠ vacío).
-- `FormatUtils` — `formatLapTime` (segundos → `"1:23.456"`), `formatPercentage`.
-- `MathUtils` — `clamp`, `average`, `percentageOf`.
-- `RandomUtils` — `randomDouble`, `randomInt`, `randomBoolean`, `pickRandom` (base para variabilidad del motor de simulación cuando se implemente).
+Las excepciones son `RuntimeException` porque la UI y los servicios las manejan en los bordes de cada flujo. Esto evita propagar `throws` por todo el dominio y mantiene el código de simulación enfocado en reglas.
 
-Todas las clases de `util` tienen constructor privado (no instanciables) y responsabilidad única por clase (evitan convertirse en una "God class" de utilidades, según lo pedido en RNF-36).
-
-## Patrón de diseño
-
-No aplica directamente.
-
-## Pendiente
-
-Ninguno de nivel C: son utilidades e infraestructura de excepciones, no lógica de negocio.
+Las utilidades son clases finales o de uso estático con responsabilidad acotada; no contienen lógica de negocio de Fórmula 1.
 
 ## Verificación
 
-`mvn -f simulator/pom.xml clean compile` → `BUILD SUCCESS`, 26 archivos fuente compilados.
+La suite completa ejecuta 94 pruebas correctamente.

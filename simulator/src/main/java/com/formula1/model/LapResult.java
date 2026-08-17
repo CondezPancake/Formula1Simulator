@@ -1,6 +1,10 @@
 package com.formula1.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Resultado de un piloto en la sesión de clasificación.
@@ -21,8 +25,15 @@ public class LapResult {
     private double gap;
     private double consumoEstimado;
     private double desgasteEstimado;
+    private SectorTimes sectorTimes;
+    private LapStatus estadoVuelta;
+    private TrackSector sectorIncidente;
+    private List<EventOccurrence> eventos;
 
     public LapResult() {
+        this.estadoVuelta = LapStatus.VALID;
+        this.sectorIncidente = TrackSector.NONE;
+        this.eventos = new ArrayList<>();
     }
 
     public LapResult(int pilotoId, String piloto, String equipo, String vehiculo, double tiempoSegundos) {
@@ -105,8 +116,60 @@ public class LapResult {
         this.desgasteEstimado = desgasteEstimado;
     }
 
+    public SectorTimes getSectorTimes() {
+        return sectorTimes;
+    }
+
+    public void setSectorTimes(SectorTimes sectorTimes) {
+        this.sectorTimes = sectorTimes;
+    }
+
+    @JsonIgnore
+    public boolean hasSectorTimes() {
+        return sectorTimes != null;
+    }
+
+    public LapStatus getEstadoVuelta() {
+        return estadoVuelta == null ? LapStatus.VALID : estadoVuelta;
+    }
+
+    public void setEstadoVuelta(LapStatus estadoVuelta) {
+        this.estadoVuelta = estadoVuelta == null ? LapStatus.VALID : estadoVuelta;
+    }
+
+    public TrackSector getSectorIncidente() {
+        return sectorIncidente == null ? TrackSector.NONE : sectorIncidente;
+    }
+
+    public void setSectorIncidente(TrackSector sectorIncidente) {
+        this.sectorIncidente = sectorIncidente == null ? TrackSector.NONE : sectorIncidente;
+    }
+
+    public List<EventOccurrence> getEventos() {
+        return eventos == null ? List.of() : eventos;
+    }
+
+    public void setEventos(List<EventOccurrence> eventos) {
+        this.eventos = eventos == null ? new ArrayList<>() : new ArrayList<>(eventos);
+    }
+
+    @JsonIgnore
+    public boolean isVueltaValida() {
+        return getEstadoVuelta() == LapStatus.VALID;
+    }
+
+    @JsonIgnore
+    public String getEventoResumen() {
+        return getEventos().stream()
+                .filter(EventOccurrence::ocurrio)
+                .map(evento -> evento.tipo().getEtiqueta())
+                .findFirst()
+                .orElse(EventType.NO_EVENT.getEtiqueta());
+    }
+
     @Override
     public String toString() {
-        return posicion + ". " + piloto + " (" + equipo + ")";
+        return posicion + ". " + piloto + " (" + equipo + ") · "
+                + getEstadoVuelta().getEtiqueta();
     }
 }

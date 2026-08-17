@@ -1,11 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.LineChart?>
+<?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.FlowPane?>
@@ -18,34 +24,24 @@
       fx:controller="com.formula1.controller.SimulationController" spacing="12">
     <padding><Insets top="26" right="26" bottom="26" left="26"/></padding>
 
-    <Label text="Sesión de clasificación" styleClass="view-title"/>
-    <Label text="Configura el monoplaza y disputa la sesión: el clima se genera al azar según el circuito."
-           styleClass="view-subtitle"/>
-
+    <!-- La puesta a punto del monoplaza vive en CONFIG. & HISTORIAL, como en
+         el diseño; aquí solo se elige quién sale a pista. -->
     <FlowPane hgap="14" vgap="10">
         <VBox spacing="4">
-            <Label text="Circuito" styleClass="card-label"/>
+            <Label text="CIRCUITO" styleClass="card-label"/>
             <ComboBox fx:id="selectorCircuito" prefWidth="230"/>
         </VBox>
         <VBox spacing="4">
-            <Label text="Vehículo" styleClass="card-label"/>
+            <Label text="VEHÍCULO" styleClass="card-label"/>
             <ComboBox fx:id="selectorVehiculo" prefWidth="130"/>
         </VBox>
         <VBox spacing="4">
-            <Label text="Conducción" styleClass="card-label"/>
-            <ComboBox fx:id="selectorModo" prefWidth="180"/>
+            <Label text="PILOTO" styleClass="card-label"/>
+            <ComboBox fx:id="selectorPiloto" promptText="Selecciona un piloto" prefWidth="190" disable="true"/>
         </VBox>
         <VBox spacing="4">
-            <Label text="Aerodinámica" styleClass="card-label"/>
-            <ComboBox fx:id="selectorAero" prefWidth="120"/>
-        </VBox>
-        <VBox spacing="4">
-            <Label text="Presión" styleClass="card-label"/>
-            <ComboBox fx:id="selectorPresion" prefWidth="120"/>
-        </VBox>
-        <VBox spacing="4">
-            <Label text="Combustible" styleClass="card-label"/>
-            <ComboBox fx:id="selectorCombustible" prefWidth="140"/>
+            <Label text="PUESTA A PUNTO" styleClass="card-label"/>
+            <Label fx:id="lblPuestaAPunto" text="—" styleClass="stat-value"/>
         </VBox>
     </FlowPane>
 
@@ -59,16 +55,271 @@
 
     <Separator/>
 
-    <TableView fx:id="tabla" VBox.vgrow="ALWAYS">
-        <columns>
-            <TableColumn fx:id="colPosicion" text="Pos" prefWidth="50"/>
-            <TableColumn fx:id="colPiloto" text="Piloto" prefWidth="170"/>
-            <TableColumn fx:id="colEquipo" text="Equipo" prefWidth="180"/>
-            <TableColumn fx:id="colVehiculo" text="Vehículo" prefWidth="90"/>
-            <TableColumn fx:id="colTiempo" text="Tiempo" prefWidth="100"/>
-            <TableColumn fx:id="colGap" text="Dif." prefWidth="80"/>
-            <TableColumn fx:id="colConsumo" text="Consumo" prefWidth="85"/>
-            <TableColumn fx:id="colDesgaste" text="Desgaste" prefWidth="85"/>
-        </columns>
-    </TableView>
+    <VBox spacing="8" styleClass="evolution-panel">
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Label text="Evolución del vehículo seleccionado" styleClass="section-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label text="Los valores provienen del cálculo de la vuelta" styleClass="hint"/>
+        </HBox>
+        <HBox spacing="12">
+            <VBox spacing="6" styleClass="evolution-card" HBox.hgrow="ALWAYS">
+                <Label text="Vuelta del piloto" styleClass="card-label"/>
+                <Label fx:id="lblPilotoEvolucion" text="Esperando inicio de vuelta" styleClass="metric-value"/>
+                <ProgressBar fx:id="progresoVuelta" progress="0" maxWidth="Infinity"/>
+            </VBox>
+            <VBox spacing="6" styleClass="evolution-card" HBox.hgrow="ALWAYS">
+                <Label text="Velocidad" styleClass="card-label"/>
+                <Label fx:id="lblVelocidad" text="0 km/h" styleClass="metric-value"/>
+                <ProgressBar fx:id="barraVelocidad" progress="0" maxWidth="Infinity" styleClass="metric-speed"/>
+            </VBox>
+            <VBox spacing="6" styleClass="evolution-card" HBox.hgrow="ALWAYS">
+                <Label text="Consumo acumulado" styleClass="card-label"/>
+                <Label fx:id="lblConsumoEvolucion" text="0.00 / 0.00 u" styleClass="metric-value"/>
+                <ProgressBar fx:id="barraConsumo" progress="0" maxWidth="Infinity" styleClass="metric-consumption"/>
+            </VBox>
+            <VBox spacing="6" styleClass="evolution-card" HBox.hgrow="ALWAYS">
+                <Label text="Desgaste acumulado" styleClass="card-label"/>
+                <Label fx:id="lblDesgasteEvolucion" text="0.00 / 0.00 u" styleClass="metric-value"/>
+                <ProgressBar fx:id="barraDesgaste" progress="0" maxWidth="Infinity" styleClass="metric-wear"/>
+            </VBox>
+        </HBox>
+    </VBox>
+
+    <TabPane fx:id="panelResultados" styleClass="subnav" VBox.vgrow="ALWAYS" tabClosingPolicy="UNAVAILABLE">
+        <tabs>
+            <Tab text="Clasificación">
+                <TableView fx:id="tabla">
+                    <columns>
+                        <TableColumn fx:id="colPosicion" text="Pos" prefWidth="45"/>
+                        <TableColumn fx:id="colPiloto" text="Piloto" prefWidth="145"/>
+                        <TableColumn fx:id="colEquipo" text="Equipo" prefWidth="145"/>
+                        <TableColumn fx:id="colVehiculo" text="Vehículo" prefWidth="75"/>
+                        <TableColumn fx:id="colTiempo" text="Tiempo" prefWidth="90"/>
+                        <TableColumn fx:id="colGap" text="Dif." prefWidth="65"/>
+                        <TableColumn fx:id="colConsumo" text="Consumo" prefWidth="75"/>
+                        <TableColumn fx:id="colDesgaste" text="Desgaste" prefWidth="75"/>
+                        <TableColumn fx:id="colEstadoVuelta" text="Estado" prefWidth="90"/>
+                        <TableColumn fx:id="colEventoResultado" text="Evento" prefWidth="145"/>
+                    </columns>
+                </TableView>
+            </Tab>
+            <Tab text="Estadísticas">
+                <VBox spacing="10">
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Comparar participantes por" styleClass="card-label"/>
+                        <ComboBox fx:id="selectorMetrica" prefWidth="220"/>
+                    </HBox>
+                    <HBox spacing="12">
+                        <VBox spacing="4" styleClass="stat-card" HBox.hgrow="ALWAYS">
+                            <Label text="Pole" styleClass="card-label"/>
+                            <Label fx:id="lblPoleEstadistica" text="—" styleClass="stat-value"/>
+                        </VBox>
+                        <VBox spacing="4" styleClass="stat-card" HBox.hgrow="ALWAYS">
+                            <Label text="Tiempo promedio" styleClass="card-label"/>
+                            <Label fx:id="lblPromedioEstadistica" text="—" styleClass="stat-value"/>
+                        </VBox>
+                        <VBox spacing="4" styleClass="stat-card" HBox.hgrow="ALWAYS">
+                            <Label text="Diferencia máxima" styleClass="card-label"/>
+                            <Label fx:id="lblDiferenciaEstadistica" text="—" styleClass="stat-value"/>
+                        </VBox>
+                        <VBox spacing="4" styleClass="stat-card" HBox.hgrow="ALWAYS">
+                            <Label text="Participantes" styleClass="card-label"/>
+                            <Label fx:id="lblParticipantesEstadistica" text="0" styleClass="stat-value"/>
+                        </VBox>
+                    </HBox>
+                    <BarChart fx:id="graficoRendimiento" legendVisible="false" VBox.vgrow="ALWAYS">
+                        <xAxis>
+                            <CategoryAxis label="Piloto" tickLabelRotation="-45"/>
+                        </xAxis>
+                        <yAxis>
+                            <NumberAxis fx:id="ejeMetrica" forceZeroInRange="false"/>
+                        </yAxis>
+                    </BarChart>
+                </VBox>
+            </Tab>
+            <Tab fx:id="tabTelemetria" text="Telemetría en vivo">
+                <VBox spacing="12" styleClass="telemetry-panel">
+                    <HBox spacing="12" alignment="CENTER_LEFT">
+                        <VBox spacing="2">
+                            <Label text="LIVE TELEMETRY" styleClass="telemetry-title"/>
+                            <Label fx:id="lblTelemetriaPiloto"
+                                   text="Esperando datos del vehículo seleccionado" styleClass="hint"/>
+                        </VBox>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <VBox spacing="2" alignment="CENTER_RIGHT">
+                            <Label fx:id="lblEventoTelemetria" text="Sin evento" styleClass="event-live"/>
+                            <Label fx:id="lblEstadoPiloto" text="Vuelta válida" styleClass="hint"/>
+                        </VBox>
+                        <Label fx:id="lblEstadoPista" text="Estado de pista —" styleClass="track-state"/>
+                    </HBox>
+
+                    <HBox spacing="12">
+                        <VBox spacing="6" styleClass="telemetry-card" HBox.hgrow="ALWAYS">
+                            <Label text="VELOCIDAD" styleClass="card-label"/>
+                            <Label fx:id="lblVelocidadTelemetria" text="0 km/h" styleClass="telemetry-value"/>
+                            <ProgressBar fx:id="barraVelocidadTelemetria" progress="0" maxWidth="Infinity"
+                                         styleClass="metric-speed"/>
+                        </VBox>
+                        <VBox spacing="6" styleClass="telemetry-card" HBox.hgrow="ALWAYS">
+                            <Label text="RPM" styleClass="card-label"/>
+                            <Label fx:id="lblRpm" text="0 rpm" styleClass="telemetry-value"/>
+                            <ProgressBar fx:id="barraRpm" progress="0" maxWidth="Infinity"
+                                         styleClass="metric-rpm"/>
+                        </VBox>
+                        <VBox spacing="6" styleClass="telemetry-card" HBox.hgrow="ALWAYS">
+                            <Label text="COMBUSTIBLE DE VUELTA" styleClass="card-label"/>
+                            <Label fx:id="lblCombustible" text="100.0 %" styleClass="telemetry-value"/>
+                            <ProgressBar fx:id="barraCombustible" progress="1" maxWidth="Infinity"
+                                         styleClass="metric-fuel"/>
+                        </VBox>
+                    </HBox>
+
+                    <HBox spacing="12">
+                        <VBox spacing="6" styleClass="telemetry-card" HBox.hgrow="ALWAYS">
+                            <Label text="DESGASTE DE NEUMÁTICOS" styleClass="card-label"/>
+                            <Label fx:id="lblDesgasteTelemetria" text="0.0 %" styleClass="telemetry-value"/>
+                            <ProgressBar fx:id="barraDesgasteTelemetria" progress="0" maxWidth="Infinity"
+                                         styleClass="metric-wear"/>
+                        </VBox>
+                        <VBox spacing="6" styleClass="telemetry-card" HBox.hgrow="ALWAYS">
+                            <Label text="TEMP. NEUMÁTICOS" styleClass="card-label"/>
+                            <Label fx:id="lblTempNeumaticos" text="0.0 °C" styleClass="telemetry-value"/>
+                            <ProgressBar fx:id="barraTempNeumaticos" progress="0" maxWidth="Infinity"
+                                         styleClass="metric-temperature"/>
+                        </VBox>
+                        <VBox spacing="6" styleClass="telemetry-card" HBox.hgrow="ALWAYS">
+                            <Label text="TEMP. MOTOR" styleClass="card-label"/>
+                            <Label fx:id="lblTempMotor" text="0.0 °C" styleClass="telemetry-value"/>
+                            <ProgressBar fx:id="barraTempMotor" progress="0" maxWidth="Infinity"
+                                         styleClass="metric-engine"/>
+                        </VBox>
+                    </HBox>
+
+                    <HBox spacing="12">
+                        <VBox spacing="4" styleClass="telemetry-summary" HBox.hgrow="ALWAYS">
+                            <Label text="SECTOR ACTUAL" styleClass="card-label"/>
+                            <Label fx:id="lblSector" text="S—" styleClass="telemetry-value"/>
+                        </VBox>
+                        <VBox spacing="4" styleClass="telemetry-summary" HBox.hgrow="ALWAYS">
+                            <Label text="TIEMPO DE VUELTA" styleClass="card-label"/>
+                            <Label fx:id="lblTiempoVuelta" text="0:00.000" styleClass="telemetry-value"/>
+                        </VBox>
+                        <VBox spacing="4" styleClass="telemetry-summary" HBox.hgrow="ALWAYS">
+                            <Label text="DELTA VS. RÉCORD" styleClass="card-label"/>
+                            <Label fx:id="lblDelta" text="±0.000" styleClass="telemetry-value"/>
+                        </VBox>
+                    </HBox>
+                </VBox>
+            </Tab>
+            <Tab text="Evolución de vuelta">
+                <fx:include fx:id="evolucionVuelta" source="lap-evolution.fxml"/>
+            </Tab>
+            <Tab text="Comparación de sectores">
+                <fx:include fx:id="comparacionSectores" source="sector-comparison.fxml"/>
+            </Tab>
+            <Tab text="Evolución de pista">
+                <fx:include fx:id="evolucionPista" source="track-evolution.fxml"/>
+            </Tab>
+            <Tab text="Análisis">
+                <fx:include fx:id="analisisSesion" source="session-analysis.fxml"/>
+            </Tab>
+            <Tab text="Eventos">
+                <VBox spacing="8">
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Registro de eventos de la sesión" styleClass="section-title"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label text="NO_EVENT no se almacena para mantener el registro limpio" styleClass="hint"/>
+                    </HBox>
+                    <TableView fx:id="tablaEventos" VBox.vgrow="ALWAYS">
+                        <placeholder>
+                            <Label text="La sesión terminó sin eventos"/>
+                        </placeholder>
+                        <columns>
+                            <TableColumn fx:id="colEventoPiloto" text="Piloto" prefWidth="160"/>
+                            <TableColumn fx:id="colEventoNombre" text="Evento" prefWidth="180"/>
+                            <TableColumn fx:id="colEventoCategoria" text="Categoría" prefWidth="135"/>
+                            <TableColumn fx:id="colEventoAlcance" text="Alcance" prefWidth="95"/>
+                            <TableColumn fx:id="colEventoSector" text="Sector" prefWidth="90"/>
+                            <TableColumn fx:id="colEventoImpacto" text="Impacto" prefWidth="120"/>
+                            <TableColumn fx:id="colEventoBandera" text="Pista" prefWidth="145"/>
+                        </columns>
+                    </TableView>
+                </VBox>
+            </Tab>
+            <Tab fx:id="tabClima" text="Clima dinámico">
+                <VBox spacing="10" styleClass="weather-panel">
+                    <HBox spacing="12" alignment="CENTER_LEFT">
+                        <VBox spacing="2">
+                            <Label text="DYNAMIC WEATHER" styleClass="weather-title"/>
+                            <Label text="Las condiciones modifican el rendimiento de la vuelta" styleClass="hint"/>
+                        </VBox>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label fx:id="lblEstadoClimaDinamico" text="Esperando evolución climática"
+                               styleClass="weather-state"/>
+                    </HBox>
+
+                    <HBox spacing="10">
+                        <VBox spacing="4" styleClass="weather-card" HBox.hgrow="ALWAYS">
+                            <Label text="TEMPERATURA" styleClass="card-label"/>
+                            <Label fx:id="lblTempAmbiente" text="— °C" styleClass="weather-value"/>
+                        </VBox>
+                        <VBox spacing="4" styleClass="weather-card" HBox.hgrow="ALWAYS">
+                            <Label text="HUMEDAD" styleClass="card-label"/>
+                            <Label fx:id="lblHumedad" text="— %" styleClass="weather-value"/>
+                        </VBox>
+                        <VBox spacing="4" styleClass="weather-card" HBox.hgrow="ALWAYS">
+                            <Label text="PROB. LLUVIA" styleClass="card-label"/>
+                            <Label fx:id="lblProbLluvia" text="— %" styleClass="weather-value"/>
+                        </VBox>
+                        <VBox spacing="4" styleClass="weather-card" HBox.hgrow="ALWAYS">
+                            <Label text="INTENSIDAD" styleClass="card-label"/>
+                            <Label fx:id="lblIntensidadLluvia" text="— %" styleClass="weather-value"/>
+                        </VBox>
+                        <VBox spacing="4" styleClass="weather-card" HBox.hgrow="ALWAYS">
+                            <Label text="TEMP. PISTA" styleClass="card-label"/>
+                            <Label fx:id="lblTempPista" text="— °C" styleClass="weather-value"/>
+                        </VBox>
+                    </HBox>
+
+                    <HBox spacing="10">
+                        <VBox spacing="5" styleClass="weather-card" HBox.hgrow="ALWAYS">
+                            <Label text="GRIP" styleClass="card-label"/>
+                            <Label fx:id="lblGrip" text="— %" styleClass="weather-value"/>
+                            <ProgressBar fx:id="barraGrip" progress="0" maxWidth="Infinity" styleClass="metric-grip"/>
+                        </VBox>
+                        <VBox spacing="5" styleClass="weather-card" HBox.hgrow="ALWAYS">
+                            <Label text="TRACCIÓN" styleClass="card-label"/>
+                            <Label fx:id="lblTraccion" text="— %" styleClass="weather-value"/>
+                            <ProgressBar fx:id="barraTraccion" progress="0" maxWidth="Infinity" styleClass="metric-traction"/>
+                        </VBox>
+                        <VBox spacing="5" styleClass="weather-card" HBox.hgrow="ALWAYS">
+                            <Label text="FRENADO" styleClass="card-label"/>
+                            <Label fx:id="lblFrenado" text="— %" styleClass="weather-value"/>
+                            <ProgressBar fx:id="barraFrenado" progress="0" maxWidth="Infinity" styleClass="metric-braking"/>
+                        </VBox>
+                        <VBox spacing="4" styleClass="weather-card" HBox.hgrow="ALWAYS">
+                            <Label text="NEUMÁTICO" styleClass="card-label"/>
+                            <Label fx:id="lblNeumaticoClima" text="—" styleClass="weather-value"/>
+                        </VBox>
+                        <VBox spacing="4" styleClass="weather-card" HBox.hgrow="ALWAYS">
+                            <Label text="ESTRATEGIA" styleClass="card-label"/>
+                            <Label fx:id="lblEstrategiaClima" text="—" styleClass="weather-value"/>
+                        </VBox>
+                    </HBox>
+
+                    <LineChart fx:id="graficoClima" createSymbols="false" animated="false"
+                               legendVisible="true" VBox.vgrow="ALWAYS">
+                        <xAxis>
+                            <NumberAxis label="Segmento" lowerBound="1" upperBound="20"
+                                        tickUnit="1" autoRanging="false"/>
+                        </xAxis>
+                        <yAxis>
+                            <NumberAxis label="Porcentaje" lowerBound="0" upperBound="100"
+                                        tickUnit="20" autoRanging="false"/>
+                        </yAxis>
+                    </LineChart>
+                </VBox>
+            </Tab>
+        </tabs>
+    </TabPane>
 </VBox>

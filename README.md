@@ -7,7 +7,7 @@
   <img alt="JavaFX" src="https://img.shields.io/badge/JavaFX-17.0.10-e10600?style=flat-square&logo=java&logoColor=white">
   <img alt="Maven" src="https://img.shields.io/badge/Maven-build-e10600?style=flat-square&logo=apachemaven&logoColor=white">
   <img alt="MongoDB" src="https://img.shields.io/badge/MongoDB-5.1.1-e10600?style=flat-square&logo=mongodb&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-40%20passing-2ea043?style=flat-square">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-96%20passing-2ea043?style=flat-square">
 </p>
 
 # Formula1Simulator
@@ -25,6 +25,7 @@ La especificación que sigue el proyecto es [`f1project.md`](f1project.md).
 - [Cómo funciona la simulación](#cómo-funciona-la-simulación)
 - [Tecnologías](#tecnologías)
 - [Arquitectura](#arquitectura)
+- [Interfaz](#interfaz)
 - [Estructura del proyecto](#estructura-del-proyecto)
 - [Instalación y ejecución](#instalación-y-ejecución)
 - [Datos](#datos)
@@ -42,10 +43,10 @@ La aplicación **arranca y es plenamente usable con o sin MongoDB**: si no hay s
 
 | | |
 |---|---|
-| Archivos `.java` | 46 |
-| Paquetes | 5 |
+| Archivos `.java` | 90 |
+| Paquetes | 6 |
 | Patrones de diseño | 2 (Repository, Singleton) |
-| Tests | 40, todos en verde |
+| Tests | 96, todos en verde |
 
 ## Funcionalidades
 
@@ -53,7 +54,7 @@ La aplicación **arranca y es plenamente usable con o sin MongoDB**: si no hay s
 
 **Análisis** — Comparación de dos o más vehículos en una tabla transpuesta con gráfico de barras. Ficha de circuito con récord de vuelta, ganadores históricos, clima promedio e impacto de la pista sobre consumo y desgaste.
 
-**Simulación** — Clima aleatorio según la distribución del circuito, cálculo del tiempo de los 20 pilotos, parrilla ordenada con la pole destacada y diferencias respecto a ella. Corre en segundo plano con barra de progreso, sin congelar la ventana.
+**Simulación** — Clima inicial aleatorio según la distribución del circuito y evolución dinámica de temperatura, humedad, lluvia, pista, grip, tracción y frenado. La goma se acumula entre vueltas en seco y la lluvia limpia progresivamente la pista; el grip resultante modifica el tiempo real de cada piloto. Incluye 28 eventos ponderados y contextuales más `NO_EVENT`: pueden alterar rendimiento, tiempo, desgaste, temperaturas y pista; un accidente invalida la vuelta y puede dejar al piloto fuera. La vuelta seleccionada muestra telemetría, clima y eventos en vivo, además de un gráfico intercambiable de velocidad, tiempo, desgaste, combustible, temperaturas y delta. La sesión incluye clasificación, estadísticas, comparación S1/S2/S3, evolución de pista, análisis automático por reglas, registro de eventos y tendencias climáticas persistibles. Todo corre en segundo plano sin congelar la ventana.
 
 **Historial** — Sesiones guardadas con su parrilla, comparación de tiempos de pole entre sesiones del mismo circuito, y configuraciones previas reutilizables.
 
@@ -62,7 +63,7 @@ La aplicación **arranca y es plenamente usable con o sin MongoDB**: si no hay s
 ```
 t_base   = 3600 · longitud_km / velocidad_promedio(modo)
 t_vuelta = t_base · factorTecnico · f_clima · f_aero · f_presion
-                  · f_combustible · f_piloto · (1 ± 0,5 %)
+                  · f_combustible · f_piloto · (1 ± 0,5 %) + delta_evento
 ```
 
 El **factor técnico** de cada circuito no es un número inventado: se deriva de su récord de vuelta real comparándolo con el tiempo a velocidad de referencia, lo que sitúa a Mónaco en 1,98 y a Monza en 1,32. Cada ajuste tiene contrapartida —más carga aerodinámica mejora el tiempo pero dispara el consumo; menos presión mejora el agarre pero desgasta más— para que configurar importe.
@@ -83,7 +84,7 @@ Una parrilla típica en Monza:
 
 ## Arquitectura
 
-Cinco paquetes y **dos patrones de diseño**, los mínimos que aportan valor real:
+Seis paquetes y **dos patrones de diseño**, los exigidos por el alcance principal:
 
 | Patrón | Dónde | Por qué |
 |---|---|---|
@@ -104,13 +105,39 @@ Cinco paquetes y **dos patrones de diseño**, los mínimos que aportan valor rea
 
 Un único pool de dos hilos demonio (`util.Async`). La carga inicial y la simulación corren en `javafx.concurrent.Task`, con la interfaz **enlazada** a sus propiedades de progreso y mensaje. Ningún acceso a datos ni cálculo ocurre en el hilo de JavaFX.
 
+### Interfaz
+
+La interfaz reproduce el mockup de Figma del equipo, cuyas capturas están en
+`docs/assets/F1_Recursos_Multimedia/Mockup_Design/`. La paleta y la geometría no
+son aproximaciones: los colores se muestrearon de esos PNG y las medidas salen de
+la metadata del archivo de Figma.
+
+- **Cabecera persistente de 54 px** con el evento, el estado de la sesión
+  (`LISTO` / `LIVE` / `FINALIZADA`), el contador de segmento, el clima real y las
+  banderas de pista, que se encienden con los eventos de la simulación.
+- **Nav superior de 4 secciones** — `CARRERA · EXPLORAR · GESTIÓN · CONFIG. & HISTORIAL` —
+  y cada sección lleva su propia barra de sub-tabs.
+- **Color oficial por escudería** (`util.TeamColors`) en el borde de las tarjetas de
+  Explorar y en la franja izquierda de cada fila de la parrilla.
+- Cifras y tiempos en tipografía monoespaciada; títulos y reloj en una condensada.
+
+El diseño está trazado sobre 1920 px de ancho; por debajo de ~1280 la cabecera se
+apelmaza, de ahí el mínimo que fija `App`.
+
+Como el mockup describe una **carrera** y esta aplicación simula una
+**clasificación**, hay elementos sin equivalente en el dominio. En vez de dejarlos
+como adorno fijo, cada uno se ató al dato más cercano que sí existe: el contador de
+vuelta muestra el segmento de vuelta (1-20), las banderas usan las de `TrackFlag`
+(no hay Safety Car ni VSC en el modelo), y las columnas de neumático, boxes y DRS
+se sustituyeron por desgaste, estado de vuelta y evento.
+
 ## Estructura del proyecto
 
 ```text
 Formula1Simulator/
 ├── f1project.md                 # Especificación del proyecto
 ├── docs/
-│   ├── features/                # Un .md por rama: qué se hizo y por qué
+│   ├── features/                # Documentos vigentes de funcionalidades y estado
 │   └── legacy/                  # Especificación anterior, ya no vigente
 ├── tools/gen_seed.py            # Genera seed.json de forma reproducible
 └── simulator/
@@ -121,13 +148,14 @@ Formula1Simulator/
         │   ├── model/      # entidades + enums con sus factores
         │   ├── data/       # DataStore, MongoConnection, repositorios, seed
         │   ├── service/    # CRUD, búsquedas, motor de clasificación
-        │   ├── controller/ # controladores JavaFX, navegación y formularios
+        │   ├── event/      # catálogo, selección ponderada e impactos
+        │   ├── controller/ # controladores JavaFX y componentes visuales
         │   └── util/       # formato, validación, aleatoriedad, hilos
         ├── main/resources/
-        │   ├── views/      # 10 vistas FXML
+        │   ├── views/      # 21 vistas FXML
         │   ├── css/style.css
         │   └── data/seed.json
-        └── test/java/      # 40 tests
+        └── test/java/      # 96 tests
 ```
 
 ## Instalación y ejecución
@@ -182,5 +210,5 @@ El archivo se genera con `tools/gen_seed.py` para que los datos sean reproducibl
 
 ## Pendiente
 
-- **Diseño de Figma**: las vistas usan la paleta del proyecto pero aún no reproducen el diseño de Figma (no se pudo extraer por el límite del plan). Las vistas no llevan estilos en línea, así que adaptarlas será cambiar `style.css`.
-- Imágenes de equipos, vehículos y trazados: los datos incluyen las URL pero la interfaz todavía no las muestra.
+- **Pestañas de análisis** (clima dinámico, eventos, evolución de vuelta, sectores, evolución de pista, análisis) y **comparación de vehículos**: ya heredan la paleta y los componentes nuevos, pero su composición todavía no está trabajada al detalle del resto.
+- Imágenes de **equipos y vehículos**: `seed.json` trae las URL de 3 logos y ninguna foto de coche; además los trazados son SVG remotos y JavaFX no renderiza SVG sin `javafx-web`. Las tarjetas usan un marcador propio mientras tanto.

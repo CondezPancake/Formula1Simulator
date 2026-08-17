@@ -49,6 +49,59 @@ IMG_EQUIPO = {
     "Ferrari": "https://upload.wikimedia.org/wikipedia/en/d/d4/Scuderia_Ferrari_Logo.svg",
 }
 
+# Ficha de parrilla de cada piloto: dorsal, abreviatura de TV, nacionalidad,
+# victorias y campeonatos (temporada 2024). La especificacion no los define,
+# pero el mockup los muestra en las tarjetas y en la tabla de posiciones.
+# (numero, codigo, nacionalidad, victorias, campeonatos)
+FICHA_PILOTO = {
+    "Max Verstappen":   (1,  "VER", "Neerlandes",     59,  4),
+    "Sergio Pérez":     (11, "PER", "Mexicano",        6,  0),
+    "Lewis Hamilton":   (44, "HAM", "Britanico",     103,  7),
+    "George Russell":   (63, "RUS", "Britanico",       2,  0),
+    "Charles Leclerc":  (16, "LEC", "Monegasco",       7,  0),
+    "Carlos Sainz":     (55, "SAI", "Espanol",         3,  0),
+    "Lando Norris":     (4,  "NOR", "Britanico",       3,  0),
+    "Oscar Piastri":    (81, "PIA", "Australiano",     1,  0),
+    "Fernando Alonso":  (14, "ALO", "Espanol",        32,  2),
+    "Lance Stroll":     (18, "STR", "Canadiense",      0,  0),
+    "Esteban Ocon":     (31, "OCO", "Frances",         1,  0),
+    "Pierre Gasly":     (10, "GAS", "Frances",         1,  0),
+    "Valtteri Bottas":  (77, "BOT", "Finlandes",      10,  0),
+    "Zhou Guanyu":      (24, "ZHO", "Chino",           0,  0),
+    "Kevin Magnussen":  (20, "MAG", "Danes",           0,  0),
+    "Nico Hülkenberg":  (27, "HUL", "Aleman",          0,  0),
+    "Yuki Tsunoda":     (22, "TSU", "Japones",         0,  0),
+    "Daniel Ricciardo": (3,  "RIC", "Australiano",     8,  0),
+    "Alexander Albon":  (23, "ALB", "Tailandes",       0,  0),
+    "Logan Sargeant":   (2,  "SAR", "Estadounidense",  0,  0),
+}
+
+# Fotos locales en simulator/src/main/resources/images/drivers/, provistas por
+# el equipo (docs/assets/F1_Recursos_Multimedia/img-pilotos/). Rutas de
+# classpath, resueltas por Java con getResource/getResourceAsStream.
+IMG_PILOTO = {
+    "Max Verstappen":   "/images/drivers/max-verstappen.jpg",
+    "Sergio Pérez":     "/images/drivers/sergio-perez.png",
+    "Lewis Hamilton":   "/images/drivers/lewis-hamilton.jpg",
+    "George Russell":   "/images/drivers/george-russell.png",
+    "Charles Leclerc":  "/images/drivers/charles-leclerc.jpg",
+    "Carlos Sainz":     "/images/drivers/carlos-sainz.jpg",
+    "Lando Norris":     "/images/drivers/lando-norris.png",
+    "Oscar Piastri":    "/images/drivers/oscar-piastri.png",
+    "Fernando Alonso":  "/images/drivers/fernando-alonso.jpeg",
+    "Lance Stroll":     "/images/drivers/lance-stroll.jpg",
+    "Esteban Ocon":     "/images/drivers/esteban-ocon.jpeg",
+    "Pierre Gasly":     "/images/drivers/pierre-gasly.png",
+    "Valtteri Bottas":  "/images/drivers/valtteri-bottas.jpeg",
+    "Zhou Guanyu":      "/images/drivers/zhou-guanyu.png",
+    "Kevin Magnussen":  "/images/drivers/kevin-magnussen.jpeg",
+    "Nico Hülkenberg":  "/images/drivers/nico-hulkenberg.png",
+    "Yuki Tsunoda":     "/images/drivers/yuki-tsunoda.jpeg",
+    "Daniel Ricciardo": "/images/drivers/daniel-ricciardo.jpg",
+    "Alexander Albon":  "/images/drivers/alexander-albon.png",
+    "Logan Sargeant":   "/images/drivers/logan-sargeant.png",
+}
+
 # ---------------------------------------------------------------- vehiculos
 # (modelo, equipo, vel_max, acel, vel_agresiva, escala_consumo/desgaste)
 # RB20 y W15 reproducen exactamente los valores de la spec (escala 1.00 y 1.05).
@@ -133,11 +186,19 @@ def parse_tiempo(t):
 
 
 def build():
-    pilotos = [collections.OrderedDict([
-        ("id", i), ("nombre", n), ("equipo", e), ("rol", r), ("experiencia", x),
-        ("habilidades", collections.OrderedDict(
-            [("velocidad", v), ("consistencia", c), ("lluvia", l)])),
-    ]) for (i, n, e, r, x, v, c, l) in PILOTOS]
+    pilotos = []
+    for (i, n, e, r, x, v, c, l) in PILOTOS:
+        numero, codigo, nacionalidad, victorias, campeonatos = FICHA_PILOTO[n]
+        pilotos.append(collections.OrderedDict([
+            ("id", i), ("nombre", n), ("equipo", e), ("rol", r),
+            ("numero", numero), ("codigo", codigo),
+            ("nacionalidad", nacionalidad),
+            ("victorias", victorias), ("campeonatos", campeonatos),
+            ("experiencia", x),
+            ("habilidades", collections.OrderedDict(
+                [("velocidad", v), ("consistencia", c), ("lluvia", l)])),
+            ("imagen", IMG_PILOTO.get(n, "")),
+        ]))
 
     por_equipo = collections.defaultdict(list)
     for p in PILOTOS:

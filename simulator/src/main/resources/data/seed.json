@@ -5,240 +5,360 @@
       "nombre": "Max Verstappen",
       "equipo": "Red Bull Racing",
       "rol": "Líder",
+      "numero": 1,
+      "codigo": "VER",
+      "nacionalidad": "Neerlandes",
+      "victorias": 59,
+      "campeonatos": 4,
       "experiencia": 9,
       "habilidades": {
         "velocidad": 98,
         "consistencia": 95,
         "lluvia": 96
-      }
+      },
+      "imagen": "/images/drivers/max-verstappen.jpg"
     },
     {
       "id": 2,
       "nombre": "Sergio Pérez",
       "equipo": "Red Bull Racing",
       "rol": "Escudero",
+      "numero": 11,
+      "codigo": "PER",
+      "nacionalidad": "Mexicano",
+      "victorias": 6,
+      "campeonatos": 0,
       "experiencia": 10,
       "habilidades": {
         "velocidad": 88,
         "consistencia": 80,
         "lluvia": 82
-      }
+      },
+      "imagen": "/images/drivers/sergio-perez.png"
     },
     {
       "id": 3,
       "nombre": "Lewis Hamilton",
       "equipo": "Mercedes-AMG Petronas",
       "rol": "Líder",
+      "numero": 44,
+      "codigo": "HAM",
+      "nacionalidad": "Britanico",
+      "victorias": 103,
+      "campeonatos": 7,
       "experiencia": 17,
       "habilidades": {
         "velocidad": 95,
         "consistencia": 93,
         "lluvia": 97
-      }
+      },
+      "imagen": "/images/drivers/lewis-hamilton.jpg"
     },
     {
       "id": 4,
       "nombre": "George Russell",
       "equipo": "Mercedes-AMG Petronas",
       "rol": "Escudero",
+      "numero": 63,
+      "codigo": "RUS",
+      "nacionalidad": "Britanico",
+      "victorias": 2,
+      "campeonatos": 0,
       "experiencia": 5,
       "habilidades": {
         "velocidad": 90,
         "consistencia": 88,
         "lluvia": 86
-      }
+      },
+      "imagen": "/images/drivers/george-russell.png"
     },
     {
       "id": 5,
       "nombre": "Charles Leclerc",
       "equipo": "Ferrari",
       "rol": "Líder",
+      "numero": 16,
+      "codigo": "LEC",
+      "nacionalidad": "Monegasco",
+      "victorias": 7,
+      "campeonatos": 0,
       "experiencia": 6,
       "habilidades": {
         "velocidad": 94,
         "consistencia": 85,
         "lluvia": 88
-      }
+      },
+      "imagen": "/images/drivers/charles-leclerc.jpg"
     },
     {
       "id": 6,
       "nombre": "Carlos Sainz",
       "equipo": "Ferrari",
       "rol": "Escudero",
+      "numero": 55,
+      "codigo": "SAI",
+      "nacionalidad": "Espanol",
+      "victorias": 3,
+      "campeonatos": 0,
       "experiencia": 9,
       "habilidades": {
         "velocidad": 89,
         "consistencia": 90,
         "lluvia": 85
-      }
+      },
+      "imagen": "/images/drivers/carlos-sainz.jpg"
     },
     {
       "id": 7,
       "nombre": "Lando Norris",
       "equipo": "McLaren",
       "rol": "Líder",
+      "numero": 4,
+      "codigo": "NOR",
+      "nacionalidad": "Britanico",
+      "victorias": 3,
+      "campeonatos": 0,
       "experiencia": 5,
       "habilidades": {
         "velocidad": 92,
         "consistencia": 89,
         "lluvia": 90
-      }
+      },
+      "imagen": "/images/drivers/lando-norris.png"
     },
     {
       "id": 8,
       "nombre": "Oscar Piastri",
       "equipo": "McLaren",
       "rol": "Escudero",
+      "numero": 81,
+      "codigo": "PIA",
+      "nacionalidad": "Australiano",
+      "victorias": 1,
+      "campeonatos": 0,
       "experiencia": 1,
       "habilidades": {
         "velocidad": 87,
         "consistencia": 84,
         "lluvia": 80
-      }
+      },
+      "imagen": "/images/drivers/oscar-piastri.png"
     },
     {
       "id": 9,
       "nombre": "Fernando Alonso",
       "equipo": "Aston Martin",
       "rol": "Líder",
+      "numero": 14,
+      "codigo": "ALO",
+      "nacionalidad": "Espanol",
+      "victorias": 32,
+      "campeonatos": 2,
       "experiencia": 20,
       "habilidades": {
         "velocidad": 93,
         "consistencia": 94,
         "lluvia": 95
-      }
+      },
+      "imagen": "/images/drivers/fernando-alonso.jpeg"
     },
     {
       "id": 10,
       "nombre": "Lance Stroll",
       "equipo": "Aston Martin",
       "rol": "Escudero",
+      "numero": 18,
+      "codigo": "STR",
+      "nacionalidad": "Canadiense",
+      "victorias": 0,
+      "campeonatos": 0,
       "experiencia": 7,
       "habilidades": {
         "velocidad": 80,
         "consistencia": 75,
         "lluvia": 78
-      }
+      },
+      "imagen": "/images/drivers/lance-stroll.jpg"
     },
     {
       "id": 11,
       "nombre": "Esteban Ocon",
       "equipo": "Alpine",
       "rol": "Líder",
+      "numero": 31,
+      "codigo": "OCO",
+      "nacionalidad": "Frances",
+      "victorias": 1,
+      "campeonatos": 0,
       "experiencia": 7,
       "habilidades": {
         "velocidad": 84,
         "consistencia": 82,
         "lluvia": 83
-      }
+      },
+      "imagen": "/images/drivers/esteban-ocon.jpeg"
     },
     {
       "id": 12,
       "nombre": "Pierre Gasly",
       "equipo": "Alpine",
       "rol": "Escudero",
+      "numero": 10,
+      "codigo": "GAS",
+      "nacionalidad": "Frances",
+      "victorias": 1,
+      "campeonatos": 0,
       "experiencia": 7,
       "habilidades": {
         "velocidad": 85,
         "consistencia": 81,
         "lluvia": 84
-      }
+      },
+      "imagen": "/images/drivers/pierre-gasly.png"
     },
     {
       "id": 13,
       "nombre": "Valtteri Bottas",
       "equipo": "Alfa Romeo",
       "rol": "Líder",
+      "numero": 77,
+      "codigo": "BOT",
+      "nacionalidad": "Finlandes",
+      "victorias": 10,
+      "campeonatos": 0,
       "experiencia": 11,
       "habilidades": {
         "velocidad": 86,
         "consistencia": 87,
         "lluvia": 84
-      }
+      },
+      "imagen": "/images/drivers/valtteri-bottas.jpeg"
     },
     {
       "id": 14,
       "nombre": "Zhou Guanyu",
       "equipo": "Alfa Romeo",
       "rol": "Escudero",
+      "numero": 24,
+      "codigo": "ZHO",
+      "nacionalidad": "Chino",
+      "victorias": 0,
+      "campeonatos": 0,
       "experiencia": 2,
       "habilidades": {
         "velocidad": 78,
         "consistencia": 76,
         "lluvia": 74
-      }
+      },
+      "imagen": "/images/drivers/zhou-guanyu.png"
     },
     {
       "id": 15,
       "nombre": "Kevin Magnussen",
       "equipo": "Haas",
       "rol": "Líder",
+      "numero": 20,
+      "codigo": "MAG",
+      "nacionalidad": "Danes",
+      "victorias": 0,
+      "campeonatos": 0,
       "experiencia": 8,
       "habilidades": {
         "velocidad": 82,
         "consistencia": 74,
         "lluvia": 79
-      }
+      },
+      "imagen": "/images/drivers/kevin-magnussen.jpeg"
     },
     {
       "id": 16,
       "nombre": "Nico Hülkenberg",
       "equipo": "Haas",
       "rol": "Escudero",
+      "numero": 27,
+      "codigo": "HUL",
+      "nacionalidad": "Aleman",
+      "victorias": 0,
+      "campeonatos": 0,
       "experiencia": 12,
       "habilidades": {
         "velocidad": 84,
         "consistencia": 83,
         "lluvia": 86
-      }
+      },
+      "imagen": "/images/drivers/nico-hulkenberg.png"
     },
     {
       "id": 17,
       "nombre": "Yuki Tsunoda",
       "equipo": "AlphaTauri",
       "rol": "Líder",
+      "numero": 22,
+      "codigo": "TSU",
+      "nacionalidad": "Japones",
+      "victorias": 0,
+      "campeonatos": 0,
       "experiencia": 4,
       "habilidades": {
         "velocidad": 83,
         "consistencia": 75,
         "lluvia": 77
-      }
+      },
+      "imagen": "/images/drivers/yuki-tsunoda.jpeg"
     },
     {
       "id": 18,
       "nombre": "Daniel Ricciardo",
       "equipo": "AlphaTauri",
       "rol": "Escudero",
+      "numero": 3,
+      "codigo": "RIC",
+      "nacionalidad": "Australiano",
+      "victorias": 8,
+      "campeonatos": 0,
       "experiencia": 13,
       "habilidades": {
         "velocidad": 86,
         "consistencia": 82,
         "lluvia": 85
-      }
+      },
+      "imagen": "/images/drivers/daniel-ricciardo.jpg"
     },
     {
       "id": 19,
       "nombre": "Alexander Albon",
       "equipo": "Williams",
       "rol": "Líder",
+      "numero": 23,
+      "codigo": "ALB",
+      "nacionalidad": "Tailandes",
+      "victorias": 0,
+      "campeonatos": 0,
       "experiencia": 5,
       "habilidades": {
         "velocidad": 85,
         "consistencia": 84,
         "lluvia": 82
-      }
+      },
+      "imagen": "/images/drivers/alexander-albon.png"
     },
     {
       "id": 20,
       "nombre": "Logan Sargeant",
       "equipo": "Williams",
       "rol": "Escudero",
+      "numero": 2,
+      "codigo": "SAR",
+      "nacionalidad": "Estadounidense",
+      "victorias": 0,
+      "campeonatos": 0,
       "experiencia": 1,
       "habilidades": {
         "velocidad": 74,
         "consistencia": 70,
         "lluvia": 68
-      }
+      },
+      "imagen": "/images/drivers/logan-sargeant.png"
     }
   ],
   "equipos": [

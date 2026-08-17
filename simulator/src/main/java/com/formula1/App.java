@@ -29,8 +29,11 @@ public class App extends Application {
 
         escenario.setTitle("Formula 1 Simulator");
         escenario.setScene(escena);
-        escenario.setMinWidth(980);
-        escenario.setMinHeight(640);
+        // El diseño está trazado sobre 1920 de ancho: por debajo de ~1280 la
+        // cabecera y las grillas de tarjetas se apelmazan.
+        escenario.setMinWidth(1280);
+        escenario.setMinHeight(800);
+        escenario.setMaximized(true);
         escenario.show();
     }
 

@@ -10,9 +10,14 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 
 public class CircuitController {
 
@@ -23,7 +28,9 @@ public class CircuitController {
     @FXML private TableColumn<Circuit, Number> colVueltas;
     @FXML private TableColumn<Circuit, String> colRecord;
     @FXML private TableColumn<Circuit, Number> colFactor;
+    @FXML private TableColumn<Circuit, Void> colAcciones;
     @FXML private TextField buscador;
+    @FXML private Label lblConteo;
 
     private final CircuitService circuitos;
 
@@ -45,6 +52,7 @@ public class CircuitController {
                 f.getValue().getRecordVuelta() == null ? "—"
                         : FormatUtils.formatLapTime(f.getValue().getRecordVuelta().getTiempoSegundos())));
         colFactor.setCellValueFactory(f -> new SimpleDoubleProperty(f.getValue().getFactorTecnico()));
+        colAcciones.setCellFactory(col -> celdaAcciones());
 
         tabla.setOnMouseClicked(evento -> {
             if (evento.getClickCount() == 2) {
@@ -57,7 +65,30 @@ public class CircuitController {
     }
 
     private void refrescar(String filtro) {
-        tabla.setItems(FXCollections.observableArrayList(circuitos.buscar(filtro)));
+        var items = circuitos.buscar(filtro);
+        tabla.setItems(FXCollections.observableArrayList(items));
+        lblConteo.setText(String.valueOf(items.size()));
+    }
+
+    private TableCell<Circuit, Void> celdaAcciones() {
+        return new TableCell<>() {
+            private final Button editar = new Button("Editar");
+            private final Button eliminar = new Button("Eliminar");
+            private final HBox caja = new HBox(6, editar, eliminar);
+            {
+                caja.setAlignment(Pos.CENTER_LEFT);
+                editar.getStyleClass().add("icon-button");
+                eliminar.getStyleClass().addAll("icon-button", "danger");
+                editar.setOnAction(e -> editar(getTableView().getItems().get(getIndex())));
+                eliminar.setOnAction(e -> eliminar(getTableView().getItems().get(getIndex())));
+            }
+
+            @Override
+            protected void updateItem(Void valor, boolean vacio) {
+                super.updateItem(valor, vacio);
+                setGraphic(vacio ? null : caja);
+            }
+        };
     }
 
     @FXML
@@ -82,25 +113,13 @@ public class CircuitController {
         Forms.circuito(null).ifPresent(this::guardar);
     }
 
-    @FXML
-    private void onEditar() {
-        Circuit seleccionado = tabla.getSelectionModel().getSelectedItem();
-        if (seleccionado == null) {
-            Navigator.aviso("Sin selección", "Elige un circuito de la tabla.");
-            return;
-        }
-        Forms.circuito(seleccionado).ifPresent(this::guardar);
+    private void editar(Circuit circuito) {
+        Forms.circuito(circuito).ifPresent(this::guardar);
     }
 
-    @FXML
-    private void onEliminar() {
-        Circuit seleccionado = tabla.getSelectionModel().getSelectedItem();
-        if (seleccionado == null) {
-            Navigator.aviso("Sin selección", "Elige un circuito de la tabla.");
-            return;
-        }
-        if (Navigator.confirmar("¿Eliminar " + seleccionado.getNombre() + "?")) {
-            circuitos.eliminar(seleccionado.getNombre());
+    private void eliminar(Circuit circuito) {
+        if (Navigator.confirmar("¿Eliminar " + circuito.getNombre() + "?")) {
+            circuitos.eliminar(circuito.getNombre());
             refrescar(buscador.getText());
         }
     }

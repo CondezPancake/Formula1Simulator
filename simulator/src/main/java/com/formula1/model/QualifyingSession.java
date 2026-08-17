@@ -21,11 +21,21 @@ public class QualifyingSession {
     private WeatherCondition clima;
     private SimulationConfig config;
     private List<LapResult> resultados;
+    private List<WeatherSnapshot> evolucionClimatica;
+    private List<TelemetrySnapshot> evolucionVuelta;
+    private List<TrackEvolutionSnapshot> evolucionPista;
+    private SessionAnalysis analisis;
+    private List<EventOccurrence> eventos;
     private String fecha;
 
     public QualifyingSession() {
         this.id = UUID.randomUUID().toString();
         this.resultados = new ArrayList<>();
+        this.evolucionClimatica = new ArrayList<>();
+        this.evolucionVuelta = new ArrayList<>();
+        this.evolucionPista = new ArrayList<>();
+        this.analisis = SessionAnalysis.vacio();
+        this.eventos = new ArrayList<>();
     }
 
     public QualifyingSession(String circuito, WeatherCondition clima, SimulationConfig config) {
@@ -38,7 +48,10 @@ public class QualifyingSession {
     /** Piloto que logró la pole, o {@code null} si la sesión está vacía. */
     @JsonIgnore
     public LapResult getPole() {
-        return resultados.isEmpty() ? null : resultados.get(0);
+        return resultados.stream()
+                .filter(LapResult::isVueltaValida)
+                .findFirst()
+                .orElse(null);
     }
 
     public String getId() {
@@ -79,6 +92,58 @@ public class QualifyingSession {
 
     public void setResultados(List<LapResult> resultados) {
         this.resultados = resultados;
+    }
+
+    public List<WeatherSnapshot> getEvolucionClimatica() {
+        return evolucionClimatica;
+    }
+
+    public void setEvolucionClimatica(List<WeatherSnapshot> evolucionClimatica) {
+        this.evolucionClimatica = evolucionClimatica == null
+                ? new ArrayList<>()
+                : new ArrayList<>(evolucionClimatica);
+    }
+
+    public List<EventOccurrence> getEventos() {
+        return eventos == null ? List.of() : eventos;
+    }
+
+    public void setEventos(List<EventOccurrence> eventos) {
+        this.eventos = eventos == null ? new ArrayList<>() : new ArrayList<>(eventos);
+    }
+
+    /**
+     * Muestras ordenadas de la vuelta del piloto configurado. Se guardan con
+     * la sesión para que HU-32 no dependa de callbacks transitorios de JavaFX.
+     */
+    public List<TelemetrySnapshot> getEvolucionVuelta() {
+        return evolucionVuelta == null ? List.of() : List.copyOf(evolucionVuelta);
+    }
+
+    public void setEvolucionVuelta(List<TelemetrySnapshot> evolucionVuelta) {
+        this.evolucionVuelta = evolucionVuelta == null
+                ? new ArrayList<>()
+                : new ArrayList<>(evolucionVuelta);
+    }
+
+    /** Evolución de goma y grip, con una lectura consolidada por vuelta. */
+    public List<TrackEvolutionSnapshot> getEvolucionPista() {
+        return evolucionPista == null ? List.of() : List.copyOf(evolucionPista);
+    }
+
+    public void setEvolucionPista(List<TrackEvolutionSnapshot> evolucionPista) {
+        this.evolucionPista = evolucionPista == null
+                ? new ArrayList<>()
+                : new ArrayList<>(evolucionPista);
+    }
+
+    /** Diagnostico generado por reglas al cerrar la clasificacion. */
+    public SessionAnalysis getAnalisis() {
+        return analisis == null ? SessionAnalysis.vacio() : analisis;
+    }
+
+    public void setAnalisis(SessionAnalysis analisis) {
+        this.analisis = analisis == null ? SessionAnalysis.vacio() : analisis;
     }
 
     public String getFecha() {

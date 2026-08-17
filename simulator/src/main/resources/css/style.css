@@ -1,243 +1,945 @@
-/* Paleta Fórmula 1: rojo de carrera sobre asfalto oscuro. */
+/* =====================================================================
+   Formula1Simulator — hoja de estilos
+   Paleta y geometria extraidas del mockup de Figma
+   (docs/assets/F1_Recursos_Multimedia/Mockup_Design/).
+   Los hex no son aproximaciones: salen de un muestreo de los PNG.
+   ===================================================================== */
+
 .root {
-    -fx-background-color: #15151e;
-    -fx-font-family: "Segoe UI", "Noto Sans", sans-serif;
+    /* --- superficies --- */
+    -fx-bg-0: #0A0A0A;          /* lienzo de la pagina */
+    -fx-bg-header: #0D0D10;     /* barra superior y nav */
+    -fx-surface-1: #1A1A1E;     /* tarjetas y paneles */
+    -fx-surface-2: #202025;     /* stat-tiles, cabeceras de tabla */
+    -fx-surface-3: #111115;     /* paneles hundidos */
+    -fx-row-alt: #1B1B1F;       /* fila alterna */
+    -fx-border-1: #2C2C34;
+    -fx-border-2: #29292F;
+
+    /* --- texto --- */
+    -fx-text-hero: #FFFFFF;
+    -fx-text-1: #E8E8F0;
+    -fx-text-2: #CECED6;
+    -fx-text-muted: #9090A8;
+    -fx-text-faint: #565656;
+
+    /* --- acentos --- */
+    -fx-brand: #E10600;
+    -fx-brand-hi: #FF1E0F;
+    -fx-accent-red: #FF0101;
+    -fx-accent-amber: #FFC906;
+    -fx-accent-green: #39B54A;
+    -fx-accent-blue: #3671C6;
+    -fx-accent-pink: #FF87BC;
+
+    -fx-background-color: -fx-bg-0;
+    -fx-font-family: "Adwaita Sans", "Open Sans", sans-serif;
     -fx-font-size: 13px;
 }
 
 .label {
-    -fx-text-fill: #f0f0f0;
+    -fx-text-fill: -fx-text-1;
 }
 
-/* ---------------------------------------------------------- navegación */
-
-.nav {
-    -fx-background-color: #101018;
-    -fx-border-color: transparent #26263a transparent transparent;
-    -fx-border-width: 0 1 0 0;
+/* Numeros tabulares: tiempos, gaps, RPM, temperaturas. */
+.mono {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
 }
 
-.nav-brand {
-    -fx-font-size: 19px;
+/* Wordmark y cifras hero. */
+.display {
+    -fx-font-family: "Orbitron", "Adwaita Sans", sans-serif;
+}
+
+/* Etiquetas en mayuscula del mockup. */
+.micro-label {
+    -fx-font-family: "InputSansCondensed Nerd Font", "Adwaita Sans", sans-serif;
+    -fx-font-size: 10px;
     -fx-font-weight: bold;
-    -fx-text-fill: #f0f0f0;
+    -fx-text-fill: -fx-text-faint;
 }
 
-.nav-brand-accent {
-    -fx-font-size: 15px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #e10600;
-}
-
-.nav-button {
-    -fx-background-color: transparent;
-    -fx-text-fill: #b8b8c4;
-    -fx-alignment: CENTER_LEFT;
-    -fx-padding: 9 14 9 14;
-    -fx-background-radius: 6;
-    -fx-cursor: hand;
-}
-
-.nav-button:hover {
-    -fx-background-color: #1e1e2c;
-    -fx-text-fill: #ffffff;
-}
-
-.nav-primary {
-    -fx-text-fill: #ffffff;
-    -fx-background-color: #e10600;
-    -fx-font-weight: bold;
-}
-
-.nav-primary:hover {
-    -fx-background-color: #ff1e0f;
-}
-
-/* ------------------------------------------------------------ contenido */
-
-.contenido {
-    -fx-background-color: #15151e;
-}
-
-.view-title {
-    -fx-font-size: 22px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #e10600;
-}
-
-.view-subtitle {
-    -fx-text-fill: #9a9aa8;
-}
-
-.section-title {
-    -fx-font-size: 15px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #f0f0f0;
-}
-
-.hint {
-    -fx-text-fill: #9a9aa8;
-    -fx-font-size: 12px;
-}
-
-/* ---------------------------------------------------------------- cards */
-
-.card {
-    -fx-background-color: #1e1e2c;
-    -fx-background-radius: 10;
-    -fx-padding: 18 26 18 18;
-    -fx-min-width: 130;
-}
-
-.card-value {
-    -fx-font-size: 30px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #e10600;
-}
-
-.card-label {
-    -fx-text-fill: #9a9aa8;
-    -fx-font-size: 12px;
-}
-
-/* -------------------------------------------------------------- botones */
-
+/* Base de todos los botones. Va antes que las variantes (nav, segmentos,
+   chips…) porque en JavaFX, a igual especificidad, gana la regla posterior. */
 .button {
-    -fx-background-color: #2a2a3c;
-    -fx-text-fill: #f0f0f0;
+    -fx-background-color: -fx-surface-2;
+    -fx-text-fill: -fx-text-1;
     -fx-padding: 8 16 8 16;
-    -fx-background-radius: 6;
+    -fx-background-radius: 5;
+    -fx-border-color: -fx-border-1;
+    -fx-border-radius: 5;
+    -fx-font-size: 11px;
     -fx-cursor: hand;
 }
 
 .button:hover {
-    -fx-background-color: #35354a;
+    -fx-background-color: #2A2A32;
 }
 
-.primary {
-    -fx-background-color: #e10600;
+/* =============================================================
+   Barra superior persistente (54 px en el diseno)
+   ============================================================= */
+
+.app-header {
+    -fx-background-color: -fx-bg-header;
+    -fx-border-color: transparent transparent -fx-border-2 transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-min-height: 54;
+    -fx-pref-height: 54;
+}
+
+.header-divider {
+    -fx-background-color: -fx-border-1;
+    -fx-min-width: 1;
+    -fx-pref-width: 1;
+    -fx-max-width: 1;
+    -fx-min-height: 30;
+}
+
+.brand-mark {
+    -fx-font-family: "Orbitron", "Adwaita Sans", sans-serif;
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-brand;
+}
+
+.header-title {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.header-subtitle {
+    -fx-font-size: 10px;
+    -fx-text-fill: -fx-text-faint;
+}
+
+.header-value {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 12px;
+    -fx-text-fill: -fx-text-2;
+}
+
+/* Badge de estado de sesion: rojo encendido / gris en reposo. */
+.live-badge {
+    -fx-background-color: -fx-brand;
+    -fx-background-radius: 3;
+    -fx-padding: 3 9 3 9;
     -fx-text-fill: white;
+    -fx-font-size: 10px;
     -fx-font-weight: bold;
 }
 
-.primary:hover {
-    -fx-background-color: #ff1e0f;
+.live-badge.off {
+    -fx-background-color: #23232A;
+    -fx-text-fill: -fx-text-faint;
 }
 
-.danger {
-    -fx-background-color: #3a1f26;
-    -fx-text-fill: #ff8a80;
+.live-badge.done {
+    -fx-background-color: #1B3320;
+    -fx-text-fill: -fx-accent-green;
 }
 
-.danger:hover {
-    -fx-background-color: #52252f;
+/* Contador de segmento (el "VUELTA 18/58" del mockup). */
+.counter-value {
+    -fx-font-family: "Orbitron", "JetBrains Mono", monospace;
+    -fx-font-size: 19px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-accent-amber;
 }
 
-/* --------------------------------------------------------- formularios */
+.counter-total {
+    -fx-font-family: "JetBrains Mono", monospace;
+    -fx-font-size: 11px;
+    -fx-text-fill: -fx-text-faint;
+}
 
-.text-field, .combo-box, .spinner, .text-area {
-    -fx-background-color: #1e1e2c;
-    -fx-text-fill: #f0f0f0;
-    -fx-prompt-text-fill: #6c6c80;
+/* Pills de bandera: apagadas por defecto, como en el mockup. */
+.flag-pill {
+    -fx-background-color: transparent;
+    -fx-border-color: #2A2A32;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+    -fx-padding: 2 8 2 8;
+    -fx-font-size: 9px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #3A3A44;
+}
+
+.flag-pill.on-green {
+    -fx-border-color: -fx-accent-green;
+    -fx-text-fill: -fx-accent-green;
+    -fx-background-color: #14261A;
+}
+
+.flag-pill.on-yellow {
+    -fx-border-color: -fx-accent-amber;
+    -fx-text-fill: -fx-accent-amber;
+    -fx-background-color: #2B2309;
+}
+
+.flag-pill.on-red {
+    -fx-border-color: -fx-accent-red;
+    -fx-text-fill: -fx-accent-red;
+    -fx-background-color: #2E1012;
+}
+
+.header-clock {
+    -fx-font-family: "Orbitron", "JetBrains Mono", monospace;
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+/* =============================================================
+   Nav superior de secciones (44 px)
+   ============================================================= */
+
+.top-nav {
+    -fx-background-color: -fx-bg-header;
+    -fx-border-color: transparent transparent -fx-border-2 transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-min-height: 44;
+    -fx-pref-height: 44;
+}
+
+.top-nav-item {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-text-fill: -fx-text-faint;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 0 26 0 26;
+    -fx-min-height: 44;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+    -fx-border-width: 0 0 2 0;
+}
+
+.top-nav-item:hover {
+    -fx-text-fill: -fx-text-2;
+    -fx-background-color: #131318;
+}
+
+.top-nav-item.active {
+    -fx-text-fill: -fx-text-hero;
+    -fx-background-color: #131318;
+    -fx-border-color: transparent transparent -fx-brand transparent;
+}
+
+/* =============================================================
+   Barra de sub-tabs dentro de cada seccion (45 px)
+   Se aplica sobre un TabPane para reusar fx:include.
+   ============================================================= */
+
+.subnav > .tab-header-area {
+    -fx-padding: 0;
+}
+
+.subnav > .tab-header-area > .tab-header-background {
+    -fx-background-color: -fx-bg-header;
+    -fx-border-color: transparent transparent -fx-border-2 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.subnav > .tab-header-area > .headers-region > .tab {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-padding: 0 22 0 22;
+    -fx-min-height: 44;
+    -fx-border-color: transparent;
+    -fx-border-width: 0 0 2 0;
+}
+
+.subnav > .tab-header-area > .headers-region > .tab .tab-label {
+    -fx-text-fill: -fx-text-faint;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.subnav > .tab-header-area > .headers-region > .tab:hover .tab-label {
+    -fx-text-fill: -fx-text-2;
+}
+
+.subnav > .tab-header-area > .headers-region > .tab:selected {
+    -fx-border-color: transparent transparent -fx-brand transparent;
+}
+
+.subnav > .tab-header-area > .headers-region > .tab:selected .tab-label {
+    -fx-text-fill: -fx-text-hero;
+}
+
+.subnav > .tab-content-area {
+    -fx-background-color: -fx-bg-0;
+    -fx-padding: 0;
+}
+
+/* =============================================================
+   Contenido y titulos
+   ============================================================= */
+
+.contenido {
+    -fx-background-color: -fx-bg-0;
+}
+
+.view-title {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.view-subtitle {
+    -fx-font-size: 11px;
+    -fx-text-fill: -fx-text-faint;
+}
+
+.section-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.hint {
+    -fx-text-fill: -fx-text-muted;
+    -fx-font-size: 11px;
+}
+
+/* Barra roja vertical a la izquierda del titulo de seccion. */
+.section-header {
+    -fx-border-color: transparent transparent transparent -fx-brand;
+    -fx-border-width: 0 0 0 3;
+    -fx-padding: 0 0 0 10;
+}
+
+.count-badge {
+    -fx-background-color: -fx-brand;
+    -fx-background-radius: 3;
+    -fx-padding: 2 8 2 8;
+    -fx-text-fill: white;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+}
+
+/* =============================================================
+   Tiles de metrica (las cajas con cifra grande de color)
+   ============================================================= */
+
+.metric-tile {
+    -fx-background-color: -fx-surface-2;
     -fx-background-radius: 6;
-    -fx-border-color: #2e2e42;
+    -fx-border-color: -fx-border-2;
+    -fx-border-radius: 6;
+    -fx-padding: 10 14 10 14;
+}
+
+.tile-label {
+    -fx-font-size: 9px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-faint;
+}
+
+.tile-value {
+    -fx-font-family: "JetBrains Mono", monospace;
+    -fx-font-size: 21px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.tile-unit {
+    -fx-font-size: 10px;
+    -fx-text-fill: -fx-text-faint;
+}
+
+.hero-number {
+    -fx-font-family: "Orbitron", "JetBrains Mono", monospace;
+    -fx-font-size: 44px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.v-speed  { -fx-text-fill: -fx-accent-red; }
+.v-accel  { -fx-text-fill: #FF8000; }
+.v-fuel   { -fx-text-fill: -fx-accent-blue; }
+.v-wear   { -fx-text-fill: -fx-accent-amber; }
+.v-grip   { -fx-text-fill: -fx-accent-green; }
+.v-time   { -fx-text-fill: -fx-accent-pink; }
+
+/* =============================================================
+   Selector segmentado (pantalla de configuracion)
+   ============================================================= */
+
+.segmented {
+    -fx-background-color: -fx-surface-3;
+    -fx-background-radius: 6;
+    -fx-border-color: -fx-border-2;
     -fx-border-radius: 6;
 }
 
-.combo-box .list-cell, .combo-box-popup .list-view {
-    -fx-background-color: #1e1e2c;
-    -fx-text-fill: #f0f0f0;
+.segment {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-text-fill: -fx-text-faint;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 11 0 11 0;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+    -fx-border-width: 0 0 2 0;
 }
 
-.combo-box-popup .list-view .list-cell:hover {
-    -fx-background-color: #e10600;
+.segment:hover {
+    -fx-text-fill: -fx-text-2;
 }
 
-/* ------------------------------------------------------------- tablas */
+.segment.active-blue {
+    -fx-background-color: #101823;
+    -fx-text-fill: -fx-accent-blue;
+    -fx-border-color: transparent transparent -fx-accent-blue transparent;
+}
+
+.segment.active-amber {
+    -fx-background-color: #2B2309;
+    -fx-text-fill: -fx-accent-amber;
+    -fx-border-color: transparent transparent -fx-accent-amber transparent;
+}
+
+.segment.active-red {
+    -fx-background-color: #2A0F0E;
+    -fx-text-fill: -fx-brand;
+    -fx-border-color: transparent transparent -fx-brand transparent;
+}
+
+.option-note {
+    -fx-background-color: -fx-surface-3;
+    -fx-background-radius: 5;
+    -fx-padding: 9 12 9 12;
+    -fx-text-fill: -fx-text-muted;
+    -fx-font-size: 11px;
+}
+
+.impact-panel {
+    -fx-background-color: -fx-surface-1;
+    -fx-background-radius: 8;
+    -fx-border-color: -fx-border-2;
+    -fx-border-radius: 8;
+    -fx-padding: 16;
+}
+
+/* =============================================================
+   Tarjetas genericas
+   ============================================================= */
+
+.card {
+    -fx-background-color: -fx-surface-1;
+    -fx-background-radius: 8;
+    -fx-border-color: -fx-border-2;
+    -fx-border-radius: 8;
+    -fx-padding: 16 22 16 16;
+    -fx-min-width: 130;
+}
+
+.card-value {
+    -fx-font-family: "Orbitron", "JetBrains Mono", monospace;
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-brand;
+}
+
+.card-label {
+    -fx-font-size: 9px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-faint;
+}
+
+.stat-card {
+    -fx-background-color: -fx-surface-2;
+    -fx-background-radius: 6;
+    -fx-border-color: -fx-border-2;
+    -fx-border-radius: 6;
+    -fx-padding: 10 14 10 14;
+    -fx-min-width: 150;
+}
+
+.stat-value {
+    -fx-font-family: "JetBrains Mono", monospace;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+/* =============================================================
+   Explorar: tarjetas con borde de color de equipo
+   ============================================================= */
+
+.explore-card {
+    -fx-background-color: -fx-surface-1;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 0 0 12 0;
+    -fx-min-width: 244;
+    -fx-max-width: 244;
+}
+
+.explore-card-photo {
+    -fx-background-color: #08080A;
+    -fx-background-radius: 7 7 0 0;
+}
+
+.explore-card-body {
+    -fx-padding: 0 13 0 13;
+}
+
+.explore-card-name {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.explore-card-team {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+}
+
+.explore-card-foot {
+    -fx-font-size: 10px;
+    -fx-text-fill: -fx-text-faint;
+}
+
+.card-link {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+
+/* Numero del piloto sobre la foto. */
+.number-badge {
+    -fx-background-radius: 3;
+    -fx-padding: 2 8 2 8;
+    -fx-text-fill: white;
+    -fx-font-family: "JetBrains Mono", monospace;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.role-badge {
+    -fx-background-radius: 3;
+    -fx-padding: 2 8 2 8;
+    -fx-font-size: 9px;
+    -fx-font-weight: bold;
+}
+
+.role-badge.lider {
+    -fx-background-color: -fx-brand;
+    -fx-text-fill: white;
+}
+
+.role-badge.escudero {
+    -fx-background-color: #26262C;
+    -fx-text-fill: -fx-text-muted;
+}
+
+.filter-chip {
+    -fx-background-color: -fx-surface-2;
+    -fx-border-color: -fx-border-1;
+    -fx-border-radius: 11;
+    -fx-background-radius: 11;
+    -fx-padding: 4 14 4 14;
+    -fx-cursor: hand;
+    -fx-text-fill: -fx-text-faint;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+}
+
+.filter-chip:hover {
+    -fx-background-color: #2A2A32;
+    -fx-text-fill: -fx-text-2;
+}
+
+.filter-chip.chip-selected {
+    -fx-background-color: #2A0F0E;
+    -fx-border-color: -fx-brand;
+    -fx-text-fill: -fx-brand;
+}
+
+.edge-to-edge, .edge-to-edge .viewport {
+    -fx-background-color: transparent;
+}
+
+.edge-to-edge > .scroll-bar:vertical {
+    -fx-background-color: transparent;
+}
+
+/* =============================================================
+   Tablas
+   ============================================================= */
 
 .table-view {
-    -fx-background-color: #1a1a26;
-    -fx-border-color: #26263a;
+    -fx-background-color: -fx-surface-1;
+    -fx-border-color: -fx-border-2;
     -fx-border-radius: 8;
     -fx-background-radius: 8;
+    -fx-table-cell-border-color: transparent;
 }
 
 .table-view .column-header-background {
-    -fx-background-color: #101018;
+    -fx-background-color: -fx-surface-2;
+    -fx-background-radius: 8 8 0 0;
 }
 
 .table-view .column-header, .table-view .filler {
     -fx-background-color: transparent;
     -fx-border-color: transparent;
+    -fx-size: 36;
 }
 
 .table-view .column-header .label {
-    -fx-text-fill: #9a9aa8;
+    -fx-text-fill: -fx-text-faint;
+    -fx-font-size: 9px;
     -fx-font-weight: bold;
     -fx-alignment: CENTER_LEFT;
 }
 
 .table-row-cell {
-    -fx-background-color: #1a1a26;
-    -fx-border-color: transparent transparent #22222f transparent;
+    -fx-background-color: -fx-surface-1;
+    -fx-border-color: transparent transparent #17171B transparent;
+    -fx-cell-size: 50;
 }
 
 .table-row-cell:odd {
-    -fx-background-color: #1d1d2a;
+    -fx-background-color: -fx-row-alt;
 }
 
 .table-row-cell:selected {
-    -fx-background-color: #34101a;
+    -fx-background-color: #26262E;
 }
 
 .table-view .table-cell {
-    -fx-text-fill: #e8e8f0;
+    -fx-text-fill: -fx-text-1;
     -fx-alignment: CENTER_LEFT;
+    -fx-font-size: 12px;
 }
 
-/* La pole se destaca en rojo. */
+.table-view:focused {
+    -fx-background-color: -fx-surface-1;
+}
+
+/* La pole se destaca con el amarillo del mockup. */
 .pole-row .table-cell {
-    -fx-text-fill: #ff5a4d;
+    -fx-text-fill: -fx-accent-amber;
     -fx-font-weight: bold;
 }
 
+.pole-row {
+    -fx-background-color: #201E0F;
+}
+
+.invalid-row .table-cell {
+    -fx-text-fill: #7A5A5A;
+}
+
+/* Columnas de datos numericos: tiempos, diferencias, temperaturas. */
+.mono-col {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+}
+
+/* Badges de posicion del historial. */
+.pos-badge {
+    -fx-font-family: "JetBrains Mono", monospace;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-muted;
+}
+
+.pos-badge.p1 { -fx-text-fill: -fx-accent-amber; }
+.pos-badge.p2 { -fx-text-fill: #CECED6; }
+.pos-badge.p3 { -fx-text-fill: #FF8000; }
+
 .list-view {
-    -fx-background-color: #1a1a26;
-    -fx-border-color: #26263a;
+    -fx-background-color: -fx-surface-1;
+    -fx-border-color: -fx-border-2;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
 }
 
 .list-cell {
     -fx-background-color: transparent;
-    -fx-text-fill: #e8e8f0;
+    -fx-text-fill: -fx-text-1;
+    -fx-font-size: 11px;
 }
 
 .list-cell:selected {
-    -fx-background-color: #34101a;
+    -fx-background-color: #26262E;
 }
 
-/* --------------------------------------------------------- barra estado */
+/* =============================================================
+   Paneles de sesion (telemetria, clima, analisis…)
+   ============================================================= */
+
+.evolution-panel, .telemetry-panel, .weather-panel,
+.lap-evolution-panel, .sector-comparison-panel,
+.track-evolution-panel, .session-analysis-panel {
+    -fx-background-color: -fx-surface-1;
+    -fx-background-radius: 8;
+    -fx-border-color: -fx-border-2;
+    -fx-border-radius: 8;
+    -fx-padding: 16;
+}
+
+.evolution-card, .telemetry-card, .telemetry-summary,
+.weather-card, .analysis-card {
+    -fx-background-color: -fx-surface-2;
+    -fx-background-radius: 6;
+    -fx-border-color: -fx-border-2;
+    -fx-border-radius: 6;
+    -fx-padding: 10 14 10 14;
+}
+
+.evolution-card { -fx-min-width: 190; }
+.telemetry-card, .telemetry-summary { -fx-min-width: 210; }
+.weather-card { -fx-min-width: 130; }
+.analysis-card { -fx-min-width: 170; }
+
+.metric-value, .telemetry-value, .weather-value,
+.analysis-pole, .analysis-value {
+    -fx-font-family: "JetBrains Mono", monospace;
+    -fx-font-size: 17px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.telemetry-title, .weather-title, .analysis-title {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.track-state {
+    -fx-background-color: #14261A;
+    -fx-background-radius: 3;
+    -fx-padding: 3 10 3 10;
+    -fx-text-fill: -fx-accent-green;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+}
+
+.event-live {
+    -fx-background-color: #2B2309;
+    -fx-background-radius: 3;
+    -fx-padding: 3 10 3 10;
+    -fx-text-fill: -fx-accent-amber;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+}
+
+.weather-state {
+    -fx-background-color: #101823;
+    -fx-background-radius: 3;
+    -fx-padding: 3 10 3 10;
+    -fx-text-fill: -fx-accent-blue;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+}
+
+.delta-faster, .sector-winner, .best-sector {
+    -fx-text-fill: -fx-accent-green;
+    -fx-font-weight: bold;
+}
+
+.delta-slower {
+    -fx-text-fill: -fx-accent-red;
+}
+
+.session-analysis-panel .list-view {
+    -fx-min-height: 140;
+}
+
+/* Barras de progreso por metrica. */
+.progress-bar > .bar {
+    -fx-background-color: -fx-brand;
+    -fx-background-radius: 3;
+    -fx-padding: 4;
+}
+
+.progress-bar > .track {
+    -fx-background-color: #23232A;
+    -fx-background-radius: 3;
+}
+
+.progress-bar.metric-speed > .bar        { -fx-background-color: -fx-accent-red; }
+.progress-bar.metric-consumption > .bar  { -fx-background-color: -fx-accent-blue; }
+.progress-bar.metric-wear > .bar         { -fx-background-color: -fx-accent-amber; }
+.progress-bar.metric-rpm > .bar          { -fx-background-color: -fx-accent-blue; }
+.progress-bar.metric-fuel > .bar         { -fx-background-color: -fx-accent-blue; }
+.progress-bar.metric-temperature > .bar  { -fx-background-color: #FF8000; }
+.progress-bar.metric-engine > .bar       { -fx-background-color: -fx-brand; }
+.progress-bar.metric-grip > .bar         { -fx-background-color: -fx-accent-green; }
+.progress-bar.metric-traction > .bar     { -fx-background-color: -fx-accent-blue; }
+.progress-bar.metric-braking > .bar      { -fx-background-color: #FF8000; }
+
+/* =============================================================
+   Graficos
+   ============================================================= */
+
+.chart {
+    -fx-background-color: transparent;
+    -fx-padding: 6;
+}
+
+.chart-plot-background {
+    -fx-background-color: -fx-surface-3;
+}
+
+.chart-vertical-grid-lines, .chart-horizontal-grid-lines {
+    -fx-stroke: #1F1F25;
+}
+
+.chart-bar {
+    -fx-bar-fill: -fx-brand;
+}
+
+.axis {
+    -fx-tick-label-fill: -fx-text-faint;
+    -fx-tick-label-font-size: 9px;
+    -fx-tick-mark-visible: false;
+    -fx-minor-tick-visible: false;
+}
+
+.axis-label {
+    -fx-text-fill: -fx-text-faint;
+    -fx-font-size: 10px;
+}
+
+.chart-legend {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-text-muted;
+}
+
+.lap-evolution-panel .chart-series-line {
+    -fx-stroke: -fx-brand;
+    -fx-stroke-width: 2px;
+}
+
+.track-evolution-panel .default-color0.chart-series-line {
+    -fx-stroke: -fx-accent-green;
+    -fx-stroke-width: 2px;
+}
+
+.track-evolution-panel .default-color1.chart-series-line {
+    -fx-stroke: -fx-accent-amber;
+    -fx-stroke-width: 2px;
+}
+
+/* =============================================================
+   Controles
+   ============================================================= */
+
+.primary {
+    -fx-background-color: -fx-brand;
+    -fx-border-color: -fx-brand;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.primary:hover {
+    -fx-background-color: -fx-brand-hi;
+    -fx-border-color: -fx-brand-hi;
+}
+
+.danger {
+    -fx-background-color: #2E1012;
+    -fx-border-color: #4A1D20;
+    -fx-text-fill: #FF8A80;
+}
+
+.danger:hover {
+    -fx-background-color: #45191C;
+}
+
+.icon-button {
+    -fx-background-color: -fx-surface-2;
+    -fx-border-color: -fx-border-1;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-padding: 3 8 3 8;
+    -fx-cursor: hand;
+    -fx-text-fill: -fx-text-1;
+    -fx-font-size: 10px;
+}
+
+.icon-button:hover {
+    -fx-background-color: #2A2A32;
+}
+
+.icon-button.danger {
+    -fx-border-color: #4A1D20;
+    -fx-text-fill: #FF8A80;
+}
+
+.icon-button.danger:hover {
+    -fx-background-color: #45191C;
+}
+
+.text-field, .combo-box, .spinner, .text-area {
+    -fx-background-color: -fx-surface-3;
+    -fx-text-fill: -fx-text-1;
+    -fx-prompt-text-fill: -fx-text-faint;
+    -fx-background-radius: 5;
+    -fx-border-color: -fx-border-1;
+    -fx-border-radius: 5;
+    -fx-font-size: 12px;
+}
+
+.combo-box .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-text-1;
+}
+
+.combo-box-popup .list-view {
+    -fx-background-color: -fx-surface-2;
+    -fx-border-color: -fx-border-1;
+}
+
+.combo-box-popup .list-view .list-cell:hover {
+    -fx-background-color: -fx-brand;
+    -fx-text-fill: white;
+}
+
+/* =============================================================
+   Barra de estado inferior
+   ============================================================= */
 
 .status-bar {
-    -fx-background-color: #101018;
-    -fx-border-color: #26263a transparent transparent transparent;
+    -fx-background-color: -fx-bg-header;
+    -fx-border-color: -fx-border-2 transparent transparent transparent;
     -fx-border-width: 1 0 0 0;
 }
 
 .status-bar .label {
-    -fx-text-fill: #9a9aa8;
-    -fx-font-size: 12px;
-}
-
-.progress-bar > .bar {
-    -fx-background-color: #e10600;
-    -fx-background-radius: 4;
-}
-
-.progress-bar > .track {
-    -fx-background-color: #26263a;
-    -fx-background-radius: 4;
+    -fx-text-fill: -fx-text-faint;
+    -fx-font-size: 11px;
 }
 
 .separator .line {
-    -fx-border-color: #26263a transparent transparent transparent;
+    -fx-border-color: -fx-border-2 transparent transparent transparent;
+}
+
+/* TabPane por defecto (el que no lleva .subnav). */
+.tab-pane > .tab-header-area > .tab-header-background {
+    -fx-background-color: -fx-bg-0;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab {
+    -fx-background-color: -fx-surface-2;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab:selected {
+    -fx-background-color: #2A0F0E;
+}
+
+.tab-pane > .tab-content-area {
+    -fx-background-color: -fx-bg-0;
+    -fx-padding: 10 0 0 0;
 }

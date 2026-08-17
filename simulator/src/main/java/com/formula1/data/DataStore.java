@@ -3,6 +3,7 @@ package com.formula1.data;
 import com.formula1.model.Circuit;
 import com.formula1.model.Driver;
 import com.formula1.model.QualifyingSession;
+import com.formula1.model.SimulationConfig;
 import com.formula1.model.Team;
 import com.formula1.model.Vehicle;
 
@@ -46,6 +47,7 @@ public final class DataStore {
 
     private volatile boolean modoMemoria = true;
     private volatile String estado = "Sin cargar";
+    private volatile SimulationConfig configuracionActual;
 
     private DataStore() {
     }
@@ -211,6 +213,21 @@ public final class DataStore {
     public void guardarSesion(QualifyingSession sesion) {
         sesiones.add(sesion);
         persistir(() -> repoSesiones.save(sesion));
+    }
+
+    // --- configuración en curso ------------------------------------------
+
+    /**
+     * Ajustes que el usuario dejó preparados en la pantalla de configuración,
+     * a la espera de lanzar la sesión. Vive solo en memoria: al reiniciar, la
+     * pantalla de clasificación recupera los de la última sesión guardada.
+     */
+    public SimulationConfig configuracionActual() {
+        return configuracionActual;
+    }
+
+    public void guardarConfiguracion(SimulationConfig config) {
+        this.configuracionActual = config;
     }
 
     public boolean isModoMemoria() {

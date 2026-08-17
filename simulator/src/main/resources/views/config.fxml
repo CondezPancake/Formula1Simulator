@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<HBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.formula1.controller.ConfigController" spacing="20">
+    <padding><Insets top="24" right="28" bottom="24" left="28"/></padding>
+
+    <!-- ================= columna principal ================= -->
+    <VBox spacing="16" HBox.hgrow="ALWAYS">
+
+        <HBox spacing="10" alignment="CENTER_LEFT" styleClass="section-header">
+            <Label text="CONFIGURACIÓN DE SIMULACIÓN" styleClass="view-title"/>
+        </HBox>
+
+        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="edge-to-edge">
+            <VBox spacing="14">
+
+                <!-- modo de conducción -->
+                <VBox spacing="12" styleClass="card">
+                    <HBox styleClass="section-header">
+                        <Label text="MODO DE CONDUCCIÓN" styleClass="card-label"/>
+                    </HBox>
+                    <HBox fx:id="segModo" styleClass="segmented"/>
+                    <Label fx:id="lblNotaModo" styleClass="option-note" maxWidth="Infinity" wrapText="true"/>
+                </VBox>
+
+                <!-- carga aerodinámica -->
+                <VBox spacing="12" styleClass="card">
+                    <HBox styleClass="section-header">
+                        <Label text="CARGA AERODINÁMICA" styleClass="card-label"/>
+                    </HBox>
+                    <HBox fx:id="segAero" styleClass="segmented"/>
+                    <HBox spacing="12">
+                        <VBox styleClass="metric-tile" HBox.hgrow="ALWAYS" spacing="3">
+                            <Label text="FACTOR DE TIEMPO" styleClass="tile-label"/>
+                            <Label fx:id="lblAeroTiempo" text="—" styleClass="tile-value,v-speed"/>
+                        </VBox>
+                        <VBox styleClass="metric-tile" HBox.hgrow="ALWAYS" spacing="3">
+                            <Label text="CONSUMO" styleClass="tile-label"/>
+                            <Label fx:id="lblAeroConsumo" text="—" styleClass="tile-value,v-fuel"/>
+                        </VBox>
+                        <VBox styleClass="metric-tile" HBox.hgrow="ALWAYS" spacing="3">
+                            <Label text="DESGASTE" styleClass="tile-label"/>
+                            <Label fx:id="lblAeroDesgaste" text="—" styleClass="tile-value,v-wear"/>
+                        </VBox>
+                    </HBox>
+                </VBox>
+
+                <!-- presión de neumáticos -->
+                <VBox spacing="12" styleClass="card">
+                    <HBox styleClass="section-header">
+                        <Label text="PRESIÓN DE NEUMÁTICOS" styleClass="card-label"/>
+                    </HBox>
+                    <HBox fx:id="segPresion" styleClass="segmented"/>
+                    <HBox spacing="12">
+                        <VBox styleClass="metric-tile" HBox.hgrow="ALWAYS" spacing="3">
+                            <Label text="FACTOR DE TIEMPO" styleClass="tile-label"/>
+                            <Label fx:id="lblPresionTiempo" text="—" styleClass="tile-value,v-speed"/>
+                        </VBox>
+                        <VBox styleClass="metric-tile" HBox.hgrow="ALWAYS" spacing="3">
+                            <Label text="DESGASTE" styleClass="tile-label"/>
+                            <Label fx:id="lblPresionDesgaste" text="—" styleClass="tile-value,v-wear"/>
+                        </VBox>
+                    </HBox>
+                </VBox>
+
+                <!-- estrategia de combustible -->
+                <VBox spacing="12" styleClass="card">
+                    <HBox styleClass="section-header">
+                        <Label text="ESTRATEGIA DE COMBUSTIBLE" styleClass="card-label"/>
+                    </HBox>
+                    <HBox fx:id="segCombustible" styleClass="segmented"/>
+                    <Label fx:id="lblNotaCombustible" styleClass="option-note" maxWidth="Infinity" wrapText="true"/>
+                </VBox>
+
+                <HBox alignment="CENTER_RIGHT">
+                    <Button text="GUARDAR CONFIGURACIÓN" styleClass="primary" onAction="#onGuardar"/>
+                </HBox>
+            </VBox>
+        </ScrollPane>
+    </VBox>
+
+    <!-- ================= panel de impacto ================= -->
+    <VBox spacing="14" styleClass="impact-panel" prefWidth="320" minWidth="320">
+        <HBox spacing="8" alignment="CENTER_LEFT" styleClass="section-header">
+            <Label text="IMPACTO EN TIEMPO REAL" styleClass="card-label"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="lblPunto" text="●" style="-fx-text-fill: #39B54A; -fx-font-size: 10px;"/>
+        </HBox>
+
+        <VBox spacing="5">
+            <HBox alignment="CENTER_LEFT">
+                <Label text="VELOCIDAD MEDIA" styleClass="tile-label"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="lblVelocidad" text="—" styleClass="tile-value,v-wear"/>
+                <Label text=" km/h" styleClass="tile-unit"/>
+            </HBox>
+            <ProgressBar fx:id="barraVelocidad" progress="0" maxWidth="Infinity" styleClass="metric-wear"/>
+        </VBox>
+
+        <VBox spacing="5">
+            <HBox alignment="CENTER_LEFT">
+                <Label text="DESGASTE ESTIMADO" styleClass="tile-label"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="lblDesgaste" text="—" styleClass="tile-value,v-grip"/>
+                <Label text=" /vuelta" styleClass="tile-unit"/>
+            </HBox>
+            <ProgressBar fx:id="barraDesgaste" progress="0" maxWidth="Infinity" styleClass="metric-grip"/>
+        </VBox>
+
+        <HBox spacing="12">
+            <VBox styleClass="metric-tile" HBox.hgrow="ALWAYS" spacing="3">
+                <Label text="CONSUMO FUEL" styleClass="tile-label"/>
+                <HBox alignment="BOTTOM_LEFT">
+                    <Label fx:id="lblConsumo" text="—" styleClass="tile-value,v-fuel"/>
+                    <Label text=" kg/v" styleClass="tile-unit"/>
+                </HBox>
+            </VBox>
+            <VBox styleClass="metric-tile" HBox.hgrow="ALWAYS" spacing="3">
+                <Label text="TIEMPO ESTIMADO" styleClass="tile-label"/>
+                <Label fx:id="lblTiempo" text="—" styleClass="tile-value,v-time"/>
+            </VBox>
+        </HBox>
+
+        <VBox spacing="9" styleClass="metric-tile">
+            <Label text="CONFIGURACIÓN ACTUAL" styleClass="tile-label"/>
+            <HBox>
+                <Label text="Conducción" styleClass="hint"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="lblResumenModo" text="—" style="-fx-text-fill: #3671C6; -fx-font-weight: bold;"/>
+            </HBox>
+            <HBox>
+                <Label text="Aerodinámica" styleClass="hint"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="lblResumenAero" text="—" style="-fx-text-fill: #3671C6; -fx-font-weight: bold;"/>
+            </HBox>
+            <HBox>
+                <Label text="Presión" styleClass="hint"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="lblResumenPresion" text="—" style="-fx-text-fill: #FFC906; -fx-font-weight: bold;"/>
+            </HBox>
+            <HBox>
+                <Label text="Combustible" styleClass="hint"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="lblResumenCombustible" text="—" style="-fx-text-fill: #FFC906; -fx-font-weight: bold;"/>
+            </HBox>
+        </VBox>
+
+        <Label fx:id="lblContexto" styleClass="hint" wrapText="true"/>
+    </VBox>
+</HBox>

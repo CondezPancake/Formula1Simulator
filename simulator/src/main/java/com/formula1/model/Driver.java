@@ -28,6 +28,12 @@ public class Driver {
     private DriverRole rol;
     private int experiencia;
     private Map<String, Integer> habilidades;
+    private String imagen;
+    private int numero;
+    private String codigo;
+    private String nacionalidad;
+    private int victorias;
+    private int campeonatos;
 
     public Driver() {
         this.habilidades = new LinkedHashMap<>();
@@ -97,6 +103,56 @@ public class Driver {
 
     public void setHabilidades(Map<String, Integer> habilidades) {
         this.habilidades = habilidades;
+    }
+
+    public String getImagen() {
+        return imagen;
+    }
+
+    public void setImagen(String imagen) {
+        this.imagen = imagen;
+    }
+
+    /** Dorsal del monoplaza (1, 44, 81…), independiente del {@link #getId()}. */
+    public int getNumero() {
+        return numero;
+    }
+
+    public void setNumero(int numero) {
+        this.numero = numero;
+    }
+
+    /** Abreviatura de tres letras que usa la señal de TV (VER, HAM, LEC). */
+    public String getCodigo() {
+        return codigo;
+    }
+
+    public void setCodigo(String codigo) {
+        this.codigo = codigo;
+    }
+
+    public String getNacionalidad() {
+        return nacionalidad;
+    }
+
+    public void setNacionalidad(String nacionalidad) {
+        this.nacionalidad = nacionalidad;
+    }
+
+    public int getVictorias() {
+        return victorias;
+    }
+
+    public void setVictorias(int victorias) {
+        this.victorias = victorias;
+    }
+
+    public int getCampeonatos() {
+        return campeonatos;
+    }
+
+    public void setCampeonatos(int campeonatos) {
+        this.campeonatos = campeonatos;
     }
 
     @Override

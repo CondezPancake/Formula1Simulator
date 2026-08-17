@@ -15,27 +15,31 @@
       fx:controller="com.formula1.controller.DriverController" spacing="12">
     <padding><Insets top="26" right="26" bottom="26" left="26"/></padding>
 
-    <Label text="Pilotos" styleClass="view-title"/>
+    <Label text="Gestión" styleClass="view-title"/>
     <Label text="Registra, edita y busca los competidores de la parrilla." styleClass="view-subtitle"/>
 
     <HBox spacing="10" alignment="CENTER_LEFT">
         <TextField fx:id="buscador" promptText="Buscar por nombre, equipo o rol…" prefWidth="320"/>
         <Region HBox.hgrow="ALWAYS"/>
-        <Button text="Nuevo" styleClass="primary" onAction="#onNuevo"/>
-        <Button text="Editar" onAction="#onEditar"/>
-        <Button text="Eliminar" styleClass="danger" onAction="#onEliminar"/>
+        <Button text="+ Agregar nuevo" styleClass="primary" onAction="#onNuevo"/>
+    </HBox>
+
+    <HBox spacing="10" alignment="CENTER_LEFT" styleClass="section-header">
+        <Label text="PILOTOS" styleClass="section-title"/>
+        <Label fx:id="lblConteo" styleClass="count-badge"/>
     </HBox>
 
     <TableView fx:id="tabla" VBox.vgrow="ALWAYS">
         <columns>
-            <TableColumn fx:id="colId" text="#" prefWidth="45"/>
-            <TableColumn fx:id="colNombre" text="Piloto" prefWidth="180"/>
-            <TableColumn fx:id="colEquipo" text="Equipo" prefWidth="190"/>
-            <TableColumn fx:id="colRol" text="Rol" prefWidth="90"/>
-            <TableColumn fx:id="colExperiencia" text="Exp." prefWidth="60"/>
-            <TableColumn fx:id="colVelocidad" text="Velocidad" prefWidth="85"/>
-            <TableColumn fx:id="colConsistencia" text="Consistencia" prefWidth="95"/>
-            <TableColumn fx:id="colLluvia" text="Lluvia" prefWidth="70"/>
+            <TableColumn fx:id="colId" text="#" prefWidth="40"/>
+            <TableColumn fx:id="colNombre" text="Piloto" prefWidth="170"/>
+            <TableColumn fx:id="colEquipo" text="Equipo" prefWidth="180"/>
+            <TableColumn fx:id="colRol" text="Rol" prefWidth="85"/>
+            <TableColumn fx:id="colExperiencia" text="Exp." prefWidth="55"/>
+            <TableColumn fx:id="colVelocidad" text="Velocidad" prefWidth="80"/>
+            <TableColumn fx:id="colConsistencia" text="Consistencia" prefWidth="90"/>
+            <TableColumn fx:id="colLluvia" text="Lluvia" prefWidth="65"/>
+            <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="160"/>
         </columns>
     </TableView>
 </VBox>

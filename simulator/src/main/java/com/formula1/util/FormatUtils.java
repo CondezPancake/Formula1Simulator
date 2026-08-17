@@ -1,5 +1,9 @@
 package com.formula1.util;
 
+import com.formula1.model.LapResult;
+
+import java.util.Locale;
+
 public final class FormatUtils {
 
     private FormatUtils() {
@@ -8,7 +12,7 @@ public final class FormatUtils {
     public static String formatLapTime(double segundos) {
         int minutos = (int) (segundos / 60);
         double resto = segundos - (minutos * 60);
-        return String.format("%d:%06.3f", minutos, resto);
+        return String.format(Locale.ROOT, "%d:%06.3f", minutos, resto);
     }
 
     /**
@@ -34,10 +38,24 @@ public final class FormatUtils {
         if (gap <= 0) {
             return "—";
         }
-        return String.format("+%.3f", gap);
+        return String.format(Locale.ROOT, "+%.3f", gap);
+    }
+
+    /** Delta en vivo: negativo es mas rapido y positivo es mas lento. */
+    public static String formatDelta(double delta) {
+        if (Math.abs(delta) < 0.0005) {
+            return "±0.000";
+        }
+        return String.format(Locale.ROOT, "%+.3f", delta);
     }
 
     public static String formatPercentage(double value) {
-        return String.format("%.0f%%", value * 100);
+        return String.format(Locale.ROOT, "%.0f%%", value * 100);
+    }
+
+    public static String formatLapResult(LapResult result) {
+        return result.isVueltaValida()
+                ? formatLapTime(result.getTiempoSegundos())
+                : "INVALID";
     }
 }
