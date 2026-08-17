@@ -76,11 +76,7 @@ final class DynamicWeatherService {
     }
 
     private DynamicWeatherState estadoPara(double intensidad) {
-        if (intensidad < 0.03) return DynamicWeatherState.SECO;
-        if (intensidad < 0.18) return DynamicWeatherState.NUBLADO;
-        if (intensidad < 0.38) return DynamicWeatherState.LLUVIA_LIGERA;
-        if (intensidad < 0.72) return DynamicWeatherState.LLUVIA;
-        return DynamicWeatherState.LLUVIA_INTENSA;
+        return DynamicWeatherState.desdeIntensidad(intensidad * 100);
     }
 
     private double variacion(double min, double max) {

@@ -22,12 +22,14 @@ public class QualifyingSession {
     private SimulationConfig config;
     private List<LapResult> resultados;
     private List<WeatherSnapshot> evolucionClimatica;
+    private List<EventOccurrence> eventos;
     private String fecha;
 
     public QualifyingSession() {
         this.id = UUID.randomUUID().toString();
         this.resultados = new ArrayList<>();
         this.evolucionClimatica = new ArrayList<>();
+        this.eventos = new ArrayList<>();
     }
 
     public QualifyingSession(String circuito, WeatherCondition clima, SimulationConfig config) {
@@ -40,7 +42,10 @@ public class QualifyingSession {
     /** Piloto que logró la pole, o {@code null} si la sesión está vacía. */
     @JsonIgnore
     public LapResult getPole() {
-        return resultados.isEmpty() ? null : resultados.get(0);
+        return resultados.stream()
+                .filter(LapResult::isVueltaValida)
+                .findFirst()
+                .orElse(null);
     }
 
     public String getId() {
@@ -91,6 +96,14 @@ public class QualifyingSession {
         this.evolucionClimatica = evolucionClimatica == null
                 ? new ArrayList<>()
                 : new ArrayList<>(evolucionClimatica);
+    }
+
+    public List<EventOccurrence> getEventos() {
+        return eventos == null ? List.of() : eventos;
+    }
+
+    public void setEventos(List<EventOccurrence> eventos) {
+        this.eventos = eventos == null ? new ArrayList<>() : new ArrayList<>(eventos);
     }
 
     public String getFecha() {

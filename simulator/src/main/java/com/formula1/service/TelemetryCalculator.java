@@ -2,7 +2,10 @@ package com.formula1.service;
 
 import com.formula1.model.Circuit;
 import com.formula1.model.Driver;
+import com.formula1.model.EventImpact;
+import com.formula1.model.EventOccurrence;
 import com.formula1.model.LapResult;
+import com.formula1.model.LapStatus;
 import com.formula1.model.SimulationConfig;
 import com.formula1.model.TelemetrySnapshot;
 import com.formula1.model.Vehicle;
@@ -20,25 +23,29 @@ final class TelemetryCalculator {
                                 LapResult resultado, int segmento, int totalSegmentos,
                                 double progreso, double velocidad,
                                 double combustibleRestante, double desgasteAcumulado,
-                                double tiempoAcumulado) {
+                                double tiempoAcumulado, double tiempoReferencia,
+                                EventImpact impacto, EventOccurrence evento,
+                                LapStatus estadoVuelta) {
         double velocidadRelativa = velocidad / vehiculo.getVelocidadMaximaKmh();
         int rpm = (int) Math.round(MathUtils.clamp(
                 4_000 + 9_000 * velocidadRelativa + 350 * Math.sin(progreso * 6 * Math.PI),
                 4_000, 15_000));
 
         double referencia = circuito.getRecordVuelta() == null
-                ? resultado.getTiempoSegundos()
+                ? tiempoReferencia
                 : circuito.getRecordVuelta().getTiempoSegundos();
 
         return new TelemetrySnapshot(
                 piloto.getNombre(), vehiculo.getModelo(), segmento, totalSegmentos,
                 velocidad, vehiculo.getVelocidadMaximaKmh(), rpm,
                 combustibleRestante, MathUtils.clamp(desgasteAcumulado, 0, 100),
-                temperaturaNeumaticos(clima, config, velocidadRelativa, progreso),
-                temperaturaMotor(clima, config, velocidadRelativa, progreso),
+                temperaturaNeumaticos(clima, config, velocidadRelativa, progreso)
+                        + impacto.deltaTemperaturaNeumaticosC(),
+                temperaturaMotor(clima, config, velocidadRelativa, progreso)
+                        + impacto.deltaTemperaturaMotorC(),
                 Math.min(3, ((segmento - 1) * 3 / totalSegmentos) + 1),
                 tiempoAcumulado, tiempoAcumulado - referencia * progreso,
-                clima);
+                clima, estadoVuelta, evento);
     }
 
     private double temperaturaNeumaticos(WeatherSnapshot clima, SimulationConfig config,

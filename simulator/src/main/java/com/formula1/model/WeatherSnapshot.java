@@ -81,9 +81,39 @@ public record WeatherSnapshot(
         return estado.getEstrategiaRecomendada();
     }
 
+    /** Aplica una alteración global desde un evento de lluvia o pista. */
+    public WeatherSnapshot conImpacto(double deltaIntensidadLluvia,
+                                      double deltaGrip) {
+        double nuevaIntensidad = clamp(
+                intensidadLluviaPorcentaje + deltaIntensidadLluvia, 0, 100);
+        double nuevaProbabilidad = clamp(
+                probabilidadLluviaPorcentaje + deltaIntensidadLluvia * 0.55, 0, 100);
+        double nuevaHumedad = clamp(
+                humedadPorcentaje + deltaIntensidadLluvia * 0.25, 0, 100);
+        double nuevaTemperaturaPista = clamp(
+                temperaturaPistaC - deltaIntensidadLluvia * 0.06, -20, 80);
+        double nuevoGrip = clamp(gripPorcentaje + deltaGrip, 0, 100);
+        double nuevaTraccion = clamp(
+                traccionPorcentaje + deltaGrip - Math.max(0, deltaIntensidadLluvia) * 0.04,
+                0, 100);
+        double nuevoFrenado = clamp(
+                frenadoPorcentaje + deltaGrip - Math.max(0, deltaIntensidadLluvia) * 0.06,
+                0, 100);
+        DynamicWeatherState nuevoEstado = deltaIntensidadLluvia == 0
+                ? estado
+                : DynamicWeatherState.desdeIntensidad(nuevaIntensidad);
+        return new WeatherSnapshot(segmento, totalSegmentos, nuevoEstado,
+                temperaturaC, nuevaHumedad, nuevaProbabilidad, nuevaIntensidad,
+                nuevaTemperaturaPista, nuevoGrip, nuevaTraccion, nuevoFrenado);
+    }
+
     private static void requireRange(double value, double min, double max, String metric) {
         if (!Double.isFinite(value) || value < min || value > max) {
             throw new IllegalArgumentException("Valor inválido para " + metric);
         }
+    }
+
+    private static double clamp(double value, double min, double max) {
+        return Math.max(min, Math.min(max, value));
     }
 }

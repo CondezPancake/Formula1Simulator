@@ -22,13 +22,18 @@ public record TelemetrySnapshot(
         int sectorActual,
         double tiempoVueltaSegundos,
         double deltaSegundos,
-        WeatherSnapshot clima) {
+        WeatherSnapshot clima,
+        LapStatus estadoVuelta,
+        EventOccurrence evento) {
 
     public TelemetrySnapshot {
         requireText(piloto, "El piloto es obligatorio");
         requireText(vehiculo, "El vehículo es obligatorio");
         if (clima == null) {
             throw new IllegalArgumentException("La muestra climática es obligatoria");
+        }
+        if (estadoVuelta == null || evento == null) {
+            throw new IllegalArgumentException("El estado y el evento son obligatorios");
         }
         if (totalSegmentos <= 0 || segmento < 1 || segmento > totalSegmentos) {
             throw new IllegalArgumentException("El segmento debe pertenecer a la vuelta");

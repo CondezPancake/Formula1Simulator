@@ -39,6 +39,17 @@ class WeatherSnapshotTest {
         assertEquals(original, recuperada);
     }
 
+    @Test
+    void unImpactoSoloDeGripConservaElEstadoClimatico() {
+        WeatherSnapshot nublado = muestra(
+                DynamicWeatherState.NUBLADO, 0, 82, 80, 79, 28);
+
+        WeatherSnapshot impactado = nublado.conImpacto(0, -5);
+
+        assertEquals(DynamicWeatherState.NUBLADO, impactado.estado());
+        assertEquals(77, impactado.gripPorcentaje(), 1e-9);
+    }
+
     private WeatherSnapshot muestra(DynamicWeatherState estado, double intensidad,
                                      double grip, double traccion, double frenado,
                                      double temperaturaPista) {

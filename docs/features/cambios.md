@@ -20,7 +20,7 @@ Una épica se considera **Terminada** solamente cuando todas sus historias está
 | E05 | Integración y persistencia | **En desarrollo** |
 | E06 | Motor probabilístico de simulación | **Terminada** |
 | E07 | Clima dinámico | **Terminada** |
-| E08 | Sistema de eventos aleatorios | **En desarrollo** |
+| E08 | Sistema de eventos aleatorios | **Terminada** |
 | E09 | Telemetría visual | **En desarrollo** |
 | E10 | Evolución dinámica de pista | **En desarrollo** |
 | E11 | Sistema de estrategia | **Terminada** |
@@ -79,7 +79,7 @@ Una épica se considera **Terminada** solamente cuando todas sus historias está
 
 ## E05 — Integración y persistencia
 
-**Estado de la épica: En desarrollo**
+**Estado de la épica: Terminada**
 
 | Historia | Nombre | Estado |
 |---|---|---|
@@ -110,7 +110,7 @@ Una épica se considera **Terminada** solamente cuando todas sus historias está
 
 | Historia | Nombre | Estado |
 |---|---|---|
-| HU-30 | Generar eventos | **En desarrollo** |
+| HU-30 | Generar eventos | **Terminada** |
 
 ## E09 — Telemetría visual
 
@@ -150,12 +150,12 @@ Una épica se considera **Terminada** solamente cuando todas sus historias está
 
 | Elemento | Terminadas | En desarrollo | Total |
 |---|---:|---:|---:|
-| Épicas | 7 | 5 | 12 |
-| Historias de usuario | 30 | 6 | 36 |
+| Épicas | 8 | 4 | 12 |
+| Historias de usuario | 31 | 5 | 36 |
 
 ## Auditoría de requisitos cumplidos
 
-Esta auditoría corresponde al estado del proyecto después de HU-29. Un requisito se marca como cumplido solamente cuando existe implementación verificable; una declaración en el README no se considera evidencia suficiente por sí sola.
+Esta auditoría corresponde al estado del proyecto después de HU-30. Un requisito se marca como cumplido solamente cuando existe implementación verificable; una declaración en el README no se considera evidencia suficiente por sí sola.
 
 ### Resumen
 
@@ -163,8 +163,8 @@ Esta auditoría corresponde al estado del proyecto después de HU-29. Un requisi
 |---|---:|---:|
 | Requisitos funcionales | 19 | 21 |
 | RNF generales | 8 | 12 |
-| RNF de POO y calidad | 24 | 26 |
-| **Total RNF** | **32** | **38** |
+| RNF de POO y calidad | 25 | 26 |
+| **Total RNF** | **33** | **38** |
 
 ### Requisitos funcionales cumplidos
 
@@ -207,7 +207,8 @@ RNF-02 está cumplido en JavaFX, pero no completamente en el uso de imágenes SV
 |---|---|
 | RNF-18 | POO con encapsulamiento, abstracciones, herencia lógica de JavaFX y polimorfismo mediante interfaces. |
 | RNF-19 y RNF-20 | Atributos encapsulados, getters/setters controlados y uso justificado de `this`. |
-| RNF-22 y RNF-23 | Visibilidad mínima necesaria y herencia usada únicamente para contratos del framework. |
+| RNF-21 | Las entidades principales están modeladas: piloto, equipo, vehículo, circuito, sesión, resultado, clima, telemetría, evento y estrategia. |
+| RNF-22 y RNF-23 | Visibilidad mínima necesaria y herencia lógica entre el evento abstracto y sus especializaciones de rendimiento y pista. |
 | RNF-25 y RNF-26 | Sobrecarga útil e interfaces como `CrudRepository`, `Progreso` y `Evolucion`. |
 | RNF-27 y RNF-28 | Lambdas y Streams empleados en filtros, búsquedas, ordenamiento, callbacks y agrupaciones. |
 | RNF-29 y RNF-30 | Pool de hilos, `Task` de JavaFX y actualizaciones visuales mediante el JavaFX Application Thread. |
@@ -216,22 +217,22 @@ RNF-02 está cumplido en JavaFX, pero no completamente en el uso de imágenes SV
 | RNF-35 a RNF-39 | Packages cohesionados, utilidades enfocadas, imports explícitos, separación de capas y responsabilidad principal por clase. |
 | RNF-40 a RNF-43 | Comentarios sobre decisiones no evidentes, métodos enfocados, comportamiento dentro de objetos y lógica reutilizable. |
 
-RNF-21 no está completo porque todavía no existen todas las entidades avanzadas, especialmente eventos. RNF-24 tampoco está completo: los modos de conducción funcionan, pero todavía no están modelados como implementaciones polimórficas de una abstracción `DrivingStrategy`.
+RNF-24 no está completo: los modos de conducción funcionan, pero todavía no están modelados como implementaciones polimórficas de una abstracción `DrivingStrategy`.
 
 ## Controles de calidad aplicados
 
 | Control | Estado y evidencia |
 |---|---|
 | Compilación | Código principal y pruebas compilan con Java 17. |
-| Pruebas automatizadas | 54 pruebas ejecutadas correctamente. |
+| Pruebas automatizadas | 68 pruebas ejecutadas correctamente, incluida una regresión de 250 carreras consecutivas. |
 | Integridad de vistas | `ViewsLoadTest` carga los diez archivos FXML y detecta IDs, acciones o imports inválidos. |
-| Pruebas del motor | Fórmula, clima dinámico, ordenamiento, configuración, HU-08, HU-19, estadísticas de HU-21 y telemetría de HU-23 están cubiertos. |
+| Pruebas del motor | Fórmula, clima dinámico, ordenamiento, configuración, HU-08, HU-19, estadísticas de HU-21, telemetría de HU-23 y eventos de HU-30 están cubiertos. |
 | Validación en capas | La interfaz previene entradas incompletas y los servicios protegen nuevamente las reglas de negocio. |
-| Inmutabilidad e invariantes | `SimulationSnapshot`, `TelemetrySnapshot` y `WeatherSnapshot` son inmutables y rechazan segmentos o métricas inválidas. |
+| Inmutabilidad e invariantes | `SimulationSnapshot`, `TelemetrySnapshot`, `WeatherSnapshot`, `EventOccurrence` y `EventImpact` son inmutables y rechazan estados o métricas inválidas. |
 | Seguridad entre hilos | `Task`, un pool compartido y `Platform.runLater` evitan bloquear o actualizar JavaFX desde un hilo incorrecto. |
 | Persistencia resiliente | MongoDB funciona como almacenamiento duradero y `ConcurrentHashMap` permite continuar en modo memoria. |
 | Patrones exigidos por el alcance vigente | Repository para persistencia y Singleton para conexión y almacén compartido. |
-| Reproducibilidad | Semillas fijas en pruebas y formatos técnicos independientes de la configuración regional. |
+| Reproducibilidad | Semilla opcional del motor de eventos, semillas fijas en pruebas y formatos técnicos independientes de la configuración regional. |
 | Trazabilidad | Documentos por funcionalidad, matriz de épicas/HU y commits descriptivos en Git. |
 
 ## Observaciones de alcance
@@ -239,4 +240,5 @@ RNF-21 no está completo porque todavía no existen todas las entidades avanzada
 - El alcance vigente descrito por el README es `f1project.md`; `ProyectoFormula1.md` se conserva dentro de `docs/legacy` y contiene funcionalidades adicionales.
 - OpenF1 y Q1/Q2/Q3 continúan fuera del alcance vigente. La telemetría se reincorporó como extensión mediante HU-23.
 - HU-29 genera y persiste 20 estados climáticos por sesión; grip, tracción, frenado, temperaturas, consumo, desgaste y tiempo reaccionan a ellos.
+- HU-30 incorpora 28 eventos + `NO_EVENT`, probabilidades configurables, selección ponderada contextual, cooldown, sectores y accidentes con vuelta invalidada, posible abandono y banderas.
 - HU-23 también satisface HU-31 porque implementa su dashboard detallado en tiempo real. La evolución histórica de vueltas y la comparación de sectores de HU-32 y HU-33 continúan en desarrollo.

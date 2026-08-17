@@ -7,7 +7,7 @@
   <img alt="JavaFX" src="https://img.shields.io/badge/JavaFX-17.0.10-e10600?style=flat-square&logo=java&logoColor=white">
   <img alt="Maven" src="https://img.shields.io/badge/Maven-build-e10600?style=flat-square&logo=apachemaven&logoColor=white">
   <img alt="MongoDB" src="https://img.shields.io/badge/MongoDB-5.1.1-e10600?style=flat-square&logo=mongodb&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-54%20passing-2ea043?style=flat-square">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-68%20passing-2ea043?style=flat-square">
 </p>
 
 # Formula1Simulator
@@ -42,10 +42,10 @@ La aplicación **arranca y es plenamente usable con o sin MongoDB**: si no hay s
 
 | | |
 |---|---|
-| Archivos `.java` | 53 |
-| Paquetes | 5 |
+| Archivos `.java` | 74 |
+| Paquetes | 6 |
 | Patrones de diseño | 2 (Repository, Singleton) |
-| Tests | 54, todos en verde |
+| Tests | 68, todos en verde |
 
 ## Funcionalidades
 
@@ -53,7 +53,7 @@ La aplicación **arranca y es plenamente usable con o sin MongoDB**: si no hay s
 
 **Análisis** — Comparación de dos o más vehículos en una tabla transpuesta con gráfico de barras. Ficha de circuito con récord de vuelta, ganadores históricos, clima promedio e impacto de la pista sobre consumo y desgaste.
 
-**Simulación** — Clima inicial aleatorio según la distribución del circuito y evolución dinámica de temperatura, humedad, lluvia, pista, grip, tracción y frenado. Estas condiciones modifican los tiempos, el consumo y el desgaste de los 20 pilotos. La vuelta seleccionada muestra telemetría y clima en vivo, incluyendo recomendaciones de neumáticos y estrategia. La sesión incluye clasificación, estadísticas y tendencias climáticas. Todo corre en segundo plano sin congelar la ventana.
+**Simulación** — Clima inicial aleatorio según la distribución del circuito y evolución dinámica de temperatura, humedad, lluvia, pista, grip, tracción y frenado. Incluye 28 eventos ponderados y contextuales más `NO_EVENT`: pueden alterar rendimiento, tiempo, desgaste, temperaturas y pista; un accidente invalida la vuelta y puede dejar al piloto fuera. La vuelta seleccionada muestra telemetría, clima y eventos en vivo. La sesión incluye clasificación, estadísticas, registro de eventos y tendencias climáticas. Todo corre en segundo plano sin congelar la ventana.
 
 **Historial** — Sesiones guardadas con su parrilla, comparación de tiempos de pole entre sesiones del mismo circuito, y configuraciones previas reutilizables.
 
@@ -62,7 +62,7 @@ La aplicación **arranca y es plenamente usable con o sin MongoDB**: si no hay s
 ```
 t_base   = 3600 · longitud_km / velocidad_promedio(modo)
 t_vuelta = t_base · factorTecnico · f_clima · f_aero · f_presion
-                  · f_combustible · f_piloto · (1 ± 0,5 %)
+                  · f_combustible · f_piloto · (1 ± 0,5 %) + delta_evento
 ```
 
 El **factor técnico** de cada circuito no es un número inventado: se deriva de su récord de vuelta real comparándolo con el tiempo a velocidad de referencia, lo que sitúa a Mónaco en 1,98 y a Monza en 1,32. Cada ajuste tiene contrapartida —más carga aerodinámica mejora el tiempo pero dispara el consumo; menos presión mejora el agarre pero desgasta más— para que configurar importe.
@@ -83,7 +83,7 @@ Una parrilla típica en Monza:
 
 ## Arquitectura
 
-Cinco paquetes y **dos patrones de diseño**, los mínimos que aportan valor real:
+Seis paquetes y **dos patrones de diseño**, los exigidos por el alcance principal:
 
 | Patrón | Dónde | Por qué |
 |---|---|---|
@@ -121,13 +121,14 @@ Formula1Simulator/
         │   ├── model/      # entidades + enums con sus factores
         │   ├── data/       # DataStore, MongoConnection, repositorios, seed
         │   ├── service/    # CRUD, búsquedas, motor de clasificación
+        │   ├── event/      # catálogo, selección ponderada e impactos
         │   ├── controller/ # controladores JavaFX, navegación y formularios
         │   └── util/       # formato, validación, aleatoriedad, hilos
         ├── main/resources/
         │   ├── views/      # 10 vistas FXML
         │   ├── css/style.css
         │   └── data/seed.json
-        └── test/java/      # 54 tests
+        └── test/java/      # 68 tests
 ```
 
 ## Instalación y ejecución

@@ -72,8 +72,9 @@ public class HistoryController {
         colPiloto.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getPiloto()));
         colEquipo.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getEquipo()));
         colTiempo.setCellValueFactory(f -> new SimpleStringProperty(
-                FormatUtils.formatLapTime(f.getValue().getTiempoSegundos())));
-        colGap.setCellValueFactory(f -> new SimpleStringProperty(FormatUtils.formatGap(f.getValue().getGap())));
+                FormatUtils.formatLapResult(f.getValue())));
+        colGap.setCellValueFactory(f -> new SimpleStringProperty(
+                f.getValue().isVueltaValida() ? FormatUtils.formatGap(f.getValue().getGap()) : "—"));
 
         tablaSesiones.getSelectionModel().selectedItemProperty().addListener((obs, antes, ahora) ->
                 tablaResultados.setItems(ahora == null

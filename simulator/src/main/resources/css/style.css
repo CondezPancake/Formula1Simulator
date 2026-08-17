@@ -184,6 +184,14 @@
     -fx-text-fill: #ff5a4d;
 }
 
+.event-live {
+    -fx-background-color: #342b18;
+    -fx-background-radius: 12;
+    -fx-padding: 5 12 5 12;
+    -fx-text-fill: #f5c542;
+    -fx-font-weight: bold;
+}
+
 .progress-bar.metric-rpm > .bar {
     -fx-background-color: #9b6dff;
 }
@@ -380,6 +388,11 @@
 /* La pole se destaca en rojo. */
 .pole-row .table-cell {
     -fx-text-fill: #ff5a4d;
+    -fx-font-weight: bold;
+}
+
+.invalid-row .table-cell {
+    -fx-text-fill: #ff8a80;
     -fx-font-weight: bold;
 }
 

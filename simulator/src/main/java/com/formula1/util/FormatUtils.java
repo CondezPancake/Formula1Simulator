@@ -1,5 +1,7 @@
 package com.formula1.util;
 
+import com.formula1.model.LapResult;
+
 import java.util.Locale;
 
 public final class FormatUtils {
@@ -49,5 +51,11 @@ public final class FormatUtils {
 
     public static String formatPercentage(double value) {
         return String.format(Locale.ROOT, "%.0f%%", value * 100);
+    }
+
+    public static String formatLapResult(LapResult result) {
+        return result.isVueltaValida()
+                ? formatLapTime(result.getTiempoSegundos())
+                : "INVALID";
     }
 }

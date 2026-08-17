@@ -56,6 +56,14 @@ public enum DynamicWeatherState {
         return estrategiaRecomendada;
     }
 
+    public static DynamicWeatherState desdeIntensidad(double intensidadPorcentaje) {
+        if (intensidadPorcentaje < 3) return SECO;
+        if (intensidadPorcentaje < 18) return NUBLADO;
+        if (intensidadPorcentaje < 38) return LLUVIA_LIGERA;
+        if (intensidadPorcentaje < 72) return LLUVIA;
+        return LLUVIA_INTENSA;
+    }
+
     @Override
     public String toString() {
         return etiqueta;

@@ -1,14 +1,22 @@
 package com.formula1.service;
 
 import com.formula1.data.DataStore;
+import com.formula1.event.EventContext;
+import com.formula1.event.EventContextFactory;
+import com.formula1.event.EventEffectService;
+import com.formula1.event.EventManager;
 import com.formula1.model.Circuit;
 import com.formula1.model.Driver;
+import com.formula1.model.EventImpact;
+import com.formula1.model.EventOccurrence;
 import com.formula1.model.LapResult;
+import com.formula1.model.LapStatus;
 import com.formula1.model.QualifyingSession;
 import com.formula1.model.SessionStatistics;
 import com.formula1.model.SimulationConfig;
 import com.formula1.model.SimulationSnapshot;
 import com.formula1.model.TelemetrySnapshot;
+import com.formula1.model.TrackSector;
 import com.formula1.model.Vehicle;
 import com.formula1.model.WeatherCondition;
 import com.formula1.model.WeatherSnapshot;
@@ -48,9 +56,18 @@ public class QualifyingService {
     private final LapTimeCalculator calculadora;
     private final TelemetryCalculator calculadoraTelemetria;
     private final DynamicWeatherService climaDinamico;
+    private final EventManager eventos;
+    private final EventContextFactory fabricaContextoEventos;
+    private final EventEffectService efectosEventos;
 
     public QualifyingService() {
         this(DataStore.getInstance(), new LapTimeCalculator());
+    }
+
+    /** Permite reproducir únicamente la secuencia de eventos de una ejecución. */
+    public QualifyingService(long eventSeed) {
+        this(DataStore.getInstance(), new LapTimeCalculator(),
+                new DynamicWeatherService(), new EventManager(eventSeed));
     }
 
     public QualifyingService(DataStore datos, LapTimeCalculator calculadora) {
@@ -59,10 +76,18 @@ public class QualifyingService {
 
     QualifyingService(DataStore datos, LapTimeCalculator calculadora,
                       DynamicWeatherService climaDinamico) {
+        this(datos, calculadora, climaDinamico, new EventManager());
+    }
+
+    QualifyingService(DataStore datos, LapTimeCalculator calculadora,
+                      DynamicWeatherService climaDinamico, EventManager eventos) {
         this.datos = datos;
         this.calculadora = calculadora;
         this.calculadoraTelemetria = new TelemetryCalculator();
         this.climaDinamico = climaDinamico;
+        this.eventos = eventos;
+        this.fabricaContextoEventos = new EventContextFactory();
+        this.efectosEventos = new EventEffectService();
         this.pilotos = new DriverService(datos);
         this.vehiculos = new VehicleService(datos);
         this.circuitos = new CircuitService(datos);
@@ -105,8 +130,10 @@ public class QualifyingService {
 
         List<Driver> parrilla = participantesConSeleccionPrimero(config.getPilotoId());
         List<LapResult> resultados = new ArrayList<>();
+        List<EventOccurrence> eventosSesion = new ArrayList<>();
         List<WeatherSnapshot> evolucionClimatica = climaDinamico.generar(
                 circuito, clima, SEGMENTOS_EVOLUCION);
+        eventos.startSession();
 
         for (int i = 0; i < parrilla.size(); i++) {
             Driver piloto = parrilla.get(i);
@@ -122,26 +149,39 @@ public class QualifyingService {
                     ? config
                     : SimulationConfig.paraClasificacion();
 
-            double tiempo = calculadora.calcularTiempo(
+            double desgastePrevio = calculadora.desgastePorVuelta(
+                    coche, circuito, evolucionClimatica, configPiloto);
+            EventContext contexto = fabricaContextoEventos.create(
+                    i + 1, piloto, coche, configPiloto, evolucionClimatica, desgastePrevio);
+            List<EventOccurrence> eventosVuelta = eventos.resolve(contexto);
+            evolucionClimatica = efectosEventos.applyGlobalWeather(
+                    evolucionClimatica, eventosVuelta);
+
+            double tiempoBase = calculadora.calcularTiempo(
                     piloto, coche, circuito, evolucionClimatica, configPiloto);
+            double consumoBase = calculadora.consumoPorVuelta(
+                    coche, circuito, evolucionClimatica, configPiloto);
+            double desgasteBase = calculadora.desgastePorVuelta(
+                    coche, circuito, evolucionClimatica, configPiloto);
 
             LapResult resultado = new LapResult(piloto.getId(), piloto.getNombre(),
-                    piloto.getEquipo(), coche.getModelo(), tiempo);
-            resultado.setConsumoEstimado(calculadora.consumoPorVuelta(
-                    coche, circuito, evolucionClimatica, configPiloto));
-            resultado.setDesgasteEstimado(calculadora.desgastePorVuelta(
-                    coche, circuito, evolucionClimatica, configPiloto));
+                    piloto.getEquipo(), coche.getModelo(), tiempoBase);
+            efectosEventos.applyResult(resultado, tiempoBase, consumoBase,
+                    desgasteBase, eventosVuelta);
             resultados.add(resultado);
+            eventosVuelta.stream()
+                    .filter(EventOccurrence::ocurrio)
+                    .forEach(eventosSesion::add);
 
             if (piloto.getId() == config.getPilotoId()
                     && (evolucion != null || telemetria != null)) {
                 emitirMuestras(piloto, coche, circuito, evolucionClimatica, configPiloto,
-                        resultado, evolucion, telemetria);
+                        resultado, tiempoBase, eventosVuelta, evolucion, telemetria);
             }
 
             if (progreso != null) {
                 progreso.avanzar(i + 1, parrilla.size(),
-                        piloto.getNombre() + " — " + FormatUtils.formatLapTime(tiempo));
+                        piloto.getNombre() + " — " + formatoResultado(resultado));
             }
         }
 
@@ -150,6 +190,7 @@ public class QualifyingService {
         QualifyingSession sesion = new QualifyingSession(circuito.getNombre(), clima, config);
         sesion.setResultados(resultados);
         sesion.setEvolucionClimatica(evolucionClimatica);
+        sesion.setEventos(eventosSesion);
         sesion.setFecha(DateUtils.format(DateUtils.now()));
         config.setGuardadoEn(sesion.getFecha());
         return sesion;
@@ -157,15 +198,26 @@ public class QualifyingService {
 
     /** Ordena por tiempo, asigna posiciones y calcula la diferencia con la pole. */
     void ordenarParrilla(List<LapResult> resultados) {
-        resultados.sort(Comparator.comparingDouble(LapResult::getTiempoSegundos));
-        if (resultados.isEmpty()) {
+        resultados.sort(Comparator
+                .comparing((LapResult resultado) -> !resultado.isVueltaValida())
+                .thenComparingDouble(LapResult::getTiempoSegundos));
+        LapResult poleResult = resultados.stream()
+                .filter(LapResult::isVueltaValida)
+                .findFirst()
+                .orElse(null);
+        if (poleResult == null) {
+            for (int i = 0; i < resultados.size(); i++) {
+                resultados.get(i).setPosicion(i + 1);
+                resultados.get(i).setGap(0);
+            }
             return;
         }
-        double pole = resultados.get(0).getTiempoSegundos();
+        double pole = poleResult.getTiempoSegundos();
         for (int i = 0; i < resultados.size(); i++) {
             LapResult resultado = resultados.get(i);
             resultado.setPosicion(i + 1);
-            resultado.setGap(resultado.getTiempoSegundos() - pole);
+            resultado.setGap(resultado.isVueltaValida()
+                    ? resultado.getTiempoSegundos() - pole : 0);
         }
     }
 
@@ -247,8 +299,10 @@ public class QualifyingService {
      */
     private void emitirMuestras(Driver piloto, Vehicle vehiculo, Circuit circuito,
                                 List<WeatherSnapshot> clima, SimulationConfig config,
-                                LapResult resultado, Evolucion evolucion, Telemetria telemetria) {
-        double velocidadMedia = 3600 * circuito.getLongitudKm() / resultado.getTiempoSegundos();
+                                LapResult resultado, double tiempoBase,
+                                List<EventOccurrence> eventosVuelta,
+                                Evolucion evolucion, Telemetria telemetria) {
+        double velocidadMedia = 3600 * circuito.getLongitudKm() / tiempoBase;
         double sumaTiempo = clima.stream().mapToDouble(WeatherSnapshot::factorTiempo).sum();
         double sumaConsumo = clima.stream().mapToDouble(WeatherSnapshot::factorConsumo).sum();
         double sumaDesgaste = clima.stream().mapToDouble(WeatherSnapshot::factorDesgaste).sum();
@@ -260,19 +314,51 @@ public class QualifyingService {
         for (int segmento = 1; segmento <= SEGMENTOS_EVOLUCION; segmento++) {
             double progreso = segmento / (double) SEGMENTOS_EVOLUCION;
             WeatherSnapshot climaActual = clima.get(segmento - 1);
+            TrackSector sector = TrackSector.desdeSegmento(segmento, SEGMENTOS_EVOLUCION);
+            EventImpact impacto = efectosEventos.impactAt(eventosVuelta, sector);
+            EventOccurrence eventoActual = efectosEventos.eventAt(
+                    eventosVuelta, sector, piloto.getId(), piloto.getNombre(), 1);
+            WeatherSnapshot climaTelemetria = impacto.deltaGripPorcentaje() == 0
+                    ? climaActual
+                    : climaActual.conImpacto(0, impacto.deltaGripPorcentaje());
+            boolean invalidada = efectosEventos.invalidatedAtOrBefore(eventosVuelta, sector);
             double variacionVelocidad = 1
                     + 0.08 * Math.sin(2 * Math.PI * progreso)
                     - 0.03 * Math.cos(4 * Math.PI * progreso);
             double velocidad = MathUtils.clamp(
                     velocidadMedia * variacionVelocidad
-                            * factorTiempoMedio / climaActual.factorTiempo(),
+                            * factorTiempoMedio / climaActual.factorTiempo()
+                            * impacto.multiplicadorVelocidad(),
                     0, vehiculo.getVelocidadMaximaKmh());
-            tiempoAcumulado += resultado.getTiempoSegundos()
-                    * climaActual.factorTiempo() / sumaTiempo;
-            consumoAcumulado += resultado.getConsumoEstimado()
-                    * climaActual.factorConsumo() / sumaConsumo;
-            desgasteAcumulado += resultado.getDesgasteEstimado()
-                    * climaActual.factorDesgaste() / sumaDesgaste;
+            if (invalidada) {
+                velocidad = 0;
+            } else {
+                tiempoAcumulado += tiempoBase * climaActual.factorTiempo() / sumaTiempo;
+                tiempoAcumulado += deltaTiempoSegmento(eventosVuelta, sector);
+                // Las fracciones suman matemáticamente el total, pero en el
+                // último segmento un double puede excederlo por unas millonésimas.
+                // Se limita en cada paso para preservar el invariante del snapshot.
+                consumoAcumulado = acumularHastaTotal(
+                        consumoAcumulado,
+                        resultado.getConsumoEstimado()
+                                * climaActual.factorConsumo() / sumaConsumo,
+                        resultado.getConsumoEstimado());
+                desgasteAcumulado = acumularHastaTotal(
+                        desgasteAcumulado,
+                        resultado.getDesgasteEstimado()
+                                * climaActual.factorDesgaste() / sumaDesgaste,
+                        resultado.getDesgasteEstimado());
+                if (segmento == SEGMENTOS_EVOLUCION) {
+                    // La lectura final representa el resultado consolidado,
+                    // no una aproximación binaria unas millonésimas inferior.
+                    consumoAcumulado = resultado.getConsumoEstimado();
+                    desgasteAcumulado = resultado.getDesgasteEstimado();
+                }
+            }
+            if (invalidada) {
+                consumoAcumulado = resultado.getConsumoEstimado();
+                desgasteAcumulado = resultado.getDesgasteEstimado();
+            }
 
             if (evolucion != null) {
                 evolucion.actualizar(new SimulationSnapshot(
@@ -289,15 +375,40 @@ public class QualifyingService {
             }
             if (telemetria != null) {
                 telemetria.actualizar(calculadoraTelemetria.calcular(
-                        piloto, vehiculo, circuito, climaActual, config, resultado,
+                        piloto, vehiculo, circuito, climaTelemetria, config, resultado,
                         segmento, SEGMENTOS_EVOLUCION, progreso, velocidad,
                         resultado.getConsumoEstimado() <= 0
                                 ? 100
                                 : MathUtils.clamp(100 * (1 - consumoAcumulado
                                         / resultado.getConsumoEstimado()), 0, 100),
-                        desgasteAcumulado, tiempoAcumulado));
+                        desgasteAcumulado, tiempoAcumulado, tiempoBase,
+                        impacto, eventoActual,
+                        invalidada ? resultado.getEstadoVuelta() : LapStatus.VALID));
             }
         }
+    }
+
+    private double deltaTiempoSegmento(List<EventOccurrence> eventosVuelta,
+                                       TrackSector sector) {
+        double delta = eventosVuelta.stream()
+                .filter(EventOccurrence::ocurrio)
+                .filter(evento -> evento.sector() == sector)
+                .mapToDouble(evento -> evento.impacto().deltaTiempoSegundos())
+                .sum();
+        long segmentos = java.util.stream.IntStream.rangeClosed(1, SEGMENTOS_EVOLUCION)
+                .filter(segmento -> sector.contiene(segmento, SEGMENTOS_EVOLUCION))
+                .count();
+        return segmentos == 0 ? 0 : delta / segmentos;
+    }
+
+    private double acumularHastaTotal(double acumulado, double incremento, double total) {
+        return MathUtils.clamp(acumulado + incremento, 0, total);
+    }
+
+    private String formatoResultado(LapResult resultado) {
+        return resultado.isVueltaValida()
+                ? FormatUtils.formatLapTime(resultado.getTiempoSegundos())
+                : resultado.getEstadoVuelta().getEtiqueta();
     }
 
     /**
@@ -355,8 +466,10 @@ public class QualifyingService {
         if (sesion == null) {
             throw new ValidationException("La sesión no puede ser nula");
         }
-        List<LapResult> resultados = sesion.getResultados();
-        if (resultados == null || resultados.isEmpty()) {
+        List<LapResult> resultados = sesion.getResultados() == null
+                ? List.of()
+                : sesion.getResultados().stream().filter(LapResult::isVueltaValida).toList();
+        if (resultados.isEmpty()) {
             return SessionStatistics.vacias();
         }
 

@@ -1,12 +1,18 @@
 package com.formula1.service;
 
 import com.formula1.data.DataStore;
+import com.formula1.event.EventManager;
+import com.formula1.event.EventCatalog;
+import com.formula1.event.SimulationEvent;
 import com.formula1.model.AerodynamicLoad;
 import com.formula1.model.Circuit;
 import com.formula1.model.Driver;
 import com.formula1.model.DrivingMode;
 import com.formula1.model.FuelStrategy;
+import com.formula1.model.EventProbabilityConfig;
+import com.formula1.model.EventType;
 import com.formula1.model.LapResult;
+import com.formula1.model.LapStatus;
 import com.formula1.model.QualifyingSession;
 import com.formula1.model.SimulationConfig;
 import com.formula1.model.SimulationSnapshot;
@@ -26,6 +32,7 @@ import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -59,7 +66,8 @@ class QualifyingServiceTest {
         // Semilla fija -> sin ruido aleatorio, resultados reproducibles.
         calculadora = new LapTimeCalculator(new Random(7));
         sesiones = new QualifyingService(
-                datos, calculadora, new DynamicWeatherService(new Random(11)));
+                datos, calculadora, new DynamicWeatherService(new Random(11)),
+                new EventManager(EventProbabilityConfig.disabled(), new Random(13)));
     }
 
     @Test
@@ -261,6 +269,25 @@ class QualifyingServiceTest {
     }
 
     @Test
+    void variasCarrerasConsecutivasNuncaSuperanLosTotalesAcumulados() {
+        for (int carrera = 0; carrera < 250; carrera++) {
+            List<SimulationSnapshot> evolucion = new ArrayList<>();
+
+            sesiones.simular(config(DrivingMode.NORMAL), WeatherCondition.SECO,
+                    null, evolucion::add);
+
+            assertEquals(QualifyingService.SEGMENTOS_EVOLUCION, evolucion.size());
+            for (SimulationSnapshot muestra : evolucion) {
+                assertTrue(muestra.consumoAcumulado() <= muestra.consumoTotal());
+                assertTrue(muestra.desgasteAcumulado() <= muestra.desgasteTotal());
+            }
+            SimulationSnapshot ultima = evolucion.get(evolucion.size() - 1);
+            assertEquals(ultima.consumoTotal(), ultima.consumoAcumulado(), 0);
+            assertEquals(ultima.desgasteTotal(), ultima.desgasteAcumulado(), 0);
+        }
+    }
+
+    @Test
     void elClimaDinamicoFormaParteDelResultadoDeLaSesion() {
         QualifyingSession sesion = sesiones.simular(
                 config(DrivingMode.NORMAL), WeatherCondition.LLUVIOSO, null);
@@ -304,6 +331,41 @@ class QualifyingServiceTest {
         assertTrue(estadisticas.tiempoPromedio() >= estadisticas.tiempoPole());
         assertTrue(estadisticas.consumoPromedio() > 0);
         assertTrue(estadisticas.desgastePromedio() > 0);
+    }
+
+    @Test
+    void crashIsReflectedInResultsEventsAndTelemetry() {
+        SimulationEvent crash = EventCatalog.defaultEvents().stream()
+                .filter(event -> event.type() == EventType.CRASH)
+                .findFirst()
+                .orElseThrow();
+        EventProbabilityConfig onlyExceptional = new EventProbabilityConfig(
+                0, 0, 0, 0, 0, 1, 0);
+        QualifyingService crashSession = new QualifyingService(
+                datos,
+                new LapTimeCalculator(new Random(21)),
+                new DynamicWeatherService(new Random(22)),
+                new EventManager(onlyExceptional, new Random(23), List.of(crash)));
+        List<TelemetrySnapshot> telemetry = new ArrayList<>();
+
+        QualifyingSession session = crashSession.simular(
+                config(DrivingMode.AGRESIVA), WeatherCondition.LLUVIOSO,
+                null, null, telemetry::add);
+
+        assertEquals(20, session.getEventos().size());
+        assertTrue(session.getEventos().stream().allMatch(event -> event.tipo() == EventType.CRASH));
+        assertTrue(session.getResultados().stream().noneMatch(LapResult::isVueltaValida));
+        assertTrue(session.getResultados().stream().allMatch(result -> result.getTiempoSegundos() == 0));
+        assertTrue(session.getResultados().stream().allMatch(result -> result.getSectorIncidente()
+                != com.formula1.model.TrackSector.NONE));
+        assertNull(session.getPole());
+
+        assertEquals(QualifyingService.SEGMENTOS_EVOLUCION, telemetry.size());
+        assertTrue(telemetry.stream().anyMatch(sample -> sample.evento().tipo() == EventType.CRASH));
+        assertTrue(telemetry.stream().anyMatch(sample -> sample.estadoVuelta() != LapStatus.VALID));
+        assertTrue(telemetry.stream()
+                .filter(sample -> sample.estadoVuelta() != LapStatus.VALID)
+                .allMatch(sample -> sample.velocidadKmh() == 0));
     }
 
     @Test

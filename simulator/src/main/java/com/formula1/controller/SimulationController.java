@@ -3,14 +3,17 @@ package com.formula1.controller;
 import com.formula1.model.AerodynamicLoad;
 import com.formula1.model.Driver;
 import com.formula1.model.DrivingMode;
+import com.formula1.model.EventOccurrence;
 import com.formula1.model.FuelStrategy;
 import com.formula1.model.LapResult;
+import com.formula1.model.LapStatus;
 import com.formula1.model.QualifyingSession;
 import com.formula1.model.SessionStatistics;
 import com.formula1.model.SimulationConfig;
 import com.formula1.model.SimulationSnapshot;
 import com.formula1.model.TelemetrySnapshot;
 import com.formula1.model.TirePressure;
+import com.formula1.model.TrackFlag;
 import com.formula1.model.WeatherSnapshot;
 import com.formula1.service.CircuitService;
 import com.formula1.service.DriverService;
@@ -92,6 +95,8 @@ public class SimulationController {
     @FXML private ProgressBar barraDesgasteTelemetria;
     @FXML private ProgressBar barraTempNeumaticos;
     @FXML private ProgressBar barraTempMotor;
+    @FXML private Label lblEventoTelemetria;
+    @FXML private Label lblEstadoPiloto;
     @FXML private Tab tabClima;
     @FXML private Label lblEstadoClimaDinamico;
     @FXML private Label lblTempAmbiente;
@@ -117,6 +122,16 @@ public class SimulationController {
     @FXML private TableColumn<LapResult, String> colGap;
     @FXML private TableColumn<LapResult, String> colConsumo;
     @FXML private TableColumn<LapResult, String> colDesgaste;
+    @FXML private TableColumn<LapResult, String> colEstadoVuelta;
+    @FXML private TableColumn<LapResult, String> colEventoResultado;
+    @FXML private TableView<EventOccurrence> tablaEventos;
+    @FXML private TableColumn<EventOccurrence, String> colEventoPiloto;
+    @FXML private TableColumn<EventOccurrence, String> colEventoNombre;
+    @FXML private TableColumn<EventOccurrence, String> colEventoCategoria;
+    @FXML private TableColumn<EventOccurrence, String> colEventoAlcance;
+    @FXML private TableColumn<EventOccurrence, String> colEventoSector;
+    @FXML private TableColumn<EventOccurrence, String> colEventoImpacto;
+    @FXML private TableColumn<EventOccurrence, String> colEventoBandera;
 
     private final QualifyingService sesiones;
     private final CircuitService circuitos;
@@ -161,20 +176,28 @@ public class SimulationController {
         colEquipo.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getEquipo()));
         colVehiculo.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getVehiculo()));
         colTiempo.setCellValueFactory(f -> new SimpleStringProperty(
-                FormatUtils.formatLapTime(f.getValue().getTiempoSegundos())));
-        colGap.setCellValueFactory(f -> new SimpleStringProperty(FormatUtils.formatGap(f.getValue().getGap())));
+                FormatUtils.formatLapResult(f.getValue())));
+        colGap.setCellValueFactory(f -> new SimpleStringProperty(
+                f.getValue().isVueltaValida() ? FormatUtils.formatGap(f.getValue().getGap()) : "—"));
         colConsumo.setCellValueFactory(f -> new SimpleStringProperty(
                 String.format("%.2f", f.getValue().getConsumoEstimado())));
         colDesgaste.setCellValueFactory(f -> new SimpleStringProperty(
                 String.format("%.2f", f.getValue().getDesgasteEstimado())));
+        colEstadoVuelta.setCellValueFactory(f -> new SimpleStringProperty(
+                f.getValue().getEstadoVuelta().getEtiqueta()));
+        colEventoResultado.setCellValueFactory(f -> new SimpleStringProperty(
+                f.getValue().getEventoResumen()));
+        configurarTablaEventos();
 
         // La pole se resalta con la clase .pole-row de la hoja de estilos.
         tabla.setRowFactory(t -> new TableRow<>() {
             @Override
             protected void updateItem(LapResult resultado, boolean vacia) {
                 super.updateItem(resultado, vacia);
-                getStyleClass().remove("pole-row");
-                if (!vacia && resultado != null && resultado.getPosicion() == 1) {
+                getStyleClass().removeAll("pole-row", "invalid-row");
+                if (!vacia && resultado != null && !resultado.isVueltaValida()) {
+                    getStyleClass().add("invalid-row");
+                } else if (!vacia && resultado != null && resultado.getPosicion() == 1) {
                     getStyleClass().add("pole-row");
                 }
             }
@@ -235,7 +258,7 @@ public class SimulationController {
         reiniciarEstadisticas();
         reiniciarTelemetria();
         reiniciarClimaDinamico();
-        panelResultados.getSelectionModel().select(tabClima);
+        panelResultados.getSelectionModel().select(tabTelemetria);
         Task<QualifyingSession> tarea = sesiones.crearTarea(config,
                 muestra -> Platform.runLater(() -> mostrarEvolucion(muestra)),
                 muestra -> Platform.runLater(() -> {
@@ -249,6 +272,7 @@ public class SimulationController {
         lblEstado.textProperty().bind(tarea.messageProperty());
         btnSimular.disableProperty().bind(tarea.runningProperty());
         tabla.getItems().clear();
+        tablaEventos.getItems().clear();
         lblClima.setText("");
 
         tarea.setOnSucceeded(e -> {
@@ -256,6 +280,7 @@ public class SimulationController {
             QualifyingSession sesion = tarea.getValue();
             lblClima.setText(resumenClimatico(sesion));
             tabla.setItems(FXCollections.observableArrayList(sesion.getResultados()));
+            tablaEventos.setItems(FXCollections.observableArrayList(sesion.getEventos()));
             mostrarEstadisticas(sesion);
             LapResult pole = sesion.getPole();
             lblEstado.setText(pole == null ? "Sesión sin resultados"
@@ -313,6 +338,8 @@ public class SimulationController {
         lblSector.setText("S—");
         lblTiempoVuelta.setText("0:00.000");
         lblDelta.setText("±0.000");
+        lblEventoTelemetria.setText("Sin evento");
+        lblEstadoPiloto.setText("Vuelta válida");
         lblDelta.getStyleClass().removeAll("delta-faster", "delta-slower");
         barraVelocidadTelemetria.setProgress(0);
         barraRpm.setProgress(0);
@@ -325,7 +352,9 @@ public class SimulationController {
     /** Representa una lectura ya calculada; no ejecuta lógica del motor en JavaFX. */
     private void mostrarTelemetria(TelemetrySnapshot muestra) {
         lblTelemetriaPiloto.setText(muestra.piloto() + " · " + muestra.vehiculo());
-        lblEstadoPista.setText(muestra.estadoPista());
+        String bandera = muestra.evento().impacto().bandera() == TrackFlag.GREEN
+                ? "" : " · " + muestra.evento().impacto().bandera().getEtiqueta();
+        lblEstadoPista.setText(muestra.estadoPista() + bandera);
         lblVelocidadTelemetria.setText(String.format("%.0f km/h", muestra.velocidadKmh()));
         lblRpm.setText(String.format("%,d rpm", muestra.rpm()));
         lblCombustible.setText(String.format("%.1f %%", muestra.combustibleRestantePorcentaje()));
@@ -334,11 +363,16 @@ public class SimulationController {
         lblTempMotor.setText(String.format("%.1f °C", muestra.temperaturaMotorC()));
         lblSector.setText("S" + muestra.sectorActual());
         lblTiempoVuelta.setText(FormatUtils.formatLapTime(muestra.tiempoVueltaSegundos()));
-        lblDelta.setText(FormatUtils.formatDelta(muestra.deltaSegundos()));
+        lblDelta.setText(muestra.estadoVuelta() == LapStatus.VALID
+                ? FormatUtils.formatDelta(muestra.deltaSegundos()) : "INVALID");
+        lblEstadoPiloto.setText(muestra.estadoVuelta().getEtiqueta());
+        if (muestra.evento().ocurrio()) {
+            lblEventoTelemetria.setText(muestra.evento().resumen());
+        }
 
         lblDelta.getStyleClass().removeAll("delta-faster", "delta-slower");
-        lblDelta.getStyleClass().add(muestra.deltaSegundos() <= 0
-                ? "delta-faster" : "delta-slower");
+        lblDelta.getStyleClass().add(muestra.estadoVuelta() != LapStatus.VALID
+                || muestra.deltaSegundos() > 0 ? "delta-slower" : "delta-faster");
         barraVelocidadTelemetria.setProgress(muestra.velocidadRelativa());
         barraRpm.setProgress(muestra.rpmRelativas());
         barraCombustible.setProgress(muestra.combustibleRestantePorcentaje() / 100);
@@ -440,9 +474,38 @@ public class SimulationController {
         graficoRendimiento.setTitle(metrica.getEtiqueta());
         XYChart.Series<String, Number> serie = new XYChart.Series<>();
         serie.setName(ultimaSesion.getCircuito());
-        ultimaSesion.getResultados().forEach(resultado -> serie.getData().add(
-                new XYChart.Data<>(resultado.getPiloto(), metrica.valorDe(resultado))));
+        ultimaSesion.getResultados().stream()
+                .filter(LapResult::isVueltaValida)
+                .forEach(resultado -> serie.getData().add(
+                        new XYChart.Data<>(resultado.getPiloto(), metrica.valorDe(resultado))));
         graficoRendimiento.getData().add(serie);
+    }
+
+    private void configurarTablaEventos() {
+        colEventoPiloto.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().piloto()));
+        colEventoNombre.setCellValueFactory(f -> new SimpleStringProperty(
+                f.getValue().tipo().getEtiqueta()));
+        colEventoCategoria.setCellValueFactory(f -> new SimpleStringProperty(
+                f.getValue().categoria().name()));
+        colEventoAlcance.setCellValueFactory(f -> new SimpleStringProperty(
+                f.getValue().alcance().name()));
+        colEventoSector.setCellValueFactory(f -> new SimpleStringProperty(
+                f.getValue().sector().getEtiqueta()));
+        colEventoImpacto.setCellValueFactory(f -> new SimpleStringProperty(
+                describirImpacto(f.getValue())));
+        colEventoBandera.setCellValueFactory(f -> new SimpleStringProperty(
+                f.getValue().impacto().bandera().getEtiqueta()));
+    }
+
+    private String describirImpacto(EventOccurrence evento) {
+        if (evento.impacto().vueltaInvalidada()) {
+            return evento.impacto().pilotoFuera() ? "INVALID · OUT" : "INVALID";
+        }
+        if (evento.impacto().deltaIntensidadLluviaPorcentaje() != 0) {
+            return String.format("Lluvia %+.0f %%",
+                    evento.impacto().deltaIntensidadLluviaPorcentaje());
+        }
+        return String.format("%+.3f s", evento.impacto().deltaTiempoSegundos());
     }
 
     private boolean configuracionCompleta() {
