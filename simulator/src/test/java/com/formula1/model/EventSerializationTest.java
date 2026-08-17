@@ -108,4 +108,32 @@ class EventSerializationTest {
 
         assertEquals(List.of(), session.getEvolucionPista());
     }
+
+    @Test
+    void sessionKeepsAnalysisAfterSerializationRoundTrip() throws Exception {
+        SessionAnalysis analysis = new SessionAnalysis(
+                "Max Verstappen",
+                70.234,
+                20,
+                "Pole clara por ritmo y sectores.",
+                List.of("Mejor rendimiento en Sector 1"),
+                List.of("Perdio tiempo en Sector 2"),
+                List.of("Grip medio de pista: 92%"));
+        QualifyingSession original = new QualifyingSession(
+                "Circuito de Monza", WeatherCondition.SECO, new SimulationConfig());
+        original.setAnalisis(analysis);
+
+        QualifyingSession copy = mapper.readValue(
+                mapper.writeValueAsString(original), QualifyingSession.class);
+
+        assertEquals(analysis, copy.getAnalisis());
+    }
+
+    @Test
+    void oldSessionWithoutAnalysisRemainsCompatible() throws Exception {
+        QualifyingSession session = mapper.readValue(
+                "{\"circuito\":\"Circuito de Monza\"}", QualifyingSession.class);
+
+        assertEquals("Sin pole", session.getAnalisis().pilotoPole());
+    }
 }

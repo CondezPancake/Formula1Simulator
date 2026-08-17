@@ -234,6 +234,9 @@
             <Tab text="Evolución de pista">
                 <fx:include fx:id="evolucionPista" source="track-evolution.fxml"/>
             </Tab>
+            <Tab text="Análisis">
+                <fx:include fx:id="analisisSesion" source="session-analysis.fxml"/>
+            </Tab>
             <Tab text="Eventos">
                 <VBox spacing="8">
                     <HBox spacing="10" alignment="CENTER_LEFT">

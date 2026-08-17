@@ -230,6 +230,35 @@
     -fx-stroke-width: 2.2px;
 }
 
+.session-analysis-panel {
+    -fx-background-color: #191925;
+    -fx-background-radius: 10;
+    -fx-padding: 14;
+}
+
+.analysis-title {
+    -fx-font-size: 17px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #e10600;
+}
+
+.analysis-card {
+    -fx-background-color: #20202f;
+    -fx-background-radius: 8;
+    -fx-padding: 10 12 10 12;
+    -fx-min-width: 170;
+}
+
+.analysis-pole, .analysis-value {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #ffffff;
+}
+
+.session-analysis-panel .list-view {
+    -fx-min-height: 140;
+}
+
 .progress-bar.metric-rpm > .bar {
     -fx-background-color: #9b6dff;
 }

@@ -58,6 +58,7 @@ public class QualifyingService {
     private final TelemetryCalculator calculadoraTelemetria;
     private final SectorTimeCalculator calculadoraSectores;
     private final TrackEvolutionService evolucionPista;
+    private final SessionAnalysisService analizador;
     private final DynamicWeatherService climaDinamico;
     private final EventManager eventos;
     private final EventContextFactory fabricaContextoEventos;
@@ -89,6 +90,7 @@ public class QualifyingService {
         this.calculadoraTelemetria = new TelemetryCalculator();
         this.calculadoraSectores = new SectorTimeCalculator();
         this.evolucionPista = new TrackEvolutionService();
+        this.analizador = new SessionAnalysisService();
         this.climaDinamico = climaDinamico;
         this.eventos = eventos;
         this.fabricaContextoEventos = new EventContextFactory();
@@ -219,6 +221,7 @@ public class QualifyingService {
         sesion.setEvolucionVuelta(evolucionVuelta);
         sesion.setEvolucionPista(historialPista);
         sesion.setEventos(eventosSesion);
+        sesion.setAnalisis(analizador.analizar(sesion));
         sesion.setFecha(DateUtils.format(DateUtils.now()));
         config.setGuardadoEn(sesion.getFecha());
         return sesion;

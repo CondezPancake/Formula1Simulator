@@ -113,6 +113,7 @@ class ViewsLoadTest {
         cargar("lap-evolution");
         cargar("sector-comparison");
         cargar("track-evolution");
+        cargar("session-analysis");
         cargar("simulation");
         cargar("history");
     }

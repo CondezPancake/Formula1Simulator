@@ -7,7 +7,7 @@
   <img alt="JavaFX" src="https://img.shields.io/badge/JavaFX-17.0.10-e10600?style=flat-square&logo=java&logoColor=white">
   <img alt="Maven" src="https://img.shields.io/badge/Maven-build-e10600?style=flat-square&logo=apachemaven&logoColor=white">
   <img alt="MongoDB" src="https://img.shields.io/badge/MongoDB-5.1.1-e10600?style=flat-square&logo=mongodb&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-88%20passing-2ea043?style=flat-square">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-94%20passing-2ea043?style=flat-square">
 </p>
 
 # Formula1Simulator
@@ -42,10 +42,10 @@ La aplicación **arranca y es plenamente usable con o sin MongoDB**: si no hay s
 
 | | |
 |---|---|
-| Archivos `.java` | 82 |
+| Archivos `.java` | 85 |
 | Paquetes | 6 |
 | Patrones de diseño | 2 (Repository, Singleton) |
-| Tests | 88, todos en verde |
+| Tests | 94, todos en verde |
 
 ## Funcionalidades
 
@@ -53,7 +53,7 @@ La aplicación **arranca y es plenamente usable con o sin MongoDB**: si no hay s
 
 **Análisis** — Comparación de dos o más vehículos en una tabla transpuesta con gráfico de barras. Ficha de circuito con récord de vuelta, ganadores históricos, clima promedio e impacto de la pista sobre consumo y desgaste.
 
-**Simulación** — Clima inicial aleatorio según la distribución del circuito y evolución dinámica de temperatura, humedad, lluvia, pista, grip, tracción y frenado. La goma se acumula entre vueltas en seco y la lluvia limpia progresivamente la pista; el grip resultante modifica el tiempo real de cada piloto. Incluye 28 eventos ponderados y contextuales más `NO_EVENT`: pueden alterar rendimiento, tiempo, desgaste, temperaturas y pista; un accidente invalida la vuelta y puede dejar al piloto fuera. La vuelta seleccionada muestra telemetría, clima y eventos en vivo, además de un gráfico intercambiable de velocidad, tiempo, desgaste, combustible, temperaturas y delta. La sesión incluye clasificación, estadísticas, comparación S1/S2/S3, evolución de pista, registro de eventos y tendencias climáticas persistibles. Todo corre en segundo plano sin congelar la ventana.
+**Simulación** — Clima inicial aleatorio según la distribución del circuito y evolución dinámica de temperatura, humedad, lluvia, pista, grip, tracción y frenado. La goma se acumula entre vueltas en seco y la lluvia limpia progresivamente la pista; el grip resultante modifica el tiempo real de cada piloto. Incluye 28 eventos ponderados y contextuales más `NO_EVENT`: pueden alterar rendimiento, tiempo, desgaste, temperaturas y pista; un accidente invalida la vuelta y puede dejar al piloto fuera. La vuelta seleccionada muestra telemetría, clima y eventos en vivo, además de un gráfico intercambiable de velocidad, tiempo, desgaste, combustible, temperaturas y delta. La sesión incluye clasificación, estadísticas, comparación S1/S2/S3, evolución de pista, análisis automático por reglas, registro de eventos y tendencias climáticas persistibles. Todo corre en segundo plano sin congelar la ventana.
 
 **Historial** — Sesiones guardadas con su parrilla, comparación de tiempos de pole entre sesiones del mismo circuito, y configuraciones previas reutilizables.
 
@@ -110,7 +110,7 @@ Un único pool de dos hilos demonio (`util.Async`). La carga inicial y la simula
 Formula1Simulator/
 ├── f1project.md                 # Especificación del proyecto
 ├── docs/
-│   ├── features/                # Un .md por rama: qué se hizo y por qué
+│   ├── features/                # Documentos vigentes de funcionalidades y estado
 │   └── legacy/                  # Especificación anterior, ya no vigente
 ├── tools/gen_seed.py            # Genera seed.json de forma reproducible
 └── simulator/
@@ -125,10 +125,10 @@ Formula1Simulator/
         │   ├── controller/ # controladores JavaFX y componentes visuales
         │   └── util/       # formato, validación, aleatoriedad, hilos
         ├── main/resources/
-        │   ├── views/      # 11 vistas FXML
+        │   ├── views/      # 14 vistas FXML
         │   ├── css/style.css
         │   └── data/seed.json
-        └── test/java/      # 72 tests
+        └── test/java/      # 94 tests
 ```
 
 ## Instalación y ejecución

@@ -100,6 +100,7 @@ public class SimulationController {
     @FXML private LapEvolutionController evolucionVueltaController;
     @FXML private SectorComparisonController comparacionSectoresController;
     @FXML private TrackEvolutionController evolucionPistaController;
+    @FXML private SessionAnalysisController analisisSesionController;
     @FXML private Tab tabClima;
     @FXML private Label lblEstadoClimaDinamico;
     @FXML private Label lblTempAmbiente;
@@ -263,6 +264,7 @@ public class SimulationController {
         evolucionVueltaController.reiniciar();
         comparacionSectoresController.reiniciar();
         evolucionPistaController.reiniciar();
+        analisisSesionController.reiniciar();
         reiniciarClimaDinamico();
         panelResultados.getSelectionModel().select(tabTelemetria);
         Task<QualifyingSession> tarea = sesiones.crearTarea(config,
@@ -290,6 +292,7 @@ public class SimulationController {
             evolucionVueltaController.cargar(sesion.getEvolucionVuelta());
             comparacionSectoresController.cargar(sesion.getResultados());
             evolucionPistaController.cargar(sesion.getEvolucionPista());
+            analisisSesionController.cargar(sesion.getAnalisis());
             mostrarEstadisticas(sesion);
             LapResult pole = sesion.getPole();
             lblEstado.setText(pole == null ? "Sesión sin resultados"

@@ -348,6 +348,20 @@ class QualifyingServiceTest {
     }
 
     @Test
+    void laSesionIncluyeAnalisisAutomaticoPersistible() {
+        QualifyingSession sesion = sesiones.simular(
+                config(DrivingMode.NORMAL), WeatherCondition.SECO, null);
+
+        assertNotNull(sesion.getAnalisis());
+        assertTrue(sesion.getAnalisis().tieneResultados());
+        assertEquals(sesion.getPole().getPiloto(), sesion.getAnalisis().pilotoPole());
+        assertEquals(sesion.getPole().getTiempoSegundos(),
+                sesion.getAnalisis().tiempoPoleSegundos(), 1e-9);
+        assertTrue(sesion.getAnalisis().factoresPositivos().size() > 0);
+        assertTrue(sesion.getAnalisis().factoresClave().size() > 0);
+    }
+
+    @Test
     void laLluviaIntensaProduceUnaVueltaMasLentaQueUnaPistaSeca() {
         WeatherSnapshot seco = new WeatherSnapshot(1, 1,
                 com.formula1.model.DynamicWeatherState.SECO,

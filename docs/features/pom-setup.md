@@ -1,25 +1,20 @@
-# feature/pom-setup
+# Configuración Maven
 
 ## Qué se implementó
 
-Configuración base de Maven para soportar el resto del proyecto (JavaFX, MongoDB, OpenF1/Jackson, JUnit 5).
+`simulator/pom.xml` define la base de build del proyecto:
 
-## Cambios
+- Java 17 mediante `maven-compiler-plugin` y `<release>17</release>`.
+- JavaFX 17.0.10 con `javafx-controls` y `javafx-fxml`.
+- MongoDB driver sync 5.1.1.
+- Jackson Databind 2.17.2 para serializar sesiones y datos.
+- JUnit Jupiter 5.10.3 con Surefire 3.2.5.
+- `javafx-maven-plugin` para ejecutar `com.formula1.App`.
 
-- `simulator/pom.xml`:
-  - Dependencias: `javafx-controls`, `javafx-fxml` (17.0.10), `mongodb-driver-sync` (5.1.1), `jackson-databind` + `jackson-datatype-jsr310` (2.17.2), `junit-jupiter` (5.10.3, scope `test`).
-  - `maven-compiler-plugin` con `<release>17</release>` en lugar de las properties sueltas `maven.compiler.source/target`.
-  - `javafx-maven-plugin` (0.0.8) configurado con `mainClass=com.formula1.App`, para poder ejecutar la app con `mvn javafx:run` una vez exista esa clase (se crea en `feature/javafx-bootstrap`).
-  - `maven-surefire-plugin` (3.2.5) para que `mvn test` ejecute JUnit 5 correctamente.
+## Estado
 
-## Patrón de diseño
-
-No aplica (configuración de build).
-
-## Pendiente
-
-Nada de este paquete queda pendiente; es la base para todas las demás features.
+No queda trabajo pendiente en la configuración de build. En este entorno `mvn` no está disponible en PATH, por eso la verificación se hizo con `javac` y los jars locales de `.m2`.
 
 ## Verificación
 
-`mvn -f simulator/pom.xml compile` → `BUILD SUCCESS`.
+Código principal y pruebas compilan con Java 17; la suite completa ejecuta 94 pruebas correctamente.
