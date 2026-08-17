@@ -24,38 +24,24 @@
       fx:controller="com.formula1.controller.SimulationController" spacing="12">
     <padding><Insets top="26" right="26" bottom="26" left="26"/></padding>
 
-    <Label text="Sesión de clasificación" styleClass="view-title"/>
-    <Label text="Configura el monoplaza y disputa la sesión: el clima se genera al azar según el circuito."
-           styleClass="view-subtitle"/>
-
+    <!-- La puesta a punto del monoplaza vive en CONFIG. & HISTORIAL, como en
+         el diseño; aquí solo se elige quién sale a pista. -->
     <FlowPane hgap="14" vgap="10">
         <VBox spacing="4">
-            <Label text="Circuito" styleClass="card-label"/>
+            <Label text="CIRCUITO" styleClass="card-label"/>
             <ComboBox fx:id="selectorCircuito" prefWidth="230"/>
         </VBox>
         <VBox spacing="4">
-            <Label text="Vehículo" styleClass="card-label"/>
+            <Label text="VEHÍCULO" styleClass="card-label"/>
             <ComboBox fx:id="selectorVehiculo" prefWidth="130"/>
         </VBox>
         <VBox spacing="4">
-            <Label text="Piloto" styleClass="card-label"/>
+            <Label text="PILOTO" styleClass="card-label"/>
             <ComboBox fx:id="selectorPiloto" promptText="Selecciona un piloto" prefWidth="190" disable="true"/>
         </VBox>
         <VBox spacing="4">
-            <Label text="Conducción" styleClass="card-label"/>
-            <ComboBox fx:id="selectorModo" prefWidth="180"/>
-        </VBox>
-        <VBox spacing="4">
-            <Label text="Aerodinámica" styleClass="card-label"/>
-            <ComboBox fx:id="selectorAero" prefWidth="120"/>
-        </VBox>
-        <VBox spacing="4">
-            <Label text="Presión" styleClass="card-label"/>
-            <ComboBox fx:id="selectorPresion" prefWidth="120"/>
-        </VBox>
-        <VBox spacing="4">
-            <Label text="Combustible" styleClass="card-label"/>
-            <ComboBox fx:id="selectorCombustible" prefWidth="140"/>
+            <Label text="PUESTA A PUNTO" styleClass="card-label"/>
+            <Label fx:id="lblPuestaAPunto" text="—" styleClass="stat-value"/>
         </VBox>
     </FlowPane>
 
@@ -99,7 +85,7 @@
         </HBox>
     </VBox>
 
-    <TabPane fx:id="panelResultados" VBox.vgrow="ALWAYS" tabClosingPolicy="UNAVAILABLE">
+    <TabPane fx:id="panelResultados" styleClass="subnav" VBox.vgrow="ALWAYS" tabClosingPolicy="UNAVAILABLE">
         <tabs>
             <Tab text="Clasificación">
                 <TableView fx:id="tabla">

@@ -20,6 +20,7 @@ import com.formula1.service.DriverService;
 import com.formula1.service.QualifyingService;
 import com.formula1.service.VehicleService;
 import com.formula1.util.Async;
+import com.formula1.util.TeamColors;
 import com.formula1.util.FormatUtils;
 
 import javafx.application.Platform;
@@ -36,6 +37,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
@@ -53,10 +55,7 @@ public class SimulationController {
     @FXML private ComboBox<String> selectorCircuito;
     @FXML private ComboBox<String> selectorVehiculo;
     @FXML private ComboBox<Driver> selectorPiloto;
-    @FXML private ComboBox<DrivingMode> selectorModo;
-    @FXML private ComboBox<AerodynamicLoad> selectorAero;
-    @FXML private ComboBox<TirePressure> selectorPresion;
-    @FXML private ComboBox<FuelStrategy> selectorCombustible;
+    @FXML private Label lblPuestaAPunto;
     @FXML private Button btnSimular;
     @FXML private ProgressBar progreso;
     @FXML private Label lblEstado;
@@ -145,6 +144,12 @@ public class SimulationController {
     private XYChart.Series<Number, Number> serieGrip;
     private XYChart.Series<Number, Number> serieLluvia;
 
+    // Puesta a punto elegida en CONFIG. & HISTORIAL; aquí solo se consulta.
+    private DrivingMode modo = DrivingMode.NORMAL;
+    private AerodynamicLoad aero = AerodynamicLoad.MEDIA;
+    private TirePressure presion = TirePressure.ESTANDAR;
+    private FuelStrategy combustible = FuelStrategy.BALANCEADA;
+
     public SimulationController() {
         this(new QualifyingService(), new CircuitService(), new VehicleService(), new DriverService());
     }
@@ -161,10 +166,6 @@ public class SimulationController {
     public void initialize() {
         circuitos.listar().forEach(c -> selectorCircuito.getItems().add(c.getNombre()));
         vehiculos.listar().forEach(v -> selectorVehiculo.getItems().add(v.getModelo()));
-        selectorModo.getItems().addAll(DrivingMode.values());
-        selectorAero.getItems().addAll(AerodynamicLoad.values());
-        selectorPresion.getItems().addAll(TirePressure.values());
-        selectorCombustible.getItems().addAll(FuelStrategy.values());
         selectorMetrica.getItems().addAll(MetricType.values());
         selectorMetrica.setValue(MetricType.DIFERENCIA_POLE);
         selectorMetrica.valueProperty().addListener((obs, anterior, actual) -> pintarGrafico());
@@ -194,18 +195,49 @@ public class SimulationController {
         configurarTablaEventos();
 
         // La pole se resalta con la clase .pole-row de la hoja de estilos.
+        // Cada fila lleva a la izquierda la franja del color de su escudería,
+        // igual que la tabla de tiempos del diseño.
         tabla.setRowFactory(t -> new TableRow<>() {
             @Override
             protected void updateItem(LapResult resultado, boolean vacia) {
                 super.updateItem(resultado, vacia);
                 getStyleClass().removeAll("pole-row", "invalid-row");
-                if (!vacia && resultado != null && !resultado.isVueltaValida()) {
+                if (vacia || resultado == null) {
+                    setStyle("");
+                    return;
+                }
+                if (!resultado.isVueltaValida()) {
                     getStyleClass().add("invalid-row");
-                } else if (!vacia && resultado != null && resultado.getPosicion() == 1) {
+                } else if (resultado.getPosicion() == 1) {
                     getStyleClass().add("pole-row");
+                }
+                setStyle("-fx-border-color: transparent transparent #17171B "
+                        + TeamColors.hex(resultado.getEquipo())
+                        + "; -fx-border-width: 0 0 1 3;");
+            }
+        });
+
+        colPosicion.setCellFactory(c -> new TableCell<>() {
+            @Override
+            protected void updateItem(Number valor, boolean vacia) {
+                super.updateItem(valor, vacia);
+                getStyleClass().removeAll("pos-badge", "p1", "p2", "p3");
+                if (vacia || valor == null) {
+                    setText(null);
+                    return;
+                }
+                setText(String.valueOf(valor.intValue()));
+                getStyleClass().add("pos-badge");
+                switch (valor.intValue()) {
+                    case 1 -> getStyleClass().add("p1");
+                    case 2 -> getStyleClass().add("p2");
+                    case 3 -> getStyleClass().add("p3");
+                    default -> { }
                 }
             }
         });
+        colTiempo.getStyleClass().add("mono-col");
+        colGap.getStyleClass().add("mono-col");
 
         precargarUltimaConfiguracion();
     }
@@ -215,48 +247,81 @@ public class SimulationController {
      * al abrir la pantalla se recupera la última empleada.
      */
     private void precargarUltimaConfiguracion() {
-        SimulationConfig ultima = sesiones.historial().stream()
-                .map(QualifyingSession::getConfig)
-                .filter(c -> c != null)
-                .findFirst()
-                .orElse(null);
-
-        if (ultima != null) {
-            selectorCircuito.setValue(ultima.getCircuito());
-            selectorVehiculo.setValue(ultima.getVehiculo());
-            seleccionarPiloto(ultima.getPilotoId());
-            selectorModo.setValue(ultima.getModo());
-            selectorAero.setValue(ultima.getAerodinamica());
-            selectorPresion.setValue(ultima.getPresion());
-            selectorCombustible.setValue(ultima.getCombustible());
-            lblEstado.setText("Configuración recuperada de la última sesión");
-            return;
+        // Lo que el usuario dejó preparado en la pantalla de configuración
+        // manda sobre lo que se usó en la última sesión guardada.
+        SimulationConfig ultima = com.formula1.data.DataStore.getInstance().configuracionActual();
+        if (ultima == null) {
+            ultima = sesiones.historial().stream()
+                    .map(QualifyingSession::getConfig)
+                    .filter(c -> c != null)
+                    .findFirst()
+                    .orElse(null);
         }
 
+        // Los ajustes guardados pueden venir incompletos (la pantalla de
+        // configuración solo fija la puesta a punto), así que cada campo cae
+        // a su valor por defecto en vez de quedarse vacío.
         if (!selectorCircuito.getItems().isEmpty()) {
             selectorCircuito.setValue(selectorCircuito.getItems().get(0));
         }
         if (!selectorVehiculo.getItems().isEmpty()) {
             selectorVehiculo.setValue(selectorVehiculo.getItems().get(0));
         }
-        selectorModo.setValue(DrivingMode.NORMAL);
-        selectorAero.setValue(AerodynamicLoad.MEDIA);
-        selectorPresion.setValue(TirePressure.ESTANDAR);
-        selectorCombustible.setValue(FuelStrategy.BALANCEADA);
+        modo = DrivingMode.NORMAL;
+        aero = AerodynamicLoad.MEDIA;
+        presion = TirePressure.ESTANDAR;
+        combustible = FuelStrategy.BALANCEADA;
+
+        if (ultima == null) {
+            return;
+        }
+        if (ultima.getCircuito() != null) {
+            selectorCircuito.setValue(ultima.getCircuito());
+        }
+        if (ultima.getVehiculo() != null) {
+            selectorVehiculo.setValue(ultima.getVehiculo());
+        }
+        seleccionarPiloto(ultima.getPilotoId());
+        if (ultima.getModo() != null) {
+            modo = ultima.getModo();
+        }
+        if (ultima.getAerodinamica() != null) {
+            aero = ultima.getAerodinamica();
+        }
+        if (ultima.getPresion() != null) {
+            presion = ultima.getPresion();
+        }
+        if (ultima.getCombustible() != null) {
+            combustible = ultima.getCombustible();
+        }
+        lblEstado.setText("Configuración recuperada");
+        mostrarPuestaAPunto();
+    }
+
+    /** Resume la puesta a punto vigente, que se ajusta en la otra pantalla. */
+    private void mostrarPuestaAPunto() {
+        lblPuestaAPunto.setText(modo.getEtiqueta() + " · " + aero.getEtiqueta()
+                + " · " + presion.getEtiqueta() + " · " + combustible.getEtiqueta());
+    }
+
+    /** Deep-link desde Explorar » Garaje: precarga el vehículo elegido. */
+    public void precargarVehiculo(String modelo) {
+        if (selectorVehiculo.getItems().contains(modelo)) {
+            selectorVehiculo.setValue(modelo);
+        }
     }
 
     @FXML
     private void onSimular() {
         if (!configuracionCompleta()) {
             Navigator.aviso("Falta configuración",
-                    "Elige un circuito, un vehículo, un piloto y todos los ajustes.");
+                    "Elige un circuito, un vehículo y un piloto.");
             return;
         }
 
         SimulationConfig config = new SimulationConfig(
                 selectorCircuito.getValue(), selectorPiloto.getValue().getId(), selectorVehiculo.getValue(),
-                selectorModo.getValue(), selectorAero.getValue(),
-                selectorPresion.getValue(), selectorCombustible.getValue());
+                modo, aero, presion, combustible);
 
         reiniciarEvolucion();
         reiniciarEstadisticas();
@@ -267,6 +332,13 @@ public class SimulationController {
         analisisSesionController.reiniciar();
         reiniciarClimaDinamico();
         panelResultados.getSelectionModel().select(tabTelemetria);
+
+        // La cabecera de la aplicación acompaña a la sesión: evento, estado,
+        // contador de segmento, clima y bandera.
+        circuitos.porNombre(config.getCircuito()).ifPresent(
+                c -> ShellController.evento(c.getNombre(), c.getPais()));
+        ShellController.estadoSesion(ShellController.Estado.EN_CURSO);
+        ShellController.bandera(null);
         Task<QualifyingSession> tarea = sesiones.crearTarea(config,
                 muestra -> Platform.runLater(() -> mostrarEvolucion(muestra)),
                 muestra -> Platform.runLater(() -> {
@@ -297,6 +369,10 @@ public class SimulationController {
             LapResult pole = sesion.getPole();
             lblEstado.setText(pole == null ? "Sesión sin resultados"
                     : "Pole: " + pole.getPiloto() + " — " + FormatUtils.formatLapTime(pole.getTiempoSegundos()));
+            ShellController.estadoSesion(ShellController.Estado.TERMINADA);
+            // Terminada la vuelta, lo que interesa es la parrilla, no la
+            // telemetría en directo que ya dejó de moverse.
+            panelResultados.getSelectionModel().selectFirst();
             // Guardar en segundo plano: la parrilla ya está en pantalla.
             Async.ejecutar(() -> sesiones.guardar(sesion));
         });
@@ -305,6 +381,7 @@ public class SimulationController {
             desenlazar();
             progreso.setProgress(0);
             lblEstado.setText("La simulación falló");
+            ShellController.estadoSesion(ShellController.Estado.REPOSO);
             Throwable causa = tarea.getException();
             Navigator.error("No se pudo completar la clasificación",
                     causa == null ? "Error desconocido" : String.valueOf(causa.getMessage()));
@@ -334,6 +411,7 @@ public class SimulationController {
                 muestra.desgasteAcumulado(), muestra.desgasteTotal()));
         progresoVuelta.setProgress(muestra.progreso());
         barraVelocidad.setProgress(muestra.velocidadRelativa());
+        ShellController.segmento(muestra.segmento(), muestra.totalSegmentos());
         barraConsumo.setProgress(muestra.progreso());
         barraDesgaste.setProgress(muestra.progreso());
     }
@@ -368,6 +446,7 @@ public class SimulationController {
         String bandera = muestra.evento().impacto().bandera() == TrackFlag.GREEN
                 ? "" : " · " + muestra.evento().impacto().bandera().getEtiqueta();
         lblEstadoPista.setText(muestra.estadoPista() + bandera);
+        ShellController.bandera(muestra.evento().impacto().bandera());
         lblVelocidadTelemetria.setText(String.format("%.0f km/h", muestra.velocidadKmh()));
         lblRpm.setText(String.format("%,d rpm", muestra.rpm()));
         lblCombustible.setText(String.format("%.1f %%", muestra.combustibleRestantePorcentaje()));
@@ -428,6 +507,7 @@ public class SimulationController {
         lblProbLluvia.setText(String.format("%.0f %%", muestra.probabilidadLluviaPorcentaje()));
         lblIntensidadLluvia.setText(String.format("%.0f %%", muestra.intensidadLluviaPorcentaje()));
         lblTempPista.setText(String.format("%.1f °C", muestra.temperaturaPistaC()));
+        ShellController.clima(muestra);
         lblGrip.setText(String.format("%.0f %%", muestra.gripPorcentaje()));
         lblTraccion.setText(String.format("%.0f %%", muestra.traccionPorcentaje()));
         lblFrenado.setText(String.format("%.0f %%", muestra.frenadoPorcentaje()));
@@ -524,11 +604,7 @@ public class SimulationController {
     private boolean configuracionCompleta() {
         return selectorCircuito.getValue() != null
                 && selectorVehiculo.getValue() != null
-                && selectorPiloto.getValue() != null
-                && selectorModo.getValue() != null
-                && selectorAero.getValue() != null
-                && selectorPresion.getValue() != null
-                && selectorCombustible.getValue() != null;
+                && selectorPiloto.getValue() != null;
     }
 
     private void cargarPilotosDelVehiculo(String modelo) {
