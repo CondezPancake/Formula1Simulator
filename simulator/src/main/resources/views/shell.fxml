@@ -4,7 +4,6 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ProgressIndicator?>
-<?import javafx.scene.control.Separator?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Priority?>
@@ -15,33 +14,74 @@
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.formula1.controller.ShellController"
-            prefWidth="1180" prefHeight="760">
+            prefWidth="1600" prefHeight="940">
 
-    <left>
-        <VBox fx:id="navegacion" styleClass="nav" spacing="4" prefWidth="210">
-            <padding><Insets top="20" right="12" bottom="20" left="12"/></padding>
+    <top>
+        <VBox>
+            <!-- ============ barra superior persistente (54 px) ============ -->
+            <HBox fx:id="cabecera" styleClass="app-header" spacing="0" alignment="CENTER_LEFT">
+                <padding><Insets left="20" right="20"/></padding>
 
-            <Label text="FORMULA 1" styleClass="nav-brand"/>
-            <Label text="SIMULATOR" styleClass="nav-brand-accent"/>
+                <Label text="F1" styleClass="brand-mark"/>
 
-            <Separator>
-                <VBox.margin><Insets top="14" bottom="10"/></VBox.margin>
-            </Separator>
+                <Region styleClass="header-divider">
+                    <HBox.margin><Insets left="18" right="18"/></HBox.margin>
+                </Region>
 
-            <Button text="Inicio"       styleClass="nav-button" maxWidth="Infinity" onAction="#onInicio"/>
-            <Button text="Pilotos"      styleClass="nav-button" maxWidth="Infinity" onAction="#onPilotos"/>
-            <Button text="Equipos"      styleClass="nav-button" maxWidth="Infinity" onAction="#onEquipos"/>
-            <Button text="Vehículos"    styleClass="nav-button" maxWidth="Infinity" onAction="#onVehiculos"/>
-            <Button text="Circuitos"    styleClass="nav-button" maxWidth="Infinity" onAction="#onCircuitos"/>
+                <VBox spacing="1" alignment="CENTER_LEFT">
+                    <Label fx:id="lblEvento" text="SIMULADOR DE CLASIFICACIÓN" styleClass="header-title"/>
+                    <Label fx:id="lblCircuitoCabecera" text="SIN CIRCUITO SELECCIONADO" styleClass="header-subtitle"/>
+                </VBox>
 
-            <Separator>
-                <VBox.margin><Insets top="10" bottom="10"/></VBox.margin>
-            </Separator>
+                <Label fx:id="lblEstadoSesion" text="● LISTO" styleClass="live-badge,off">
+                    <HBox.margin><Insets left="22"/></HBox.margin>
+                </Label>
 
-            <Button text="Clasificación" styleClass="nav-button,nav-primary" maxWidth="Infinity" onAction="#onSimulacion"/>
-            <Button text="Historial"     styleClass="nav-button" maxWidth="Infinity" onAction="#onHistorial"/>
+                <VBox spacing="0" alignment="CENTER_LEFT">
+                    <HBox.margin><Insets left="18"/></HBox.margin>
+                    <Label text="SEGMENTO" styleClass="micro-label"/>
+                    <HBox spacing="2" alignment="BOTTOM_LEFT">
+                        <Label fx:id="lblSegmentoActual" text="—" styleClass="counter-value"/>
+                        <Label fx:id="lblSegmentoTotal" text="/20" styleClass="counter-total"/>
+                    </HBox>
+                </VBox>
+
+                <Region styleClass="header-divider">
+                    <HBox.margin><Insets left="18" right="18"/></HBox.margin>
+                </Region>
+
+                <Label fx:id="lblIconoClima" text="☁" style="-fx-font-size: 20px;"/>
+                <VBox spacing="1" alignment="CENTER_LEFT">
+                    <HBox.margin><Insets left="10"/></HBox.margin>
+                    <Label fx:id="lblClimaTemp" text="— · ASFALTO —" styleClass="header-value"/>
+                    <Label fx:id="lblClimaEstado" text="SIN DATOS DE SESIÓN" styleClass="header-subtitle"/>
+                </VBox>
+
+                <Region HBox.hgrow="ALWAYS"/>
+
+                <HBox spacing="6" alignment="CENTER">
+                    <Label fx:id="banderaVerde"    text="VERDE"    styleClass="flag-pill"/>
+                    <Label fx:id="banderaAmarilla" text="AMARILLA" styleClass="flag-pill"/>
+                    <Label fx:id="banderaRoja"     text="ROJA"     styleClass="flag-pill"/>
+                </HBox>
+
+                <VBox spacing="0" alignment="CENTER_RIGHT">
+                    <HBox.margin><Insets left="22"/></HBox.margin>
+                    <Label fx:id="lblZonaHoraria" text="UTC" styleClass="micro-label"/>
+                    <Label fx:id="lblReloj" text="--:--:--" styleClass="header-clock"/>
+                </VBox>
+            </HBox>
+
+            <!-- ============ nav de secciones (44 px) ============ -->
+            <HBox fx:id="navegacion" styleClass="top-nav" spacing="0" alignment="CENTER_LEFT">
+                <padding><Insets left="20"/></padding>
+                <Button fx:id="btnCarrera"  text="CARRERA"             styleClass="top-nav-item" onAction="#onCarrera"/>
+                <Button fx:id="btnExplorar" text="EXPLORAR"            styleClass="top-nav-item" onAction="#onExplorar"/>
+                <Button fx:id="btnGestion"  text="GESTIÓN"             styleClass="top-nav-item" onAction="#onGestion"/>
+                <Button fx:id="btnConfig"   text="CONFIG. &amp; HISTORIAL" styleClass="top-nav-item" onAction="#onConfigHistorial"/>
+            </HBox>
         </VBox>
-    </left>
+    </top>
 
     <center>
         <StackPane fx:id="contenido" styleClass="contenido"/>
@@ -49,8 +89,8 @@
 
     <bottom>
         <HBox styleClass="status-bar" spacing="10" alignment="CENTER_LEFT">
-            <padding><Insets top="8" right="16" bottom="8" left="16"/></padding>
-            <ProgressIndicator fx:id="cargando" prefWidth="16" prefHeight="16" visible="false"/>
+            <padding><Insets top="7" right="20" bottom="7" left="20"/></padding>
+            <ProgressIndicator fx:id="cargando" prefWidth="14" prefHeight="14" visible="false"/>
             <Label fx:id="lblEstado" text=""/>
             <Region HBox.hgrow="ALWAYS"/>
         </HBox>
