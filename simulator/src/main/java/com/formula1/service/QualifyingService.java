@@ -5,6 +5,7 @@ import com.formula1.model.Circuit;
 import com.formula1.model.Driver;
 import com.formula1.model.LapResult;
 import com.formula1.model.QualifyingSession;
+import com.formula1.model.SessionStatistics;
 import com.formula1.model.SimulationConfig;
 import com.formula1.model.SimulationSnapshot;
 import com.formula1.model.Vehicle;
@@ -19,6 +20,7 @@ import javafx.concurrent.Task;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.DoubleSummaryStatistics;
 import java.util.List;
 import java.util.Optional;
 
@@ -280,6 +282,41 @@ public class QualifyingService {
                 .sorted(Comparator.comparing(QualifyingSession::getFecha,
                         Comparator.nullsLast(Comparator.reverseOrder())))
                 .toList();
+    }
+
+    /** Calcula el resumen que consume la vista estadística de HU-21. */
+    public SessionStatistics calcularEstadisticas(QualifyingSession sesion) {
+        if (sesion == null) {
+            throw new ValidationException("La sesión no puede ser nula");
+        }
+        List<LapResult> resultados = sesion.getResultados();
+        if (resultados == null || resultados.isEmpty()) {
+            return SessionStatistics.vacias();
+        }
+
+        DoubleSummaryStatistics tiempos = resultados.stream()
+                .mapToDouble(LapResult::getTiempoSegundos)
+                .summaryStatistics();
+        double diferenciaMaxima = resultados.stream()
+                .mapToDouble(LapResult::getGap)
+                .max()
+                .orElse(0);
+        double consumoPromedio = resultados.stream()
+                .mapToDouble(LapResult::getConsumoEstimado)
+                .average()
+                .orElse(0);
+        double desgastePromedio = resultados.stream()
+                .mapToDouble(LapResult::getDesgasteEstimado)
+                .average()
+                .orElse(0);
+
+        return new SessionStatistics(
+                resultados.size(),
+                tiempos.getMin(),
+                tiempos.getAverage(),
+                diferenciaMaxima,
+                consumoPromedio,
+                desgastePromedio);
     }
 
     /** Notificación de avance durante la simulación. */

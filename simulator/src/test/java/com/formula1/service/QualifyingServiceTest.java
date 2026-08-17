@@ -10,6 +10,7 @@ import com.formula1.model.LapResult;
 import com.formula1.model.QualifyingSession;
 import com.formula1.model.SimulationConfig;
 import com.formula1.model.SimulationSnapshot;
+import com.formula1.model.SessionStatistics;
 import com.formula1.model.TirePressure;
 import com.formula1.model.Vehicle;
 import com.formula1.model.WeatherCondition;
@@ -207,6 +208,22 @@ class QualifyingServiceTest {
             assertTrue(muestras.get(i).consumoAcumulado() >= muestras.get(i - 1).consumoAcumulado());
             assertTrue(muestras.get(i).desgasteAcumulado() >= muestras.get(i - 1).desgasteAcumulado());
         }
+    }
+
+    @Test
+    void calculaEstadisticasDeTodosLosParticipantes() {
+        QualifyingSession sesion = sesiones.simular(
+                config(DrivingMode.NORMAL), WeatherCondition.SECO, null);
+
+        SessionStatistics estadisticas = sesiones.calcularEstadisticas(sesion);
+
+        assertTrue(estadisticas.tieneResultados());
+        assertEquals(20, estadisticas.participantes());
+        assertEquals(sesion.getPole().getTiempoSegundos(), estadisticas.tiempoPole(), 1e-9);
+        assertEquals(sesion.getResultados().get(19).getGap(), estadisticas.diferenciaMaxima(), 1e-9);
+        assertTrue(estadisticas.tiempoPromedio() >= estadisticas.tiempoPole());
+        assertTrue(estadisticas.consumoPromedio() > 0);
+        assertTrue(estadisticas.desgastePromedio() > 0);
     }
 
     @Test

@@ -6,6 +6,7 @@ import com.formula1.model.DrivingMode;
 import com.formula1.model.FuelStrategy;
 import com.formula1.model.LapResult;
 import com.formula1.model.QualifyingSession;
+import com.formula1.model.SessionStatistics;
 import com.formula1.model.SimulationConfig;
 import com.formula1.model.SimulationSnapshot;
 import com.formula1.model.TirePressure;
@@ -22,6 +23,9 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import javafx.scene.chart.BarChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -57,6 +61,13 @@ public class SimulationController {
     @FXML private ProgressBar barraVelocidad;
     @FXML private ProgressBar barraConsumo;
     @FXML private ProgressBar barraDesgaste;
+    @FXML private ComboBox<MetricType> selectorMetrica;
+    @FXML private BarChart<String, Number> graficoRendimiento;
+    @FXML private NumberAxis ejeMetrica;
+    @FXML private Label lblPoleEstadistica;
+    @FXML private Label lblPromedioEstadistica;
+    @FXML private Label lblDiferenciaEstadistica;
+    @FXML private Label lblParticipantesEstadistica;
     @FXML private TableView<LapResult> tabla;
     @FXML private TableColumn<LapResult, Number> colPosicion;
     @FXML private TableColumn<LapResult, String> colPiloto;
@@ -71,6 +82,7 @@ public class SimulationController {
     private final CircuitService circuitos;
     private final VehicleService vehiculos;
     private final DriverService pilotos;
+    private QualifyingSession ultimaSesion;
 
     public SimulationController() {
         this(new QualifyingService(), new CircuitService(), new VehicleService(), new DriverService());
@@ -92,6 +104,10 @@ public class SimulationController {
         selectorAero.getItems().addAll(AerodynamicLoad.values());
         selectorPresion.getItems().addAll(TirePressure.values());
         selectorCombustible.getItems().addAll(FuelStrategy.values());
+        selectorMetrica.getItems().addAll(MetricType.values());
+        selectorMetrica.setValue(MetricType.DIFERENCIA_POLE);
+        selectorMetrica.valueProperty().addListener((obs, anterior, actual) -> pintarGrafico());
+        graficoRendimiento.setAnimated(false);
 
         // El vehículo delimita los pilotos válidos y evita combinaciones de
         // escuderías distintas antes de que lleguen a la capa de servicio.
@@ -174,6 +190,7 @@ public class SimulationController {
                 selectorPresion.getValue(), selectorCombustible.getValue());
 
         reiniciarEvolucion();
+        reiniciarEstadisticas();
         Task<QualifyingSession> tarea = sesiones.crearTarea(config,
                 muestra -> Platform.runLater(() -> mostrarEvolucion(muestra)));
 
@@ -190,6 +207,7 @@ public class SimulationController {
             QualifyingSession sesion = tarea.getValue();
             lblClima.setText("Clima de la sesión: " + sesion.getClima().getEtiqueta());
             tabla.setItems(FXCollections.observableArrayList(sesion.getResultados()));
+            mostrarEstadisticas(sesion);
             LapResult pole = sesion.getPole();
             lblEstado.setText(pole == null ? "Sesión sin resultados"
                     : "Pole: " + pole.getPiloto() + " — " + FormatUtils.formatLapTime(pole.getTiempoSegundos()));
@@ -234,6 +252,46 @@ public class SimulationController {
         barraDesgaste.setProgress(muestra.progreso());
     }
 
+    private void reiniciarEstadisticas() {
+        ultimaSesion = null;
+        graficoRendimiento.getData().clear();
+        lblPoleEstadistica.setText("—");
+        lblPromedioEstadistica.setText("—");
+        lblDiferenciaEstadistica.setText("—");
+        lblParticipantesEstadistica.setText("0");
+    }
+
+    private void mostrarEstadisticas(QualifyingSession sesion) {
+        ultimaSesion = sesion;
+        SessionStatistics estadisticas = sesiones.calcularEstadisticas(sesion);
+        LapResult pole = sesion.getPole();
+
+        lblPoleEstadistica.setText(pole == null
+                ? "—"
+                : pole.getPiloto() + " · " + FormatUtils.formatLapTime(estadisticas.tiempoPole()));
+        lblPromedioEstadistica.setText(FormatUtils.formatLapTime(estadisticas.tiempoPromedio()));
+        lblDiferenciaEstadistica.setText(FormatUtils.formatGap(estadisticas.diferenciaMaxima()));
+        lblParticipantesEstadistica.setText(String.valueOf(estadisticas.participantes()));
+        pintarGrafico();
+    }
+
+    /** Convierte resultados del dominio en una única serie visual. */
+    private void pintarGrafico() {
+        graficoRendimiento.getData().clear();
+        MetricType metrica = selectorMetrica.getValue();
+        if (ultimaSesion == null || metrica == null) {
+            return;
+        }
+
+        ejeMetrica.setLabel(metrica.getUnidad());
+        graficoRendimiento.setTitle(metrica.getEtiqueta());
+        XYChart.Series<String, Number> serie = new XYChart.Series<>();
+        serie.setName(ultimaSesion.getCircuito());
+        ultimaSesion.getResultados().forEach(resultado -> serie.getData().add(
+                new XYChart.Data<>(resultado.getPiloto(), metrica.valorDe(resultado))));
+        graficoRendimiento.getData().add(serie);
+    }
+
     private boolean configuracionCompleta() {
         return selectorCircuito.getValue() != null
                 && selectorVehiculo.getValue() != null
@@ -271,5 +329,55 @@ public class SimulationController {
         progreso.progressProperty().unbind();
         lblEstado.textProperty().unbind();
         btnSimular.disableProperty().unbind();
+    }
+
+    private enum MetricType {
+        TIEMPO_VUELTA("Tiempo de vuelta", "Segundos") {
+            @Override
+            double valorDe(LapResult resultado) {
+                return resultado.getTiempoSegundos();
+            }
+        },
+        DIFERENCIA_POLE("Diferencia con la pole", "Segundos") {
+            @Override
+            double valorDe(LapResult resultado) {
+                return resultado.getGap();
+            }
+        },
+        CONSUMO("Consumo estimado", "Unidades por vuelta") {
+            @Override
+            double valorDe(LapResult resultado) {
+                return resultado.getConsumoEstimado();
+            }
+        },
+        DESGASTE("Desgaste estimado", "Unidades por vuelta") {
+            @Override
+            double valorDe(LapResult resultado) {
+                return resultado.getDesgasteEstimado();
+            }
+        };
+
+        private final String etiqueta;
+        private final String unidad;
+
+        MetricType(String etiqueta, String unidad) {
+            this.etiqueta = etiqueta;
+            this.unidad = unidad;
+        }
+
+        abstract double valorDe(LapResult resultado);
+
+        String getEtiqueta() {
+            return etiqueta;
+        }
+
+        String getUnidad() {
+            return unidad;
+        }
+
+        @Override
+        public String toString() {
+            return etiqueta;
+        }
     }
 }

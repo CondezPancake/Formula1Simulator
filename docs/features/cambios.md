@@ -73,7 +73,7 @@ Una épica se considera **Terminada** solamente cuando todas sus historias está
 | Historia | Nombre | Estado |
 |---|---|---|
 | HU-20 | Visualizar clasificación | **Terminada** |
-| HU-21 | Visualizar estadísticas | **En desarrollo** |
+| HU-21 | Visualizar estadísticas | **Terminada** |
 | HU-22 | Visualizar clima | **Terminada** |
 | HU-23 | Visualizar telemetría | **En desarrollo** |
 
@@ -151,17 +151,17 @@ Una épica se considera **Terminada** solamente cuando todas sus historias está
 | Elemento | Terminadas | En desarrollo | Total |
 |---|---:|---:|---:|
 | Épicas | 5 | 7 | 12 |
-| Historias de usuario | 26 | 10 | 36 |
+| Historias de usuario | 27 | 9 | 36 |
 
 ## Auditoría de requisitos cumplidos
 
-Esta auditoría corresponde al estado del proyecto después de HU-19. Un requisito se marca como cumplido solamente cuando existe implementación verificable; una declaración en el README no se considera evidencia suficiente por sí sola.
+Esta auditoría corresponde al estado del proyecto después de HU-21. Un requisito se marca como cumplido solamente cuando existe implementación verificable; una declaración en el README no se considera evidencia suficiente por sí sola.
 
 ### Resumen
 
 | Grupo | Cumplidos | Definidos en `ProyectoFormula1.md` |
 |---|---:|---:|
-| Requisitos funcionales | 18 | 21 |
+| Requisitos funcionales | 19 | 21 |
 | RNF generales | 8 | 12 |
 | RNF de POO y calidad | 24 | 26 |
 | **Total RNF** | **32** | **38** |
@@ -179,11 +179,10 @@ Esta auditoría corresponde al estado del proyecto después de HU-19. Un requisi
 | RF-13 | Cálculo probabilístico del tiempo de vuelta. |
 | RF-14 | Ordenamiento de participantes por tiempo y cálculo de posiciones y diferencias. |
 | RF-15 | Presentación de la clasificación final en JavaFX. |
+| RF-16 | Resumen estadístico y gráfico de barras para comparar tiempos, diferencias, consumo y desgaste. |
 | RF-18 | Persistencia de entidades y sesiones en MongoDB, con operación alternativa en memoria. |
 | RF-19 | Almacenamiento de resultados de clasificación. |
 | RF-20 | Consulta de sesiones almacenadas, parrillas y configuraciones anteriores. |
-
-RF-16 todavía no se considera cumplido: existen gráficos de comparación de vehículos e historial, pero falta la visualización gráfica del rendimiento de los participantes de la sesión actual solicitada por HU-21.
 
 RF-17 y RF-21 dependen de OpenF1, integración que fue retirada del alcance vigente y no está implementada.
 
@@ -224,9 +223,9 @@ RNF-21 no está completo porque todavía no existen todas las entidades avanzada
 | Control | Estado y evidencia |
 |---|---|
 | Compilación | Código principal y pruebas compilan con Java 17. |
-| Pruebas automatizadas | 42 pruebas ejecutadas correctamente. |
+| Pruebas automatizadas | 43 pruebas ejecutadas correctamente. |
 | Integridad de vistas | `ViewsLoadTest` carga los diez archivos FXML y detecta IDs, acciones o imports inválidos. |
-| Pruebas del motor | Fórmula, clima, ordenamiento, configuración, HU-08 y evolución de HU-19 están cubiertos. |
+| Pruebas del motor | Fórmula, clima, ordenamiento, configuración, HU-08, HU-19 y estadísticas de HU-21 están cubiertos. |
 | Validación en capas | La interfaz previene entradas incompletas y los servicios protegen nuevamente las reglas de negocio. |
 | Inmutabilidad e invariantes | `SimulationSnapshot` es inmutable y rechaza segmentos o métricas inválidas. |
 | Seguridad entre hilos | `Task`, un pool compartido y `Platform.runLater` evitan bloquear o actualizar JavaFX desde un hilo incorrecto. |

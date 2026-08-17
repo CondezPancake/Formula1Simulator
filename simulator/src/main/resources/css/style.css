@@ -130,6 +130,56 @@
     -fx-background-color: #ff7b45;
 }
 
+.stat-card {
+    -fx-background-color: #20202f;
+    -fx-background-radius: 8;
+    -fx-padding: 10 12 10 12;
+    -fx-min-width: 150;
+}
+
+.stat-value {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #ffffff;
+}
+
+.tab-pane .tab-header-area .tab-header-background {
+    -fx-background-color: #15151e;
+}
+
+.tab-pane .tab {
+    -fx-background-color: #20202f;
+}
+
+.tab-pane .tab:selected {
+    -fx-background-color: #34101a;
+}
+
+.tab-pane .tab-content-area {
+    -fx-background-color: #15151e;
+    -fx-padding: 10 0 0 0;
+}
+
+.chart {
+    -fx-background-color: #191925;
+}
+
+.chart-plot-background {
+    -fx-background-color: #1e1e2c;
+}
+
+.chart-bar {
+    -fx-bar-fill: #e10600;
+}
+
+.axis {
+    -fx-tick-label-fill: #b8b8c4;
+}
+
+.axis-label {
+    -fx-text-fill: #b8b8c4;
+}
+
 /* -------------------------------------------------------------- botones */
 
 .button {
