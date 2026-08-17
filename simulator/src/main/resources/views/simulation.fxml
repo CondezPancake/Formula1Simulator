@@ -225,6 +225,9 @@
                     </HBox>
                 </VBox>
             </Tab>
+            <Tab text="Evolución de vuelta">
+                <fx:include fx:id="evolucionVuelta" source="lap-evolution.fxml"/>
+            </Tab>
             <Tab text="Eventos">
                 <VBox spacing="8">
                     <HBox spacing="10" alignment="CENTER_LEFT">

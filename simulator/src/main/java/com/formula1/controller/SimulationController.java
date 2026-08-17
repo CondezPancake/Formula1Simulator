@@ -97,6 +97,7 @@ public class SimulationController {
     @FXML private ProgressBar barraTempMotor;
     @FXML private Label lblEventoTelemetria;
     @FXML private Label lblEstadoPiloto;
+    @FXML private LapEvolutionController evolucionVueltaController;
     @FXML private Tab tabClima;
     @FXML private Label lblEstadoClimaDinamico;
     @FXML private Label lblTempAmbiente;
@@ -257,6 +258,7 @@ public class SimulationController {
         reiniciarEvolucion();
         reiniciarEstadisticas();
         reiniciarTelemetria();
+        evolucionVueltaController.reiniciar();
         reiniciarClimaDinamico();
         panelResultados.getSelectionModel().select(tabTelemetria);
         Task<QualifyingSession> tarea = sesiones.crearTarea(config,
@@ -281,6 +283,7 @@ public class SimulationController {
             lblClima.setText(resumenClimatico(sesion));
             tabla.setItems(FXCollections.observableArrayList(sesion.getResultados()));
             tablaEventos.setItems(FXCollections.observableArrayList(sesion.getEventos()));
+            evolucionVueltaController.cargar(sesion.getEvolucionVuelta());
             mostrarEstadisticas(sesion);
             LapResult pole = sesion.getPole();
             lblEstado.setText(pole == null ? "Sesión sin resultados"
@@ -351,6 +354,7 @@ public class SimulationController {
 
     /** Representa una lectura ya calculada; no ejecuta lógica del motor en JavaFX. */
     private void mostrarTelemetria(TelemetrySnapshot muestra) {
+        evolucionVueltaController.actualizar(muestra);
         lblTelemetriaPiloto.setText(muestra.piloto() + " · " + muestra.vehiculo());
         String bandera = muestra.evento().impacto().bandera() == TrackFlag.GREEN
                 ? "" : " · " + muestra.evento().impacto().bandera().getEtiqueta();

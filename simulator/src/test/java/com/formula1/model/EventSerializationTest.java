@@ -35,4 +35,31 @@ class EventSerializationTest {
         assertEquals(TrackFlag.YELLOW,
                 copy.getResultados().get(0).getEventos().get(0).impacto().bandera());
     }
+
+    @Test
+    void sessionKeepsLapEvolutionAfterSerializationRoundTrip() throws Exception {
+        WeatherSnapshot weather = new WeatherSnapshot(1, 1, DynamicWeatherState.SECO,
+                24, 50, 10, 0, 34, 96, 95, 94);
+        TelemetrySnapshot sample = new TelemetrySnapshot(
+                "Max Verstappen", "RB20", 1, 1,
+                315, 340, 12_100, 82, 4.5,
+                98, 108, 1, 72.35, -0.18, weather,
+                LapStatus.VALID, EventOccurrence.noEvent(1, "Max Verstappen", 1));
+        QualifyingSession original = new QualifyingSession(
+                "Circuito de Monza", WeatherCondition.SECO, new SimulationConfig());
+        original.setEvolucionVuelta(List.of(sample));
+
+        QualifyingSession copy = mapper.readValue(
+                mapper.writeValueAsString(original), QualifyingSession.class);
+
+        assertEquals(List.of(sample), copy.getEvolucionVuelta());
+    }
+
+    @Test
+    void oldSessionWithoutLapEvolutionRemainsCompatible() throws Exception {
+        QualifyingSession session = mapper.readValue(
+                "{\"circuito\":\"Circuito de Monza\"}", QualifyingSession.class);
+
+        assertEquals(List.of(), session.getEvolucionVuelta());
+    }
 }

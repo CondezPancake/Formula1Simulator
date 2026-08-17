@@ -192,6 +192,17 @@
     -fx-font-weight: bold;
 }
 
+.lap-evolution-panel {
+    -fx-background-color: #191925;
+    -fx-background-radius: 10;
+    -fx-padding: 14;
+}
+
+.lap-evolution-panel .chart-series-line {
+    -fx-stroke: #e10600;
+    -fx-stroke-width: 2.2px;
+}
+
 .progress-bar.metric-rpm > .bar {
     -fx-background-color: #9b6dff;
 }

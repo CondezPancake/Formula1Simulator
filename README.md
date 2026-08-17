@@ -7,7 +7,7 @@
   <img alt="JavaFX" src="https://img.shields.io/badge/JavaFX-17.0.10-e10600?style=flat-square&logo=java&logoColor=white">
   <img alt="Maven" src="https://img.shields.io/badge/Maven-build-e10600?style=flat-square&logo=apachemaven&logoColor=white">
   <img alt="MongoDB" src="https://img.shields.io/badge/MongoDB-5.1.1-e10600?style=flat-square&logo=mongodb&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-68%20passing-2ea043?style=flat-square">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-71%20passing-2ea043?style=flat-square">
 </p>
 
 # Formula1Simulator
@@ -42,10 +42,10 @@ La aplicación **arranca y es plenamente usable con o sin MongoDB**: si no hay s
 
 | | |
 |---|---|
-| Archivos `.java` | 74 |
+| Archivos `.java` | 75 |
 | Paquetes | 6 |
 | Patrones de diseño | 2 (Repository, Singleton) |
-| Tests | 68, todos en verde |
+| Tests | 71, todos en verde |
 
 ## Funcionalidades
 
@@ -53,7 +53,7 @@ La aplicación **arranca y es plenamente usable con o sin MongoDB**: si no hay s
 
 **Análisis** — Comparación de dos o más vehículos en una tabla transpuesta con gráfico de barras. Ficha de circuito con récord de vuelta, ganadores históricos, clima promedio e impacto de la pista sobre consumo y desgaste.
 
-**Simulación** — Clima inicial aleatorio según la distribución del circuito y evolución dinámica de temperatura, humedad, lluvia, pista, grip, tracción y frenado. Incluye 28 eventos ponderados y contextuales más `NO_EVENT`: pueden alterar rendimiento, tiempo, desgaste, temperaturas y pista; un accidente invalida la vuelta y puede dejar al piloto fuera. La vuelta seleccionada muestra telemetría, clima y eventos en vivo. La sesión incluye clasificación, estadísticas, registro de eventos y tendencias climáticas. Todo corre en segundo plano sin congelar la ventana.
+**Simulación** — Clima inicial aleatorio según la distribución del circuito y evolución dinámica de temperatura, humedad, lluvia, pista, grip, tracción y frenado. Incluye 28 eventos ponderados y contextuales más `NO_EVENT`: pueden alterar rendimiento, tiempo, desgaste, temperaturas y pista; un accidente invalida la vuelta y puede dejar al piloto fuera. La vuelta seleccionada muestra telemetría, clima y eventos en vivo, además de un gráfico intercambiable de velocidad, tiempo, desgaste, combustible, temperaturas y delta. La sesión incluye clasificación, estadísticas, registro de eventos, evolución persistible y tendencias climáticas. Todo corre en segundo plano sin congelar la ventana.
 
 **Historial** — Sesiones guardadas con su parrilla, comparación de tiempos de pole entre sesiones del mismo circuito, y configuraciones previas reutilizables.
 
@@ -122,13 +122,13 @@ Formula1Simulator/
         │   ├── data/       # DataStore, MongoConnection, repositorios, seed
         │   ├── service/    # CRUD, búsquedas, motor de clasificación
         │   ├── event/      # catálogo, selección ponderada e impactos
-        │   ├── controller/ # controladores JavaFX, navegación y formularios
+        │   ├── controller/ # controladores JavaFX y componentes visuales
         │   └── util/       # formato, validación, aleatoriedad, hilos
         ├── main/resources/
-        │   ├── views/      # 10 vistas FXML
+        │   ├── views/      # 11 vistas FXML
         │   ├── css/style.css
         │   └── data/seed.json
-        └── test/java/      # 68 tests
+        └── test/java/      # 71 tests
 ```
 
 ## Instalación y ejecución

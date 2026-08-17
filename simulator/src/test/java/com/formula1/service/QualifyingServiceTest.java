@@ -232,6 +232,8 @@ class QualifyingServiceTest {
 
         assertEquals(QualifyingService.SEGMENTOS_EVOLUCION, telemetria.size());
         assertEquals(evolucion.size(), telemetria.size(), "cada segmento comparte una lectura");
+        assertEquals(telemetria, sesion.getEvolucionVuelta(),
+                "la evolución mostrada debe ser la misma que se persiste");
 
         LapResult seleccionado = resultadoDe(sesion, 1);
         TelemetrySnapshot ultima = telemetria.get(telemetria.size() - 1);
@@ -266,6 +268,21 @@ class QualifyingServiceTest {
                         >= anterior.desgasteNeumaticosPorcentaje());
             }
         }
+    }
+
+    @Test
+    void guardaLaEvolucionAunqueLaSimulacionNoTengaCallbacksVisuales() {
+        QualifyingSession sesion = sesiones.simular(
+                config(DrivingMode.NORMAL), WeatherCondition.SECO, null);
+
+        List<TelemetrySnapshot> muestras = sesion.getEvolucionVuelta();
+        assertEquals(QualifyingService.SEGMENTOS_EVOLUCION, muestras.size());
+        assertTrue(muestras.stream().allMatch(muestra -> muestra.piloto().equals("Max Verstappen")));
+        assertEquals(1, muestras.get(0).segmento());
+        assertEquals(QualifyingService.SEGMENTOS_EVOLUCION,
+                muestras.get(muestras.size() - 1).segmento());
+        assertThrows(UnsupportedOperationException.class,
+                () -> muestras.add(muestras.get(0)), "la sesión no expone su lista mutable");
     }
 
     @Test
@@ -361,6 +378,7 @@ class QualifyingServiceTest {
         assertNull(session.getPole());
 
         assertEquals(QualifyingService.SEGMENTOS_EVOLUCION, telemetry.size());
+        assertEquals(telemetry, session.getEvolucionVuelta());
         assertTrue(telemetry.stream().anyMatch(sample -> sample.evento().tipo() == EventType.CRASH));
         assertTrue(telemetry.stream().anyMatch(sample -> sample.estadoVuelta() != LapStatus.VALID));
         assertTrue(telemetry.stream()

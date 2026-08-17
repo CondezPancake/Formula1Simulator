@@ -22,6 +22,7 @@ public class QualifyingSession {
     private SimulationConfig config;
     private List<LapResult> resultados;
     private List<WeatherSnapshot> evolucionClimatica;
+    private List<TelemetrySnapshot> evolucionVuelta;
     private List<EventOccurrence> eventos;
     private String fecha;
 
@@ -29,6 +30,7 @@ public class QualifyingSession {
         this.id = UUID.randomUUID().toString();
         this.resultados = new ArrayList<>();
         this.evolucionClimatica = new ArrayList<>();
+        this.evolucionVuelta = new ArrayList<>();
         this.eventos = new ArrayList<>();
     }
 
@@ -104,6 +106,20 @@ public class QualifyingSession {
 
     public void setEventos(List<EventOccurrence> eventos) {
         this.eventos = eventos == null ? new ArrayList<>() : new ArrayList<>(eventos);
+    }
+
+    /**
+     * Muestras ordenadas de la vuelta del piloto configurado. Se guardan con
+     * la sesión para que HU-32 no dependa de callbacks transitorios de JavaFX.
+     */
+    public List<TelemetrySnapshot> getEvolucionVuelta() {
+        return evolucionVuelta == null ? List.of() : List.copyOf(evolucionVuelta);
+    }
+
+    public void setEvolucionVuelta(List<TelemetrySnapshot> evolucionVuelta) {
+        this.evolucionVuelta = evolucionVuelta == null
+                ? new ArrayList<>()
+                : new ArrayList<>(evolucionVuelta);
     }
 
     public String getFecha() {

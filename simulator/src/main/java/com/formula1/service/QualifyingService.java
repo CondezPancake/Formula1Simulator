@@ -131,6 +131,7 @@ public class QualifyingService {
         List<Driver> parrilla = participantesConSeleccionPrimero(config.getPilotoId());
         List<LapResult> resultados = new ArrayList<>();
         List<EventOccurrence> eventosSesion = new ArrayList<>();
+        List<TelemetrySnapshot> evolucionVuelta = new ArrayList<>();
         List<WeatherSnapshot> evolucionClimatica = climaDinamico.generar(
                 circuito, clima, SEGMENTOS_EVOLUCION);
         eventos.startSession();
@@ -173,10 +174,15 @@ public class QualifyingService {
                     .filter(EventOccurrence::ocurrio)
                     .forEach(eventosSesion::add);
 
-            if (piloto.getId() == config.getPilotoId()
-                    && (evolucion != null || telemetria != null)) {
+            if (piloto.getId() == config.getPilotoId()) {
+                Telemetria capturarEvolucion = muestra -> {
+                    evolucionVuelta.add(muestra);
+                    if (telemetria != null) {
+                        telemetria.actualizar(muestra);
+                    }
+                };
                 emitirMuestras(piloto, coche, circuito, evolucionClimatica, configPiloto,
-                        resultado, tiempoBase, eventosVuelta, evolucion, telemetria);
+                        resultado, tiempoBase, eventosVuelta, evolucion, capturarEvolucion);
             }
 
             if (progreso != null) {
@@ -190,6 +196,7 @@ public class QualifyingService {
         QualifyingSession sesion = new QualifyingSession(circuito.getNombre(), clima, config);
         sesion.setResultados(resultados);
         sesion.setEvolucionClimatica(evolucionClimatica);
+        sesion.setEvolucionVuelta(evolucionVuelta);
         sesion.setEventos(eventosSesion);
         sesion.setFecha(DateUtils.format(DateUtils.now()));
         config.setGuardadoEn(sesion.getFecha());
