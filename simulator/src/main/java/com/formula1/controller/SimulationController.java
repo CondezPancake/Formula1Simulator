@@ -376,49 +376,22 @@ public class SimulationController {
         evolucionPistaController.reiniciar();
         analisisSesionController.reiniciar();
         reiniciarClimaDinamico();
-        panelResultados.getSelectionModel().select(tabTelemetria);
-
-        // La cabecera de la aplicación acompaña a la sesión: evento, estado,
-        // contador de segmento, clima y bandera.
-        circuitos.porNombre(config.getCircuito()).ifPresent(
-                c -> ShellController.evento(c.getNombre(), c.getPais()));
-        ShellController.estadoSesion(ShellController.Estado.EN_CURSO);
-        ShellController.bandera(null);
-        Task<QualifyingSession> tarea = sesiones.crearTarea(config,
-                muestra -> Platform.runLater(() -> mostrarEvolucion(muestra)),
-                muestra -> Platform.runLater(() -> {
-                    mostrarTelemetria(muestra);
-                    mostrarClimaDinamico(muestra.clima());
-                }),
-                muestra -> Platform.runLater(() -> evolucionPistaController.actualizar(muestra)));
-
-        // Enlazar en vez de asignar: el Task publica sus cambios en el hilo
-        // de JavaFX, así que la interfaz se actualiza sola y sin bloquearse.
-        progreso.progressProperty().bind(tarea.progressProperty());
-        lblEstado.textProperty().bind(tarea.messageProperty());
-        btnSimular.disableProperty().bind(tarea.runningProperty());
         tabla.getItems().clear();
         tablaEventos.getItems().clear();
         lblClima.setText("");
 
-        tarea.setOnSucceeded(e -> {
-            desenlazar();
-            mostrarSesion(tarea.getValue());
-            // Guardar en segundo plano: la parrilla ya está en pantalla.
-            Async.ejecutar(() -> sesiones.guardar(tarea.getValue()));
-        });
+        // La cabecera de la aplicación acompaña a la sesión.
+        circuitos.porNombre(config.getCircuito()).ifPresent(
+                c -> ShellController.evento(c.getNombre(), c.getPais()));
+        ShellController.bandera(null);
 
-        tarea.setOnFailed(e -> {
-            desenlazar();
-            progreso.setProgress(0);
-            lblEstado.setText("La simulación falló");
-            ShellController.estadoSesion(ShellController.Estado.REPOSO);
-            Throwable causa = tarea.getException();
-            Navigator.error("No se pudo completar la clasificación",
-                    causa == null ? "Error desconocido" : String.valueOf(causa.getMessage()));
-        });
-
-        Async.ejecutar(tarea);
+        // La sesión ya no se calcula aquí: se cede el paso a la parrilla de
+        // salida, que la lanza detrás del semáforo y luego la reproduce en la
+        // pantalla en vivo. Esta pantalla vuelve a recibirla ya terminada.
+        Navigator.ir("parrilla-salida");
+        if (Navigator.ultimoControlador() instanceof StartGridController parrilla) {
+            parrilla.preparar(config);
+        }
     }
 
     private void reiniciarEvolucion() {

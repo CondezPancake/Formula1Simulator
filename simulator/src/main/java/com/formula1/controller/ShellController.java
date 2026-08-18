@@ -165,7 +165,7 @@ public class ShellController {
             return;
         }
         String seccion = switch (vista) {
-            case "simulation", "home" -> "simulation";
+            case "simulation", "home", "parrilla-salida", "carrera-vivo" -> "simulation";
             case "explorar", "explore-drivers", "explore-vehicles", "explore-circuits",
                  "driver-detail" -> "explorar";
             case "gestion", "teams", "drivers", "vehicles", "circuits", "vehicle-compare" -> "gestion";
