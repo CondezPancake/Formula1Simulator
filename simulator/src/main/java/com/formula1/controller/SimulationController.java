@@ -250,6 +250,35 @@ public class SimulationController {
     }
 
     /**
+     * Vuelca una sesión ya calculada en todas las pestañas.
+     *
+     * Está separado del arranque porque la sesión no siempre llega de la
+     * tarea que lanza esta pantalla: cuando se disputa desde la vista en vivo
+     * es esa la que la trae ya terminada.
+     */
+    public void mostrarSesion(QualifyingSession sesion) {
+        if (sesion == null) {
+            return;
+        }
+        ultimaSesion = sesion;
+        lblClima.setText(resumenClimatico(sesion));
+        tabla.setItems(FXCollections.observableArrayList(sesion.getResultados()));
+        tablaEventos.setItems(FXCollections.observableArrayList(sesion.getEventos()));
+        evolucionVueltaController.cargar(sesion.getEvolucionVuelta());
+        comparacionSectoresController.cargar(sesion.getResultados());
+        evolucionPistaController.cargar(sesion.getEvolucionPista());
+        analisisSesionController.cargar(sesion.getAnalisis());
+        mostrarEstadisticas(sesion);
+        LapResult pole = sesion.getPole();
+        lblEstado.setText(pole == null ? "Sesión sin resultados"
+                : "Pole: " + pole.getPiloto() + " — " + FormatUtils.formatLapTime(pole.getTiempoSegundos()));
+        ShellController.estadoSesion(ShellController.Estado.TERMINADA);
+        // Terminada la vuelta, lo que interesa es la parrilla, no la
+        // telemetría en directo que ya dejó de moverse.
+        panelResultados.getSelectionModel().selectFirst();
+    }
+
+    /**
      * Fila con la franja del color de su escudería a la izquierda y la pole
      * destacada, igual que la tabla de tiempos del diseño.
      */
@@ -374,24 +403,9 @@ public class SimulationController {
 
         tarea.setOnSucceeded(e -> {
             desenlazar();
-            QualifyingSession sesion = tarea.getValue();
-            lblClima.setText(resumenClimatico(sesion));
-            tabla.setItems(FXCollections.observableArrayList(sesion.getResultados()));
-            tablaEventos.setItems(FXCollections.observableArrayList(sesion.getEventos()));
-            evolucionVueltaController.cargar(sesion.getEvolucionVuelta());
-            comparacionSectoresController.cargar(sesion.getResultados());
-            evolucionPistaController.cargar(sesion.getEvolucionPista());
-            analisisSesionController.cargar(sesion.getAnalisis());
-            mostrarEstadisticas(sesion);
-            LapResult pole = sesion.getPole();
-            lblEstado.setText(pole == null ? "Sesión sin resultados"
-                    : "Pole: " + pole.getPiloto() + " — " + FormatUtils.formatLapTime(pole.getTiempoSegundos()));
-            ShellController.estadoSesion(ShellController.Estado.TERMINADA);
-            // Terminada la vuelta, lo que interesa es la parrilla, no la
-            // telemetría en directo que ya dejó de moverse.
-            panelResultados.getSelectionModel().selectFirst();
+            mostrarSesion(tarea.getValue());
             // Guardar en segundo plano: la parrilla ya está en pantalla.
-            Async.ejecutar(() -> sesiones.guardar(sesion));
+            Async.ejecutar(() -> sesiones.guardar(tarea.getValue()));
         });
 
         tarea.setOnFailed(e -> {
