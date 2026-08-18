@@ -43,6 +43,19 @@ EQUIPOS = [
     ("Williams",              "Reino Unido",  "Mercedes"),
 ]
 
+# Trazados locales, copiados por tools/copiar_imagenes.py. Los cinco PNG
+# llevan transparencia (son diagramas del circuito); silverstone y suzuka son
+# fotografias, de ahi la mezcla de extensiones.
+IMG_CIRCUITO = {
+    "Circuito de Mónaco":            "/images/circuits/monaco.png",
+    "Silverstone":                   "/images/circuits/silverstone.jpg",
+    "Circuito de Spa-Francorchamps": "/images/circuits/spa-francorchamps.png",
+    "Circuito de Monza":             "/images/circuits/monza.png",
+    "Interlagos":                    "/images/circuits/interlagos.png",
+    "Circuito de Yas Marina":        "/images/circuits/yas-marina.png",
+    "Circuito de Suzuka":            "/images/circuits/suzuka.jpg",
+}
+
 IMG_EQUIPO = {
     "Red Bull Racing": "https://upload.wikimedia.org/wikipedia/commons/b/bb/Red_Bull_Racing_Logo.svg",
     "Mercedes-AMG Petronas": "https://upload.wikimedia.org/wikipedia/commons/3/32/Mercedes_AMG_Petronas_F1_Team_logo.svg",
@@ -236,7 +249,8 @@ def build():
             ("motor", dict((n, m) for (n, _, m) in EQUIPOS)[equipo]),
             ("velocidad_maxima_kmh", vmax), ("aceleracion_0_100", acel),
             ("pilotos", sorted(por_equipo[equipo])),
-            ("rendimiento", rendimiento), ("imagen", ""),
+            ("rendimiento", rendimiento),
+            ("imagen", f"/images/vehicles/{modelo}/principal.jpg"),
         ]))
 
     circuitos = []
@@ -254,7 +268,9 @@ def build():
                 zip(CLIMAS, prob))),
             ("factor_tecnico", factor),
             ("factor_consumo", fc), ("factor_desgaste", fd),
-            ("imagen", img),
+            # El trazado local sustituye al SVG remoto de Wikimedia: JavaFX no
+            # renderiza SVG y la aplicacion no deberia depender de la red.
+            ("imagen", IMG_CIRCUITO.get(nom, img)),
         ]))
 
     return collections.OrderedDict([
