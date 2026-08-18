@@ -615,6 +615,30 @@
     -fx-font-size: 12px;
 }
 
+.assignment-panel {
+    -fx-background-color: -fx-surface-2;
+    -fx-background-radius: 6;
+    -fx-border-color: -fx-border-2;
+    -fx-border-radius: 6;
+    -fx-padding: 12;
+}
+
+.assignment-panel > .label {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-1;
+}
+
+.assignment-list {
+    -fx-padding: 4 0 0 0;
+}
+
+.breadcrumb {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-faint;
+}
+
 .card-link {
     -fx-background-color: transparent;
     -fx-padding: 3 0 3 8;

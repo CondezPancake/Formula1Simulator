@@ -112,6 +112,12 @@ public class VehicleService {
         if (!ValidationUtils.isPositive(vehiculo.getAceleracion0100())) {
             throw new ValidationException("La aceleración debe ser mayor que 0");
         }
+        for (Integer pilotoId : vehiculo.getPilotos()) {
+            Driver piloto = datos.pilotos().get(pilotoId);
+            if (piloto == null || !Objects.equals(piloto.getEquipo(), vehiculo.getEquipo())) {
+                throw new ValidationException("Todos los pilotos asignados deben pertenecer al equipo del vehículo");
+            }
+        }
     }
 
     private boolean contiene(String valor, String texto) {

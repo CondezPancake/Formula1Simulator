@@ -7,6 +7,7 @@ import com.formula1.model.DrivingMode;
 import com.formula1.model.Team;
 import com.formula1.model.Vehicle;
 import com.formula1.model.WeatherCondition;
+import com.formula1.service.DriverService;
 import com.formula1.util.FormatUtils;
 
 import javafx.geometry.Insets;
@@ -29,6 +30,7 @@ import javafx.scene.layout.VBox;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  * Diálogos de alta y edición.
@@ -174,7 +176,13 @@ public final class Forms {
 
     // ---------------------------------------------------------- vehículos
 
+    /** Conserva la entrada anterior para los consumidores que usan el almacén global. */
     public static Optional<Vehicle> vehiculo(Vehicle original, List<Team> equipos) {
+        return vehiculo(original, equipos, new DriverService().listar());
+    }
+
+    public static Optional<Vehicle> vehiculo(
+            Vehicle original, List<Team> equipos, List<Driver> pilotosDisponibles) {
         boolean nuevo = original == null;
         Vehicle vehiculo = nuevo ? new Vehicle() : original;
 
@@ -194,6 +202,32 @@ public final class Forms {
         datos.addRow(3, new Label("Velocidad máx. (km/h)"), velocidad);
         datos.addRow(4, new Label("Aceleración 0-100 (s)"), aceleracion);
 
+        List<CheckBox> candidatos = new ArrayList<>();
+        VBox listaPilotos = new VBox(6);
+        listaPilotos.getStyleClass().add("assignment-list");
+        Consumer<String> mostrarCandidatos = nombreEquipo -> {
+            candidatos.clear();
+            listaPilotos.getChildren().clear();
+            for (Driver piloto : pilotosElegibles(pilotosDisponibles, nombreEquipo)) {
+                CheckBox casilla = new CheckBox(piloto.getNombre() + "  ·  "
+                        + (piloto.getRol() == null ? "Sin rol" : piloto.getRol().getEtiqueta()));
+                casilla.setUserData(piloto.getId());
+                candidatos.add(casilla);
+                listaPilotos.getChildren().add(casilla);
+            }
+            if (candidatos.isEmpty()) {
+                Label vacio = new Label("No hay pilotos disponibles para el equipo seleccionado.");
+                vacio.getStyleClass().add("hint");
+                listaPilotos.getChildren().add(vacio);
+            }
+        };
+        equipo.valueProperty().addListener((o, anterior, actual) -> mostrarCandidatos.accept(actual));
+        mostrarCandidatos.accept(equipo.getValue());
+
+        VBox asignacion = new VBox(7,
+                new Label("Pilotos disponibles del equipo"), listaPilotos);
+        asignacion.getStyleClass().add("assignment-panel");
+
         // Una pestaña por modo de conducción, con su velocidad media y las
         // tablas de consumo y desgaste por clima.
         TabPane pestanas = new TabPane();
@@ -206,7 +240,11 @@ public final class Forms {
             pestanas.getTabs().add(new Tab(modo.getEtiqueta(), fila.panel()));
         }
 
-        VBox contenido = new VBox(10, datos, pestanas);
+        VBox contenido = new VBox(10, datos);
+        if (nuevo) {
+            contenido.getChildren().add(asignacion);
+        }
+        contenido.getChildren().add(pestanas);
         Dialog<Vehicle> dialogo = base(nuevo ? "Nuevo vehículo" : "Editar vehículo");
         dialogo.getDialogPane().setContent(contenido);
         dialogo.getDialogPane().setPrefWidth(520);
@@ -219,10 +257,25 @@ public final class Forms {
             vehiculo.setMotor(motor.getText());
             vehiculo.setVelocidadMaximaKmh(velocidad.getValue());
             vehiculo.setAceleracion0100(parseDouble(aceleracion.getText(), 2.7));
+            if (nuevo) {
+                vehiculo.setPilotos(candidatos.stream()
+                        .filter(CheckBox::isSelected)
+                        .map(c -> (Integer) c.getUserData())
+                        .toList());
+            }
             controles.forEach(fila -> vehiculo.getRendimiento().put(fila.modo, fila.aPerformance()));
             return vehiculo;
         });
         return dialogo.showAndWait();
+    }
+
+    static List<Driver> pilotosElegibles(List<Driver> pilotos, String equipo) {
+        if (pilotos == null || equipo == null) {
+            return List.of();
+        }
+        return pilotos.stream()
+                .filter(p -> p.getEquipo() != null && p.getEquipo().equalsIgnoreCase(equipo))
+                .toList();
     }
 
     /** Selección de pilotos de un vehículo, limitada a los de su equipo. */

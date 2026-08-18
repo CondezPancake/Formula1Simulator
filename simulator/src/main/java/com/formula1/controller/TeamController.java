@@ -63,6 +63,12 @@ public class TeamController {
         lblConteo.setText(String.valueOf(items.size()));
     }
 
+    /** Recalcula columnas derivadas cuando otro catálogo modifica pilotos. */
+    void refrescarVista() {
+        refrescar(buscador.getText());
+        tabla.refresh();
+    }
+
     private TableCell<Team, Void> celdaAcciones() {
         return new TableCell<>() {
             private final Button editar = new Button("Editar");

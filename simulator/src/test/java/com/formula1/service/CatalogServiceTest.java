@@ -95,6 +95,20 @@ class CatalogServiceTest {
     }
 
     @Test
+    void altaYBajaDePilotoSincronizaInmediatamenteSuEquipo() {
+        int id = pilotos.siguienteId();
+        pilotos.guardar(new Driver(id, "Piloto Nuevo", "Ferrari", DriverRole.ESCUDERO, 0));
+
+        var ferrari = equipos.porNombre("Ferrari").orElseThrow();
+        assertTrue(ferrari.getPilotos().contains(id));
+        assertTrue(equipos.pilotosDe(ferrari).stream()
+                .anyMatch(p -> p.getNombre().equals("Piloto Nuevo")));
+
+        pilotos.eliminar(id);
+        assertFalse(ferrari.getPilotos().contains(id));
+    }
+
+    @Test
     void impideBorrarUnEquipoConPilotos() {
         assertThrows(ValidationException.class, () -> equipos.eliminar("Ferrari"));
     }

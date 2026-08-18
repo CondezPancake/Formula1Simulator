@@ -177,4 +177,44 @@ class ViewsLoadTest {
             fail("La vista de sesion no se conservo", fallo.get());
         }
     }
+
+    @Test
+    void conservaGestionAlEntrarYSalirDeComparacion() {
+        if (!toolkitListo) {
+            return;
+        }
+        AtomicReference<Throwable> fallo = new AtomicReference<>();
+        CountDownLatch hecho = new CountDownLatch(1);
+        Platform.runLater(() -> {
+            try {
+                StackPane centro = new StackPane();
+                Navigator.registrar(centro);
+                Navigator.ir("gestion");
+                Node vistaGestion = centro.getChildren().get(0);
+                Object controladorGestion = Navigator.ultimoControlador();
+
+                Navigator.ir("vehicle-compare");
+                Navigator.ir("gestion");
+
+                assertSame(vistaGestion, centro.getChildren().get(0));
+                assertSame(controladorGestion, Navigator.ultimoControlador());
+            } catch (Throwable t) {
+                fallo.set(t);
+            } finally {
+                hecho.countDown();
+            }
+        });
+
+        try {
+            if (!hecho.await(20, TimeUnit.SECONDS)) {
+                fail("La comprobación de navegación de Gestión no terminó");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            fail(e);
+        }
+        if (fallo.get() != null) {
+            fail("La vista de Gestión no conservó su estado", fallo.get());
+        }
+    }
 }

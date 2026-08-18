@@ -15,11 +15,14 @@ import javafx.scene.layout.StackPane;
 public final class Navigator {
 
     private static final String VISTA_SESION = "simulation";
+    private static final String VISTA_GESTION = "gestion";
 
     private static StackPane contenedor;
     private static Object ultimoControlador;
     private static Node sesion;
     private static Object controladorSesion;
+    private static Node gestion;
+    private static Object controladorGestion;
 
     private Navigator() {
     }
@@ -30,6 +33,8 @@ public final class Navigator {
         if (contenedor != centro) {
             sesion = null;
             controladorSesion = null;
+            gestion = null;
+            controladorGestion = null;
         }
         contenedor = centro;
     }
@@ -44,6 +49,11 @@ public final class Navigator {
             contenedor.getChildren().setAll(sesion);
             return;
         }
+        if (VISTA_GESTION.equals(vista) && gestion != null) {
+            ultimoControlador = controladorGestion;
+            contenedor.getChildren().setAll(gestion);
+            return;
+        }
         try {
             FXMLLoader cargador = new FXMLLoader(Navigator.class.getResource("/views/" + vista + ".fxml"));
             Node contenido = cargador.load();
@@ -54,6 +64,9 @@ public final class Navigator {
                 // exactamente en el punto en que los dejo el usuario.
                 sesion = contenido;
                 controladorSesion = ultimoControlador;
+            } else if (VISTA_GESTION.equals(vista)) {
+                gestion = contenido;
+                controladorGestion = ultimoControlador;
             }
             contenedor.getChildren().setAll(contenido);
         } catch (Exception e) {
