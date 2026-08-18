@@ -212,24 +212,16 @@ public class SimulationController {
         // La pole se resalta con la clase .pole-row de la hoja de estilos.
         // Cada fila lleva a la izquierda la franja del color de su escudería,
         // igual que la tabla de tiempos del diseño.
-        tabla.setRowFactory(t -> new TableRow<>() {
-            @Override
-            protected void updateItem(LapResult resultado, boolean vacia) {
-                super.updateItem(resultado, vacia);
-                getStyleClass().removeAll("pole-row", "invalid-row");
-                if (vacia || resultado == null) {
-                    setStyle("");
-                    return;
+        tabla.setRowFactory(t -> {
+            TableRow<LapResult> fila = filaConColorDeEquipo();
+            // Doble clic sobre un piloto abre su ficha, como en cualquier
+            // tabla de resultados: la fila es el acceso natural al detalle.
+            fila.setOnMouseClicked(e -> {
+                if (e.getClickCount() == 2 && !fila.isEmpty() && fila.getItem() != null) {
+                    ExploreDriversController.abrirFicha(fila.getItem().getPilotoId());
                 }
-                if (!resultado.isVueltaValida()) {
-                    getStyleClass().add("invalid-row");
-                } else if (resultado.getPosicion() == 1) {
-                    getStyleClass().add("pole-row");
-                }
-                setStyle("-fx-border-color: transparent transparent #17171B "
-                        + TeamColors.hex(resultado.getEquipo())
-                        + "; -fx-border-width: 0 0 1 3;");
-            }
+            });
+            return fila;
         });
 
         colPosicion.setCellFactory(c -> new TableCell<>() {
@@ -255,6 +247,32 @@ public class SimulationController {
         colGap.getStyleClass().add("mono-col");
 
         precargarUltimaConfiguracion();
+    }
+
+    /**
+     * Fila con la franja del color de su escudería a la izquierda y la pole
+     * destacada, igual que la tabla de tiempos del diseño.
+     */
+    private TableRow<LapResult> filaConColorDeEquipo() {
+        return new TableRow<>() {
+            @Override
+            protected void updateItem(LapResult resultado, boolean vacia) {
+                super.updateItem(resultado, vacia);
+                getStyleClass().removeAll("pole-row", "invalid-row");
+                if (vacia || resultado == null) {
+                    setStyle("");
+                    return;
+                }
+                if (!resultado.isVueltaValida()) {
+                    getStyleClass().add("invalid-row");
+                } else if (resultado.getPosicion() == 1) {
+                    getStyleClass().add("pole-row");
+                }
+                setStyle("-fx-border-color: transparent transparent #17171B "
+                        + TeamColors.hex(resultado.getEquipo())
+                        + "; -fx-border-width: 0 0 1 3;");
+            }
+        };
     }
 
     /**

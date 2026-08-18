@@ -110,6 +110,14 @@ public class ExploreDriversController {
         lblConteo.setText(resultado.size() + " PILOTOS");
     }
 
+    /** Ficha de solo lectura del piloto, con retorno a este catalogo. */
+    static void abrirFicha(int pilotoId) {
+        Navigator.irConRetorno("driver-detail");
+        if (Navigator.ultimoControlador() instanceof DriverDetailController ficha) {
+            ficha.mostrar(pilotoId);
+        }
+    }
+
     private VBox tarjeta(Driver piloto) {
         String color = TeamColors.hex(piloto.getEquipo());
 
@@ -208,8 +216,9 @@ public class ExploreDriversController {
         Button detalle = new Button("VER DETALLE ▸");
         detalle.getStyleClass().add("card-link");
         detalle.setStyle("-fx-text-fill: " + color + ";");
-        detalle.setOnAction(e -> Forms.piloto(piloto, equipos.listar(), piloto.getId())
-                .ifPresent(this::guardar));
+        // Abre la ficha en vez del formulario de edicion: «ver detalle» es
+        // consultar, no modificar. La edicion vive en la seccion de gestion.
+        detalle.setOnAction(e -> abrirFicha(piloto.getId()));
         pie.getChildren().addAll(nacionalidad, relleno, detalle);
         pie.getStyleClass().add("explore-card-actions");
 

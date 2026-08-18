@@ -111,6 +111,7 @@ class ViewsLoadTest {
         cargar("explore-drivers");
         cargar("explore-vehicles");
         cargar("explore-circuits");
+        cargar("driver-detail");
     }
 
     @Test
