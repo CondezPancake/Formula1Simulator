@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.formula1.controller.StartGridController"
+      spacing="16" styleClass="start-grid" alignment="CENTER">
+    <padding><Insets top="24" right="28" bottom="24" left="28"/></padding>
+
+    <HBox spacing="12" alignment="CENTER_LEFT" maxWidth="Infinity">
+        <VBox spacing="2" styleClass="section-header">
+            <Label fx:id="lblEvento" styleClass="view-title"/>
+            <Label fx:id="lblCircuito" styleClass="view-subtitle"/>
+        </VBox>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label fx:id="lblFase" text="● FORMACIÓN" styleClass="live-badge,off"/>
+        <Button fx:id="btnCancelar" text="CANCELAR" styleClass="icon-button" onAction="#onCancelar"/>
+    </HBox>
+
+    <!-- Los tres monoplazas de la parrilla: el tuyo en el centro -->
+    <HBox fx:id="parrilla" spacing="16" alignment="CENTER" VBox.vgrow="ALWAYS"/>
+
+    <Label text="SECUENCIA DE SALIDA" styleClass="micro-label"/>
+
+    <HBox fx:id="contenedorSemaforo" alignment="CENTER"/>
+
+    <Label fx:id="lblEstado" styleClass="hint"/>
+</VBox>
