@@ -353,14 +353,9 @@ public class QualifyingService {
                     ? climaActual
                     : climaActual.conImpacto(0, impacto.deltaGripPorcentaje());
             boolean invalidada = efectosEventos.invalidatedAtOrBefore(eventosVuelta, sector);
-            double variacionVelocidad = 1
-                    + 0.08 * Math.sin(2 * Math.PI * progreso)
-                    - 0.03 * Math.cos(4 * Math.PI * progreso);
-            double velocidad = MathUtils.clamp(
-                    velocidadMedia * variacionVelocidad
-                            * factorTiempoMedio / climaActual.factorTiempo()
-                            * impacto.multiplicadorVelocidad(),
-                    0, vehiculo.getVelocidadMaximaKmh());
+            double velocidad = calcularVelocidad(
+                    vehiculo, config, velocidadMedia, factorTiempoMedio,
+                    climaActual, progreso, impacto.multiplicadorVelocidad());
             if (invalidada) {
                 velocidad = 0;
             } else {
@@ -417,6 +412,48 @@ public class QualifyingService {
                         invalidada ? resultado.getEstadoVuelta() : LapStatus.VALID));
             }
         }
+    }
+
+    /**
+     * Calcula velocidad instantánea sin confundirla con la media de la vuelta.
+     * La punta depende del rendimiento del modo activo y nunca supera el máximo
+     * declarado por el vehículo; el perfil conserva zonas lentas y rectas.
+     */
+    static double calcularVelocidad(Vehicle vehiculo, SimulationConfig config,
+                                    double velocidadMedia, double factorTiempoMedio,
+                                    WeatherSnapshot clima, double progreso,
+                                    double multiplicadorEvento) {
+        double mediaDelSegmento = velocidadMedia
+                * factorTiempoMedio / clima.factorTiempo();
+        double rendimientoActivo = vehiculo.rendimientoDe(config.getModo())
+                .getVelocidadPromedioKmh();
+        double mejorRendimiento = vehiculo.getRendimiento().values().stream()
+                .mapToDouble(Vehicle.Performance::getVelocidadPromedioKmh)
+                .max()
+                .orElse(rendimientoActivo);
+        double factorModo = mejorRendimiento <= 0
+                ? 1
+                : MathUtils.clamp(rendimientoActivo / mejorRendimiento, 0.75, 1);
+        double puntaDisponible = vehiculo.getVelocidadMaximaKmh()
+                * factorModo / Math.max(1, clima.factorTiempo());
+        puntaDisponible = Math.max(mediaDelSegmento, puntaDisponible);
+
+        // El perfil vale 1 en una recta y presenta valles en las zonas lentas.
+        double perfil = MathUtils.clamp(
+                0.65 * Math.sin(2 * Math.PI * progreso)
+                        - 0.35 * Math.cos(4 * Math.PI * progreso),
+                -1, 1);
+        double velocidad;
+        if (perfil >= 0) {
+            velocidad = mediaDelSegmento
+                    + (puntaDisponible - mediaDelSegmento) * perfil;
+        } else {
+            double velocidadLenta = mediaDelSegmento * 0.55;
+            velocidad = mediaDelSegmento
+                    + (mediaDelSegmento - velocidadLenta) * perfil;
+        }
+        return MathUtils.clamp(velocidad * multiplicadorEvento,
+                0, vehiculo.getVelocidadMaximaKmh());
     }
 
     private double deltaTiempoSegmento(List<EventOccurrence> eventosVuelta,

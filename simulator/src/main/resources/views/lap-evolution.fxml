@@ -16,12 +16,16 @@
     <HBox spacing="12" alignment="CENTER_LEFT">
         <VBox spacing="2">
             <Label text="LAP PERFORMANCE" styleClass="telemetry-title"/>
-            <Label text="Evolución real del piloto configurado en 20 segmentos" styleClass="hint"/>
+            <Label text="Tres sectores de pista · una lectura consolidada al cierre de cada sector"
+                   styleClass="hint"/>
         </VBox>
         <Region HBox.hgrow="ALWAYS"/>
         <Label text="Métrica" styleClass="card-label"/>
         <ComboBox fx:id="selectorMetrica" prefWidth="230"/>
     </HBox>
+
+    <Label wrapText="true" styleClass="hint"
+           text="S1 · Inicio: salida al primer corte  ·  S2 · Intermedio: primer al segundo corte  ·  S3 · Final: segundo corte a meta. Los valores son acumulados al cierre de cada sector."/>
 
     <HBox spacing="12">
         <VBox spacing="4" styleClass="stat-card" HBox.hgrow="ALWAYS">
@@ -40,7 +44,7 @@
 
     <LineChart fx:id="grafico" legendVisible="false" prefHeight="245" VBox.vgrow="ALWAYS">
         <xAxis>
-            <NumberAxis label="Segmento" lowerBound="1" upperBound="20"
+            <NumberAxis label="Sector (S1 · S2 · S3)" lowerBound="1" upperBound="3"
                         tickUnit="1" autoRanging="false" forceZeroInRange="false"/>
         </xAxis>
         <yAxis>
@@ -53,11 +57,10 @@
             <Label text="La evolución aparecerá al iniciar una clasificación"/>
         </placeholder>
         <columns>
-            <TableColumn fx:id="colSegmento" text="Seg." prefWidth="50"/>
-            <TableColumn fx:id="colSector" text="Sector" prefWidth="60"/>
+            <TableColumn fx:id="colSector" text="Sector de pista" prefWidth="125"/>
             <TableColumn fx:id="colVelocidad" text="Velocidad" prefWidth="95"/>
-            <TableColumn fx:id="colTiempo" text="Tiempo" prefWidth="90"/>
-            <TableColumn fx:id="colDelta" text="Delta" prefWidth="85"/>
+            <TableColumn fx:id="colTiempo" text="Tiempo acum." prefWidth="100"/>
+            <TableColumn fx:id="colDelta" text="Delta acum." prefWidth="95"/>
             <TableColumn fx:id="colCombustible" text="Combustible" prefWidth="100"/>
             <TableColumn fx:id="colDesgaste" text="Desgaste" prefWidth="90"/>
             <TableColumn fx:id="colTemperaturas" text="Temperaturas" prefWidth="190"/>

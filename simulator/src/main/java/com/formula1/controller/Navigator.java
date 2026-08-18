@@ -14,13 +14,23 @@ import javafx.scene.layout.StackPane;
  */
 public final class Navigator {
 
+    private static final String VISTA_SESION = "simulation";
+
     private static StackPane contenedor;
     private static Object ultimoControlador;
+    private static Node sesion;
+    private static Object controladorSesion;
 
     private Navigator() {
     }
 
     static void registrar(StackPane centro) {
+        // Un shell nuevo delimita un ciclo de vida nuevo de la aplicacion.
+        // Evita reutilizar nodos pertenecientes a una escena anterior.
+        if (contenedor != centro) {
+            sesion = null;
+            controladorSesion = null;
+        }
         contenedor = centro;
     }
 
@@ -29,10 +39,22 @@ public final class Navigator {
         if (contenedor == null) {
             return;
         }
+        if (VISTA_SESION.equals(vista) && sesion != null) {
+            ultimoControlador = controladorSesion;
+            contenedor.getChildren().setAll(sesion);
+            return;
+        }
         try {
             FXMLLoader cargador = new FXMLLoader(Navigator.class.getResource("/views/" + vista + ".fxml"));
             Node contenido = cargador.load();
             ultimoControlador = cargador.getController();
+            if (VISTA_SESION.equals(vista)) {
+                // La sesion puede seguir ejecutandose aunque su vista no este
+                // visible. Conservar ambos mantiene tarea, bindings y datos
+                // exactamente en el punto en que los dejo el usuario.
+                sesion = contenido;
+                controladorSesion = ultimoControlador;
+            }
             contenedor.getChildren().setAll(contenido);
         } catch (Exception e) {
             error("No se pudo abrir la vista «" + vista + "»", e.getMessage());
