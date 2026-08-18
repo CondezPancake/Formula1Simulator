@@ -1244,3 +1244,11 @@
     -fx-font-size: 13px;
     -fx-font-weight: bold;
 }
+
+/* Panel del semaforo de salida. */
+.start-lights {
+    -fx-background-color: #0C0C10;
+    -fx-background-radius: 10;
+    -fx-border-color: -fx-border-1;
+    -fx-border-radius: 10;
+}
