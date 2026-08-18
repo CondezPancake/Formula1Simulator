@@ -2,6 +2,7 @@ package com.formula1.controller;
 
 import com.formula1.model.Circuit;
 import com.formula1.model.Vehicle;
+import com.formula1.util.ImageCrop;
 import javafx.scene.Group;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -24,14 +25,20 @@ final class ExploreCardVisuals {
 
     static StackPane vehiculo(Vehicle vehiculo, String colorEquipo) {
         StackPane visual = base();
-        visual.getChildren().add(monoplaza(colorEquipo, vehiculo.getModelo()));
-        agregarImagen(visual, vehiculo.getImagen());
+        // La foto de un monoplaza se ve mejor a sangre: se recorta para
+        // llenar la tarjeta en vez de dejar franjas a los lados. El dibujo
+        // solo aparece si no hay foto, porque si no se transparenta debajo.
+        if (!agregarFoto(visual, vehiculo.getImagen())) {
+            visual.getChildren().add(monoplaza(colorEquipo, vehiculo.getModelo()));
+        }
         return visual;
     }
 
     static StackPane circuito(Circuit circuito) {
         StackPane visual = base();
         visual.getChildren().add(trazado(circuito.getNombre()));
+        // Un trazado hay que verlo entero: recortarlo le cortaria curvas, asi
+        // que aqui si se deja el ajuste con franjas.
         agregarImagen(visual, circuito.getImagen());
         return visual;
     }
@@ -61,6 +68,28 @@ final class ExploreCardVisuals {
                     + "/" + archivo + "/640px-" + archivo + ".png";
         }
         return limpia;
+    }
+
+    /**
+     * Rellena la tarjeta recortando la foto, sin deformarla ni dejar franjas.
+     *
+     * @return {@code true} si la foto se pudo cargar y ya ocupa la tarjeta
+     */
+    private static boolean agregarFoto(StackPane contenedor, String fuente) {
+        String compatible = fuenteCompatible(fuente);
+        if (compatible == null) {
+            return false;
+        }
+        // Carga sincrona a proposito: hay que saber ya si existe para decidir
+        // entre la foto y el dibujo de respaldo.
+        Image imagen = new Image(compatible, WIDTH * 2, HEIGHT * 2, true, true, false);
+        if (imagen.isError() || imagen.getWidth() <= 0) {
+            return false;
+        }
+        ImageView vista = ImageCrop.encajar(imagen, WIDTH, HEIGHT, ImageCrop.CENTRADO);
+        vista.getStyleClass().add("explore-card-image");
+        contenedor.getChildren().add(vista);
+        return true;
     }
 
     private static void agregarImagen(StackPane contenedor, String fuente) {
