@@ -36,10 +36,13 @@ final class ExploreCardVisuals {
 
     static StackPane circuito(Circuit circuito) {
         StackPane visual = base();
-        visual.getChildren().add(trazado(circuito.getNombre()));
         // Un trazado hay que verlo entero: recortarlo le cortaria curvas, asi
-        // que aqui si se deja el ajuste con franjas.
-        agregarImagen(visual, circuito.getImagen());
+        // que aqui si se ajusta con franjas en vez de recortar. El dibujo de
+        // respaldo solo se pinta si no hay imagen, porque los PNG de trazado
+        // tienen transparencia y dejarian ver el vector por debajo.
+        if (!agregarImagen(visual, circuito.getImagen())) {
+            visual.getChildren().add(trazado(circuito.getNombre()));
+        }
         return visual;
     }
 
@@ -92,18 +95,28 @@ final class ExploreCardVisuals {
         return true;
     }
 
-    private static void agregarImagen(StackPane contenedor, String fuente) {
+    /**
+     * Ajusta la imagen dentro de la tarjeta sin recortarla.
+     *
+     * @return {@code true} si la imagen se pudo cargar
+     */
+    private static boolean agregarImagen(StackPane contenedor, String fuente) {
         String compatible = fuenteCompatible(fuente);
-        if (compatible == null) return;
-        Image imagen = new Image(compatible, WIDTH - 22, HEIGHT - 18, true, true, true);
+        if (compatible == null) {
+            return false;
+        }
+        Image imagen = new Image(compatible, WIDTH - 22, HEIGHT - 18, true, true, false);
+        if (imagen.isError() || imagen.getWidth() <= 0) {
+            return false;
+        }
         ImageView vista = new ImageView(imagen);
         vista.setFitWidth(WIDTH - 22);
         vista.setFitHeight(HEIGHT - 18);
         vista.setPreserveRatio(true);
         vista.setSmooth(true);
         vista.getStyleClass().add("explore-card-image");
-        vista.visibleProperty().bind(imagen.errorProperty().not());
         contenedor.getChildren().add(vista);
+        return true;
     }
 
     private static Pane monoplaza(String colorEquipo, String modelo) {

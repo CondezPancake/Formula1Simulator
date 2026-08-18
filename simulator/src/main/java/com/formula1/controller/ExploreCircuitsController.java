@@ -10,6 +10,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 import java.util.Comparator;
@@ -56,14 +58,15 @@ public class ExploreCircuitsController {
                 + circuito.getVueltas() + " vueltas");
         ubicacion.getStyleClass().add("hint");
 
-        HBox stats = new HBox(18);
         String record = circuito.getRecordVuelta() == null ? "—" : circuito.getRecordVuelta().getTiempo();
         String titular = circuito.getRecordVuelta() == null || circuito.getRecordVuelta().getPiloto() == null
                 ? "—" : circuito.getRecordVuelta().getPiloto();
-        stats.getChildren().addAll(
-                statCell(record, "RÉC. VUELTA"),
-                statCell(titular, "TITULAR"),
-                statCell(climaDominanteEtiqueta(circuito), "CLIMA MED."));
+        // En columna y no en fila: en el ancho de la tarjeta, tres celdas de
+        // texto dejaban valores como «Rubens Bar...» cortados a la mitad.
+        VBox stats = new VBox(4,
+                statFila("RÉC. VUELTA", record),
+                statFila("TITULAR", titular),
+                statFila("CLIMA MED.", climaDominanteEtiqueta(circuito)));
 
         Button verDetalles = new Button("VER DETALLE  →");
         verDetalles.getStyleClass().add("explore-card-cta");
@@ -83,6 +86,19 @@ public class ExploreCircuitsController {
         return card;
     }
 
+    /** Etiqueta a la izquierda y valor a la derecha, en una sola linea. */
+    private HBox statFila(String etiqueta, String valor) {
+        Label etiquetaLbl = new Label(etiqueta);
+        etiquetaLbl.getStyleClass().add("card-label");
+        Region relleno = new Region();
+        HBox.setHgrow(relleno, Priority.ALWAYS);
+        Label valorLbl = new Label(valor);
+        valorLbl.getStyleClass().add("stat-value");
+        HBox fila = new HBox(8, etiquetaLbl, relleno, valorLbl);
+        fila.setAlignment(Pos.CENTER_LEFT);
+        return fila;
+    }
+
     private WeatherCondition climaDominante(Circuit circuito) {
         Map<WeatherCondition, Double> prob = circuito.getProbabilidadClima();
         if (prob == null || prob.isEmpty()) {
@@ -98,14 +114,4 @@ public class ExploreCircuitsController {
         return climaDominante(circuito).getEtiqueta();
     }
 
-    private VBox statCell(String valor, String etiqueta) {
-        VBox celda = new VBox(2);
-        celda.setAlignment(Pos.CENTER_LEFT);
-        Label valorLbl = new Label(valor);
-        valorLbl.getStyleClass().add("stat-value");
-        Label etiquetaLbl = new Label(etiqueta);
-        etiquetaLbl.getStyleClass().add("card-label");
-        celda.getChildren().addAll(valorLbl, etiquetaLbl);
-        return celda;
-    }
 }
