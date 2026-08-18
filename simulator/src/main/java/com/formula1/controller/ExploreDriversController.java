@@ -5,18 +5,17 @@ import com.formula1.model.Team;
 import com.formula1.service.DriverService;
 import com.formula1.service.TeamService;
 import com.formula1.service.ValidationException;
+import com.formula1.util.ImageCrop;
 import com.formula1.util.TeamColors;
 import com.formula1.util.InputValidation;
 
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
-import javafx.geometry.Rectangle2D;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
@@ -250,45 +249,7 @@ public class ExploreDriversController {
      * centradas en vez de estirarse.
      */
     private java.util.Optional<ImageView> imagenDe(Driver piloto) {
-        if (piloto.getImagen() == null || piloto.getImagen().isBlank()) {
-            return java.util.Optional.empty();
-        }
-        var recurso = getClass().getResourceAsStream(piloto.getImagen());
-        if (recurso == null) {
-            return java.util.Optional.empty();
-        }
-        Image imagen = new Image(recurso);
-        ImageView vista = new ImageView(imagen);
-
-        // Se recorta sobre la imagen de origen, no sobre el nodo ya escalado:
-        // asi la vista mide exactamente la caja y no puede desbordarla. Las
-        // fotos van de 224x224 a 3444x4429, y recortarlas a una proporcion
-        // comun es lo que hace que todas las tarjetas se vean iguales.
-        double ancho = imagen.getWidth();
-        double alto = imagen.getHeight();
-        double proporcion = ANCHO_FOTO / ALTO_FOTO;
-
-        double recorteAncho;
-        double recorteAlto;
-        if (ancho / alto > proporcion) {
-            recorteAlto = alto;                       // sobra a los lados
-            recorteAncho = alto * proporcion;
-        } else {
-            recorteAncho = ancho;                     // sobra arriba y abajo
-            recorteAlto = ancho / proporcion;
-        }
-
-        vista.setViewport(new Rectangle2D(
-                (ancho - recorteAncho) / 2,                   // centrado
-                (alto - recorteAlto) * SESGO_VERTICAL,        // la cara va arriba
-                recorteAncho, recorteAlto));
-        vista.setFitWidth(ANCHO_FOTO);
-        vista.setFitHeight(ALTO_FOTO);
-        // El recorte ya tiene la proporcion exacta, asi que ajustar a la caja
-        // no deforma nada.
-        vista.setPreserveRatio(false);
-        vista.setSmooth(true);
-        return java.util.Optional.of(vista);
+        return ImageCrop.desdeClasspath(piloto.getImagen(), ANCHO_FOTO, ALTO_FOTO, SESGO_VERTICAL);
     }
 
     private String inicialesDe(String nombre) {
