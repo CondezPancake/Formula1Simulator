@@ -4,6 +4,7 @@ import com.formula1.model.Driver;
 import com.formula1.model.Team;
 import com.formula1.service.DriverService;
 import com.formula1.service.TeamService;
+import com.formula1.service.ValidationException;
 import com.formula1.util.TeamColors;
 
 import javafx.fxml.FXML;
@@ -13,6 +14,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
@@ -168,9 +170,8 @@ public class ExploreDriversController {
     }
 
     private VBox cuerpo(Driver piloto, String color) {
-        VBox cuerpo = new VBox(3);
+        VBox cuerpo = new VBox(6);
         cuerpo.getStyleClass().add("explore-card-body");
-        cuerpo.setPadding(new Insets(11, 13, 0, 13));
 
         Label nombre = new Label(piloto.getNombre());
         nombre.getStyleClass().add("explore-card-name");
@@ -181,11 +182,21 @@ public class ExploreDriversController {
         equipo.setStyle("-fx-text-fill: " + color + ";");
 
         HBox stats = new HBox(20);
-        stats.setPadding(new Insets(9, 0, 9, 0));
+        stats.setPadding(new Insets(6, 0, 5, 0));
         stats.getChildren().addAll(
                 estadistica(String.valueOf(piloto.getVictorias()), "VICTORIAS", "#FFC906"),
                 estadistica(String.valueOf(piloto.getCampeonatos()), "CAMPS.", "#E10600"),
-                estadistica(piloto.getExperiencia() + "a", "EXP.", "#39B54A"));
+                estadistica(piloto.getExperiencia() + " años", "EXPERIENCIA", "#39B54A"));
+
+        Label tituloHabilidades = new Label("HABILIDADES · ESCALA 0–100");
+        tituloHabilidades.getStyleClass().add("card-label");
+        HBox habilidades = new HBox(12,
+                habilidad(piloto, Driver.HABILIDAD_VELOCIDAD, "VELOCIDAD", "#59A5FF",
+                        "Capacidad para marcar un ritmo rápido y reducir el tiempo de vuelta."),
+                habilidad(piloto, Driver.HABILIDAD_CONSISTENCIA, "CONSIST.", "#FFC906",
+                        "Capacidad para mantener un rendimiento estable durante toda la vuelta."),
+                habilidad(piloto, Driver.HABILIDAD_LLUVIA, "LLUVIA", "#64D8CB",
+                        "Capacidad para conservar ritmo y control con la pista mojada."));
 
         HBox pie = new HBox();
         pie.setAlignment(Pos.CENTER_LEFT);
@@ -196,11 +207,29 @@ public class ExploreDriversController {
         Button detalle = new Button("VER DETALLE ▸");
         detalle.getStyleClass().add("card-link");
         detalle.setStyle("-fx-text-fill: " + color + ";");
-        detalle.setOnAction(e -> Forms.piloto(piloto, equipos.listar(), piloto.getId()));
+        detalle.setOnAction(e -> Forms.piloto(piloto, equipos.listar(), piloto.getId())
+                .ifPresent(this::guardar));
         pie.getChildren().addAll(nacionalidad, relleno, detalle);
+        pie.getStyleClass().add("explore-card-actions");
 
-        cuerpo.getChildren().addAll(nombre, equipo, stats, pie);
+        cuerpo.getChildren().addAll(nombre, equipo, stats, tituloHabilidades, habilidades, pie);
         return cuerpo;
+    }
+
+    private VBox habilidad(Driver piloto, String clave, String etiqueta,
+                           String color, String explicacion) {
+        VBox celda = estadistica(piloto.getHabilidad(clave) + "/100", etiqueta, color);
+        Tooltip.install(celda, new Tooltip(explicacion + " Escala: 0 (baja) a 100 (élite)."));
+        return celda;
+    }
+
+    void guardar(Driver piloto) {
+        try {
+            pilotos.guardar(piloto);
+            refrescar();
+        } catch (ValidationException e) {
+            Navigator.error("Datos no válidos", e.getMessage());
+        }
     }
 
     private VBox estadistica(String valor, String etiqueta, String color) {

@@ -43,7 +43,7 @@ public class ExploreCircuitsController {
     }
 
     private VBox tarjeta(Circuit circuito) {
-        VBox card = new VBox(8);
+        VBox card = new VBox(0);
         card.getStyleClass().add("explore-card");
         card.setStyle("-fx-border-color: " + ACENTO + ";");
 
@@ -82,7 +82,11 @@ public class ExploreCircuitsController {
             }
         });
 
-        card.getChildren().addAll(placeholder, nombre, ubicacion, stats, verDetalles);
+        VBox acciones = new VBox(verDetalles);
+        acciones.getStyleClass().add("explore-card-actions");
+        VBox contenido = new VBox(8, nombre, ubicacion, stats, acciones);
+        contenido.getStyleClass().add("explore-card-body");
+        card.getChildren().addAll(placeholder, contenido);
         return card;
     }
 

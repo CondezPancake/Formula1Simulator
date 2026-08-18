@@ -45,7 +45,7 @@ public class ExploreVehiclesController {
     private VBox tarjeta(Vehicle vehiculo) {
         String color = TeamColors.hex(vehiculo.getEquipo());
 
-        VBox card = new VBox(8);
+        VBox card = new VBox(0);
         card.getStyleClass().add("explore-card");
         card.setStyle("-fx-border-color: " + color + ";");
 
@@ -91,7 +91,11 @@ public class ExploreVehiclesController {
         Label nombre = new Label(vehiculo.getModelo());
         nombre.getStyleClass().add("explore-card-name");
 
-        card.getChildren().addAll(placeholder, nombre, equipo, stats, piloto, usar);
+        VBox acciones = new VBox(usar);
+        acciones.getStyleClass().add("explore-card-actions");
+        VBox contenido = new VBox(8, nombre, equipo, stats, piloto, acciones);
+        contenido.getStyleClass().add("explore-card-body");
+        card.getChildren().addAll(placeholder, contenido);
         return card;
     }
 

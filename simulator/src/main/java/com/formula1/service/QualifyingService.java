@@ -130,6 +130,12 @@ public class QualifyingService {
 
     QualifyingSession simular(SimulationConfig config, WeatherCondition clima,
                               Progreso progreso, Evolucion evolucion, Telemetria telemetria) {
+        return simular(config, clima, progreso, evolucion, telemetria, null);
+    }
+
+    QualifyingSession simular(SimulationConfig config, WeatherCondition clima,
+                              Progreso progreso, Evolucion evolucion, Telemetria telemetria,
+                              EvolucionPista observadorPista) {
         Circuit circuito = validarSeleccion(config);
         if (clima == null) {
             throw new ValidationException("Las condiciones climáticas no pueden ser nulas");
@@ -173,6 +179,9 @@ public class QualifyingService {
             List<WeatherSnapshot> climaVuelta = pistaVuelta.clima();
             gomaPista = pistaVuelta.gomaFinalPorcentaje();
             historialPista.add(pistaVuelta.resumen());
+            if (observadorPista != null) {
+                observadorPista.actualizar(pistaVuelta.resumen());
+            }
 
             double tiempoBase = calculadora.calcularTiempo(
                     piloto, coche, circuito, climaVuelta, configPiloto);
@@ -267,6 +276,12 @@ public class QualifyingService {
 
     public Task<QualifyingSession> crearTarea(SimulationConfig config, Evolucion evolucion,
                                               Telemetria telemetria) {
+        return crearTarea(config, evolucion, telemetria, null);
+    }
+
+    public Task<QualifyingSession> crearTarea(SimulationConfig config, Evolucion evolucion,
+                                              Telemetria telemetria,
+                                              EvolucionPista observadorPista) {
         return new Task<>() {
             @Override
             protected QualifyingSession call() throws Exception {
@@ -297,7 +312,8 @@ public class QualifyingService {
                             dormir(RITMO_MS);
                         },
                         evolucionConRitmo,
-                        telemetriaConRitmo);
+                        telemetriaConRitmo,
+                        observadorPista);
 
                 updateProgress(1, 1);
                 LapResult pole = sesion.getPole();
@@ -582,5 +598,11 @@ public class QualifyingService {
     @FunctionalInterface
     public interface Telemetria {
         void actualizar(TelemetrySnapshot muestra);
+    }
+
+    /** Se invoca tras el paso de cada vehículo por la pista. */
+    @FunctionalInterface
+    public interface EvolucionPista {
+        void actualizar(TrackEvolutionSnapshot muestra);
     }
 }

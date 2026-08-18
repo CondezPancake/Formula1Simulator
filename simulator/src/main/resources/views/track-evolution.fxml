@@ -13,7 +13,7 @@
       spacing="12" styleClass="track-evolution-panel">
     <VBox spacing="2">
         <Label text="TRACK EVOLUTION" styleClass="weather-title"/>
-        <Label text="La goma mejora la adherencia en seco y la lluvia limpia la pista"
+        <Label text="El grip se actualiza con cada vehículo; la tabla detalla goma y lluvia"
                styleClass="hint"/>
     </VBox>
 
@@ -37,7 +37,7 @@
             <NumberAxis label="Vuelta completada" forceZeroInRange="false" tickUnit="1"/>
         </xAxis>
         <yAxis>
-            <NumberAxis label="Porcentaje" lowerBound="0" upperBound="100"
+            <NumberAxis fx:id="ejeGrip" label="Grip de pista (%)" lowerBound="80" upperBound="100"
                         autoRanging="false" forceZeroInRange="false"/>
         </yAxis>
     </LineChart>

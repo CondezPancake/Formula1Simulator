@@ -21,6 +21,7 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 
@@ -82,15 +83,24 @@ public final class Forms {
         Spinner<Integer> velocidad = spinner(0, 100, piloto.getHabilidad(Driver.HABILIDAD_VELOCIDAD));
         Spinner<Integer> consistencia = spinner(0, 100, piloto.getHabilidad(Driver.HABILIDAD_CONSISTENCIA));
         Spinner<Integer> lluvia = spinner(0, 100, piloto.getHabilidad(Driver.HABILIDAD_LLUVIA));
+        Tooltip ayudaVelocidad = new Tooltip(
+                "Ritmo puro del piloto. 0 es bajo y 100 representa nivel élite.");
+        Tooltip ayudaConsistencia = new Tooltip(
+                "Capacidad para repetir un rendimiento estable. Escala de 0 a 100.");
+        Tooltip ayudaLluvia = new Tooltip(
+                "Rendimiento y control sobre pista mojada. Escala de 0 a 100.");
+        velocidad.setTooltip(ayudaVelocidad);
+        consistencia.setTooltip(ayudaConsistencia);
+        lluvia.setTooltip(ayudaLluvia);
 
         GridPane rejilla = rejilla();
         rejilla.addRow(0, new Label("Nombre"), nombre);
         rejilla.addRow(1, new Label("Equipo"), equipo);
         rejilla.addRow(2, new Label("Rol"), rol);
         rejilla.addRow(3, new Label("Experiencia (años)"), experiencia);
-        rejilla.addRow(4, new Label("Velocidad"), velocidad);
-        rejilla.addRow(5, new Label("Consistencia"), consistencia);
-        rejilla.addRow(6, new Label("Lluvia"), lluvia);
+        rejilla.addRow(4, etiquetaConAyuda("Velocidad (0–100)", ayudaVelocidad), velocidad);
+        rejilla.addRow(5, etiquetaConAyuda("Consistencia (0–100)", ayudaConsistencia), consistencia);
+        rejilla.addRow(6, etiquetaConAyuda("Rendimiento en lluvia (0–100)", ayudaLluvia), lluvia);
 
         Dialog<Driver> dialogo = base(nuevo ? "Nuevo piloto" : "Editar piloto");
         dialogo.getDialogPane().setContent(rejilla);
@@ -109,6 +119,12 @@ public final class Forms {
             return piloto;
         });
         return dialogo.showAndWait();
+    }
+
+    private static Label etiquetaConAyuda(String texto, Tooltip ayuda) {
+        Label etiqueta = new Label(texto + "  ?");
+        etiqueta.setTooltip(new Tooltip(ayuda.getText()));
+        return etiqueta;
     }
 
     // ------------------------------------------------------------ equipos

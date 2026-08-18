@@ -18,6 +18,8 @@ final class TrackEvolutionService {
     private static final double DEFICIT_PISTA_VERDE = 10;
     private static final double GOMA_POR_VUELTA_SECA = 0.55;
     private static final double LAVADO_POR_VUELTA_MOJADA = 7.0;
+    private static final double MEJORA_TRAZADA_POR_VEHICULO = 0.08;
+    private static final double MAX_MEJORA_TRAZADA = 2.0;
 
     Evolution evolucionar(List<WeatherSnapshot> clima, double gomaInicial,
                           int vuelta, String piloto) {
@@ -46,7 +48,11 @@ final class TrackEvolutionService {
             // Una pista verde parte con déficit de adherencia. Cada punto de
             // goma recupera uno de grip, tracción y frenado mediante el contrato
             // inmutable que WeatherSnapshot ya ofrece para impactos de pista.
-            double modificadorGrip = -DEFICIT_PISTA_VERDE + goma;
+            // Incluso cuando la lluvia impide depositar goma, cada vehículo
+            // despeja agua y define progresivamente la trazada principal.
+            double mejoraTrazada = Math.min(MAX_MEJORA_TRAZADA,
+                    Math.max(0, vuelta - 1) * MEJORA_TRAZADA_POR_VEHICULO);
+            double modificadorGrip = -DEFICIT_PISTA_VERDE + goma + mejoraTrazada;
             pista.add(muestra.conImpacto(0, modificadorGrip));
         }
 

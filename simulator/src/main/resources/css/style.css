@@ -476,7 +476,7 @@
     -fx-background-radius: 8;
     -fx-border-radius: 8;
     -fx-border-width: 1;
-    -fx-padding: 0 0 12 0;
+    -fx-padding: 0;
     -fx-min-width: 244;
     -fx-max-width: 244;
 }
@@ -487,7 +487,7 @@
 }
 
 .explore-card-body {
-    -fx-padding: 0 13 0 13;
+    -fx-padding: 16 14 14 14;
 }
 
 .explore-card-name {
@@ -506,9 +506,15 @@
     -fx-text-fill: -fx-text-faint;
 }
 
+.explore-card-actions {
+    -fx-border-color: -fx-border-2 transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+    -fx-padding: 11 0 2 0;
+}
+
 .card-link {
     -fx-background-color: transparent;
-    -fx-padding: 0;
+    -fx-padding: 3 0 3 8;
     -fx-font-size: 10px;
     -fx-font-weight: bold;
     -fx-cursor: hand;
