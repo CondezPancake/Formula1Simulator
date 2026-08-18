@@ -1252,3 +1252,63 @@
     -fx-border-color: -fx-border-1;
     -fx-border-radius: 10;
 }
+
+/* =============================================================
+   Parrilla de salida y sesion en vivo
+   ============================================================= */
+
+.start-grid {
+    -fx-background-color: -fx-bg-0;
+}
+
+.grid-car-photo {
+    -fx-background-color: #08080A;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-width: 2;
+}
+
+.grid-car-model {
+    -fx-font-family: "Orbitron", "JetBrains Mono", monospace;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.grid-car-driver {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+.grid-car-driver-own {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+}
+
+/* Avisos de incidencias durante la sesion. */
+.live-feed {
+    -fx-background-color: -fx-surface-1;
+    -fx-background-radius: 8;
+    -fx-border-color: -fx-border-2;
+    -fx-border-radius: 8;
+    -fx-padding: 12;
+}
+
+.live-feed-item {
+    -fx-background-color: -fx-surface-2;
+    -fx-background-radius: 6;
+    -fx-border-color: transparent transparent transparent -fx-accent-amber;
+    -fx-border-width: 0 0 0 3;
+    -fx-padding: 8 12 8 12;
+}
+
+.live-feed-title {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-1;
+}
+
+.live-feed-driver {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+}
