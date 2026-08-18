@@ -133,6 +133,15 @@ public class ShellController {
         marcarActivo(btnCarrera);
     }
 
+    /** Navega a Carrera pasando por el shell para mantener sincronizado el menú activo. */
+    public static void irACarrera() {
+        if (instancia != null) {
+            instancia.onCarrera();
+        } else {
+            Navigator.ir("simulation");
+        }
+    }
+
     @FXML
     private void onExplorar() {
         Navigator.ir("explorar");

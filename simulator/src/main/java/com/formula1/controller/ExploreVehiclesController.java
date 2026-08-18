@@ -12,7 +12,6 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 import java.util.List;
@@ -49,13 +48,7 @@ public class ExploreVehiclesController {
         card.getStyleClass().add("explore-card");
         card.setStyle("-fx-border-color: " + color + ";");
 
-        StackPane placeholder = new StackPane();
-        placeholder.getStyleClass().add("explore-card-photo");
-        placeholder.setPrefSize(208, 100);
-        placeholder.setMinSize(208, 100);
-        Label modeloGrande = new Label(vehiculo.getModelo());
-        modeloGrande.setStyle("-fx-text-fill: " + color + "; -fx-font-size: 22px; -fx-font-weight: bold;");
-        placeholder.getChildren().add(modeloGrande);
+        var imagen = ExploreCardVisuals.vehiculo(vehiculo, color);
 
         Label equipo = new Label(vehiculo.getEquipo() == null ? "" : vehiculo.getEquipo().toUpperCase(Locale.ROOT));
         equipo.getStyleClass().add("explore-card-team");
@@ -78,11 +71,11 @@ public class ExploreVehiclesController {
         Label piloto = new Label((pilotoAsignado.isBlank() ? "Sin asignar" : pilotoAsignado));
         piloto.getStyleClass().add("hint");
 
-        Button usar = new Button("USAR ESTE VEHÍCULO");
-        usar.getStyleClass().add("icon-button");
+        Button usar = new Button("USAR ESTE VEHÍCULO  →");
+        usar.getStyleClass().add("explore-card-cta");
         usar.setMaxWidth(Double.MAX_VALUE);
         usar.setOnAction(e -> {
-            Navigator.ir("simulation");
+            ShellController.irACarrera();
             if (Navigator.ultimoControlador() instanceof SimulationController simulacion) {
                 simulacion.precargarVehiculo(vehiculo.getModelo());
             }
@@ -95,7 +88,7 @@ public class ExploreVehiclesController {
         acciones.getStyleClass().add("explore-card-actions");
         VBox contenido = new VBox(8, nombre, equipo, stats, piloto, acciones);
         contenido.getStyleClass().add("explore-card-body");
-        card.getChildren().addAll(placeholder, contenido);
+        card.getChildren().addAll(imagen, contenido);
         return card;
     }
 

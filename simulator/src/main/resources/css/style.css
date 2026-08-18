@@ -482,8 +482,14 @@
 }
 
 .explore-card-photo {
-    -fx-background-color: #08080A;
+    -fx-background-color: linear-gradient(to bottom right, #111117, #08080A);
     -fx-background-radius: 7 7 0 0;
+    -fx-border-color: transparent transparent -fx-border-2 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.explore-card-image {
+    -fx-opacity: 0.94;
 }
 
 .explore-card-body {
@@ -510,6 +516,103 @@
     -fx-border-color: -fx-border-2 transparent transparent transparent;
     -fx-border-width: 1 0 0 0;
     -fx-padding: 11 0 2 0;
+}
+
+.explore-card-cta {
+    -fx-background-color: -fx-brand;
+    -fx-border-color: -fx-brand;
+    -fx-background-radius: 5;
+    -fx-border-radius: 5;
+    -fx-padding: 9 12 9 12;
+    -fx-text-fill: white;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+
+.explore-card-cta:hover, .explore-card-cta:focused {
+    -fx-background-color: #F1251F;
+    -fx-border-color: #FF5954;
+}
+
+.explore-card-cta:pressed {
+    -fx-background-color: #B80600;
+}
+
+/* Detalle de circuito: el viewport y cada bloque conservan el tema oscuro. */
+.circuit-detail, .circuit-detail > .viewport, .circuit-detail-body {
+    -fx-background-color: -fx-bg-0;
+}
+
+.circuit-detail .corner,
+.circuit-detail .scroll-bar,
+.circuit-detail .scroll-bar .track {
+    -fx-background-color: -fx-bg-0;
+}
+
+.circuit-detail .scroll-bar .thumb {
+    -fx-background-color: -fx-border-1;
+    -fx-background-radius: 5;
+}
+
+.detail-panel {
+    -fx-background-color: -fx-surface-1;
+    -fx-background-radius: 8;
+    -fx-border-color: -fx-border-2;
+    -fx-border-radius: 8;
+    -fx-padding: 16;
+}
+
+.detail-kicker {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-brand;
+}
+
+.detail-description {
+    -fx-font-size: 12px;
+    -fx-line-spacing: 3px;
+    -fx-text-fill: -fx-text-1;
+}
+
+.detail-value {
+    -fx-font-family: "JetBrains Mono", monospace;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.detail-help {
+    -fx-font-size: 11px;
+    -fx-text-fill: -fx-text-muted;
+}
+
+.detail-toolbar {
+    -fx-background-color: -fx-surface-2;
+    -fx-background-radius: 6;
+    -fx-padding: 10 12 10 12;
+}
+
+.detail-field-label {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-muted;
+}
+
+.circuit-detail .list-view:focused,
+.circuit-detail .table-view:focused,
+.circuit-detail .combo-box:focused {
+    -fx-border-color: -fx-brand;
+}
+
+.readonly-field {
+    -fx-background-color: -fx-surface-2;
+    -fx-background-radius: 5;
+    -fx-border-color: -fx-border-1;
+    -fx-border-radius: 5;
+    -fx-padding: 7 10 7 10;
+    -fx-text-fill: -fx-text-muted;
+    -fx-font-size: 12px;
 }
 
 .card-link {

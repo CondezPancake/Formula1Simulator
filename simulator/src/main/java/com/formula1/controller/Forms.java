@@ -22,6 +22,7 @@ import javafx.scene.control.TabPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
+import javafx.scene.Node;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 
@@ -73,12 +74,15 @@ public final class Forms {
         Driver piloto = nuevo ? new Driver() : original;
 
         TextField nombre = new TextField(nuevo ? "" : piloto.getNombre());
-        ComboBox<String> equipo = new ComboBox<>();
-        equipos.forEach(e -> equipo.getItems().add(e.getNombre()));
-        equipo.setValue(nuevo ? (equipos.isEmpty() ? null : equipos.get(0).getNombre()) : piloto.getEquipo());
-        ComboBox<DriverRole> rol = new ComboBox<>();
-        rol.getItems().addAll(DriverRole.values());
-        rol.setValue(nuevo ? DriverRole.ESCUDERO : piloto.getRol());
+        ComboBox<String> selectorEquipo = new ComboBox<>();
+        equipos.forEach(e -> selectorEquipo.getItems().add(e.getNombre()));
+        selectorEquipo.setValue(equipos.isEmpty() ? null : equipos.get(0).getNombre());
+        ComboBox<DriverRole> selectorRol = new ComboBox<>();
+        selectorRol.getItems().addAll(DriverRole.values());
+        selectorRol.setValue(DriverRole.ESCUDERO);
+        Node campoEquipo = nuevo ? selectorEquipo : soloLectura(piloto.getEquipo());
+        Node campoRol = nuevo ? selectorRol : soloLectura(
+                piloto.getRol() == null ? "Sin rol" : piloto.getRol().toString());
         Spinner<Integer> experiencia = spinner(0, 30, nuevo ? 0 : piloto.getExperiencia());
         Spinner<Integer> velocidad = spinner(0, 100, piloto.getHabilidad(Driver.HABILIDAD_VELOCIDAD));
         Spinner<Integer> consistencia = spinner(0, 100, piloto.getHabilidad(Driver.HABILIDAD_CONSISTENCIA));
@@ -95,8 +99,8 @@ public final class Forms {
 
         GridPane rejilla = rejilla();
         rejilla.addRow(0, new Label("Nombre"), nombre);
-        rejilla.addRow(1, new Label("Equipo"), equipo);
-        rejilla.addRow(2, new Label("Rol"), rol);
+        rejilla.addRow(1, new Label("Equipo"), campoEquipo);
+        rejilla.addRow(2, new Label("Rol"), campoRol);
         rejilla.addRow(3, new Label("Experiencia (años)"), experiencia);
         rejilla.addRow(4, etiquetaConAyuda("Velocidad (0–100)", ayudaVelocidad), velocidad);
         rejilla.addRow(5, etiquetaConAyuda("Consistencia (0–100)", ayudaConsistencia), consistencia);
@@ -110,8 +114,10 @@ public final class Forms {
             }
             piloto.setId(nuevo ? idSugerido : piloto.getId());
             piloto.setNombre(nombre.getText());
-            piloto.setEquipo(equipo.getValue());
-            piloto.setRol(rol.getValue());
+            if (nuevo) {
+                piloto.setEquipo(selectorEquipo.getValue());
+                piloto.setRol(selectorRol.getValue());
+            }
             piloto.setExperiencia(experiencia.getValue());
             piloto.setHabilidad(Driver.HABILIDAD_VELOCIDAD, velocidad.getValue());
             piloto.setHabilidad(Driver.HABILIDAD_CONSISTENCIA, consistencia.getValue());
@@ -125,6 +131,15 @@ public final class Forms {
         Label etiqueta = new Label(texto + "  ?");
         etiqueta.setTooltip(new Tooltip(ayuda.getText()));
         return etiqueta;
+    }
+
+    private static Label soloLectura(String valor) {
+        Label campo = new Label(valor == null || valor.isBlank() ? "Sin asignar" : valor);
+        campo.getStyleClass().add("readonly-field");
+        campo.setMaxWidth(Double.MAX_VALUE);
+        campo.setTooltip(new Tooltip(
+                "Solo lectura. Este dato se gestiona desde las funciones específicas de asignación."));
+        return campo;
     }
 
     // ------------------------------------------------------------ equipos

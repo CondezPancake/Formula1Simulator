@@ -10,7 +10,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 import java.util.Comparator;
@@ -47,13 +46,7 @@ public class ExploreCircuitsController {
         card.getStyleClass().add("explore-card");
         card.setStyle("-fx-border-color: " + ACENTO + ";");
 
-        StackPane placeholder = new StackPane();
-        placeholder.getStyleClass().add("explore-card-photo");
-        placeholder.setPrefSize(208, 100);
-        placeholder.setMinSize(208, 100);
-        Label emoji = new Label(climaDominanteIcono(circuito));
-        emoji.setStyle("-fx-font-size: 30px;");
-        placeholder.getChildren().add(emoji);
+        var imagen = ExploreCardVisuals.circuito(circuito);
 
         Label nombre = new Label(circuito.getNombre());
         nombre.getStyleClass().add("explore-card-name");
@@ -72,8 +65,8 @@ public class ExploreCircuitsController {
                 statCell(titular, "TITULAR"),
                 statCell(climaDominanteEtiqueta(circuito), "CLIMA MED."));
 
-        Button verDetalles = new Button("▼ VER DETALLES");
-        verDetalles.getStyleClass().add("icon-button");
+        Button verDetalles = new Button("VER DETALLE  →");
+        verDetalles.getStyleClass().add("explore-card-cta");
         verDetalles.setMaxWidth(Double.MAX_VALUE);
         verDetalles.setOnAction(e -> {
             Navigator.ir("circuit-detail");
@@ -86,7 +79,7 @@ public class ExploreCircuitsController {
         acciones.getStyleClass().add("explore-card-actions");
         VBox contenido = new VBox(8, nombre, ubicacion, stats, acciones);
         contenido.getStyleClass().add("explore-card-body");
-        card.getChildren().addAll(placeholder, contenido);
+        card.getChildren().addAll(imagen, contenido);
         return card;
     }
 
@@ -103,15 +96,6 @@ public class ExploreCircuitsController {
 
     private String climaDominanteEtiqueta(Circuit circuito) {
         return climaDominante(circuito).getEtiqueta();
-    }
-
-    /** Glifos con cobertura en las fuentes del sistema (los emojis no la tienen). */
-    private String climaDominanteIcono(Circuit circuito) {
-        return switch (climaDominante(circuito)) {
-            case SECO -> "☀";
-            case LLUVIOSO -> "▒";
-            case EXTREMO -> "▓";
-        };
     }
 
     private VBox statCell(String valor, String etiqueta) {
