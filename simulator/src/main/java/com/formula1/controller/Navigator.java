@@ -25,6 +25,7 @@ public final class Navigator {
     private static Object controladorGestion;
     private static Node vistaRetorno;
     private static Object controladorRetorno;
+    private static String vistaRetornoNombre;
 
     private Navigator() {
     }
@@ -39,6 +40,7 @@ public final class Navigator {
             controladorGestion = null;
             vistaRetorno = null;
             controladorRetorno = null;
+            vistaRetornoNombre = null;
         }
         contenedor = centro;
     }
@@ -51,11 +53,14 @@ public final class Navigator {
         if (VISTA_SESION.equals(vista) && sesion != null) {
             ultimoControlador = controladorSesion;
             contenedor.getChildren().setAll(sesion);
+            prepararSesionPendiente();
+            ShellController.sincronizarVista(vista);
             return;
         }
         if (VISTA_GESTION.equals(vista) && gestion != null) {
             ultimoControlador = controladorGestion;
             contenedor.getChildren().setAll(gestion);
+            ShellController.sincronizarVista(vista);
             return;
         }
         try {
@@ -73,6 +78,10 @@ public final class Navigator {
                 controladorGestion = ultimoControlador;
             }
             contenedor.getChildren().setAll(contenido);
+            if (VISTA_SESION.equals(vista)) {
+                prepararSesionPendiente();
+            }
+            ShellController.sincronizarVista(vista);
         } catch (Exception e) {
             error("No se pudo abrir la vista «" + vista + "»", e.getMessage());
         }
@@ -86,6 +95,7 @@ public final class Navigator {
         }
         vistaRetorno = contenedor.getChildren().get(0);
         controladorRetorno = ultimoControlador;
+        vistaRetornoNombre = ShellController.vistaActual();
         ir(vista);
     }
 
@@ -96,11 +106,20 @@ public final class Navigator {
         }
         Node anterior = vistaRetorno;
         Object controladorAnterior = controladorRetorno;
+        String seccionAnterior = vistaRetornoNombre;
         vistaRetorno = null;
         controladorRetorno = null;
+        vistaRetornoNombre = null;
         contenedor.getChildren().setAll(anterior);
         ultimoControlador = controladorAnterior;
+        ShellController.sincronizarVista(seccionAnterior);
         return true;
+    }
+
+    private static void prepararSesionPendiente() {
+        if (controladorSesion instanceof SimulationController simulacion) {
+            simulacion.aplicarConfiguracionGuardadaPendiente();
+        }
     }
 
     /** Controlador de la última vista cargada, para pasarle datos. */

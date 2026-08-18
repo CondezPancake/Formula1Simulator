@@ -4,6 +4,7 @@ import com.formula1.model.Circuit;
 import com.formula1.service.CircuitService;
 import com.formula1.service.ValidationException;
 import com.formula1.util.FormatUtils;
+import com.formula1.util.InputValidation;
 
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -44,6 +45,7 @@ public class CircuitController {
 
     @FXML
     public void initialize() {
+        InputValidation.busqueda(buscador);
         colNombre.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getNombre()));
         colPais.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getPais()));
         colLongitud.setCellValueFactory(f -> new SimpleDoubleProperty(f.getValue().getLongitudKm()));

@@ -6,6 +6,7 @@ import com.formula1.service.TeamService;
 import com.formula1.service.DriverService;
 import com.formula1.service.ValidationException;
 import com.formula1.service.VehicleService;
+import com.formula1.util.InputValidation;
 
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -60,6 +61,7 @@ public class VehicleController {
 
     @FXML
     public void initialize() {
+        InputValidation.busqueda(buscador);
         tabla.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
         colModelo.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getModelo()));
@@ -77,6 +79,7 @@ public class VehicleController {
 
         velocidadMinima.setValueFactory(
                 new javafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory(0, 400, 0, 5));
+        InputValidation.entero(velocidadMinima, 0, 400);
         buscador.textProperty().addListener((obs, antes, ahora) -> refrescar());
         velocidadMinima.valueProperty().addListener((obs, antes, ahora) -> refrescar());
         refrescar();

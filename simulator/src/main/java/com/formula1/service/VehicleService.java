@@ -99,18 +99,47 @@ public class VehicleService {
         if (vehiculo == null) {
             throw new ValidationException("El vehículo no puede ser nulo");
         }
-        if (!ValidationUtils.isNotBlank(vehiculo.getModelo())) {
-            throw new ValidationException("El modelo del vehículo no puede estar vacío");
+        if (!ValidationUtils.isIdentifier(vehiculo.getModelo(), 40)) {
+            throw new ValidationException("El modelo es obligatorio y contiene caracteres no válidos");
+        }
+        Vehicle existente = datos.vehiculos().get(vehiculo.getModelo());
+        if (existente != null && existente != vehiculo) {
+            throw new ValidationException("Ya existe un vehículo con el modelo " + vehiculo.getModelo());
         }
         if (!ValidationUtils.isNotBlank(vehiculo.getEquipo())
                 || !datos.equipos().containsKey(vehiculo.getEquipo())) {
             throw new ValidationException("El vehículo debe pertenecer a un equipo existente");
         }
-        if (!ValidationUtils.isPositive(vehiculo.getVelocidadMaximaKmh())) {
-            throw new ValidationException("La velocidad máxima debe ser mayor que 0");
+        if (!ValidationUtils.isIdentifier(vehiculo.getMotor(), 50)) {
+            throw new ValidationException("El motor es obligatorio y contiene caracteres no válidos");
         }
-        if (!ValidationUtils.isPositive(vehiculo.getAceleracion0100())) {
-            throw new ValidationException("La aceleración debe ser mayor que 0");
+        if (!ValidationUtils.isInRange(vehiculo.getVelocidadMaximaKmh(), 100, 400)) {
+            throw new ValidationException("La velocidad máxima debe estar entre 100 y 400 km/h");
+        }
+        if (!ValidationUtils.isInRange(vehiculo.getAceleracion0100(), 1.0, 10.0)) {
+            throw new ValidationException("La aceleración 0-100 debe estar entre 1 y 10 segundos");
+        }
+        if (vehiculo.getRendimiento() == null) {
+            throw new ValidationException("El rendimiento del vehículo no puede estar vacío");
+        }
+        for (var entrada : vehiculo.getRendimiento().entrySet()) {
+            Vehicle.Performance rendimiento = entrada.getValue();
+            if (rendimiento == null || !ValidationUtils.isInRange(rendimiento.getVelocidadPromedioKmh(), 50, 400)) {
+                throw new ValidationException("La velocidad media debe estar entre 50 y 400 km/h");
+            }
+            for (Double consumo : rendimiento.getConsumo().values()) {
+                if (consumo == null || !ValidationUtils.isInRange(consumo, 0.01, 20)) {
+                    throw new ValidationException("El consumo debe estar entre 0.01 y 20 por vuelta");
+                }
+            }
+            for (Double desgaste : rendimiento.getDesgaste().values()) {
+                if (desgaste == null || !ValidationUtils.isInRange(desgaste, 0.01, 100)) {
+                    throw new ValidationException("El desgaste debe estar entre 0.01 y 100 por vuelta");
+                }
+            }
+        }
+        if (vehiculo.getPilotos() == null) {
+            throw new ValidationException("La asignación de pilotos no puede ser nula");
         }
         for (Integer pilotoId : vehiculo.getPilotos()) {
             Driver piloto = datos.pilotos().get(pilotoId);

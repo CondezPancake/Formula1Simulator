@@ -6,6 +6,7 @@ import com.formula1.service.DriverService;
 import com.formula1.service.TeamService;
 import com.formula1.service.ValidationException;
 import com.formula1.util.TeamColors;
+import com.formula1.util.InputValidation;
 
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -67,6 +68,7 @@ public class ExploreDriversController {
 
     @FXML
     public void initialize() {
+        InputValidation.busqueda(buscador);
         construirChips();
         buscador.textProperty().addListener((obs, antes, ahora) -> refrescar());
         refrescar();

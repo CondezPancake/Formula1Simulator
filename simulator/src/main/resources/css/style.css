@@ -768,6 +768,30 @@
     -fx-background-color: -fx-surface-1;
 }
 
+/* Evita los rellenos claros del skin de JavaFX en zonas vacías, esquinas y
+   placeholders de las tablas (especialmente visibles en Historial). */
+.table-view .virtual-flow,
+.table-view .virtual-flow .clipped-container,
+.table-view .virtual-flow .sheet,
+.table-view .corner,
+.table-view .column-header-background .filler {
+    -fx-background-color: -fx-surface-1;
+}
+
+.table-view .placeholder .label {
+    -fx-text-fill: -fx-text-muted;
+}
+
+.split-pane {
+    -fx-background-color: -fx-bg-0;
+    -fx-padding: 0;
+}
+
+.split-pane > .split-pane-divider {
+    -fx-background-color: -fx-border-2;
+    -fx-padding: 0 1 0 1;
+}
+
 /* La pole se destaca con el amarillo del mockup. */
 .pole-row .table-cell {
     -fx-text-fill: -fx-accent-amber;
@@ -1034,6 +1058,25 @@
     -fx-font-size: 12px;
 }
 
+.text-area .content,
+.spinner .text-field {
+    -fx-background-color: -fx-surface-3;
+    -fx-text-fill: -fx-text-1;
+}
+
+.spinner .increment-arrow-button,
+.spinner .decrement-arrow-button {
+    -fx-background-color: -fx-surface-2;
+    -fx-border-color: -fx-border-1;
+}
+
+.text-field.input-invalid, .combo-box.input-invalid,
+.spinner.input-invalid, .text-area.input-invalid {
+    -fx-border-color: #FF5252;
+    -fx-border-width: 1.5;
+    -fx-effect: dropshadow(gaussian, rgba(255,82,82,0.22), 6, 0.15, 0, 0);
+}
+
 .combo-box .list-cell {
     -fx-background-color: transparent;
     -fx-text-fill: -fx-text-1;
@@ -1047,6 +1090,62 @@
 .combo-box-popup .list-view .list-cell:hover {
     -fx-background-color: -fx-brand;
     -fx-text-fill: white;
+}
+
+/* Formularios de Gestión. Dialog crea una Scene separada, por eso todos sus
+   skins deben recibir explícitamente la misma paleta oscura. */
+.dialog-pane,
+.form-dialog {
+    -fx-background-color: -fx-bg-0;
+    -fx-border-color: -fx-border-1;
+}
+
+.dialog-pane > .header-panel {
+    -fx-background-color: -fx-surface-2;
+    -fx-border-color: transparent transparent -fx-border-1 transparent;
+}
+
+.dialog-pane > .header-panel > .label,
+.dialog-pane > .content.label,
+.dialog-pane .label,
+.dialog-pane .check-box {
+    -fx-text-fill: -fx-text-1;
+}
+
+.dialog-pane .button-bar,
+.dialog-pane .grid-pane,
+.dialog-pane .scroll-pane,
+.dialog-pane .scroll-pane > .viewport,
+.dialog-pane .tab-pane,
+.dialog-pane .tab-pane > .tab-content-area {
+    -fx-background-color: -fx-bg-0;
+}
+
+.check-box > .box {
+    -fx-background-color: -fx-surface-3;
+    -fx-border-color: -fx-border-1;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+}
+
+.check-box:selected > .box > .mark {
+    -fx-background-color: white;
+}
+
+.check-box:selected > .box {
+    -fx-background-color: -fx-brand;
+    -fx-border-color: -fx-brand;
+}
+
+.scroll-bar,
+.scroll-bar .track,
+.scroll-bar .corner {
+    -fx-background-color: -fx-surface-3;
+}
+
+.scroll-bar .thumb {
+    -fx-background-color: #3A3A44;
+    -fx-background-radius: 6;
 }
 
 /* =============================================================

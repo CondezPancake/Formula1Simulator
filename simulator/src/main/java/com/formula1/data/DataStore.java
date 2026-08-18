@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Almacén en memoria de la aplicación y punto único de acceso a los datos.
@@ -48,6 +49,7 @@ public final class DataStore {
     private volatile boolean modoMemoria = true;
     private volatile String estado = "Sin cargar";
     private volatile SimulationConfig configuracionActual;
+    private final AtomicLong versionConfiguracion = new AtomicLong();
 
     private DataStore() {
     }
@@ -250,6 +252,12 @@ public final class DataStore {
 
     public void guardarConfiguracion(SimulationConfig config) {
         this.configuracionActual = config;
+        versionConfiguracion.incrementAndGet();
+    }
+
+    /** Identifica si Carrera ya aplicó el último ajuste preparado. */
+    public long versionConfiguracion() {
+        return versionConfiguracion.get();
     }
 
     public boolean isModoMemoria() {

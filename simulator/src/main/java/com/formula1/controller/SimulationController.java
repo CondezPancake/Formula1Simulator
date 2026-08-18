@@ -157,6 +157,9 @@ public class SimulationController {
     private AerodynamicLoad aero = AerodynamicLoad.MEDIA;
     private TirePressure presion = TirePressure.ESTANDAR;
     private FuelStrategy combustible = FuelStrategy.BALANCEADA;
+    private long versionConfiguracionAplicada = -1;
+    private double consumoVueltaAcumulado;
+    private double consumoVueltaTotal;
 
     public SimulationController() {
         this(new QualifyingService(), new CircuitService(), new VehicleService(), new DriverService());
@@ -285,9 +288,11 @@ public class SimulationController {
         combustible = FuelStrategy.BALANCEADA;
 
         if (ultima == null) {
+            versionConfiguracionAplicada = com.formula1.data.DataStore.getInstance().versionConfiguracion();
             return;
         }
         precargarConfiguracion(ultima);
+        versionConfiguracionAplicada = com.formula1.data.DataStore.getInstance().versionConfiguracion();
         lblEstado.setText("Configuración recuperada");
     }
 
@@ -386,6 +391,8 @@ public class SimulationController {
 
     private void reiniciarEvolucion() {
         velocidadMaximaAlcanzada = 0;
+        consumoVueltaAcumulado = 0;
+        consumoVueltaTotal = 0;
         lblPilotoEvolucion.setText("Esperando inicio de vuelta");
         lblVelocidad.setText("0 km/h");
         lblVelocidadMaxima.setText("Máxima alcanzada: 0 km/h");
@@ -399,6 +406,8 @@ public class SimulationController {
 
     /** Actualiza exclusivamente controles JavaFX; el motor entrega datos inmutables. */
     private void mostrarEvolucion(SimulationSnapshot muestra) {
+        consumoVueltaAcumulado = muestra.consumoAcumulado();
+        consumoVueltaTotal = muestra.consumoTotal();
         lblPilotoEvolucion.setText(muestra.piloto() + " · " + muestra.vehiculo());
         lblVelocidad.setText(String.format("%.0f km/h", muestra.velocidadKmh()));
         actualizarVelocidadMaxima(muestra.velocidadKmh());
@@ -419,7 +428,7 @@ public class SimulationController {
         lblVelocidadTelemetria.setText("0 km/h");
         lblVelocidadMaximaTelemetria.setText("Máxima alcanzada: 0 km/h");
         lblRpm.setText("0 rpm");
-        lblCombustible.setText("100.0 %");
+        lblCombustible.setText("0.00 kg/v · 0 % consumido");
         lblDesgasteTelemetria.setText("0.0 %");
         lblTempNeumaticos.setText("0.0 °C");
         lblTempMotor.setText("0.0 °C");
@@ -431,7 +440,7 @@ public class SimulationController {
         lblDelta.getStyleClass().removeAll("delta-faster", "delta-slower");
         barraVelocidadTelemetria.setProgress(0);
         barraRpm.setProgress(0);
-        barraCombustible.setProgress(1);
+        barraCombustible.setProgress(0);
         barraDesgasteTelemetria.setProgress(0);
         barraTempNeumaticos.setProgress(0);
         barraTempMotor.setProgress(0);
@@ -448,7 +457,10 @@ public class SimulationController {
         ShellController.bandera(muestra.evento().impacto().bandera());
         lblVelocidadTelemetria.setText(String.format("%.0f km/h", muestra.velocidadKmh()));
         lblRpm.setText(String.format("%,d rpm", muestra.rpm()));
-        lblCombustible.setText(String.format("%.1f %%", muestra.combustibleRestantePorcentaje()));
+        double porcentajeConsumido = consumoVueltaTotal <= 0 ? 0
+                : Math.min(100, 100 * consumoVueltaAcumulado / consumoVueltaTotal);
+        lblCombustible.setText(String.format("%.2f kg/v · %.0f %% consumido",
+                consumoVueltaTotal, porcentajeConsumido));
         lblDesgasteTelemetria.setText(String.format("%.1f %%", muestra.desgasteNeumaticosPorcentaje()));
         lblTempNeumaticos.setText(String.format("%.1f °C", muestra.temperaturaNeumaticosC()));
         lblTempMotor.setText(String.format("%.1f °C", muestra.temperaturaMotorC()));
@@ -466,7 +478,7 @@ public class SimulationController {
                 || muestra.deltaSegundos() > 0 ? "delta-slower" : "delta-faster");
         barraVelocidadTelemetria.setProgress(muestra.velocidadRelativa());
         barraRpm.setProgress(muestra.rpmRelativas());
-        barraCombustible.setProgress(muestra.combustibleRestantePorcentaje() / 100);
+        barraCombustible.setProgress(porcentajeConsumido / 100);
         barraDesgasteTelemetria.setProgress(muestra.desgasteNeumaticosPorcentaje() / 100);
         barraTempNeumaticos.setProgress(muestra.temperaturaNeumaticosC() / 125);
         barraTempMotor.setProgress(muestra.temperaturaMotorC() / 125);
@@ -488,8 +500,21 @@ public class SimulationController {
         if (config.getAerodinamica() != null) aero = config.getAerodinamica();
         if (config.getPresion() != null) presion = config.getPresion();
         if (config.getCombustible() != null) combustible = config.getCombustible();
-        lblEstado.setText("Configuración de historial preparada");
+        if (!lblEstado.textProperty().isBound()) {
+            lblEstado.setText("Configuración preparada para la próxima sesión");
+        }
         mostrarPuestaAPunto();
+    }
+
+    /** Aplica un guardado nuevo sin tocar Carrera cuando no hay cambios pendientes. */
+    public void aplicarConfiguracionGuardadaPendiente() {
+        com.formula1.data.DataStore datos = com.formula1.data.DataStore.getInstance();
+        long version = datos.versionConfiguracion();
+        if (version == versionConfiguracionAplicada) {
+            return;
+        }
+        precargarConfiguracion(datos.configuracionActual());
+        versionConfiguracionAplicada = version;
     }
 
     private void actualizarVelocidadMaxima(double velocidadActual) {

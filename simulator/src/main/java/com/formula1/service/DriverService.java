@@ -70,8 +70,16 @@ public class DriverService {
         if (piloto == null) {
             throw new ValidationException("El piloto no puede ser nulo");
         }
-        if (!ValidationUtils.isNotBlank(piloto.getNombre())) {
-            throw new ValidationException("El nombre del piloto no puede estar vacío");
+        Driver existente = datos.pilotos().get(piloto.getId());
+        if (piloto.getId() <= 0) {
+            throw new ValidationException("El identificador del piloto debe ser mayor que 0");
+        }
+        if (existente != null && existente != piloto) {
+            throw new ValidationException("Ya existe un piloto con el identificador " + piloto.getId());
+        }
+        if (!ValidationUtils.isPersonName(piloto.getNombre(), 60)) {
+            throw new ValidationException(
+                    "El nombre del piloto es obligatorio y solo admite letras, espacios, puntos, apóstrofes o guiones");
         }
         if (!ValidationUtils.isNotBlank(piloto.getEquipo())) {
             throw new ValidationException("El piloto debe pertenecer a un equipo");
@@ -79,8 +87,20 @@ public class DriverService {
         if (!datos.equipos().containsKey(piloto.getEquipo())) {
             throw new ValidationException("El equipo no existe: " + piloto.getEquipo());
         }
-        if (piloto.getExperiencia() < 0) {
-            throw new ValidationException("La experiencia no puede ser negativa");
+        if (piloto.getRol() == null) {
+            throw new ValidationException("El piloto debe tener un rol");
+        }
+        if (!ValidationUtils.isInRange(piloto.getExperiencia(), 0, 30)) {
+            throw new ValidationException("La experiencia debe estar entre 0 y 30 años");
+        }
+        if (piloto.getHabilidades() == null) {
+            throw new ValidationException("Las habilidades del piloto no pueden estar vacías");
+        }
+        for (String habilidad : List.of(Driver.HABILIDAD_VELOCIDAD,
+                Driver.HABILIDAD_CONSISTENCIA, Driver.HABILIDAD_LLUVIA)) {
+            if (!ValidationUtils.isInRange(piloto.getHabilidad(habilidad), 0, 100)) {
+                throw new ValidationException("Las habilidades del piloto deben estar entre 0 y 100");
+            }
         }
     }
 

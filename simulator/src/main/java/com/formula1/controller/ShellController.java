@@ -38,6 +38,7 @@ public class ShellController {
     private static final DateTimeFormatter RELOJ = DateTimeFormatter.ofPattern("HH:mm:ss");
 
     private static ShellController instancia;
+    private static String vistaActual;
 
     @FXML private StackPane contenido;
     @FXML private HBox navegacion;
@@ -66,6 +67,7 @@ public class ShellController {
     @FXML
     public void initialize() {
         instancia = this;
+        vistaActual = null;
         Navigator.registrar(contenido);
         navegacion.setDisable(true);
         cargando.setVisible(true);
@@ -131,7 +133,6 @@ public class ShellController {
         // La sesión ya trae su propia barra de sub-tabs (el TabPane de
         // simulation.fxml), así que es directamente la vista de la sección.
         Navigator.ir("simulation");
-        marcarActivo(btnCarrera);
     }
 
     /** Navega a Carrera pasando por el shell para mantener sincronizado el menú activo. */
@@ -146,19 +147,48 @@ public class ShellController {
     @FXML
     private void onExplorar() {
         Navigator.ir("explorar");
-        marcarActivo(btnExplorar);
     }
 
     @FXML
     private void onGestion() {
         Navigator.ir("gestion");
-        marcarActivo(btnGestion);
     }
 
     @FXML
     private void onConfigHistorial() {
         Navigator.ir("config-historial");
-        marcarActivo(btnConfig);
+    }
+
+    /** La vista confirmada por Navigator es la única fuente del módulo activo. */
+    static void sincronizarVista(String vista) {
+        if (vista == null) {
+            return;
+        }
+        String seccion = switch (vista) {
+            case "simulation", "home" -> "simulation";
+            case "explorar", "explore-drivers", "explore-vehicles", "explore-circuits" -> "explorar";
+            case "gestion", "teams", "drivers", "vehicles", "circuits", "vehicle-compare" -> "gestion";
+            case "config-historial", "config", "history" -> "config-historial";
+            default -> vistaActual;
+        };
+        if (seccion == null) {
+            return;
+        }
+        vistaActual = seccion;
+        if (instancia == null) {
+            return;
+        }
+        switch (seccion) {
+            case "simulation" -> instancia.marcarActivo(instancia.btnCarrera);
+            case "explorar" -> instancia.marcarActivo(instancia.btnExplorar);
+            case "gestion" -> instancia.marcarActivo(instancia.btnGestion);
+            case "config-historial" -> instancia.marcarActivo(instancia.btnConfig);
+            default -> { }
+        }
+    }
+
+    static String vistaActual() {
+        return vistaActual;
     }
 
     @FXML

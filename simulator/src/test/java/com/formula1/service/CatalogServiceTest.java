@@ -134,4 +134,25 @@ class CatalogServiceTest {
         assertTrue(ganadores.get(0).startsWith("2021"), "ordenados por temporada");
         assertFalse(ganadores.get(0).contains("Piloto "), "el id debe resolverse a nombre");
     }
+
+    @Test
+    void todosLosDatosInicialesCumplenLasReglasDeEntrada() {
+        equipos.listar().forEach(equipos::guardar);
+        pilotos.listar().forEach(pilotos::guardar);
+        vehiculos.listar().forEach(vehiculos::guardar);
+        circuitos.listar().forEach(circuitos::guardar);
+    }
+
+    @Test
+    void rechazaCaracteresYValoresFueraDeRango() {
+        assertThrows(ValidationException.class,
+                () -> pilotos.guardar(new Driver(99, "Piloto 123", "Ferrari", DriverRole.LIDER, 2)));
+
+        Vehicle invalido = new Vehicle("TEST-1", "Ferrari", "Motor", 450, 2.5);
+        assertThrows(ValidationException.class, () -> vehiculos.guardar(invalido));
+
+        Circuit circuito = new Circuit("Prueba", "País 2", 5.0, 50);
+        circuito.setDescripcion("Descripción válida");
+        assertThrows(ValidationException.class, () -> circuitos.guardar(circuito));
+    }
 }

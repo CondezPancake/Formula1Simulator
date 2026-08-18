@@ -170,9 +170,9 @@
                                          styleClass="metric-rpm"/>
                         </VBox>
                         <VBox spacing="6" styleClass="telemetry-card" HBox.hgrow="ALWAYS">
-                            <Label text="COMBUSTIBLE DE VUELTA" styleClass="card-label"/>
-                            <Label fx:id="lblCombustible" text="100.0 %" styleClass="telemetry-value"/>
-                            <ProgressBar fx:id="barraCombustible" progress="1" maxWidth="Infinity"
+                            <Label text="CONSUMO DE COMBUSTIBLE" styleClass="card-label"/>
+                            <Label fx:id="lblCombustible" text="0.00 kg/v · 0 % consumido" styleClass="telemetry-value"/>
+                            <ProgressBar fx:id="barraCombustible" progress="0" maxWidth="Infinity"
                                          styleClass="metric-fuel"/>
                         </VBox>
                     </HBox>

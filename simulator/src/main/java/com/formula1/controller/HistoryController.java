@@ -248,9 +248,6 @@ public class HistoryController {
         SimulationConfig config = seleccionada.getConfig();
         com.formula1.data.DataStore.getInstance().guardarConfiguracion(config);
         ShellController.irACarrera();
-        if (Navigator.ultimoControlador() instanceof SimulationController simulacion) {
-            simulacion.precargarConfiguracion(config);
-        }
     }
 
     @FXML
