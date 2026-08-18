@@ -113,53 +113,6 @@ Un único pool de dos hilos demonio (`util.Async`). La carga inicial y la simula
 
 ## Diagramas
 
-### Capas y dependencias
-
-Las flechas indican dependencia: cada capa solo conoce la de debajo. `controller`
-nunca habla con MongoDB directamente y `service` no sabe que existe JavaFX, que es
-lo que permite probar el motor sin abrir una ventana.
-
-```mermaid
-graph TD
-    subgraph UI["controller · JavaFX"]
-        SHELL[ShellController<br/>cabecera y navegación]
-        SIM[SimulationController<br/>clasificación]
-        GRID[StartGridController<br/>parrilla de salida]
-        LIVE[LiveRaceController<br/>sesión en vivo]
-        EXP[Explore*Controller<br/>catálogos]
-        CRUD[Team/Driver/Vehicle/Circuit<br/>gestión]
-    end
-    subgraph SVC["service · reglas de negocio"]
-        QS[QualifyingService<br/>motor de la sesión]
-        CALC[LapTimeCalculator<br/>tiempo de vuelta]
-        CAT[DriverService · VehicleService<br/>CircuitService · TeamService]
-        ANA[SessionAnalysis · TrackEvolution<br/>DynamicWeather · SectorComparison]
-    end
-    subgraph EVT["event · incidencias"]
-        EM[EventManager<br/>selección ponderada]
-        EE[EventEffectService<br/>aplica impactos]
-    end
-    subgraph MOD["model · dominio"]
-        ENT[Driver · Team · Vehicle · Circuit]
-        SES[QualifyingSession · LapResult<br/>TelemetrySnapshot · WeatherSnapshot]
-    end
-    subgraph DAT["data · persistencia"]
-        DS[DataStore<br/>fuente de verdad en memoria]
-        REPO[MongoRepository<br/>CrudRepository]
-        SEED[SeedLoader]
-    end
-    UTL["util · apoyo transversal<br/>ImageCrop · TeamColors · Async · FormatUtils"]
-
-    UI --> SVC
-    UI --> MOD
-    UI --> UTL
-    SVC --> EVT
-    SVC --> MOD
-    SVC --> DAT
-    EVT --> MOD
-    DAT --> MOD
-    DAT --> REPO
-```
 
 ### Modelo de dominio
 
