@@ -4,3 +4,9 @@ target/
 *.iml
 .vscode/
 .DS_Store
+
+# Originales de imagenes (18 MB). La aplicacion consume las copias
+# redimensionadas de simulator/src/main/resources/images/, generadas con
+# tools/copiar_imagenes.py.
+docs/assets/F1_Recursos_Multimedia/img-vehiculos/
+docs/assets/F1_Recursos_Multimedia/img-circuitos/

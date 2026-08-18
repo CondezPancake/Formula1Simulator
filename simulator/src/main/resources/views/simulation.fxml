@@ -68,8 +68,9 @@
                 <ProgressBar fx:id="progresoVuelta" progress="0" maxWidth="Infinity"/>
             </VBox>
             <VBox spacing="6" styleClass="evolution-card" HBox.hgrow="ALWAYS">
-                <Label text="Velocidad" styleClass="card-label"/>
+                <Label text="Velocidad actual" styleClass="card-label"/>
                 <Label fx:id="lblVelocidad" text="0 km/h" styleClass="metric-value"/>
+                <Label fx:id="lblVelocidadMaxima" text="Máxima alcanzada: 0 km/h" styleClass="hint"/>
                 <ProgressBar fx:id="barraVelocidad" progress="0" maxWidth="Infinity" styleClass="metric-speed"/>
             </VBox>
             <VBox spacing="6" styleClass="evolution-card" HBox.hgrow="ALWAYS">
@@ -155,8 +156,10 @@
 
                     <HBox spacing="12">
                         <VBox spacing="6" styleClass="telemetry-card" HBox.hgrow="ALWAYS">
-                            <Label text="VELOCIDAD" styleClass="card-label"/>
+                            <Label text="VELOCIDAD ACTUAL" styleClass="card-label"/>
                             <Label fx:id="lblVelocidadTelemetria" text="0 km/h" styleClass="telemetry-value"/>
+                            <Label fx:id="lblVelocidadMaximaTelemetria"
+                                   text="Máxima alcanzada: 0 km/h" styleClass="hint"/>
                             <ProgressBar fx:id="barraVelocidadTelemetria" progress="0" maxWidth="Infinity"
                                          styleClass="metric-speed"/>
                         </VBox>
@@ -167,9 +170,9 @@
                                          styleClass="metric-rpm"/>
                         </VBox>
                         <VBox spacing="6" styleClass="telemetry-card" HBox.hgrow="ALWAYS">
-                            <Label text="COMBUSTIBLE DE VUELTA" styleClass="card-label"/>
-                            <Label fx:id="lblCombustible" text="100.0 %" styleClass="telemetry-value"/>
-                            <ProgressBar fx:id="barraCombustible" progress="1" maxWidth="Infinity"
+                            <Label text="CONSUMO DE COMBUSTIBLE" styleClass="card-label"/>
+                            <Label fx:id="lblCombustible" text="0.00 kg/v · 0 % consumido" styleClass="telemetry-value"/>
+                            <ProgressBar fx:id="barraCombustible" progress="0" maxWidth="Infinity"
                                          styleClass="metric-fuel"/>
                         </VBox>
                     </HBox>
@@ -254,6 +257,8 @@
                             <Label text="Las condiciones modifican el rendimiento de la vuelta" styleClass="hint"/>
                         </VBox>
                         <Region HBox.hgrow="ALWAYS"/>
+                        <Label text="Gráfica" styleClass="card-label"/>
+                        <ComboBox fx:id="selectorMetricaClima" prefWidth="210"/>
                         <Label fx:id="lblEstadoClimaDinamico" text="Esperando evolución climática"
                                styleClass="weather-state"/>
                     </HBox>
@@ -314,8 +319,8 @@
                                         tickUnit="1" autoRanging="false"/>
                         </xAxis>
                         <yAxis>
-                            <NumberAxis label="Porcentaje" lowerBound="0" upperBound="100"
-                                        tickUnit="20" autoRanging="false"/>
+                            <NumberAxis fx:id="ejeClimaValor" label="Valor"
+                                        autoRanging="true" forceZeroInRange="false"/>
                         </yAxis>
                     </LineChart>
                 </VBox>

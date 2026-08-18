@@ -15,14 +15,14 @@
 
 <ScrollPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.formula1.controller.CircuitDetailController"
-            fitToWidth="true" styleClass="contenido">
-    <VBox spacing="14">
+            fitToWidth="true" styleClass="circuit-detail">
+    <VBox spacing="18" styleClass="circuit-detail-body">
         <padding><Insets top="26" right="26" bottom="26" left="26"/></padding>
 
         <HBox spacing="12" alignment="CENTER_LEFT">
             <Label fx:id="lblNombre" text="—" styleClass="view-title"/>
             <Region HBox.hgrow="ALWAYS"/>
-            <Button text="Volver" onAction="#onVolver"/>
+            <Button text="← VOLVER A CIRCUITOS" styleClass="icon-button" onAction="#onVolver"/>
         </HBox>
 
         <HBox spacing="16">
@@ -44,31 +44,45 @@
             </VBox>
         </HBox>
 
-        <Label fx:id="lblDescripcion" text="" wrapText="true" styleClass="view-subtitle"/>
+        <VBox spacing="7" styleClass="detail-panel">
+            <Label text="DESCRIPCIÓN DEL TRAZADO" styleClass="detail-kicker"/>
+            <Label fx:id="lblDescripcion" text="" wrapText="true" styleClass="detail-description"/>
+        </VBox>
 
-        <Label text="Récord de vuelta" styleClass="section-title"/>
-        <Label fx:id="lblRecord" text="—"/>
-
-        <Label text="Clima promedio" styleClass="section-title"/>
-        <Label fx:id="lblClima" text="—"/>
-
-        <Label text="Ganadores anteriores" styleClass="section-title"/>
-        <ListView fx:id="listaGanadores" prefHeight="110"/>
-
-        <Label text="Impacto del circuito en el rendimiento" styleClass="section-title"/>
-        <HBox spacing="10" alignment="CENTER_LEFT">
-            <Label text="Vehículo"/>
-            <ComboBox fx:id="selectorVehiculo" prefWidth="140"/>
-            <Label text="Clima"/>
-            <ComboBox fx:id="selectorClima" prefWidth="140"/>
+        <HBox spacing="16">
+            <VBox spacing="7" styleClass="detail-panel" HBox.hgrow="ALWAYS" maxWidth="Infinity">
+                <Label text="RÉCORD DE VUELTA" styleClass="detail-kicker"/>
+                <Label fx:id="lblRecord" text="—" wrapText="true" styleClass="detail-value"/>
+            </VBox>
+            <VBox spacing="7" styleClass="detail-panel" HBox.hgrow="ALWAYS" maxWidth="Infinity">
+                <Label text="CLIMA PROMEDIO" styleClass="detail-kicker"/>
+                <Label fx:id="lblClima" text="—" wrapText="true" styleClass="detail-value"/>
+            </VBox>
         </HBox>
-        <TableView fx:id="tablaImpacto" prefHeight="150">
-            <columns>
-                <TableColumn fx:id="colModo" text="Modo" prefWidth="180"/>
-                <TableColumn fx:id="colConsumo" text="Consumo" prefWidth="140"/>
-                <TableColumn fx:id="colDesgaste" text="Desgaste" prefWidth="140"/>
-                <TableColumn fx:id="colConsumoCarrera" text="Consumo estimado total" prefWidth="200"/>
-            </columns>
-        </TableView>
+
+        <VBox spacing="10" styleClass="detail-panel">
+            <Label text="GANADORES ANTERIORES" styleClass="detail-kicker"/>
+            <ListView fx:id="listaGanadores" prefHeight="110"/>
+        </VBox>
+
+        <VBox spacing="12" styleClass="detail-panel">
+            <Label text="IMPACTO DEL CIRCUITO EN EL RENDIMIENTO" styleClass="detail-kicker"/>
+            <Label text="Compara consumo y desgaste estimados según el monoplaza, modo y clima."
+                   styleClass="detail-help"/>
+            <HBox spacing="12" alignment="CENTER_LEFT" styleClass="detail-toolbar">
+                <Label text="Vehículo" styleClass="detail-field-label"/>
+                <ComboBox fx:id="selectorVehiculo" prefWidth="170"/>
+                <Label text="Clima" styleClass="detail-field-label"/>
+                <ComboBox fx:id="selectorClima" prefWidth="170"/>
+            </HBox>
+            <TableView fx:id="tablaImpacto" prefHeight="170">
+                <columns>
+                    <TableColumn fx:id="colModo" text="Modo" prefWidth="180"/>
+                    <TableColumn fx:id="colConsumo" text="Consumo" prefWidth="140"/>
+                    <TableColumn fx:id="colDesgaste" text="Desgaste" prefWidth="140"/>
+                    <TableColumn fx:id="colConsumoCarrera" text="Consumo estimado total" prefWidth="200"/>
+                </columns>
+            </TableView>
+        </VBox>
     </VBox>
 </ScrollPane>

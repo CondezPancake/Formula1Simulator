@@ -93,14 +93,36 @@ public class CircuitService {
         if (circuito == null) {
             throw new ValidationException("El circuito no puede ser nulo");
         }
-        if (!ValidationUtils.isNotBlank(circuito.getNombre())) {
-            throw new ValidationException("El nombre del circuito no puede estar vacío");
+        if (!ValidationUtils.isIdentifier(circuito.getNombre(), 80)) {
+            throw new ValidationException("El nombre del circuito es obligatorio o contiene caracteres no válidos");
         }
-        if (!ValidationUtils.isPositive(circuito.getLongitudKm())) {
-            throw new ValidationException("La longitud debe ser mayor que 0");
+        Circuit existente = datos.circuitos().get(circuito.getNombre());
+        if (existente != null && existente != circuito) {
+            throw new ValidationException("Ya existe un circuito llamado " + circuito.getNombre());
         }
-        if (circuito.getVueltas() <= 0) {
-            throw new ValidationException("El número de vueltas debe ser mayor que 0");
+        if (!ValidationUtils.isPersonName(circuito.getPais(), 50)) {
+            throw new ValidationException("El país es obligatorio y solo admite texto");
+        }
+        if (!ValidationUtils.isInRange(circuito.getLongitudKm(), 0.1, 30.0)) {
+            throw new ValidationException("La longitud debe estar entre 0.1 y 30 km");
+        }
+        if (!ValidationUtils.isInRange(circuito.getVueltas(), 1, 200)) {
+            throw new ValidationException("El número de vueltas debe estar entre 1 y 200");
+        }
+        if (!ValidationUtils.hasLength(circuito.getDescripcion(), 1, 500)) {
+            throw new ValidationException("La descripción es obligatoria y no puede superar 500 caracteres");
+        }
+        if (!ValidationUtils.isInRange(circuito.getFactorConsumo(), 0.1, 5.0)
+                || !ValidationUtils.isInRange(circuito.getFactorDesgaste(), 0.1, 5.0)) {
+            throw new ValidationException("Los factores de consumo y desgaste deben estar entre 0.1 y 5");
+        }
+        if (circuito.getRecordVuelta() != null) {
+            if (!ValidationUtils.isInRange(circuito.getRecordVuelta().getTiempoSegundos(), 10, 600)) {
+                throw new ValidationException("El récord de vuelta debe estar entre 0:10.000 y 9:59.999");
+            }
+            if (!ValidationUtils.isPersonName(circuito.getRecordVuelta().getPiloto(), 60)) {
+                throw new ValidationException("El autor del récord debe ser un nombre válido");
+            }
         }
     }
 

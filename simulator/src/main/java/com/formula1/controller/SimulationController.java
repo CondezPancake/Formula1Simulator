@@ -44,6 +44,10 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.ToDoubleFunction;
+
 /**
  * Configura y lanza una sesión de clasificación.
  *
@@ -62,6 +66,7 @@ public class SimulationController {
     @FXML private Label lblClima;
     @FXML private Label lblPilotoEvolucion;
     @FXML private Label lblVelocidad;
+    @FXML private Label lblVelocidadMaxima;
     @FXML private Label lblConsumoEvolucion;
     @FXML private Label lblDesgasteEvolucion;
     @FXML private ProgressBar progresoVuelta;
@@ -80,6 +85,7 @@ public class SimulationController {
     @FXML private Label lblTelemetriaPiloto;
     @FXML private Label lblEstadoPista;
     @FXML private Label lblVelocidadTelemetria;
+    @FXML private Label lblVelocidadMaximaTelemetria;
     @FXML private Label lblRpm;
     @FXML private Label lblCombustible;
     @FXML private Label lblDesgasteTelemetria;
@@ -115,7 +121,9 @@ public class SimulationController {
     @FXML private ProgressBar barraGrip;
     @FXML private ProgressBar barraTraccion;
     @FXML private ProgressBar barraFrenado;
+    @FXML private ComboBox<WeatherMetric> selectorMetricaClima;
     @FXML private LineChart<Number, Number> graficoClima;
+    @FXML private NumberAxis ejeClimaValor;
     @FXML private TableView<LapResult> tabla;
     @FXML private TableColumn<LapResult, Number> colPosicion;
     @FXML private TableColumn<LapResult, String> colPiloto;
@@ -141,14 +149,17 @@ public class SimulationController {
     private final VehicleService vehiculos;
     private final DriverService pilotos;
     private QualifyingSession ultimaSesion;
-    private XYChart.Series<Number, Number> serieGrip;
-    private XYChart.Series<Number, Number> serieLluvia;
+    private double velocidadMaximaAlcanzada;
+    private final List<WeatherSnapshot> muestrasClima = new ArrayList<>();
 
     // Puesta a punto elegida en CONFIG. & HISTORIAL; aquí solo se consulta.
     private DrivingMode modo = DrivingMode.NORMAL;
     private AerodynamicLoad aero = AerodynamicLoad.MEDIA;
     private TirePressure presion = TirePressure.ESTANDAR;
     private FuelStrategy combustible = FuelStrategy.BALANCEADA;
+    private long versionConfiguracionAplicada = -1;
+    private double consumoVueltaAcumulado;
+    private double consumoVueltaTotal;
 
     public SimulationController() {
         this(new QualifyingService(), new CircuitService(), new VehicleService(), new DriverService());
@@ -170,6 +181,10 @@ public class SimulationController {
         selectorMetrica.setValue(MetricType.DIFERENCIA_POLE);
         selectorMetrica.valueProperty().addListener((obs, anterior, actual) -> pintarGrafico());
         graficoRendimiento.setAnimated(false);
+        selectorMetricaClima.getItems().addAll(WeatherMetric.values());
+        selectorMetricaClima.setValue(WeatherMetric.TEMPERATURA_PISTA);
+        selectorMetricaClima.valueProperty().addListener(
+                (obs, anterior, actual) -> pintarGraficoClima());
 
         // El vehículo delimita los pilotos válidos y evita combinaciones de
         // escuderías distintas antes de que lleguen a la capa de servicio.
@@ -197,24 +212,16 @@ public class SimulationController {
         // La pole se resalta con la clase .pole-row de la hoja de estilos.
         // Cada fila lleva a la izquierda la franja del color de su escudería,
         // igual que la tabla de tiempos del diseño.
-        tabla.setRowFactory(t -> new TableRow<>() {
-            @Override
-            protected void updateItem(LapResult resultado, boolean vacia) {
-                super.updateItem(resultado, vacia);
-                getStyleClass().removeAll("pole-row", "invalid-row");
-                if (vacia || resultado == null) {
-                    setStyle("");
-                    return;
+        tabla.setRowFactory(t -> {
+            TableRow<LapResult> fila = filaConColorDeEquipo();
+            // Doble clic sobre un piloto abre su ficha, como en cualquier
+            // tabla de resultados: la fila es el acceso natural al detalle.
+            fila.setOnMouseClicked(e -> {
+                if (e.getClickCount() == 2 && !fila.isEmpty() && fila.getItem() != null) {
+                    ExploreDriversController.abrirFicha(fila.getItem().getPilotoId());
                 }
-                if (!resultado.isVueltaValida()) {
-                    getStyleClass().add("invalid-row");
-                } else if (resultado.getPosicion() == 1) {
-                    getStyleClass().add("pole-row");
-                }
-                setStyle("-fx-border-color: transparent transparent #17171B "
-                        + TeamColors.hex(resultado.getEquipo())
-                        + "; -fx-border-width: 0 0 1 3;");
-            }
+            });
+            return fila;
         });
 
         colPosicion.setCellFactory(c -> new TableCell<>() {
@@ -240,6 +247,61 @@ public class SimulationController {
         colGap.getStyleClass().add("mono-col");
 
         precargarUltimaConfiguracion();
+    }
+
+    /**
+     * Vuelca una sesión ya calculada en todas las pestañas.
+     *
+     * Está separado del arranque porque la sesión no siempre llega de la
+     * tarea que lanza esta pantalla: cuando se disputa desde la vista en vivo
+     * es esa la que la trae ya terminada.
+     */
+    public void mostrarSesion(QualifyingSession sesion) {
+        if (sesion == null) {
+            return;
+        }
+        ultimaSesion = sesion;
+        lblClima.setText(resumenClimatico(sesion));
+        tabla.setItems(FXCollections.observableArrayList(sesion.getResultados()));
+        tablaEventos.setItems(FXCollections.observableArrayList(sesion.getEventos()));
+        evolucionVueltaController.cargar(sesion.getEvolucionVuelta());
+        comparacionSectoresController.cargar(sesion.getResultados());
+        evolucionPistaController.cargar(sesion.getEvolucionPista());
+        analisisSesionController.cargar(sesion.getAnalisis());
+        mostrarEstadisticas(sesion);
+        LapResult pole = sesion.getPole();
+        lblEstado.setText(pole == null ? "Sesión sin resultados"
+                : "Pole: " + pole.getPiloto() + " — " + FormatUtils.formatLapTime(pole.getTiempoSegundos()));
+        ShellController.estadoSesion(ShellController.Estado.TERMINADA);
+        // Terminada la vuelta, lo que interesa es la parrilla, no la
+        // telemetría en directo que ya dejó de moverse.
+        panelResultados.getSelectionModel().selectFirst();
+    }
+
+    /**
+     * Fila con la franja del color de su escudería a la izquierda y la pole
+     * destacada, igual que la tabla de tiempos del diseño.
+     */
+    private TableRow<LapResult> filaConColorDeEquipo() {
+        return new TableRow<>() {
+            @Override
+            protected void updateItem(LapResult resultado, boolean vacia) {
+                super.updateItem(resultado, vacia);
+                getStyleClass().removeAll("pole-row", "invalid-row");
+                if (vacia || resultado == null) {
+                    setStyle("");
+                    return;
+                }
+                if (!resultado.isVueltaValida()) {
+                    getStyleClass().add("invalid-row");
+                } else if (resultado.getPosicion() == 1) {
+                    getStyleClass().add("pole-row");
+                }
+                setStyle("-fx-border-color: transparent transparent #17171B "
+                        + TeamColors.hex(resultado.getEquipo())
+                        + "; -fx-border-width: 0 0 1 3;");
+            }
+        };
     }
 
     /**
@@ -273,29 +335,12 @@ public class SimulationController {
         combustible = FuelStrategy.BALANCEADA;
 
         if (ultima == null) {
+            versionConfiguracionAplicada = com.formula1.data.DataStore.getInstance().versionConfiguracion();
             return;
         }
-        if (ultima.getCircuito() != null) {
-            selectorCircuito.setValue(ultima.getCircuito());
-        }
-        if (ultima.getVehiculo() != null) {
-            selectorVehiculo.setValue(ultima.getVehiculo());
-        }
-        seleccionarPiloto(ultima.getPilotoId());
-        if (ultima.getModo() != null) {
-            modo = ultima.getModo();
-        }
-        if (ultima.getAerodinamica() != null) {
-            aero = ultima.getAerodinamica();
-        }
-        if (ultima.getPresion() != null) {
-            presion = ultima.getPresion();
-        }
-        if (ultima.getCombustible() != null) {
-            combustible = ultima.getCombustible();
-        }
+        precargarConfiguracion(ultima);
+        versionConfiguracionAplicada = com.formula1.data.DataStore.getInstance().versionConfiguracion();
         lblEstado.setText("Configuración recuperada");
-        mostrarPuestaAPunto();
     }
 
     /** Resume la puesta a punto vigente, que se ajusta en la otra pantalla. */
@@ -331,68 +376,31 @@ public class SimulationController {
         evolucionPistaController.reiniciar();
         analisisSesionController.reiniciar();
         reiniciarClimaDinamico();
-        panelResultados.getSelectionModel().select(tabTelemetria);
-
-        // La cabecera de la aplicación acompaña a la sesión: evento, estado,
-        // contador de segmento, clima y bandera.
-        circuitos.porNombre(config.getCircuito()).ifPresent(
-                c -> ShellController.evento(c.getNombre(), c.getPais()));
-        ShellController.estadoSesion(ShellController.Estado.EN_CURSO);
-        ShellController.bandera(null);
-        Task<QualifyingSession> tarea = sesiones.crearTarea(config,
-                muestra -> Platform.runLater(() -> mostrarEvolucion(muestra)),
-                muestra -> Platform.runLater(() -> {
-                    mostrarTelemetria(muestra);
-                    mostrarClimaDinamico(muestra.clima());
-                }));
-
-        // Enlazar en vez de asignar: el Task publica sus cambios en el hilo
-        // de JavaFX, así que la interfaz se actualiza sola y sin bloquearse.
-        progreso.progressProperty().bind(tarea.progressProperty());
-        lblEstado.textProperty().bind(tarea.messageProperty());
-        btnSimular.disableProperty().bind(tarea.runningProperty());
         tabla.getItems().clear();
         tablaEventos.getItems().clear();
         lblClima.setText("");
 
-        tarea.setOnSucceeded(e -> {
-            desenlazar();
-            QualifyingSession sesion = tarea.getValue();
-            lblClima.setText(resumenClimatico(sesion));
-            tabla.setItems(FXCollections.observableArrayList(sesion.getResultados()));
-            tablaEventos.setItems(FXCollections.observableArrayList(sesion.getEventos()));
-            evolucionVueltaController.cargar(sesion.getEvolucionVuelta());
-            comparacionSectoresController.cargar(sesion.getResultados());
-            evolucionPistaController.cargar(sesion.getEvolucionPista());
-            analisisSesionController.cargar(sesion.getAnalisis());
-            mostrarEstadisticas(sesion);
-            LapResult pole = sesion.getPole();
-            lblEstado.setText(pole == null ? "Sesión sin resultados"
-                    : "Pole: " + pole.getPiloto() + " — " + FormatUtils.formatLapTime(pole.getTiempoSegundos()));
-            ShellController.estadoSesion(ShellController.Estado.TERMINADA);
-            // Terminada la vuelta, lo que interesa es la parrilla, no la
-            // telemetría en directo que ya dejó de moverse.
-            panelResultados.getSelectionModel().selectFirst();
-            // Guardar en segundo plano: la parrilla ya está en pantalla.
-            Async.ejecutar(() -> sesiones.guardar(sesion));
-        });
+        // La cabecera de la aplicación acompaña a la sesión.
+        circuitos.porNombre(config.getCircuito()).ifPresent(
+                c -> ShellController.evento(c.getNombre(), c.getPais()));
+        ShellController.bandera(null);
 
-        tarea.setOnFailed(e -> {
-            desenlazar();
-            progreso.setProgress(0);
-            lblEstado.setText("La simulación falló");
-            ShellController.estadoSesion(ShellController.Estado.REPOSO);
-            Throwable causa = tarea.getException();
-            Navigator.error("No se pudo completar la clasificación",
-                    causa == null ? "Error desconocido" : String.valueOf(causa.getMessage()));
-        });
-
-        Async.ejecutar(tarea);
+        // La sesión ya no se calcula aquí: se cede el paso a la parrilla de
+        // salida, que la lanza detrás del semáforo y luego la reproduce en la
+        // pantalla en vivo. Esta pantalla vuelve a recibirla ya terminada.
+        Navigator.ir("parrilla-salida");
+        if (Navigator.ultimoControlador() instanceof StartGridController parrilla) {
+            parrilla.preparar(config);
+        }
     }
 
     private void reiniciarEvolucion() {
+        velocidadMaximaAlcanzada = 0;
+        consumoVueltaAcumulado = 0;
+        consumoVueltaTotal = 0;
         lblPilotoEvolucion.setText("Esperando inicio de vuelta");
         lblVelocidad.setText("0 km/h");
+        lblVelocidadMaxima.setText("Máxima alcanzada: 0 km/h");
         lblConsumoEvolucion.setText("0.00 / 0.00 u");
         lblDesgasteEvolucion.setText("0.00 / 0.00 u");
         progresoVuelta.setProgress(0);
@@ -403,8 +411,11 @@ public class SimulationController {
 
     /** Actualiza exclusivamente controles JavaFX; el motor entrega datos inmutables. */
     private void mostrarEvolucion(SimulationSnapshot muestra) {
+        consumoVueltaAcumulado = muestra.consumoAcumulado();
+        consumoVueltaTotal = muestra.consumoTotal();
         lblPilotoEvolucion.setText(muestra.piloto() + " · " + muestra.vehiculo());
         lblVelocidad.setText(String.format("%.0f km/h", muestra.velocidadKmh()));
+        actualizarVelocidadMaxima(muestra.velocidadKmh());
         lblConsumoEvolucion.setText(String.format("%.2f / %.2f u",
                 muestra.consumoAcumulado(), muestra.consumoTotal()));
         lblDesgasteEvolucion.setText(String.format("%.2f / %.2f u",
@@ -420,8 +431,9 @@ public class SimulationController {
         lblTelemetriaPiloto.setText("Esperando datos del vehículo seleccionado");
         lblEstadoPista.setText("Estado de pista —");
         lblVelocidadTelemetria.setText("0 km/h");
+        lblVelocidadMaximaTelemetria.setText("Máxima alcanzada: 0 km/h");
         lblRpm.setText("0 rpm");
-        lblCombustible.setText("100.0 %");
+        lblCombustible.setText("0.00 kg/v · 0 % consumido");
         lblDesgasteTelemetria.setText("0.0 %");
         lblTempNeumaticos.setText("0.0 °C");
         lblTempMotor.setText("0.0 °C");
@@ -433,7 +445,7 @@ public class SimulationController {
         lblDelta.getStyleClass().removeAll("delta-faster", "delta-slower");
         barraVelocidadTelemetria.setProgress(0);
         barraRpm.setProgress(0);
-        barraCombustible.setProgress(1);
+        barraCombustible.setProgress(0);
         barraDesgasteTelemetria.setProgress(0);
         barraTempNeumaticos.setProgress(0);
         barraTempMotor.setProgress(0);
@@ -442,6 +454,7 @@ public class SimulationController {
     /** Representa una lectura ya calculada; no ejecuta lógica del motor en JavaFX. */
     private void mostrarTelemetria(TelemetrySnapshot muestra) {
         evolucionVueltaController.actualizar(muestra);
+        actualizarVelocidadMaxima(muestra.velocidadKmh());
         lblTelemetriaPiloto.setText(muestra.piloto() + " · " + muestra.vehiculo());
         String bandera = muestra.evento().impacto().bandera() == TrackFlag.GREEN
                 ? "" : " · " + muestra.evento().impacto().bandera().getEtiqueta();
@@ -449,7 +462,10 @@ public class SimulationController {
         ShellController.bandera(muestra.evento().impacto().bandera());
         lblVelocidadTelemetria.setText(String.format("%.0f km/h", muestra.velocidadKmh()));
         lblRpm.setText(String.format("%,d rpm", muestra.rpm()));
-        lblCombustible.setText(String.format("%.1f %%", muestra.combustibleRestantePorcentaje()));
+        double porcentajeConsumido = consumoVueltaTotal <= 0 ? 0
+                : Math.min(100, 100 * consumoVueltaAcumulado / consumoVueltaTotal);
+        lblCombustible.setText(String.format("%.2f kg/v · %.0f %% consumido",
+                consumoVueltaTotal, porcentajeConsumido));
         lblDesgasteTelemetria.setText(String.format("%.1f %%", muestra.desgasteNeumaticosPorcentaje()));
         lblTempNeumaticos.setText(String.format("%.1f °C", muestra.temperaturaNeumaticosC()));
         lblTempMotor.setText(String.format("%.1f °C", muestra.temperaturaMotorC()));
@@ -467,10 +483,50 @@ public class SimulationController {
                 || muestra.deltaSegundos() > 0 ? "delta-slower" : "delta-faster");
         barraVelocidadTelemetria.setProgress(muestra.velocidadRelativa());
         barraRpm.setProgress(muestra.rpmRelativas());
-        barraCombustible.setProgress(muestra.combustibleRestantePorcentaje() / 100);
+        barraCombustible.setProgress(porcentajeConsumido / 100);
         barraDesgasteTelemetria.setProgress(muestra.desgasteNeumaticosPorcentaje() / 100);
         barraTempNeumaticos.setProgress(muestra.temperaturaNeumaticosC() / 125);
         barraTempMotor.setProgress(muestra.temperaturaMotorC() / 125);
+    }
+
+    /** Precarga una configuración elegida en Historial sin iniciar ni borrar la sesión actual. */
+    public void precargarConfiguracion(SimulationConfig config) {
+        if (config == null) {
+            return;
+        }
+        if (config.getCircuito() != null && selectorCircuito.getItems().contains(config.getCircuito())) {
+            selectorCircuito.setValue(config.getCircuito());
+        }
+        if (config.getVehiculo() != null && selectorVehiculo.getItems().contains(config.getVehiculo())) {
+            selectorVehiculo.setValue(config.getVehiculo());
+        }
+        seleccionarPiloto(config.getPilotoId());
+        if (config.getModo() != null) modo = config.getModo();
+        if (config.getAerodinamica() != null) aero = config.getAerodinamica();
+        if (config.getPresion() != null) presion = config.getPresion();
+        if (config.getCombustible() != null) combustible = config.getCombustible();
+        if (!lblEstado.textProperty().isBound()) {
+            lblEstado.setText("Configuración preparada para la próxima sesión");
+        }
+        mostrarPuestaAPunto();
+    }
+
+    /** Aplica un guardado nuevo sin tocar Carrera cuando no hay cambios pendientes. */
+    public void aplicarConfiguracionGuardadaPendiente() {
+        com.formula1.data.DataStore datos = com.formula1.data.DataStore.getInstance();
+        long version = datos.versionConfiguracion();
+        if (version == versionConfiguracionAplicada) {
+            return;
+        }
+        precargarConfiguracion(datos.configuracionActual());
+        versionConfiguracionAplicada = version;
+    }
+
+    private void actualizarVelocidadMaxima(double velocidadActual) {
+        velocidadMaximaAlcanzada = Math.max(velocidadMaximaAlcanzada, velocidadActual);
+        String maxima = String.format("Máxima alcanzada: %.0f km/h", velocidadMaximaAlcanzada);
+        lblVelocidadMaxima.setText(maxima);
+        lblVelocidadMaximaTelemetria.setText(maxima);
     }
 
     private void reiniciarClimaDinamico() {
@@ -489,13 +545,8 @@ public class SimulationController {
         barraTraccion.setProgress(0);
         barraFrenado.setProgress(0);
         graficoClima.setAnimated(false);
-        graficoClima.getData().clear();
-        serieGrip = new XYChart.Series<>();
-        serieGrip.setName("Grip");
-        serieLluvia = new XYChart.Series<>();
-        serieLluvia.setName("Lluvia");
-        graficoClima.getData().add(serieGrip);
-        graficoClima.getData().add(serieLluvia);
+        muestrasClima.clear();
+        pintarGraficoClima();
     }
 
     /** Actualiza el panel y su tendencia con una única muestra inmutable. */
@@ -516,9 +567,28 @@ public class SimulationController {
         barraGrip.setProgress(muestra.gripPorcentaje() / 100);
         barraTraccion.setProgress(muestra.traccionPorcentaje() / 100);
         barraFrenado.setProgress(muestra.frenadoPorcentaje() / 100);
-        serieGrip.getData().add(new XYChart.Data<>(muestra.segmento(), muestra.gripPorcentaje()));
-        serieLluvia.getData().add(new XYChart.Data<>(
-                muestra.segmento(), muestra.intensidadLluviaPorcentaje()));
+        int indice = muestra.segmento() - 1;
+        if (indice < muestrasClima.size()) {
+            muestrasClima.set(indice, muestra);
+        } else {
+            muestrasClima.add(muestra);
+        }
+        pintarGraficoClima();
+    }
+
+    private void pintarGraficoClima() {
+        WeatherMetric metrica = selectorMetricaClima.getValue();
+        graficoClima.getData().clear();
+        if (metrica == null) {
+            return;
+        }
+        XYChart.Series<Number, Number> serie = new XYChart.Series<>();
+        serie.setName(metrica.etiqueta);
+        muestrasClima.forEach(muestra -> serie.getData().add(
+                new XYChart.Data<>(muestra.segmento(), metrica.valorDe(muestra))));
+        ejeClimaValor.setLabel(metrica.unidad);
+        graficoClima.setTitle(metrica.etiqueta + " durante la vuelta");
+        graficoClima.getData().add(serie);
     }
 
     private String resumenClimatico(QualifyingSession sesion) {
@@ -634,6 +704,37 @@ public class SimulationController {
         progreso.progressProperty().unbind();
         lblEstado.textProperty().unbind();
         btnSimular.disableProperty().unbind();
+    }
+
+    private enum WeatherMetric {
+        TEMPERATURA_AMBIENTE("Temperatura ambiente", "°C", WeatherSnapshot::temperaturaC),
+        TEMPERATURA_PISTA("Temperatura de pista", "°C", WeatherSnapshot::temperaturaPistaC),
+        HUMEDAD("Humedad", "%", WeatherSnapshot::humedadPorcentaje),
+        PROBABILIDAD_LLUVIA("Probabilidad de lluvia", "%",
+                WeatherSnapshot::probabilidadLluviaPorcentaje),
+        INTENSIDAD_LLUVIA("Intensidad de lluvia", "%",
+                WeatherSnapshot::intensidadLluviaPorcentaje),
+        GRIP("Grip de pista", "%", WeatherSnapshot::gripPorcentaje);
+
+        private final String etiqueta;
+        private final String unidad;
+        private final ToDoubleFunction<WeatherSnapshot> extractor;
+
+        WeatherMetric(String etiqueta, String unidad,
+                      ToDoubleFunction<WeatherSnapshot> extractor) {
+            this.etiqueta = etiqueta;
+            this.unidad = unidad;
+            this.extractor = extractor;
+        }
+
+        double valorDe(WeatherSnapshot muestra) {
+            return extractor.applyAsDouble(muestra);
+        }
+
+        @Override
+        public String toString() {
+            return etiqueta;
+        }
     }
 
     private enum MetricType {

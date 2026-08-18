@@ -36,9 +36,9 @@
             <TableColumn fx:id="colEquipo" text="Equipo" prefWidth="180"/>
             <TableColumn fx:id="colRol" text="Rol" prefWidth="85"/>
             <TableColumn fx:id="colExperiencia" text="Exp." prefWidth="55"/>
-            <TableColumn fx:id="colVelocidad" text="Velocidad" prefWidth="80"/>
-            <TableColumn fx:id="colConsistencia" text="Consistencia" prefWidth="90"/>
-            <TableColumn fx:id="colLluvia" text="Lluvia" prefWidth="65"/>
+            <TableColumn fx:id="colVelocidad" text="Velocidad /100" prefWidth="105"/>
+            <TableColumn fx:id="colConsistencia" text="Consistencia /100" prefWidth="115"/>
+            <TableColumn fx:id="colLluvia" text="Lluvia /100" prefWidth="90"/>
             <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="160"/>
         </columns>
     </TableView>

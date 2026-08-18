@@ -227,6 +227,15 @@
     -fx-border-color: transparent transparent -fx-brand transparent;
 }
 
+.exit-nav-item {
+    -fx-text-fill: #FF8A80;
+}
+
+.exit-nav-item:hover, .exit-nav-item:focused {
+    -fx-background-color: #351416;
+    -fx-text-fill: #FFB4AF;
+}
+
 /* =============================================================
    Barra de sub-tabs dentro de cada seccion (45 px)
    Se aplica sobre un TabPane para reusar fx:include.
@@ -476,18 +485,24 @@
     -fx-background-radius: 8;
     -fx-border-radius: 8;
     -fx-border-width: 1;
-    -fx-padding: 0 0 12 0;
+    -fx-padding: 0;
     -fx-min-width: 244;
     -fx-max-width: 244;
 }
 
 .explore-card-photo {
-    -fx-background-color: #08080A;
+    -fx-background-color: linear-gradient(to bottom right, #111117, #08080A);
     -fx-background-radius: 7 7 0 0;
+    -fx-border-color: transparent transparent -fx-border-2 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.explore-card-image {
+    -fx-opacity: 0.94;
 }
 
 .explore-card-body {
-    -fx-padding: 0 13 0 13;
+    -fx-padding: 16 14 14 14;
 }
 
 .explore-card-name {
@@ -506,9 +521,136 @@
     -fx-text-fill: -fx-text-faint;
 }
 
+.explore-card-actions {
+    -fx-border-color: -fx-border-2 transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+    -fx-padding: 11 0 2 0;
+}
+
+.explore-card-cta {
+    -fx-background-color: -fx-brand;
+    -fx-border-color: -fx-brand;
+    -fx-background-radius: 5;
+    -fx-border-radius: 5;
+    -fx-padding: 9 12 9 12;
+    -fx-text-fill: white;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+
+.explore-card-cta:hover, .explore-card-cta:focused {
+    -fx-background-color: #F1251F;
+    -fx-border-color: #FF5954;
+}
+
+.explore-card-cta:pressed {
+    -fx-background-color: #B80600;
+}
+
+/* Detalle de circuito: el viewport y cada bloque conservan el tema oscuro. */
+.circuit-detail, .circuit-detail > .viewport, .circuit-detail-body {
+    -fx-background-color: -fx-bg-0;
+}
+
+.circuit-detail .corner,
+.circuit-detail .scroll-bar,
+.circuit-detail .scroll-bar .track {
+    -fx-background-color: -fx-bg-0;
+}
+
+.circuit-detail .scroll-bar .thumb {
+    -fx-background-color: -fx-border-1;
+    -fx-background-radius: 5;
+}
+
+.detail-panel {
+    -fx-background-color: -fx-surface-1;
+    -fx-background-radius: 8;
+    -fx-border-color: -fx-border-2;
+    -fx-border-radius: 8;
+    -fx-padding: 16;
+}
+
+.detail-kicker {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-brand;
+}
+
+.detail-description {
+    -fx-font-size: 12px;
+    -fx-line-spacing: 3px;
+    -fx-text-fill: -fx-text-1;
+}
+
+.detail-value {
+    -fx-font-family: "JetBrains Mono", monospace;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.detail-help {
+    -fx-font-size: 11px;
+    -fx-text-fill: -fx-text-muted;
+}
+
+.detail-toolbar {
+    -fx-background-color: -fx-surface-2;
+    -fx-background-radius: 6;
+    -fx-padding: 10 12 10 12;
+}
+
+.detail-field-label {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-muted;
+}
+
+.circuit-detail .list-view:focused,
+.circuit-detail .table-view:focused,
+.circuit-detail .combo-box:focused {
+    -fx-border-color: -fx-brand;
+}
+
+.readonly-field {
+    -fx-background-color: -fx-surface-2;
+    -fx-background-radius: 5;
+    -fx-border-color: -fx-border-1;
+    -fx-border-radius: 5;
+    -fx-padding: 7 10 7 10;
+    -fx-text-fill: -fx-text-muted;
+    -fx-font-size: 12px;
+}
+
+.assignment-panel {
+    -fx-background-color: -fx-surface-2;
+    -fx-background-radius: 6;
+    -fx-border-color: -fx-border-2;
+    -fx-border-radius: 6;
+    -fx-padding: 12;
+}
+
+.assignment-panel > .label {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-1;
+}
+
+.assignment-list {
+    -fx-padding: 4 0 0 0;
+}
+
+.breadcrumb {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-faint;
+}
+
 .card-link {
     -fx-background-color: transparent;
-    -fx-padding: 0;
+    -fx-padding: 3 0 3 8;
     -fx-font-size: 10px;
     -fx-font-weight: bold;
     -fx-cursor: hand;
@@ -624,6 +766,30 @@
 
 .table-view:focused {
     -fx-background-color: -fx-surface-1;
+}
+
+/* Evita los rellenos claros del skin de JavaFX en zonas vacías, esquinas y
+   placeholders de las tablas (especialmente visibles en Historial). */
+.table-view .virtual-flow,
+.table-view .virtual-flow .clipped-container,
+.table-view .virtual-flow .sheet,
+.table-view .corner,
+.table-view .column-header-background .filler {
+    -fx-background-color: -fx-surface-1;
+}
+
+.table-view .placeholder .label {
+    -fx-text-fill: -fx-text-muted;
+}
+
+.split-pane {
+    -fx-background-color: -fx-bg-0;
+    -fx-padding: 0;
+}
+
+.split-pane > .split-pane-divider {
+    -fx-background-color: -fx-border-2;
+    -fx-padding: 0 1 0 1;
 }
 
 /* La pole se destaca con el amarillo del mockup. */
@@ -892,6 +1058,25 @@
     -fx-font-size: 12px;
 }
 
+.text-area .content,
+.spinner .text-field {
+    -fx-background-color: -fx-surface-3;
+    -fx-text-fill: -fx-text-1;
+}
+
+.spinner .increment-arrow-button,
+.spinner .decrement-arrow-button {
+    -fx-background-color: -fx-surface-2;
+    -fx-border-color: -fx-border-1;
+}
+
+.text-field.input-invalid, .combo-box.input-invalid,
+.spinner.input-invalid, .text-area.input-invalid {
+    -fx-border-color: #FF5252;
+    -fx-border-width: 1.5;
+    -fx-effect: dropshadow(gaussian, rgba(255,82,82,0.22), 6, 0.15, 0, 0);
+}
+
 .combo-box .list-cell {
     -fx-background-color: transparent;
     -fx-text-fill: -fx-text-1;
@@ -905,6 +1090,62 @@
 .combo-box-popup .list-view .list-cell:hover {
     -fx-background-color: -fx-brand;
     -fx-text-fill: white;
+}
+
+/* Formularios de Gestión. Dialog crea una Scene separada, por eso todos sus
+   skins deben recibir explícitamente la misma paleta oscura. */
+.dialog-pane,
+.form-dialog {
+    -fx-background-color: -fx-bg-0;
+    -fx-border-color: -fx-border-1;
+}
+
+.dialog-pane > .header-panel {
+    -fx-background-color: -fx-surface-2;
+    -fx-border-color: transparent transparent -fx-border-1 transparent;
+}
+
+.dialog-pane > .header-panel > .label,
+.dialog-pane > .content.label,
+.dialog-pane .label,
+.dialog-pane .check-box {
+    -fx-text-fill: -fx-text-1;
+}
+
+.dialog-pane .button-bar,
+.dialog-pane .grid-pane,
+.dialog-pane .scroll-pane,
+.dialog-pane .scroll-pane > .viewport,
+.dialog-pane .tab-pane,
+.dialog-pane .tab-pane > .tab-content-area {
+    -fx-background-color: -fx-bg-0;
+}
+
+.check-box > .box {
+    -fx-background-color: -fx-surface-3;
+    -fx-border-color: -fx-border-1;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+}
+
+.check-box:selected > .box > .mark {
+    -fx-background-color: white;
+}
+
+.check-box:selected > .box {
+    -fx-background-color: -fx-brand;
+    -fx-border-color: -fx-brand;
+}
+
+.scroll-bar,
+.scroll-bar .track,
+.scroll-bar .corner {
+    -fx-background-color: -fx-surface-3;
+}
+
+.scroll-bar .thumb {
+    -fx-background-color: #3A3A44;
+    -fx-background-radius: 6;
 }
 
 /* =============================================================
@@ -942,4 +1183,132 @@
 .tab-pane > .tab-content-area {
     -fx-background-color: -fx-bg-0;
     -fx-padding: 10 0 0 0;
+}
+
+/* =============================================================
+   Visor de vistas del monoplaza
+   ============================================================= */
+
+.gallery-root {
+    -fx-background-color: -fx-bg-0;
+    -fx-border-color: -fx-border-1;
+    -fx-border-width: 1;
+}
+
+.gallery-header {
+    -fx-background-color: -fx-bg-header;
+}
+
+.gallery-title {
+    -fx-font-family: "Orbitron", "JetBrains Mono", monospace;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.gallery-team {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.gallery-stage {
+    -fx-background-color: -fx-surface-3;
+}
+
+.gallery-counter {
+    -fx-font-family: "JetBrains Mono", monospace;
+    -fx-font-size: 12px;
+    -fx-text-fill: -fx-text-muted;
+    -fx-min-width: 64;
+    -fx-alignment: CENTER;
+}
+
+/* La foto avisa de que se puede abrir. */
+.explore-card-photo-clickable {
+    -fx-cursor: hand;
+}
+
+.explore-card-photo-clickable:hover {
+    -fx-opacity: 0.88;
+}
+
+/* Retrato de la ficha de piloto. */
+.driver-detail-photo {
+    -fx-background-color: #08080A;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+}
+
+.driver-detail-team {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+
+/* Panel del semaforo de salida. */
+.start-lights {
+    -fx-background-color: #0C0C10;
+    -fx-background-radius: 10;
+    -fx-border-color: -fx-border-1;
+    -fx-border-radius: 10;
+}
+
+/* =============================================================
+   Parrilla de salida y sesion en vivo
+   ============================================================= */
+
+.start-grid {
+    -fx-background-color: -fx-bg-0;
+}
+
+.grid-car-photo {
+    -fx-background-color: #08080A;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-width: 2;
+}
+
+.grid-car-model {
+    -fx-font-family: "Orbitron", "JetBrains Mono", monospace;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.grid-car-driver {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+.grid-car-driver-own {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+}
+
+/* Avisos de incidencias durante la sesion. */
+.live-feed {
+    -fx-background-color: -fx-surface-1;
+    -fx-background-radius: 8;
+    -fx-border-color: -fx-border-2;
+    -fx-border-radius: 8;
+    -fx-padding: 12;
+}
+
+.live-feed-item {
+    -fx-background-color: -fx-surface-2;
+    -fx-background-radius: 6;
+    -fx-border-color: transparent transparent transparent -fx-accent-amber;
+    -fx-border-width: 0 0 0 3;
+    -fx-padding: 8 12 8 12;
+}
+
+.live-feed-title {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-1;
+}
+
+.live-feed-driver {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
 }

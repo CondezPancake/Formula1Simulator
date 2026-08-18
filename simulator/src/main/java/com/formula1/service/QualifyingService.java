@@ -130,6 +130,12 @@ public class QualifyingService {
 
     QualifyingSession simular(SimulationConfig config, WeatherCondition clima,
                               Progreso progreso, Evolucion evolucion, Telemetria telemetria) {
+        return simular(config, clima, progreso, evolucion, telemetria, null);
+    }
+
+    QualifyingSession simular(SimulationConfig config, WeatherCondition clima,
+                              Progreso progreso, Evolucion evolucion, Telemetria telemetria,
+                              EvolucionPista observadorPista) {
         Circuit circuito = validarSeleccion(config);
         if (clima == null) {
             throw new ValidationException("Las condiciones climáticas no pueden ser nulas");
@@ -173,6 +179,9 @@ public class QualifyingService {
             List<WeatherSnapshot> climaVuelta = pistaVuelta.clima();
             gomaPista = pistaVuelta.gomaFinalPorcentaje();
             historialPista.add(pistaVuelta.resumen());
+            if (observadorPista != null) {
+                observadorPista.actualizar(pistaVuelta.resumen());
+            }
 
             double tiempoBase = calculadora.calcularTiempo(
                     piloto, coche, circuito, climaVuelta, configPiloto);
@@ -267,6 +276,12 @@ public class QualifyingService {
 
     public Task<QualifyingSession> crearTarea(SimulationConfig config, Evolucion evolucion,
                                               Telemetria telemetria) {
+        return crearTarea(config, evolucion, telemetria, null);
+    }
+
+    public Task<QualifyingSession> crearTarea(SimulationConfig config, Evolucion evolucion,
+                                              Telemetria telemetria,
+                                              EvolucionPista observadorPista) {
         return new Task<>() {
             @Override
             protected QualifyingSession call() throws Exception {
@@ -297,7 +312,8 @@ public class QualifyingService {
                             dormir(RITMO_MS);
                         },
                         evolucionConRitmo,
-                        telemetriaConRitmo);
+                        telemetriaConRitmo,
+                        observadorPista);
 
                 updateProgress(1, 1);
                 LapResult pole = sesion.getPole();
@@ -353,14 +369,9 @@ public class QualifyingService {
                     ? climaActual
                     : climaActual.conImpacto(0, impacto.deltaGripPorcentaje());
             boolean invalidada = efectosEventos.invalidatedAtOrBefore(eventosVuelta, sector);
-            double variacionVelocidad = 1
-                    + 0.08 * Math.sin(2 * Math.PI * progreso)
-                    - 0.03 * Math.cos(4 * Math.PI * progreso);
-            double velocidad = MathUtils.clamp(
-                    velocidadMedia * variacionVelocidad
-                            * factorTiempoMedio / climaActual.factorTiempo()
-                            * impacto.multiplicadorVelocidad(),
-                    0, vehiculo.getVelocidadMaximaKmh());
+            double velocidad = calcularVelocidad(
+                    vehiculo, config, velocidadMedia, factorTiempoMedio,
+                    climaActual, progreso, impacto.multiplicadorVelocidad());
             if (invalidada) {
                 velocidad = 0;
             } else {
@@ -417,6 +428,48 @@ public class QualifyingService {
                         invalidada ? resultado.getEstadoVuelta() : LapStatus.VALID));
             }
         }
+    }
+
+    /**
+     * Calcula velocidad instantánea sin confundirla con la media de la vuelta.
+     * La punta depende del rendimiento del modo activo y nunca supera el máximo
+     * declarado por el vehículo; el perfil conserva zonas lentas y rectas.
+     */
+    static double calcularVelocidad(Vehicle vehiculo, SimulationConfig config,
+                                    double velocidadMedia, double factorTiempoMedio,
+                                    WeatherSnapshot clima, double progreso,
+                                    double multiplicadorEvento) {
+        double mediaDelSegmento = velocidadMedia
+                * factorTiempoMedio / clima.factorTiempo();
+        double rendimientoActivo = vehiculo.rendimientoDe(config.getModo())
+                .getVelocidadPromedioKmh();
+        double mejorRendimiento = vehiculo.getRendimiento().values().stream()
+                .mapToDouble(Vehicle.Performance::getVelocidadPromedioKmh)
+                .max()
+                .orElse(rendimientoActivo);
+        double factorModo = mejorRendimiento <= 0
+                ? 1
+                : MathUtils.clamp(rendimientoActivo / mejorRendimiento, 0.75, 1);
+        double puntaDisponible = vehiculo.getVelocidadMaximaKmh()
+                * factorModo / Math.max(1, clima.factorTiempo());
+        puntaDisponible = Math.max(mediaDelSegmento, puntaDisponible);
+
+        // El perfil vale 1 en una recta y presenta valles en las zonas lentas.
+        double perfil = MathUtils.clamp(
+                0.65 * Math.sin(2 * Math.PI * progreso)
+                        - 0.35 * Math.cos(4 * Math.PI * progreso),
+                -1, 1);
+        double velocidad;
+        if (perfil >= 0) {
+            velocidad = mediaDelSegmento
+                    + (puntaDisponible - mediaDelSegmento) * perfil;
+        } else {
+            double velocidadLenta = mediaDelSegmento * 0.55;
+            velocidad = mediaDelSegmento
+                    + (mediaDelSegmento - velocidadLenta) * perfil;
+        }
+        return MathUtils.clamp(velocidad * multiplicadorEvento,
+                0, vehiculo.getVelocidadMaximaKmh());
     }
 
     private double deltaTiempoSegmento(List<EventOccurrence> eventosVuelta,
@@ -545,5 +598,11 @@ public class QualifyingService {
     @FunctionalInterface
     public interface Telemetria {
         void actualizar(TelemetrySnapshot muestra);
+    }
+
+    /** Se invoca tras el paso de cada vehículo por la pista. */
+    @FunctionalInterface
+    public interface EvolucionPista {
+        void actualizar(TrackEvolutionSnapshot muestra);
     }
 }

@@ -6,11 +6,13 @@ import com.formula1.model.Vehicle;
 import com.formula1.model.WeatherCondition;
 import com.formula1.service.VehicleService;
 import com.formula1.util.TeamColors;
+import com.formula1.util.VehicleImages;
 
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -42,20 +44,30 @@ public class ExploreVehiclesController {
         lblConteo.setText(lista.size() + " VEHÍCULOS");
     }
 
+    /**
+     * La foto abre el visor con las demás vistas del monoplaza. Solo se hace
+     * pulsable cuando hay algo más que enseñar, para no ofrecer un clic que
+     * no lleva a ninguna parte.
+     */
+    private void prepararGaleria(StackPane imagen, Vehicle vehiculo) {
+        if (!VehicleImages.tieneGaleria(vehiculo.getModelo())) {
+            return;
+        }
+        imagen.getStyleClass().add("explore-card-photo-clickable");
+        Tooltip.install(imagen, new Tooltip("Ver más vistas del " + vehiculo.getModelo()));
+        imagen.setOnMouseClicked(e ->
+                VehicleGallery.abrir(vehiculo.getModelo(), vehiculo.getEquipo()));
+    }
+
     private VBox tarjeta(Vehicle vehiculo) {
         String color = TeamColors.hex(vehiculo.getEquipo());
 
-        VBox card = new VBox(8);
+        VBox card = new VBox(0);
         card.getStyleClass().add("explore-card");
         card.setStyle("-fx-border-color: " + color + ";");
 
-        StackPane placeholder = new StackPane();
-        placeholder.getStyleClass().add("explore-card-photo");
-        placeholder.setPrefSize(208, 100);
-        placeholder.setMinSize(208, 100);
-        Label modeloGrande = new Label(vehiculo.getModelo());
-        modeloGrande.setStyle("-fx-text-fill: " + color + "; -fx-font-size: 22px; -fx-font-weight: bold;");
-        placeholder.getChildren().add(modeloGrande);
+        var imagen = ExploreCardVisuals.vehiculo(vehiculo, color);
+        prepararGaleria(imagen, vehiculo);
 
         Label equipo = new Label(vehiculo.getEquipo() == null ? "" : vehiculo.getEquipo().toUpperCase(Locale.ROOT));
         equipo.getStyleClass().add("explore-card-team");
@@ -78,11 +90,11 @@ public class ExploreVehiclesController {
         Label piloto = new Label((pilotoAsignado.isBlank() ? "Sin asignar" : pilotoAsignado));
         piloto.getStyleClass().add("hint");
 
-        Button usar = new Button("USAR ESTE VEHÍCULO");
-        usar.getStyleClass().add("icon-button");
+        Button usar = new Button("USAR ESTE VEHÍCULO  →");
+        usar.getStyleClass().add("explore-card-cta");
         usar.setMaxWidth(Double.MAX_VALUE);
         usar.setOnAction(e -> {
-            Navigator.ir("simulation");
+            ShellController.irACarrera();
             if (Navigator.ultimoControlador() instanceof SimulationController simulacion) {
                 simulacion.precargarVehiculo(vehiculo.getModelo());
             }
@@ -91,7 +103,11 @@ public class ExploreVehiclesController {
         Label nombre = new Label(vehiculo.getModelo());
         nombre.getStyleClass().add("explore-card-name");
 
-        card.getChildren().addAll(placeholder, nombre, equipo, stats, piloto, usar);
+        VBox acciones = new VBox(usar);
+        acciones.getStyleClass().add("explore-card-actions");
+        VBox contenido = new VBox(8, nombre, equipo, stats, piloto, acciones);
+        contenido.getStyleClass().add("explore-card-body");
+        card.getChildren().addAll(imagen, contenido);
         return card;
     }
 

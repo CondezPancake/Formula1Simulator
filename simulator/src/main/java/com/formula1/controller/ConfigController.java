@@ -253,6 +253,6 @@ public class ConfigController {
     @FXML
     private void onGuardar() {
         DataStore.getInstance().guardarConfiguracion(configuracion());
-        lblContexto.setText("Configuración guardada. Se aplicará en la próxima clasificación.");
+        lblContexto.setText("Configuración guardada. Carrera la aplicará al volver, sin iniciar la sesión.");
     }
 }

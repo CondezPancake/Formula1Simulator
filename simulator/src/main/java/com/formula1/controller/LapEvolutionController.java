@@ -3,7 +3,6 @@ package com.formula1.controller;
 import com.formula1.model.LapStatus;
 import com.formula1.model.TelemetrySnapshot;
 import com.formula1.util.FormatUtils;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -33,7 +32,6 @@ public final class LapEvolutionController {
     @FXML private Label lblTendencia;
     @FXML private Label lblRango;
     @FXML private TableView<TelemetrySnapshot> tabla;
-    @FXML private TableColumn<TelemetrySnapshot, Number> colSegmento;
     @FXML private TableColumn<TelemetrySnapshot, String> colSector;
     @FXML private TableColumn<TelemetrySnapshot, String> colVelocidad;
     @FXML private TableColumn<TelemetrySnapshot, String> colTiempo;
@@ -67,9 +65,9 @@ public final class LapEvolutionController {
         pintarGrafico();
     }
 
-    /** Incorpora o reemplaza la lectura de un segmento sin producir duplicados. */
+    /** Conserva la lectura más reciente de cada uno de los tres sectores. */
     void actualizar(TelemetrySnapshot muestra) {
-        int indice = indiceDelSegmento(muestra.segmento());
+        int indice = indiceDelSector(muestra.sectorActual());
         if (indice >= 0) {
             muestras.set(indice, muestra);
             tabla.getItems().set(indice, muestra);
@@ -80,7 +78,7 @@ public final class LapEvolutionController {
             LapEvolutionMetric metrica = selectorMetrica.getValue();
             if (metrica != null && serie != null) {
                 serie.getData().add(new XYChart.Data<>(
-                        muestra.segmento(), metrica.valorDe(muestra)));
+                        muestra.sectorActual(), metrica.valorDe(muestra)));
             }
         }
         actualizarResumen(muestra);
@@ -89,7 +87,7 @@ public final class LapEvolutionController {
     /** Sustituye el flujo en vivo por la versión consolidada de la sesión. */
     void cargar(List<TelemetrySnapshot> nuevasMuestras) {
         muestras.clear();
-        muestras.addAll(nuevasMuestras == null ? List.of() : nuevasMuestras);
+        muestras.addAll(resumirPorSector(nuevasMuestras));
         tabla.setItems(FXCollections.observableArrayList(muestras));
         pintarGrafico();
         if (!muestras.isEmpty()) {
@@ -98,10 +96,8 @@ public final class LapEvolutionController {
     }
 
     private void configurarTabla() {
-        colSegmento.setCellValueFactory(
-                f -> new SimpleIntegerProperty(f.getValue().segmento()));
         colSector.setCellValueFactory(f -> new SimpleStringProperty(
-                "S" + f.getValue().sectorActual()));
+                etiquetaSector(f.getValue().sectorActual())));
         colVelocidad.setCellValueFactory(f -> new SimpleStringProperty(
                 String.format(Locale.ROOT, "%.0f km/h", f.getValue().velocidadKmh())));
         colTiempo.setCellValueFactory(f -> new SimpleStringProperty(
@@ -128,16 +124,16 @@ public final class LapEvolutionController {
         }
         serie.setName(metrica.etiqueta);
         ejeValor.setLabel(metrica.unidad);
-        grafico.setTitle(metrica.etiqueta + " por segmento");
+        grafico.setTitle(metrica.etiqueta + " al cierre de cada sector");
         muestras.forEach(muestra -> serie.getData().add(
-                new XYChart.Data<>(muestra.segmento(), metrica.valorDe(muestra))));
+                new XYChart.Data<>(muestra.sectorActual(), metrica.valorDe(muestra))));
         grafico.getData().add(serie);
         actualizarRango(metrica);
     }
 
     private void actualizarResumen(TelemetrySnapshot muestra) {
-        lblProgreso.setText(String.format("Segmento %d/%d · S%d",
-                muestra.segmento(), muestra.totalSegmentos(), muestra.sectorActual()));
+        lblProgreso.setText("Sector " + muestra.sectorActual() + " de 3 · "
+                + descripcionSector(muestra.sectorActual()));
         if (muestra.estadoVuelta() != LapStatus.VALID) {
             lblTendencia.setText(muestra.estadoVuelta().getEtiqueta());
         } else {
@@ -162,13 +158,44 @@ public final class LapEvolutionController {
                 "Rango: %.2f a %.2f %s", minimo, maximo, metrica.unidad));
     }
 
-    private int indiceDelSegmento(int segmento) {
+    private int indiceDelSector(int sector) {
         for (int indice = 0; indice < muestras.size(); indice++) {
-            if (muestras.get(indice).segmento() == segmento) {
+            if (muestras.get(indice).sectorActual() == sector) {
                 return indice;
             }
         }
         return -1;
+    }
+
+    /** Reduce las muestras internas del motor a un cierre por sector real. */
+    static List<TelemetrySnapshot> resumirPorSector(List<TelemetrySnapshot> lecturas) {
+        if (lecturas == null || lecturas.isEmpty()) {
+            return List.of();
+        }
+        TelemetrySnapshot[] cierre = new TelemetrySnapshot[3];
+        for (TelemetrySnapshot lectura : lecturas) {
+            cierre[lectura.sectorActual() - 1] = lectura;
+        }
+        List<TelemetrySnapshot> sectores = new ArrayList<>(3);
+        for (TelemetrySnapshot lectura : cierre) {
+            if (lectura != null) {
+                sectores.add(lectura);
+            }
+        }
+        return List.copyOf(sectores);
+    }
+
+    private static String etiquetaSector(int sector) {
+        return "S" + sector + " · " + descripcionSector(sector);
+    }
+
+    private static String descripcionSector(int sector) {
+        return switch (sector) {
+            case 1 -> "Inicio";
+            case 2 -> "Intermedio";
+            case 3 -> "Final";
+            default -> "";
+        };
     }
 
     private enum LapEvolutionMetric {

@@ -3,6 +3,7 @@ package com.formula1.controller;
 import com.formula1.model.Team;
 import com.formula1.service.TeamService;
 import com.formula1.service.ValidationException;
+import com.formula1.util.InputValidation;
 
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -43,6 +44,7 @@ public class TeamController {
 
     @FXML
     public void initialize() {
+        InputValidation.busqueda(buscador);
         colNombre.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getNombre()));
         colPais.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getPais()));
         colMotor.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getMotor()));
@@ -61,6 +63,12 @@ public class TeamController {
         var items = equipos.buscar(filtro);
         tabla.setItems(FXCollections.observableArrayList(items));
         lblConteo.setText(String.valueOf(items.size()));
+    }
+
+    /** Recalcula columnas derivadas cuando otro catálogo modifica pilotos. */
+    void refrescarVista() {
+        refrescar(buscador.getText());
+        tabla.refresh();
     }
 
     private TableCell<Team, Void> celdaAcciones() {

@@ -75,6 +75,17 @@ class CatalogServiceTest {
     }
 
     @Test
+    void desmarcarPilotoEliminaSuAsignacionReal() {
+        Vehicle rb20 = vehiculos.porModelo("RB20").orElseThrow();
+        vehiculos.asignarPilotos(rb20, List.of(1, 2));
+
+        vehiculos.asignarPilotos(rb20, List.of(1));
+
+        assertEquals(List.of(1), vehiculos.porModelo("RB20").orElseThrow().getPilotos());
+        assertFalse(vehiculos.porModelo("RB20").orElseThrow().conduce(2));
+    }
+
+    @Test
     void rechazaDatosInvalidos() {
         assertThrows(ValidationException.class, () -> pilotos.guardar(new Driver(99, "  ", "Ferrari", DriverRole.LIDER, 1)));
         assertThrows(ValidationException.class, () -> pilotos.guardar(new Driver(99, "X", "Equipo Fantasma", DriverRole.LIDER, 1)));
@@ -95,6 +106,20 @@ class CatalogServiceTest {
     }
 
     @Test
+    void altaYBajaDePilotoSincronizaInmediatamenteSuEquipo() {
+        int id = pilotos.siguienteId();
+        pilotos.guardar(new Driver(id, "Piloto Nuevo", "Ferrari", DriverRole.ESCUDERO, 0));
+
+        var ferrari = equipos.porNombre("Ferrari").orElseThrow();
+        assertTrue(ferrari.getPilotos().contains(id));
+        assertTrue(equipos.pilotosDe(ferrari).stream()
+                .anyMatch(p -> p.getNombre().equals("Piloto Nuevo")));
+
+        pilotos.eliminar(id);
+        assertFalse(ferrari.getPilotos().contains(id));
+    }
+
+    @Test
     void impideBorrarUnEquipoConPilotos() {
         assertThrows(ValidationException.class, () -> equipos.eliminar("Ferrari"));
     }
@@ -108,5 +133,26 @@ class CatalogServiceTest {
         assertEquals(3, ganadores.size());
         assertTrue(ganadores.get(0).startsWith("2021"), "ordenados por temporada");
         assertFalse(ganadores.get(0).contains("Piloto "), "el id debe resolverse a nombre");
+    }
+
+    @Test
+    void todosLosDatosInicialesCumplenLasReglasDeEntrada() {
+        equipos.listar().forEach(equipos::guardar);
+        pilotos.listar().forEach(pilotos::guardar);
+        vehiculos.listar().forEach(vehiculos::guardar);
+        circuitos.listar().forEach(circuitos::guardar);
+    }
+
+    @Test
+    void rechazaCaracteresYValoresFueraDeRango() {
+        assertThrows(ValidationException.class,
+                () -> pilotos.guardar(new Driver(99, "Piloto 123", "Ferrari", DriverRole.LIDER, 2)));
+
+        Vehicle invalido = new Vehicle("TEST-1", "Ferrari", "Motor", 450, 2.5);
+        assertThrows(ValidationException.class, () -> vehiculos.guardar(invalido));
+
+        Circuit circuito = new Circuit("Prueba", "País 2", 5.0, 50);
+        circuito.setDescripcion("Descripción válida");
+        assertThrows(ValidationException.class, () -> circuitos.guardar(circuito));
     }
 }

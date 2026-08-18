@@ -10,7 +10,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 import java.util.Comparator;
@@ -43,17 +44,11 @@ public class ExploreCircuitsController {
     }
 
     private VBox tarjeta(Circuit circuito) {
-        VBox card = new VBox(8);
+        VBox card = new VBox(0);
         card.getStyleClass().add("explore-card");
         card.setStyle("-fx-border-color: " + ACENTO + ";");
 
-        StackPane placeholder = new StackPane();
-        placeholder.getStyleClass().add("explore-card-photo");
-        placeholder.setPrefSize(208, 100);
-        placeholder.setMinSize(208, 100);
-        Label emoji = new Label(climaDominanteIcono(circuito));
-        emoji.setStyle("-fx-font-size: 30px;");
-        placeholder.getChildren().add(emoji);
+        var imagen = ExploreCardVisuals.circuito(circuito);
 
         Label nombre = new Label(circuito.getNombre());
         nombre.getStyleClass().add("explore-card-name");
@@ -63,27 +58,45 @@ public class ExploreCircuitsController {
                 + circuito.getVueltas() + " vueltas");
         ubicacion.getStyleClass().add("hint");
 
-        HBox stats = new HBox(18);
         String record = circuito.getRecordVuelta() == null ? "—" : circuito.getRecordVuelta().getTiempo();
         String titular = circuito.getRecordVuelta() == null || circuito.getRecordVuelta().getPiloto() == null
                 ? "—" : circuito.getRecordVuelta().getPiloto();
-        stats.getChildren().addAll(
-                statCell(record, "RÉC. VUELTA"),
-                statCell(titular, "TITULAR"),
-                statCell(climaDominanteEtiqueta(circuito), "CLIMA MED."));
+        // En columna y no en fila: en el ancho de la tarjeta, tres celdas de
+        // texto dejaban valores como «Rubens Bar...» cortados a la mitad.
+        VBox stats = new VBox(4,
+                statFila("RÉC. VUELTA", record),
+                statFila("TITULAR", titular),
+                statFila("CLIMA MED.", climaDominanteEtiqueta(circuito)));
 
-        Button verDetalles = new Button("▼ VER DETALLES");
-        verDetalles.getStyleClass().add("icon-button");
+        Button verDetalles = new Button("VER DETALLE  →");
+        verDetalles.getStyleClass().add("explore-card-cta");
         verDetalles.setMaxWidth(Double.MAX_VALUE);
         verDetalles.setOnAction(e -> {
-            Navigator.ir("circuit-detail");
+            Navigator.irConRetorno("circuit-detail");
             if (Navigator.ultimoControlador() instanceof CircuitDetailController detalle) {
                 detalle.mostrar(circuito.getNombre());
             }
         });
 
-        card.getChildren().addAll(placeholder, nombre, ubicacion, stats, verDetalles);
+        VBox acciones = new VBox(verDetalles);
+        acciones.getStyleClass().add("explore-card-actions");
+        VBox contenido = new VBox(8, nombre, ubicacion, stats, acciones);
+        contenido.getStyleClass().add("explore-card-body");
+        card.getChildren().addAll(imagen, contenido);
         return card;
+    }
+
+    /** Etiqueta a la izquierda y valor a la derecha, en una sola linea. */
+    private HBox statFila(String etiqueta, String valor) {
+        Label etiquetaLbl = new Label(etiqueta);
+        etiquetaLbl.getStyleClass().add("card-label");
+        Region relleno = new Region();
+        HBox.setHgrow(relleno, Priority.ALWAYS);
+        Label valorLbl = new Label(valor);
+        valorLbl.getStyleClass().add("stat-value");
+        HBox fila = new HBox(8, etiquetaLbl, relleno, valorLbl);
+        fila.setAlignment(Pos.CENTER_LEFT);
+        return fila;
     }
 
     private WeatherCondition climaDominante(Circuit circuito) {
@@ -101,23 +114,4 @@ public class ExploreCircuitsController {
         return climaDominante(circuito).getEtiqueta();
     }
 
-    /** Glifos con cobertura en las fuentes del sistema (los emojis no la tienen). */
-    private String climaDominanteIcono(Circuit circuito) {
-        return switch (climaDominante(circuito)) {
-            case SECO -> "☀";
-            case LLUVIOSO -> "▒";
-            case EXTREMO -> "▓";
-        };
-    }
-
-    private VBox statCell(String valor, String etiqueta) {
-        VBox celda = new VBox(2);
-        celda.setAlignment(Pos.CENTER_LEFT);
-        Label valorLbl = new Label(valor);
-        valorLbl.getStyleClass().add("stat-value");
-        Label etiquetaLbl = new Label(etiqueta);
-        etiquetaLbl.getStyleClass().add("card-label");
-        celda.getChildren().addAll(valorLbl, etiquetaLbl);
-        return celda;
-    }
 }

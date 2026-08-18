@@ -31,6 +31,6 @@ public class HomeController {
 
     @FXML
     private void onNuevaClasificacion() {
-        Navigator.ir("simulation");
+        ShellController.irACarrera();
     }
 }

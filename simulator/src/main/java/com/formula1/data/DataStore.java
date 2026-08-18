@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Almacén en memoria de la aplicación y punto único de acceso a los datos.
@@ -48,6 +49,7 @@ public final class DataStore {
     private volatile boolean modoMemoria = true;
     private volatile String estado = "Sin cargar";
     private volatile SimulationConfig configuracionActual;
+    private final AtomicLong versionConfiguracion = new AtomicLong();
 
     private DataStore() {
     }
@@ -148,12 +150,34 @@ public final class DataStore {
 
     public void guardarPiloto(Driver piloto) {
         pilotos.put(piloto.getId(), piloto);
+        sincronizarPilotosDeEquipos();
         persistir(() -> repoPilotos.save(piloto));
+        persistir(() -> repoEquipos.saveAll(List.copyOf(equipos.values())));
     }
 
     public void eliminarPiloto(int id) {
         pilotos.remove(id);
+        sincronizarPilotosDeEquipos();
         persistir(() -> repoPilotos.deleteById(id));
+        persistir(() -> repoEquipos.saveAll(List.copyOf(equipos.values())));
+    }
+
+    /** Mantiene la relación Equipo-Pilotos derivada de la fuente de verdad del piloto. */
+    private void sincronizarPilotosDeEquipos() {
+        equipos.values().forEach(equipo -> {
+            if (equipo.getPilotos() == null) {
+                equipo.setPilotos(new java.util.ArrayList<>());
+            } else {
+                equipo.getPilotos().clear();
+            }
+        });
+        pilotos.values().forEach(piloto -> {
+            Team equipo = equipos.get(piloto.getEquipo());
+            if (equipo != null && !equipo.getPilotos().contains(piloto.getId())) {
+                equipo.getPilotos().add(piloto.getId());
+            }
+        });
+        equipos.values().forEach(equipo -> equipo.getPilotos().sort(Integer::compareTo));
     }
 
     // --- equipos ---------------------------------------------------------
@@ -228,6 +252,12 @@ public final class DataStore {
 
     public void guardarConfiguracion(SimulationConfig config) {
         this.configuracionActual = config;
+        versionConfiguracion.incrementAndGet();
+    }
+
+    /** Identifica si Carrera ya aplicó el último ajuste preparado. */
+    public long versionConfiguracion() {
+        return versionConfiguracion.get();
     }
 
     public boolean isModoMemoria() {

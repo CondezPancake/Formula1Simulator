@@ -104,6 +104,14 @@ public class VehicleCompareController {
         grafico.getData().add(serie);
     }
 
+    @FXML
+    private void onVolver() {
+        Navigator.ir("gestion");
+        if (Navigator.ultimoControlador() instanceof ManagementController gestion) {
+            gestion.mostrarVehiculos();
+        }
+    }
+
     private Fila fila(String metrica, java.util.function.Function<Vehicle, String> extractor) {
         Fila fila = new Fila(metrica);
         seleccion.forEach(v -> fila.valores.add(extractor.apply(v)));

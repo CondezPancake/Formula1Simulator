@@ -7,8 +7,11 @@ import com.formula1.model.DrivingMode;
 import com.formula1.model.Team;
 import com.formula1.model.Vehicle;
 import com.formula1.model.WeatherCondition;
-import com.formula1.util.FormatUtils;
+import com.formula1.service.DriverService;
+import com.formula1.service.ValidationException;
+import com.formula1.util.InputValidation;
 
+import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
@@ -21,12 +24,15 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
+import javafx.scene.Node;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  * Diálogos de alta y edición.
@@ -45,6 +51,7 @@ public final class Forms {
         dialogo.setTitle(titulo);
         dialogo.setHeaderText(titulo);
         dialogo.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        dialogo.getDialogPane().getStyleClass().add("form-dialog");
         dialogo.getDialogPane().getStylesheets().addAll(
                 Forms.class.getResource("/css/style.css").toExternalForm());
         return dialogo;
@@ -60,9 +67,25 @@ public final class Forms {
 
     private static Spinner<Integer> spinner(int min, int max, int valor) {
         Spinner<Integer> control = new Spinner<>(min, max, valor);
-        control.setEditable(true);
+        InputValidation.entero(control, min, max);
         control.setPrefWidth(110);
         return control;
+    }
+
+    private static void validarAlAceptar(Dialog<?> dialogo, Runnable validacion) {
+        Node aceptar = dialogo.getDialogPane().lookupButton(ButtonType.OK);
+        aceptar.addEventFilter(ActionEvent.ACTION, evento -> {
+            try {
+                validacion.run();
+            } catch (ValidationException error) {
+                evento.consume();
+                Navigator.error("Revisa los datos", error.getMessage());
+            } catch (RuntimeException error) {
+                evento.consume();
+                Navigator.error("No se pudo validar el formulario",
+                        error.getMessage() == null ? "Comprueba los valores ingresados." : error.getMessage());
+            }
+        });
     }
 
     // ------------------------------------------------------------ pilotos
@@ -72,43 +95,89 @@ public final class Forms {
         Driver piloto = nuevo ? new Driver() : original;
 
         TextField nombre = new TextField(nuevo ? "" : piloto.getNombre());
-        ComboBox<String> equipo = new ComboBox<>();
-        equipos.forEach(e -> equipo.getItems().add(e.getNombre()));
-        equipo.setValue(nuevo ? (equipos.isEmpty() ? null : equipos.get(0).getNombre()) : piloto.getEquipo());
-        ComboBox<DriverRole> rol = new ComboBox<>();
-        rol.getItems().addAll(DriverRole.values());
-        rol.setValue(nuevo ? DriverRole.ESCUDERO : piloto.getRol());
+        InputValidation.texto(nombre, 60);
+        ComboBox<String> selectorEquipo = new ComboBox<>();
+        equipos.forEach(e -> selectorEquipo.getItems().add(e.getNombre()));
+        selectorEquipo.setValue(equipos.isEmpty() ? null : equipos.get(0).getNombre());
+        ComboBox<DriverRole> selectorRol = new ComboBox<>();
+        selectorRol.getItems().addAll(DriverRole.values());
+        selectorRol.setValue(DriverRole.ESCUDERO);
+        Node campoEquipo = nuevo ? selectorEquipo : soloLectura(piloto.getEquipo());
+        Node campoRol = nuevo ? selectorRol : soloLectura(
+                piloto.getRol() == null ? "Sin rol" : piloto.getRol().toString());
         Spinner<Integer> experiencia = spinner(0, 30, nuevo ? 0 : piloto.getExperiencia());
         Spinner<Integer> velocidad = spinner(0, 100, piloto.getHabilidad(Driver.HABILIDAD_VELOCIDAD));
         Spinner<Integer> consistencia = spinner(0, 100, piloto.getHabilidad(Driver.HABILIDAD_CONSISTENCIA));
         Spinner<Integer> lluvia = spinner(0, 100, piloto.getHabilidad(Driver.HABILIDAD_LLUVIA));
+        Tooltip ayudaVelocidad = new Tooltip(
+                "Ritmo puro del piloto. 0 es bajo y 100 representa nivel élite.");
+        Tooltip ayudaConsistencia = new Tooltip(
+                "Capacidad para repetir un rendimiento estable. Escala de 0 a 100.");
+        Tooltip ayudaLluvia = new Tooltip(
+                "Rendimiento y control sobre pista mojada. Escala de 0 a 100.");
+        velocidad.setTooltip(ayudaVelocidad);
+        consistencia.setTooltip(ayudaConsistencia);
+        lluvia.setTooltip(ayudaLluvia);
 
         GridPane rejilla = rejilla();
         rejilla.addRow(0, new Label("Nombre"), nombre);
-        rejilla.addRow(1, new Label("Equipo"), equipo);
-        rejilla.addRow(2, new Label("Rol"), rol);
+        rejilla.addRow(1, new Label("Equipo"), campoEquipo);
+        rejilla.addRow(2, new Label("Rol"), campoRol);
         rejilla.addRow(3, new Label("Experiencia (años)"), experiencia);
-        rejilla.addRow(4, new Label("Velocidad"), velocidad);
-        rejilla.addRow(5, new Label("Consistencia"), consistencia);
-        rejilla.addRow(6, new Label("Lluvia"), lluvia);
+        rejilla.addRow(4, etiquetaConAyuda("Velocidad (0–100)", ayudaVelocidad), velocidad);
+        rejilla.addRow(5, etiquetaConAyuda("Consistencia (0–100)", ayudaConsistencia), consistencia);
+        rejilla.addRow(6, etiquetaConAyuda("Rendimiento en lluvia (0–100)", ayudaLluvia), lluvia);
 
         Dialog<Driver> dialogo = base(nuevo ? "Nuevo piloto" : "Editar piloto");
         dialogo.getDialogPane().setContent(rejilla);
+        validarAlAceptar(dialogo, () -> {
+            InputValidation.requerido(nombre, "El nombre del piloto", 60);
+            if (nuevo) {
+                InputValidation.seleccionar(selectorEquipo.getValue() != null, selectorEquipo,
+                        "Debes seleccionar un equipo.");
+                InputValidation.seleccionar(selectorRol.getValue() != null, selectorRol,
+                        "Debes seleccionar un rol.");
+            }
+            InputValidation.valorEntero(experiencia, "La experiencia", 0, 30);
+            InputValidation.valorEntero(velocidad, "La velocidad", 0, 100);
+            InputValidation.valorEntero(consistencia, "La consistencia", 0, 100);
+            InputValidation.valorEntero(lluvia, "El rendimiento en lluvia", 0, 100);
+        });
         dialogo.setResultConverter(boton -> {
             if (boton != ButtonType.OK) {
                 return null;
             }
             piloto.setId(nuevo ? idSugerido : piloto.getId());
-            piloto.setNombre(nombre.getText());
-            piloto.setEquipo(equipo.getValue());
-            piloto.setRol(rol.getValue());
-            piloto.setExperiencia(experiencia.getValue());
-            piloto.setHabilidad(Driver.HABILIDAD_VELOCIDAD, velocidad.getValue());
-            piloto.setHabilidad(Driver.HABILIDAD_CONSISTENCIA, consistencia.getValue());
-            piloto.setHabilidad(Driver.HABILIDAD_LLUVIA, lluvia.getValue());
+            piloto.setNombre(nombre.getText().trim());
+            if (nuevo) {
+                piloto.setEquipo(selectorEquipo.getValue());
+                piloto.setRol(selectorRol.getValue());
+            }
+            piloto.setExperiencia(InputValidation.valorEntero(experiencia, "La experiencia", 0, 30));
+            piloto.setHabilidad(Driver.HABILIDAD_VELOCIDAD,
+                    InputValidation.valorEntero(velocidad, "La velocidad", 0, 100));
+            piloto.setHabilidad(Driver.HABILIDAD_CONSISTENCIA,
+                    InputValidation.valorEntero(consistencia, "La consistencia", 0, 100));
+            piloto.setHabilidad(Driver.HABILIDAD_LLUVIA,
+                    InputValidation.valorEntero(lluvia, "El rendimiento en lluvia", 0, 100));
             return piloto;
         });
         return dialogo.showAndWait();
+    }
+
+    private static Label etiquetaConAyuda(String texto, Tooltip ayuda) {
+        Label etiqueta = new Label(texto + "  ?");
+        etiqueta.setTooltip(new Tooltip(ayuda.getText()));
+        return etiqueta;
+    }
+
+    private static Label soloLectura(String valor) {
+        Label campo = new Label(valor == null || valor.isBlank() ? "Sin asignar" : valor);
+        campo.getStyleClass().add("readonly-field");
+        campo.setMaxWidth(Double.MAX_VALUE);
+        campo.setTooltip(new Tooltip(
+                "Solo lectura. Este dato se gestiona desde las funciones específicas de asignación."));
+        return campo;
     }
 
     // ------------------------------------------------------------ equipos
@@ -118,9 +187,12 @@ public final class Forms {
         Team equipo = nuevo ? new Team() : original;
 
         TextField nombre = new TextField(nuevo ? "" : equipo.getNombre());
+        InputValidation.identificador(nombre, 60);
         nombre.setDisable(!nuevo); // el nombre es la clave: no se renombra
         TextField pais = new TextField(nuevo ? "" : equipo.getPais());
         TextField motor = new TextField(nuevo ? "" : equipo.getMotor());
+        InputValidation.texto(pais, 50);
+        InputValidation.identificador(motor, 50);
 
         GridPane rejilla = rejilla();
         rejilla.addRow(0, new Label("Nombre"), nombre);
@@ -129,13 +201,18 @@ public final class Forms {
 
         Dialog<Team> dialogo = base(nuevo ? "Nuevo equipo" : "Editar equipo");
         dialogo.getDialogPane().setContent(rejilla);
+        validarAlAceptar(dialogo, () -> {
+            InputValidation.requerido(nombre, "El nombre del equipo", 60);
+            InputValidation.requerido(pais, "El país", 50);
+            InputValidation.requerido(motor, "El motor", 50);
+        });
         dialogo.setResultConverter(boton -> {
             if (boton != ButtonType.OK) {
                 return null;
             }
-            equipo.setNombre(nombre.getText());
-            equipo.setPais(pais.getText());
-            equipo.setMotor(motor.getText());
+            equipo.setNombre(nombre.getText().trim());
+            equipo.setPais(pais.getText().trim());
+            equipo.setMotor(motor.getText().trim());
             return equipo;
         });
         return dialogo.showAndWait();
@@ -143,18 +220,27 @@ public final class Forms {
 
     // ---------------------------------------------------------- vehículos
 
+    /** Conserva la entrada anterior para los consumidores que usan el almacén global. */
     public static Optional<Vehicle> vehiculo(Vehicle original, List<Team> equipos) {
+        return vehiculo(original, equipos, new DriverService().listar());
+    }
+
+    public static Optional<Vehicle> vehiculo(
+            Vehicle original, List<Team> equipos, List<Driver> pilotosDisponibles) {
         boolean nuevo = original == null;
         Vehicle vehiculo = nuevo ? new Vehicle() : original;
 
         TextField modelo = new TextField(nuevo ? "" : vehiculo.getModelo());
+        InputValidation.identificador(modelo, 40);
         modelo.setDisable(!nuevo);
         ComboBox<String> equipo = new ComboBox<>();
         equipos.forEach(e -> equipo.getItems().add(e.getNombre()));
         equipo.setValue(nuevo ? (equipos.isEmpty() ? null : equipos.get(0).getNombre()) : vehiculo.getEquipo());
         TextField motor = new TextField(nuevo ? "" : vehiculo.getMotor());
+        InputValidation.identificador(motor, 50);
         Spinner<Integer> velocidad = spinner(100, 400, nuevo ? 340 : vehiculo.getVelocidadMaximaKmh());
         TextField aceleracion = new TextField(nuevo ? "2.7" : String.valueOf(vehiculo.getAceleracion0100()));
+        InputValidation.decimal(aceleracion, 2, 2);
 
         GridPane datos = rejilla();
         datos.addRow(0, new Label("Modelo"), modelo);
@@ -162,6 +248,32 @@ public final class Forms {
         datos.addRow(2, new Label("Motor"), motor);
         datos.addRow(3, new Label("Velocidad máx. (km/h)"), velocidad);
         datos.addRow(4, new Label("Aceleración 0-100 (s)"), aceleracion);
+
+        List<CheckBox> candidatos = new ArrayList<>();
+        VBox listaPilotos = new VBox(6);
+        listaPilotos.getStyleClass().add("assignment-list");
+        Consumer<String> mostrarCandidatos = nombreEquipo -> {
+            candidatos.clear();
+            listaPilotos.getChildren().clear();
+            for (Driver piloto : pilotosElegibles(pilotosDisponibles, nombreEquipo)) {
+                CheckBox casilla = new CheckBox(piloto.getNombre() + "  ·  "
+                        + (piloto.getRol() == null ? "Sin rol" : piloto.getRol().getEtiqueta()));
+                casilla.setUserData(piloto.getId());
+                candidatos.add(casilla);
+                listaPilotos.getChildren().add(casilla);
+            }
+            if (candidatos.isEmpty()) {
+                Label vacio = new Label("No hay pilotos disponibles para el equipo seleccionado.");
+                vacio.getStyleClass().add("hint");
+                listaPilotos.getChildren().add(vacio);
+            }
+        };
+        equipo.valueProperty().addListener((o, anterior, actual) -> mostrarCandidatos.accept(actual));
+        mostrarCandidatos.accept(equipo.getValue());
+
+        VBox asignacion = new VBox(7,
+                new Label("Pilotos disponibles del equipo"), listaPilotos);
+        asignacion.getStyleClass().add("assignment-panel");
 
         // Una pestaña por modo de conducción, con su velocidad media y las
         // tablas de consumo y desgaste por clima.
@@ -175,23 +287,53 @@ public final class Forms {
             pestanas.getTabs().add(new Tab(modo.getEtiqueta(), fila.panel()));
         }
 
-        VBox contenido = new VBox(10, datos, pestanas);
+        VBox contenido = new VBox(10, datos);
+        if (nuevo) {
+            contenido.getChildren().add(asignacion);
+        }
+        contenido.getChildren().add(pestanas);
         Dialog<Vehicle> dialogo = base(nuevo ? "Nuevo vehículo" : "Editar vehículo");
         dialogo.getDialogPane().setContent(contenido);
         dialogo.getDialogPane().setPrefWidth(520);
+        validarAlAceptar(dialogo, () -> {
+            InputValidation.requerido(modelo, "El modelo", 40);
+            InputValidation.seleccionar(equipo.getValue() != null, equipo,
+                    "Debes seleccionar un equipo.");
+            InputValidation.requerido(motor, "El motor", 50);
+            InputValidation.valorEntero(velocidad, "La velocidad máxima", 100, 400);
+            InputValidation.valorDecimal(aceleracion, "La aceleración 0-100", 1.0, 10.0);
+            controles.forEach(ModoControles::validar);
+        });
         dialogo.setResultConverter(boton -> {
             if (boton != ButtonType.OK) {
                 return null;
             }
-            vehiculo.setModelo(modelo.getText());
+            vehiculo.setModelo(modelo.getText().trim());
             vehiculo.setEquipo(equipo.getValue());
-            vehiculo.setMotor(motor.getText());
-            vehiculo.setVelocidadMaximaKmh(velocidad.getValue());
-            vehiculo.setAceleracion0100(parseDouble(aceleracion.getText(), 2.7));
+            vehiculo.setMotor(motor.getText().trim());
+            vehiculo.setVelocidadMaximaKmh(
+                    InputValidation.valorEntero(velocidad, "La velocidad máxima", 100, 400));
+            vehiculo.setAceleracion0100(
+                    InputValidation.valorDecimal(aceleracion, "La aceleración 0-100", 1.0, 10.0));
+            if (nuevo) {
+                vehiculo.setPilotos(candidatos.stream()
+                        .filter(CheckBox::isSelected)
+                        .map(c -> (Integer) c.getUserData())
+                        .toList());
+            }
             controles.forEach(fila -> vehiculo.getRendimiento().put(fila.modo, fila.aPerformance()));
             return vehiculo;
         });
         return dialogo.showAndWait();
+    }
+
+    static List<Driver> pilotosElegibles(List<Driver> pilotos, String equipo) {
+        if (pilotos == null || equipo == null) {
+            return List.of();
+        }
+        return pilotos.stream()
+                .filter(p -> p.getEquipo() != null && p.getEquipo().equalsIgnoreCase(equipo))
+                .toList();
     }
 
     /** Selección de pilotos de un vehículo, limitada a los de su equipo. */
@@ -233,6 +375,7 @@ public final class Forms {
         Circuit circuito = nuevo ? new Circuit() : original;
 
         TextField nombre = new TextField(nuevo ? "" : circuito.getNombre());
+        InputValidation.identificador(nombre, 80);
         nombre.setDisable(!nuevo);
         TextField pais = new TextField(nuevo ? "" : circuito.getPais());
         TextField longitud = new TextField(nuevo ? "5.0" : String.valueOf(circuito.getLongitudKm()));
@@ -245,6 +388,13 @@ public final class Forms {
                 ? "" : circuito.getRecordVuelta().getPiloto());
         TextField consumo = new TextField(String.valueOf(nuevo ? 1.0 : circuito.getFactorConsumo()));
         TextField desgaste = new TextField(String.valueOf(nuevo ? 1.0 : circuito.getFactorDesgaste()));
+        InputValidation.texto(pais, 50);
+        InputValidation.decimal(longitud, 2, 3);
+        InputValidation.descripcion(descripcion, 500);
+        InputValidation.tiempoVuelta(record);
+        InputValidation.texto(recordPiloto, 60);
+        InputValidation.decimal(consumo, 1, 3);
+        InputValidation.decimal(desgaste, 1, 3);
 
         GridPane rejilla = rejilla();
         rejilla.addRow(0, new Label("Nombre"), nombre);
@@ -262,20 +412,44 @@ public final class Forms {
 
         Dialog<Circuit> dialogo = base(nuevo ? "Nuevo circuito" : "Editar circuito");
         dialogo.getDialogPane().setContent(new VBox(6, rejilla, ayuda));
+        validarAlAceptar(dialogo, () -> {
+            InputValidation.requerido(nombre, "El nombre del circuito", 80);
+            InputValidation.requerido(pais, "El país", 50);
+            InputValidation.valorDecimal(longitud, "La longitud", 0.1, 30.0);
+            InputValidation.valorEntero(vueltas, "El número de vueltas", 1, 200);
+            InputValidation.requerido(descripcion, "La descripción", 500);
+            InputValidation.valorDecimal(consumo, "El factor de consumo", 0.1, 5.0);
+            InputValidation.valorDecimal(desgaste, "El factor de desgaste", 0.1, 5.0);
+            boolean hayTiempo = !record.getText().isBlank();
+            boolean hayAutor = !recordPiloto.getText().isBlank();
+            if (hayTiempo != hayAutor) {
+                throw new ValidationException(
+                        "El récord de vuelta requiere tanto el tiempo como el nombre del piloto.");
+            }
+            if (hayTiempo) {
+                InputValidation.valorTiempoVuelta(record, "El récord de vuelta");
+                InputValidation.requerido(recordPiloto, "El autor del récord", 60);
+            }
+        });
         dialogo.setResultConverter(boton -> {
             if (boton != ButtonType.OK) {
                 return null;
             }
-            circuito.setNombre(nombre.getText());
-            circuito.setPais(pais.getText());
-            circuito.setLongitudKm(parseDouble(longitud.getText(), 0));
-            circuito.setVueltas(vueltas.getValue());
-            circuito.setDescripcion(descripcion.getText());
-            circuito.setFactorConsumo(parseDouble(consumo.getText(), 1.0));
-            circuito.setFactorDesgaste(parseDouble(desgaste.getText(), 1.0));
+            circuito.setNombre(nombre.getText().trim());
+            circuito.setPais(pais.getText().trim());
+            circuito.setLongitudKm(InputValidation.valorDecimal(longitud, "La longitud", 0.1, 30.0));
+            circuito.setVueltas(InputValidation.valorEntero(vueltas, "El número de vueltas", 1, 200));
+            circuito.setDescripcion(descripcion.getText().trim());
+            circuito.setFactorConsumo(
+                    InputValidation.valorDecimal(consumo, "El factor de consumo", 0.1, 5.0));
+            circuito.setFactorDesgaste(
+                    InputValidation.valorDecimal(desgaste, "El factor de desgaste", 0.1, 5.0));
             if (!record.getText().isBlank()) {
                 circuito.setRecordVuelta(new Circuit.LapRecord(
-                        FormatUtils.parseLapTime(record.getText()), recordPiloto.getText(), 0));
+                        InputValidation.valorTiempoVuelta(record, "El récord de vuelta"),
+                        recordPiloto.getText().trim(), 0));
+            } else {
+                circuito.setRecordVuelta(null);
             }
             if (circuito.getProbabilidadClima().isEmpty()) {
                 circuito.getProbabilidadClima().put(WeatherCondition.SECO, 0.7);
@@ -285,14 +459,6 @@ public final class Forms {
             return circuito;
         });
         return dialogo.showAndWait();
-    }
-
-    private static double parseDouble(String texto, double porDefecto) {
-        try {
-            return Double.parseDouble(texto.trim().replace(',', '.'));
-        } catch (RuntimeException e) {
-            return porDefecto;
-        }
     }
 
     /** Controles de rendimiento de un modo de conducción. */
@@ -310,6 +476,8 @@ public final class Forms {
             for (int i = 0; i < climas.length; i++) {
                 consumo[i] = new TextField(actual != null ? String.valueOf(actual.consumoCon(climas[i])) : "2.0");
                 desgaste[i] = new TextField(actual != null ? String.valueOf(actual.desgasteCon(climas[i])) : "1.5");
+                InputValidation.decimal(consumo[i], 2, 3);
+                InputValidation.decimal(desgaste[i], 3, 3);
                 consumo[i].setPrefWidth(70);
                 desgaste[i].setPrefWidth(70);
             }
@@ -330,10 +498,24 @@ public final class Forms {
             Vehicle.Performance rendimiento = new Vehicle.Performance(velocidad.getValue());
             WeatherCondition[] climas = WeatherCondition.values();
             for (int i = 0; i < climas.length; i++) {
-                rendimiento.getConsumo().put(climas[i], parseDouble(consumo[i].getText(), 2.0));
-                rendimiento.getDesgaste().put(climas[i], parseDouble(desgaste[i].getText(), 1.5));
+                rendimiento.getConsumo().put(climas[i], InputValidation.valorDecimal(
+                        consumo[i], "El consumo en " + climas[i].getEtiqueta(), 0.01, 20.0));
+                rendimiento.getDesgaste().put(climas[i], InputValidation.valorDecimal(
+                        desgaste[i], "El desgaste en " + climas[i].getEtiqueta(), 0.01, 100.0));
             }
             return rendimiento;
+        }
+
+        void validar() {
+            InputValidation.valorEntero(velocidad,
+                    "La velocidad media en modo " + modo.getEtiqueta(), 50, 400);
+            WeatherCondition[] climas = WeatherCondition.values();
+            for (int i = 0; i < climas.length; i++) {
+                InputValidation.valorDecimal(consumo[i],
+                        "El consumo en " + climas[i].getEtiqueta(), 0.01, 20.0);
+                InputValidation.valorDecimal(desgaste[i],
+                        "El desgaste en " + climas[i].getEtiqueta(), 0.01, 100.0);
+            }
         }
     }
 }

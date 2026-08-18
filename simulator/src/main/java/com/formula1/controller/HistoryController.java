@@ -2,6 +2,7 @@ package com.formula1.controller;
 
 import com.formula1.model.LapResult;
 import com.formula1.model.QualifyingSession;
+import com.formula1.model.SimulationConfig;
 import com.formula1.service.QualifyingService;
 import com.formula1.util.FormatUtils;
 
@@ -244,7 +245,9 @@ public class HistoryController {
             Navigator.aviso("Sin selección", "Elige una sesión con configuración guardada.");
             return;
         }
-        Navigator.ir("simulation");
+        SimulationConfig config = seleccionada.getConfig();
+        com.formula1.data.DataStore.getInstance().guardarConfiguracion(config);
+        ShellController.irACarrera();
     }
 
     @FXML

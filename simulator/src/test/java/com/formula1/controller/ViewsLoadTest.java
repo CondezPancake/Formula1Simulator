@@ -3,6 +3,8 @@ package com.formula1.controller;
 import com.formula1.data.DataStore;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
+import javafx.scene.layout.StackPane;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -11,6 +13,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -107,6 +111,7 @@ class ViewsLoadTest {
         cargar("explore-drivers");
         cargar("explore-vehicles");
         cargar("explore-circuits");
+        cargar("driver-detail");
     }
 
     @Test
@@ -115,6 +120,8 @@ class ViewsLoadTest {
         cargar("explorar");
         cargar("config");
         cargar("config-historial");
+        cargar("parrilla-salida");
+        cargar("carrera-vivo");
     }
 
     @Test
@@ -131,5 +138,124 @@ class ViewsLoadTest {
         cargar("session-analysis");
         cargar("simulation");
         cargar("history");
+    }
+
+    @Test
+    void conservaLaMismaSesionAlCambiarDeSeccion() {
+        if (!toolkitListo) {
+            return;
+        }
+        AtomicReference<Throwable> fallo = new AtomicReference<>();
+        CountDownLatch hecho = new CountDownLatch(1);
+
+        Platform.runLater(() -> {
+            try {
+                StackPane centro = new StackPane();
+                Navigator.registrar(centro);
+                Navigator.ir("simulation");
+                Node vistaSesion = centro.getChildren().get(0);
+                Object controladorSesion = Navigator.ultimoControlador();
+
+                Navigator.ir("explorar");
+                Navigator.ir("simulation");
+
+                assertSame(vistaSesion, centro.getChildren().get(0));
+                assertSame(controladorSesion, Navigator.ultimoControlador());
+            } catch (Throwable t) {
+                fallo.set(t);
+            } finally {
+                hecho.countDown();
+            }
+        });
+
+        try {
+            if (!hecho.await(20, TimeUnit.SECONDS)) {
+                fail("La comprobacion de persistencia no termino");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            fail(e);
+        }
+
+        if (fallo.get() != null) {
+            fail("La vista de sesion no se conservo", fallo.get());
+        }
+    }
+
+    @Test
+    void conservaGestionAlEntrarYSalirDeComparacion() {
+        if (!toolkitListo) {
+            return;
+        }
+        AtomicReference<Throwable> fallo = new AtomicReference<>();
+        CountDownLatch hecho = new CountDownLatch(1);
+        Platform.runLater(() -> {
+            try {
+                StackPane centro = new StackPane();
+                Navigator.registrar(centro);
+                Navigator.ir("gestion");
+                Node vistaGestion = centro.getChildren().get(0);
+                Object controladorGestion = Navigator.ultimoControlador();
+
+                Navigator.ir("vehicle-compare");
+                Navigator.ir("gestion");
+
+                assertSame(vistaGestion, centro.getChildren().get(0));
+                assertSame(controladorGestion, Navigator.ultimoControlador());
+            } catch (Throwable t) {
+                fallo.set(t);
+            } finally {
+                hecho.countDown();
+            }
+        });
+
+        try {
+            if (!hecho.await(20, TimeUnit.SECONDS)) {
+                fail("La comprobación de navegación de Gestión no terminó");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            fail(e);
+        }
+        if (fallo.get() != null) {
+            fail("La vista de Gestión no conservó su estado", fallo.get());
+        }
+    }
+
+    @Test
+    void detalleDeCircuitoVuelveAlMismoContextoDeGestion() {
+        if (!toolkitListo) {
+            return;
+        }
+        AtomicReference<Throwable> fallo = new AtomicReference<>();
+        CountDownLatch hecho = new CountDownLatch(1);
+        Platform.runLater(() -> {
+            try {
+                StackPane centro = new StackPane();
+                Navigator.registrar(centro);
+                Navigator.ir("gestion");
+                Node vistaGestion = centro.getChildren().get(0);
+
+                Navigator.irConRetorno("circuit-detail");
+                assertTrue(Navigator.volver());
+
+                assertSame(vistaGestion, centro.getChildren().get(0));
+            } catch (Throwable t) {
+                fallo.set(t);
+            } finally {
+                hecho.countDown();
+            }
+        });
+        try {
+            if (!hecho.await(20, TimeUnit.SECONDS)) {
+                fail("La comprobación de retorno desde Circuito no terminó");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            fail(e);
+        }
+        if (fallo.get() != null) {
+            fail("El detalle no restauró el contexto de Gestión", fallo.get());
+        }
     }
 }

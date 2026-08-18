@@ -4,6 +4,7 @@ import com.formula1.model.Driver;
 import com.formula1.service.DriverService;
 import com.formula1.service.TeamService;
 import com.formula1.service.ValidationException;
+import com.formula1.util.InputValidation;
 
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -47,6 +48,7 @@ public class DriverController {
 
     @FXML
     public void initialize() {
+        InputValidation.busqueda(buscador);
         colId.setCellValueFactory(f -> new SimpleIntegerProperty(f.getValue().getId()));
         colNombre.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getNombre()));
         colEquipo.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getEquipo()));

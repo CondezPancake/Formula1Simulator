@@ -3,8 +3,10 @@ package com.formula1.controller;
 import com.formula1.model.DrivingMode;
 import com.formula1.model.Vehicle;
 import com.formula1.service.TeamService;
+import com.formula1.service.DriverService;
 import com.formula1.service.ValidationException;
 import com.formula1.service.VehicleService;
+import com.formula1.util.InputValidation;
 
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -41,18 +43,25 @@ public class VehicleController {
 
     private final VehicleService vehiculos;
     private final TeamService equipos;
+    private final DriverService pilotos;
 
     public VehicleController() {
-        this(new VehicleService(), new TeamService());
+        this(new VehicleService(), new TeamService(), new DriverService());
     }
 
     public VehicleController(VehicleService vehiculos, TeamService equipos) {
+        this(vehiculos, equipos, new DriverService());
+    }
+
+    public VehicleController(VehicleService vehiculos, TeamService equipos, DriverService pilotos) {
         this.vehiculos = vehiculos;
         this.equipos = equipos;
+        this.pilotos = pilotos;
     }
 
     @FXML
     public void initialize() {
+        InputValidation.busqueda(buscador);
         tabla.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
         colModelo.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getModelo()));
@@ -70,6 +79,7 @@ public class VehicleController {
 
         velocidadMinima.setValueFactory(
                 new javafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory(0, 400, 0, 5));
+        InputValidation.entero(velocidadMinima, 0, 400);
         buscador.textProperty().addListener((obs, antes, ahora) -> refrescar());
         velocidadMinima.valueProperty().addListener((obs, antes, ahora) -> refrescar());
         refrescar();
@@ -106,11 +116,11 @@ public class VehicleController {
 
     @FXML
     private void onNuevo() {
-        Forms.vehiculo(null, equipos.listar()).ifPresent(this::guardar);
+        Forms.vehiculo(null, equipos.listar(), pilotos.listar()).ifPresent(this::guardar);
     }
 
     private void editar(Vehicle vehiculo) {
-        Forms.vehiculo(vehiculo, equipos.listar()).ifPresent(this::guardar);
+        Forms.vehiculo(vehiculo, equipos.listar(), pilotos.listar()).ifPresent(this::guardar);
     }
 
     private void eliminar(Vehicle vehiculo) {
@@ -128,11 +138,14 @@ public class VehicleController {
             Navigator.aviso("Sin selección", "Elige un vehículo de la tabla.");
             return;
         }
-        Forms.asignarPilotos(seleccionado, new com.formula1.service.DriverService().porEquipo(seleccionado.getEquipo()))
+        Forms.asignarPilotos(seleccionado, pilotos.porEquipo(seleccionado.getEquipo()))
                 .ifPresent(ids -> {
                     try {
-                        vehiculos.asignarPilotos(seleccionado, ids);
+                        Vehicle actualizado = vehiculos.asignarPilotos(seleccionado, ids);
                         refrescar();
+                        tabla.refresh();
+                        tabla.getSelectionModel().clearSelection();
+                        tabla.getSelectionModel().select(actualizado);
                     } catch (ValidationException e) {
                         Navigator.error("Asignación no válida", e.getMessage());
                     }

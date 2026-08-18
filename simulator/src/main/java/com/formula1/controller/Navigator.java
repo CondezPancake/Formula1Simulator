@@ -14,13 +14,34 @@ import javafx.scene.layout.StackPane;
  */
 public final class Navigator {
 
+    private static final String VISTA_SESION = "simulation";
+    private static final String VISTA_GESTION = "gestion";
+
     private static StackPane contenedor;
     private static Object ultimoControlador;
+    private static Node sesion;
+    private static Object controladorSesion;
+    private static Node gestion;
+    private static Object controladorGestion;
+    private static Node vistaRetorno;
+    private static Object controladorRetorno;
+    private static String vistaRetornoNombre;
 
     private Navigator() {
     }
 
     static void registrar(StackPane centro) {
+        // Un shell nuevo delimita un ciclo de vida nuevo de la aplicacion.
+        // Evita reutilizar nodos pertenecientes a una escena anterior.
+        if (contenedor != centro) {
+            sesion = null;
+            controladorSesion = null;
+            gestion = null;
+            controladorGestion = null;
+            vistaRetorno = null;
+            controladorRetorno = null;
+            vistaRetornoNombre = null;
+        }
         contenedor = centro;
     }
 
@@ -29,13 +50,75 @@ public final class Navigator {
         if (contenedor == null) {
             return;
         }
+        if (VISTA_SESION.equals(vista) && sesion != null) {
+            ultimoControlador = controladorSesion;
+            contenedor.getChildren().setAll(sesion);
+            prepararSesionPendiente();
+            ShellController.sincronizarVista(vista);
+            return;
+        }
+        if (VISTA_GESTION.equals(vista) && gestion != null) {
+            ultimoControlador = controladorGestion;
+            contenedor.getChildren().setAll(gestion);
+            ShellController.sincronizarVista(vista);
+            return;
+        }
         try {
             FXMLLoader cargador = new FXMLLoader(Navigator.class.getResource("/views/" + vista + ".fxml"));
             Node contenido = cargador.load();
             ultimoControlador = cargador.getController();
+            if (VISTA_SESION.equals(vista)) {
+                // La sesion puede seguir ejecutandose aunque su vista no este
+                // visible. Conservar ambos mantiene tarea, bindings y datos
+                // exactamente en el punto en que los dejo el usuario.
+                sesion = contenido;
+                controladorSesion = ultimoControlador;
+            } else if (VISTA_GESTION.equals(vista)) {
+                gestion = contenido;
+                controladorGestion = ultimoControlador;
+            }
             contenedor.getChildren().setAll(contenido);
+            if (VISTA_SESION.equals(vista)) {
+                prepararSesionPendiente();
+            }
+            ShellController.sincronizarVista(vista);
         } catch (Exception e) {
             error("No se pudo abrir la vista «" + vista + "»", e.getMessage());
+        }
+    }
+
+    /** Abre una vista secundaria recordando exactamente el nodo que la originó. */
+    public static void irConRetorno(String vista) {
+        if (contenedor == null || contenedor.getChildren().isEmpty()) {
+            ir(vista);
+            return;
+        }
+        vistaRetorno = contenedor.getChildren().get(0);
+        controladorRetorno = ultimoControlador;
+        vistaRetornoNombre = ShellController.vistaActual();
+        ir(vista);
+    }
+
+    /** Restaura la vista anterior con sus filtros, selección y pestaña intactos. */
+    public static boolean volver() {
+        if (contenedor == null || vistaRetorno == null) {
+            return false;
+        }
+        Node anterior = vistaRetorno;
+        Object controladorAnterior = controladorRetorno;
+        String seccionAnterior = vistaRetornoNombre;
+        vistaRetorno = null;
+        controladorRetorno = null;
+        vistaRetornoNombre = null;
+        contenedor.getChildren().setAll(anterior);
+        ultimoControlador = controladorAnterior;
+        ShellController.sincronizarVista(seccionAnterior);
+        return true;
+    }
+
+    private static void prepararSesionPendiente() {
+        if (controladorSesion instanceof SimulationController simulacion) {
+            simulacion.aplicarConfiguracionGuardadaPendiente();
         }
     }
 

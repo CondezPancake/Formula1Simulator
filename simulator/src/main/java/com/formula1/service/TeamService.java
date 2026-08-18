@@ -69,11 +69,18 @@ public class TeamService {
         if (equipo == null) {
             throw new ValidationException("El equipo no puede ser nulo");
         }
-        if (!ValidationUtils.isNotBlank(equipo.getNombre())) {
-            throw new ValidationException("El nombre del equipo no puede estar vacío");
+        if (!ValidationUtils.isIdentifier(equipo.getNombre(), 60)) {
+            throw new ValidationException("El nombre del equipo contiene caracteres no válidos o supera 60 caracteres");
         }
-        if (!ValidationUtils.isNotBlank(equipo.getMotor())) {
-            throw new ValidationException("El equipo debe indicar su motor");
+        Team existente = datos.equipos().get(equipo.getNombre());
+        if (existente != null && existente != equipo) {
+            throw new ValidationException("Ya existe un equipo llamado " + equipo.getNombre());
+        }
+        if (!ValidationUtils.isPersonName(equipo.getPais(), 50)) {
+            throw new ValidationException("El país es obligatorio y solo admite texto");
+        }
+        if (!ValidationUtils.isIdentifier(equipo.getMotor(), 50)) {
+            throw new ValidationException("El motor es obligatorio y contiene caracteres no válidos");
         }
     }
 

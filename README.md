@@ -7,7 +7,7 @@
   <img alt="JavaFX" src="https://img.shields.io/badge/JavaFX-17.0.10-e10600?style=flat-square&logo=java&logoColor=white">
   <img alt="Maven" src="https://img.shields.io/badge/Maven-build-e10600?style=flat-square&logo=apachemaven&logoColor=white">
   <img alt="MongoDB" src="https://img.shields.io/badge/MongoDB-5.1.1-e10600?style=flat-square&logo=mongodb&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-96%20passing-2ea043?style=flat-square">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-121%20passing-2ea043?style=flat-square">
 </p>
 
 # Formula1Simulator
@@ -25,6 +25,8 @@ La especificación que sigue el proyecto es [`f1project.md`](f1project.md).
 - [Cómo funciona la simulación](#cómo-funciona-la-simulación)
 - [Tecnologías](#tecnologías)
 - [Arquitectura](#arquitectura)
+- [Diagramas](#diagramas)
+- [Paquetes](#paquetes)
 - [Interfaz](#interfaz)
 - [Estructura del proyecto](#estructura-del-proyecto)
 - [Instalación y ejecución](#instalación-y-ejecución)
@@ -43,10 +45,10 @@ La aplicación **arranca y es plenamente usable con o sin MongoDB**: si no hay s
 
 | | |
 |---|---|
-| Archivos `.java` | 90 |
+| Archivos `.java` | 101 |
 | Paquetes | 6 |
 | Patrones de diseño | 2 (Repository, Singleton) |
-| Tests | 96, todos en verde |
+| Tests | 121, todos en verde |
 
 ## Funcionalidades
 
@@ -55,6 +57,10 @@ La aplicación **arranca y es plenamente usable con o sin MongoDB**: si no hay s
 **Análisis** — Comparación de dos o más vehículos en una tabla transpuesta con gráfico de barras. Ficha de circuito con récord de vuelta, ganadores históricos, clima promedio e impacto de la pista sobre consumo y desgaste.
 
 **Simulación** — Clima inicial aleatorio según la distribución del circuito y evolución dinámica de temperatura, humedad, lluvia, pista, grip, tracción y frenado. La goma se acumula entre vueltas en seco y la lluvia limpia progresivamente la pista; el grip resultante modifica el tiempo real de cada piloto. Incluye 28 eventos ponderados y contextuales más `NO_EVENT`: pueden alterar rendimiento, tiempo, desgaste, temperaturas y pista; un accidente invalida la vuelta y puede dejar al piloto fuera. La vuelta seleccionada muestra telemetría, clima y eventos en vivo, además de un gráfico intercambiable de velocidad, tiempo, desgaste, combustible, temperaturas y delta. La sesión incluye clasificación, estadísticas, comparación S1/S2/S3, evolución de pista, análisis automático por reglas, registro de eventos y tendencias climáticas persistibles. Todo corre en segundo plano sin congelar la ventana.
+
+**Ciclo de carrera** — Al iniciar una clasificación se pasa por la parrilla de salida: tu monoplaza entre dos rivales y el semáforo de cinco luces con su sonido, mientras la sesión se calcula por detrás. Al apagarse las luces arranca la sesión en vivo, de hasta 30 s, en la que los pilotos van marcando su vuelta y la tabla se reordena, con la telemetría y las incidencias apareciendo sobre la marcha. Se puede cortar en cualquier momento; termine sola o se corte, la clasificación completa queda disponible con sus nueve pestañas.
+
+**Fichas** — Cada piloto tiene ficha con foto, palmarés, habilidades y su rendimiento en las sesiones ya disputadas, accesible desde el catálogo y desde la tabla de resultados. Cada monoplaza abre una galería con sus otras vistas, y cada circuito muestra su trazado real.
 
 **Historial** — Sesiones guardadas con su parrilla, comparación de tiempos de pole entre sesiones del mismo circuito, y configuraciones previas reutilizables.
 
@@ -105,7 +111,199 @@ Seis paquetes y **dos patrones de diseño**, los exigidos por el alcance princip
 
 Un único pool de dos hilos demonio (`util.Async`). La carga inicial y la simulación corren en `javafx.concurrent.Task`, con la interfaz **enlazada** a sus propiedades de progreso y mensaje. Ningún acceso a datos ni cálculo ocurre en el hilo de JavaFX.
 
-### Interfaz
+## Diagramas
+
+### Capas y dependencias
+
+Las flechas indican dependencia: cada capa solo conoce la de debajo. `controller`
+nunca habla con MongoDB directamente y `service` no sabe que existe JavaFX, que es
+lo que permite probar el motor sin abrir una ventana.
+
+```mermaid
+graph TD
+    subgraph UI["controller · JavaFX"]
+        SHELL[ShellController<br/>cabecera y navegación]
+        SIM[SimulationController<br/>clasificación]
+        GRID[StartGridController<br/>parrilla de salida]
+        LIVE[LiveRaceController<br/>sesión en vivo]
+        EXP[Explore*Controller<br/>catálogos]
+        CRUD[Team/Driver/Vehicle/Circuit<br/>gestión]
+    end
+    subgraph SVC["service · reglas de negocio"]
+        QS[QualifyingService<br/>motor de la sesión]
+        CALC[LapTimeCalculator<br/>tiempo de vuelta]
+        CAT[DriverService · VehicleService<br/>CircuitService · TeamService]
+        ANA[SessionAnalysis · TrackEvolution<br/>DynamicWeather · SectorComparison]
+    end
+    subgraph EVT["event · incidencias"]
+        EM[EventManager<br/>selección ponderada]
+        EE[EventEffectService<br/>aplica impactos]
+    end
+    subgraph MOD["model · dominio"]
+        ENT[Driver · Team · Vehicle · Circuit]
+        SES[QualifyingSession · LapResult<br/>TelemetrySnapshot · WeatherSnapshot]
+    end
+    subgraph DAT["data · persistencia"]
+        DS[DataStore<br/>fuente de verdad en memoria]
+        REPO[MongoRepository<br/>CrudRepository]
+        SEED[SeedLoader]
+    end
+    UTL["util · apoyo transversal<br/>ImageCrop · TeamColors · Async · FormatUtils"]
+
+    UI --> SVC
+    UI --> MOD
+    UI --> UTL
+    SVC --> EVT
+    SVC --> MOD
+    SVC --> DAT
+    EVT --> MOD
+    DAT --> MOD
+    DAT --> REPO
+```
+
+### Modelo de dominio
+
+```mermaid
+classDiagram
+    class Driver {
+        +int id
+        +String nombre
+        +int numero
+        +String codigo
+        +String nacionalidad
+        +int victorias
+        +int campeonatos
+        +DriverRole rol
+        +Map~String,Integer~ habilidades
+        +getHabilidad(clave) int
+    }
+    class Team {
+        +String nombre
+        +String pais
+        +String motor
+        +List~Integer~ pilotos
+    }
+    class Vehicle {
+        +String modelo
+        +int velocidadMaximaKmh
+        +double aceleracion0100
+        +rendimientoDe(DrivingMode) Performance
+        +conduce(pilotoId) boolean
+    }
+    class Circuit {
+        +String nombre
+        +double longitudKm
+        +int vueltas
+        +double factorTecnico
+        +probabilidadDe(WeatherCondition) double
+    }
+    class QualifyingSession {
+        +String id
+        +String circuito
+        +String fecha
+        +getPole() LapResult
+    }
+    class LapResult {
+        +int posicion
+        +double tiempoSegundos
+        +double gap
+        +LapStatus estadoVuelta
+        +isVueltaValida() boolean
+    }
+    class SimulationConfig {
+        +DrivingMode modo
+        +AerodynamicLoad aerodinamica
+        +TirePressure presion
+        +FuelStrategy combustible
+    }
+    class TelemetrySnapshot {
+        <<record>>
+        +double velocidadKmh
+        +int rpm
+        +int segmento
+    }
+    class EventOccurrence {
+        <<record>>
+        +EventType tipo
+        +TrackSector sector
+        +EventImpact impacto
+    }
+
+    Team "1" o-- "*" Driver : alinea
+    Vehicle "1" o-- "*" Driver : conduce
+    Vehicle --> Team : pertenece a
+    QualifyingSession "1" *-- "*" LapResult : parrilla
+    QualifyingSession "1" *-- "*" TelemetrySnapshot : evolución
+    QualifyingSession "1" *-- "*" EventOccurrence : incidencias
+    QualifyingSession "1" --> "1" SimulationConfig : se disputó con
+    LapResult "1" *-- "*" EventOccurrence
+    SimulationConfig --> Circuit : sobre
+    SimulationConfig --> Vehicle : con
+```
+
+### Ciclo de una clasificación
+
+Desde que se pulsa el botón hasta que la parrilla queda en pantalla. El cálculo
+transcurre **detrás del semáforo**, de modo que la espera técnica se ve como puesta
+en escena en lugar de como una barra de progreso.
+
+```mermaid
+sequenceDiagram
+    actor U as Usuario
+    participant SIM as SimulationController
+    participant GRID as StartGridController
+    participant QS as QualifyingService
+    participant LIVE as LiveRaceController
+    participant DS as DataStore
+
+    U->>SIM: Iniciar clasificación
+    SIM->>SIM: valida circuito · vehículo · piloto
+    SIM->>GRID: preparar(config)
+
+    par Puesta en escena
+        GRID->>GRID: semáforo: 5 luces + sonido
+    and Cálculo en segundo plano
+        GRID->>QS: crearTarea(config)
+        QS-->>GRID: QualifyingSession
+    end
+
+    Note over GRID: la salida exige luces apagadas<br/>y sesión calculada
+
+    GRID->>LIVE: reproducir(sesion)
+    loop 20 pilotos · máx. 30 s
+        LIVE->>LIVE: revela piloto y reordena
+        LIVE->>LIVE: telemetría e incidencias
+    end
+    alt El usuario finaliza antes
+        U->>LIVE: Finalizar simulación
+    end
+    LIVE->>DS: guardar(sesion)
+    LIVE->>SIM: mostrarSesion(sesion)
+    SIM-->>U: clasificación completa y sus 9 pestañas
+```
+
+## Paquetes
+
+| Paquete | Clases | De qué se encarga |
+|---|---:|---|
+| `model` | 30 | El dominio: pilotos, equipos, vehículos y circuitos, más los objetos de una sesión (`QualifyingSession`, `LapResult`, `TelemetrySnapshot`, `WeatherSnapshot`). Los enums de configuración llevan sus propios factores, así que la regla vive junto al dato. Las instantáneas son `record` inmutables: el motor las emite desde un hilo de fondo y la interfaz las lee sin copiar. |
+| `service` | 13 | Las reglas. `QualifyingService` orquesta la sesión; `LapTimeCalculator` concentra la fórmula del tiempo de vuelta; los cuatro servicios de catálogo hacen el CRUD con validación; y `SessionAnalysisService`, `TrackEvolutionService`, `DynamicWeatherService` y `SectorComparisonService` derivan el análisis. No conoce JavaFX. |
+| `event` | 12 | Las incidencias de pista. `EventCatalog` define los 28 eventos, `WeightedEventSelector` los sortea con su peso y `EventEffectService` aplica el impacto sobre tiempo, desgaste, clima y validez de la vuelta. La jerarquía `SimulationEvent` permite añadir un evento nuevo sin tocar el motor. |
+| `controller` | 27 | La capa JavaFX: un controlador por pantalla más `Navigator` (navegación y pila de retorno) y `ShellController` (cabecera y secciones). Solo actualiza controles; ningún cálculo ocurre aquí. |
+| `data` | 6 | La persistencia. `DataStore` es la fuente de verdad en ejecución con mapas concurrentes, `MongoRepository` implementa `CrudRepository` sobre MongoDB y `SeedLoader` siembra desde `seed.json` cuando la base está vacía o no responde. |
+| `util` | 11 | Apoyo transversal sin dependencias entre sí: `ImageCrop` (encaje de imágenes), `TeamColors` (paleta oficial), `VehicleImages` (rutas de las vistas), `StartLightsSound` (síntesis del semáforo), `Async` (pool de hilos), `FormatUtils`, `DateUtils`, `MathUtils`, `RandomUtils` y las validaciones. |
+
+### Patrones aplicados
+
+| Patrón | Dónde | Por qué |
+|---|---|---|
+| **Repository** | `data.CrudRepository` + `data.MongoRepository<T,ID>` | Aísla MongoDB del resto y deja que la aplicación funcione sin él |
+| **Singleton** | `data.MongoConnection`, `data.DataStore` | Un solo cliente de Mongo (caro y thread-safe por diseño) y un único almacén compartido |
+| **Strategy** | `DrivingMode`, `AerodynamicLoad`, `TirePressure`, `FuelStrategy` | Cada ajuste encapsula sus factores; añadir uno nuevo no toca el cálculo |
+| **Observer** | Callbacks `Progreso`, `Evolucion`, `Telemetria`, `EvolucionPista` | El motor publica su avance sin conocer a quién lo pinta |
+| **Factory** | `EventCatalog`, `EventContextFactory` | Centralizan la construcción de los eventos y su contexto |
+
+## Interfaz
 
 La interfaz reproduce el mockup de Figma del equipo, cuyas capturas están en
 `docs/assets/F1_Recursos_Multimedia/Mockup_Design/`. La paleta y la geometría no
@@ -139,7 +337,9 @@ Formula1Simulator/
 ├── docs/
 │   ├── features/                # Documentos vigentes de funcionalidades y estado
 │   └── legacy/                  # Especificación anterior, ya no vigente
-├── tools/gen_seed.py            # Genera seed.json de forma reproducible
+├── tools/
+│   ├── gen_seed.py              # Genera seed.json de forma reproducible
+│   └── copiar_imagenes.py       # Redimensiona y normaliza las imágenes
 └── simulator/
     ├── pom.xml
     └── src/
@@ -152,10 +352,11 @@ Formula1Simulator/
         │   ├── controller/ # controladores JavaFX y componentes visuales
         │   └── util/       # formato, validación, aleatoriedad, hilos
         ├── main/resources/
-        │   ├── views/      # 21 vistas FXML
+        │   ├── views/      # 24 vistas FXML
         │   ├── css/style.css
+        │   ├── images/     # pilotos, monoplazas y trazados
         │   └── data/seed.json
-        └── test/java/      # 96 tests
+        └── test/java/      # 28 clases · 121 tests
 ```
 
 ## Instalación y ejecución
@@ -211,4 +412,5 @@ El archivo se genera con `tools/gen_seed.py` para que los datos sean reproducibl
 ## Pendiente
 
 - **Pestañas de análisis** (clima dinámico, eventos, evolución de vuelta, sectores, evolución de pista, análisis) y **comparación de vehículos**: ya heredan la paleta y los componentes nuevos, pero su composición todavía no está trabajada al detalle del resto.
+- **Sonido**: el semáforo se sintetiza con `javax.sound.sampled` en lugar de reproducir una grabación, para no añadir `javafx-media` ni archivos de audio al repositorio.
 - Imágenes de **equipos y vehículos**: `seed.json` trae las URL de 3 logos y ninguna foto de coche; además los trazados son SVG remotos y JavaFX no renderiza SVG sin `javafx-web`. Las tarjetas usan un marcador propio mientras tanto.

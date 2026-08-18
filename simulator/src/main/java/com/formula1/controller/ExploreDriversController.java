@@ -4,7 +4,10 @@ import com.formula1.model.Driver;
 import com.formula1.model.Team;
 import com.formula1.service.DriverService;
 import com.formula1.service.TeamService;
+import com.formula1.service.ValidationException;
+import com.formula1.util.ImageCrop;
 import com.formula1.util.TeamColors;
+import com.formula1.util.InputValidation;
 
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -12,7 +15,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.image.Image;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
@@ -21,6 +24,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.Shape;
 
 import java.util.List;
 import java.util.Locale;
@@ -34,7 +38,14 @@ import java.util.Locale;
 public class ExploreDriversController {
 
     private static final double ANCHO_FOTO = 242;
-    private static final double ALTO_FOTO = 150;
+    /** Algo mas alta que en el mockup: recorta menos los retratos cuadrados. */
+    private static final double ALTO_FOTO = 170;
+    /**
+     * 0 = recorte pegado arriba, 0,5 = centrado. Se queda cerca del borde
+     * superior porque en un retrato la cabeza esta arriba: bajarlo mas la
+     * recortaba en las fotos de plano corto.
+     */
+    private static final double SESGO_VERTICAL = 0.1;
 
     @FXML private TextField buscador;
     @FXML private FlowPane chips;
@@ -56,6 +67,7 @@ public class ExploreDriversController {
 
     @FXML
     public void initialize() {
+        InputValidation.busqueda(buscador);
         construirChips();
         buscador.textProperty().addListener((obs, antes, ahora) -> refrescar());
         refrescar();
@@ -98,6 +110,14 @@ public class ExploreDriversController {
         lblConteo.setText(resultado.size() + " PILOTOS");
     }
 
+    /** Ficha de solo lectura del piloto, con retorno a este catalogo. */
+    static void abrirFicha(int pilotoId) {
+        Navigator.irConRetorno("driver-detail");
+        if (Navigator.ultimoControlador() instanceof DriverDetailController ficha) {
+            ficha.mostrar(pilotoId);
+        }
+    }
+
     private VBox tarjeta(Driver piloto) {
         String color = TeamColors.hex(piloto.getEquipo());
 
@@ -116,6 +136,7 @@ public class ExploreDriversController {
         foto.setPrefSize(ANCHO_FOTO, ALTO_FOTO);
         foto.setMinSize(ANCHO_FOTO, ALTO_FOTO);
         foto.setMaxSize(ANCHO_FOTO, ALTO_FOTO);
+        foto.setClip(esquinasSuperioresRedondeadas());
 
         imagenDe(piloto).ifPresentOrElse(
                 foto.getChildren()::add,
@@ -144,10 +165,22 @@ public class ExploreDriversController {
         return foto;
     }
 
+    /**
+     * Redondea solo arriba, para que la foto siga la curva de la tarjeta sin
+     * separarse del cuerpo por abajo. Un {@code Rectangle} redondea las cuatro
+     * esquinas, de ahí la unión con otro recto que cubre la mitad inferior.
+     */
+    private Shape esquinasSuperioresRedondeadas() {
+        Rectangle redondeado = new Rectangle(ANCHO_FOTO, ALTO_FOTO);
+        redondeado.setArcWidth(14);
+        redondeado.setArcHeight(14);
+        Rectangle inferior = new Rectangle(0, ALTO_FOTO / 2, ANCHO_FOTO, ALTO_FOTO / 2);
+        return Shape.union(redondeado, inferior);
+    }
+
     private VBox cuerpo(Driver piloto, String color) {
-        VBox cuerpo = new VBox(3);
+        VBox cuerpo = new VBox(6);
         cuerpo.getStyleClass().add("explore-card-body");
-        cuerpo.setPadding(new Insets(11, 13, 0, 13));
 
         Label nombre = new Label(piloto.getNombre());
         nombre.getStyleClass().add("explore-card-name");
@@ -158,11 +191,21 @@ public class ExploreDriversController {
         equipo.setStyle("-fx-text-fill: " + color + ";");
 
         HBox stats = new HBox(20);
-        stats.setPadding(new Insets(9, 0, 9, 0));
+        stats.setPadding(new Insets(6, 0, 5, 0));
         stats.getChildren().addAll(
                 estadistica(String.valueOf(piloto.getVictorias()), "VICTORIAS", "#FFC906"),
                 estadistica(String.valueOf(piloto.getCampeonatos()), "CAMPS.", "#E10600"),
-                estadistica(piloto.getExperiencia() + "a", "EXP.", "#39B54A"));
+                estadistica(piloto.getExperiencia() + " años", "EXPERIENCIA", "#39B54A"));
+
+        Label tituloHabilidades = new Label("HABILIDADES · ESCALA 0–100");
+        tituloHabilidades.getStyleClass().add("card-label");
+        HBox habilidades = new HBox(12,
+                habilidad(piloto, Driver.HABILIDAD_VELOCIDAD, "VELOCIDAD", "#59A5FF",
+                        "Capacidad para marcar un ritmo rápido y reducir el tiempo de vuelta."),
+                habilidad(piloto, Driver.HABILIDAD_CONSISTENCIA, "CONSIST.", "#FFC906",
+                        "Capacidad para mantener un rendimiento estable durante toda la vuelta."),
+                habilidad(piloto, Driver.HABILIDAD_LLUVIA, "LLUVIA", "#64D8CB",
+                        "Capacidad para conservar ritmo y control con la pista mojada."));
 
         HBox pie = new HBox();
         pie.setAlignment(Pos.CENTER_LEFT);
@@ -173,11 +216,30 @@ public class ExploreDriversController {
         Button detalle = new Button("VER DETALLE ▸");
         detalle.getStyleClass().add("card-link");
         detalle.setStyle("-fx-text-fill: " + color + ";");
-        detalle.setOnAction(e -> Forms.piloto(piloto, equipos.listar(), piloto.getId()));
+        // Abre la ficha en vez del formulario de edicion: «ver detalle» es
+        // consultar, no modificar. La edicion vive en la seccion de gestion.
+        detalle.setOnAction(e -> abrirFicha(piloto.getId()));
         pie.getChildren().addAll(nacionalidad, relleno, detalle);
+        pie.getStyleClass().add("explore-card-actions");
 
-        cuerpo.getChildren().addAll(nombre, equipo, stats, pie);
+        cuerpo.getChildren().addAll(nombre, equipo, stats, tituloHabilidades, habilidades, pie);
         return cuerpo;
+    }
+
+    private VBox habilidad(Driver piloto, String clave, String etiqueta,
+                           String color, String explicacion) {
+        VBox celda = estadistica(piloto.getHabilidad(clave) + "/100", etiqueta, color);
+        Tooltip.install(celda, new Tooltip(explicacion + " Escala: 0 (baja) a 100 (élite)."));
+        return celda;
+    }
+
+    void guardar(Driver piloto) {
+        try {
+            pilotos.guardar(piloto);
+            refrescar();
+        } catch (ValidationException e) {
+            Navigator.error("Datos no válidos", e.getMessage());
+        }
     }
 
     private VBox estadistica(String valor, String etiqueta, String color) {
@@ -196,32 +258,7 @@ public class ExploreDriversController {
      * centradas en vez de estirarse.
      */
     private java.util.Optional<ImageView> imagenDe(Driver piloto) {
-        if (piloto.getImagen() == null || piloto.getImagen().isBlank()) {
-            return java.util.Optional.empty();
-        }
-        var recurso = getClass().getResourceAsStream(piloto.getImagen());
-        if (recurso == null) {
-            return java.util.Optional.empty();
-        }
-        Image imagen = new Image(recurso);
-        ImageView vista = new ImageView(imagen);
-        vista.setPreserveRatio(true);
-
-        // Se escala por el lado que se queda corto y se recorta el sobrante.
-        double escala = Math.max(ANCHO_FOTO / imagen.getWidth(), ALTO_FOTO / imagen.getHeight());
-        double ancho = imagen.getWidth() * escala;
-        double alto = imagen.getHeight() * escala;
-        vista.setFitWidth(ancho);
-        vista.setFitHeight(alto);
-
-        Rectangle recorte = new Rectangle(ANCHO_FOTO, ALTO_FOTO);
-        recorte.setX((ancho - ANCHO_FOTO) / 2);
-        // Sesgo hacia arriba: en un retrato la cara está por encima del centro.
-        recorte.setY((alto - ALTO_FOTO) * 0.25);
-        recorte.setArcWidth(8);
-        recorte.setArcHeight(8);
-        vista.setClip(recorte);
-        return java.util.Optional.of(vista);
+        return ImageCrop.desdeClasspath(piloto.getImagen(), ANCHO_FOTO, ALTO_FOTO, SESGO_VERTICAL);
     }
 
     private String inicialesDe(String nombre) {
