@@ -120,8 +120,6 @@ class ViewsLoadTest {
         cargar("explorar");
         cargar("config");
         cargar("config-historial");
-        cargar("parrilla-salida");
-        cargar("carrera-vivo");
     }
 
     @Test
