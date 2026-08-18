@@ -6,12 +6,15 @@ import com.formula1.model.Vehicle;
 import com.formula1.model.WeatherCondition;
 import com.formula1.service.VehicleService;
 import com.formula1.util.TeamColors;
+import com.formula1.util.VehicleImages;
 
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 import java.util.List;
@@ -41,6 +44,21 @@ public class ExploreVehiclesController {
         lblConteo.setText(lista.size() + " VEHÍCULOS");
     }
 
+    /**
+     * La foto abre el visor con las demás vistas del monoplaza. Solo se hace
+     * pulsable cuando hay algo más que enseñar, para no ofrecer un clic que
+     * no lleva a ninguna parte.
+     */
+    private void prepararGaleria(StackPane imagen, Vehicle vehiculo) {
+        if (!VehicleImages.tieneGaleria(vehiculo.getModelo())) {
+            return;
+        }
+        imagen.getStyleClass().add("explore-card-photo-clickable");
+        Tooltip.install(imagen, new Tooltip("Ver más vistas del " + vehiculo.getModelo()));
+        imagen.setOnMouseClicked(e ->
+                VehicleGallery.abrir(vehiculo.getModelo(), vehiculo.getEquipo()));
+    }
+
     private VBox tarjeta(Vehicle vehiculo) {
         String color = TeamColors.hex(vehiculo.getEquipo());
 
@@ -49,6 +67,7 @@ public class ExploreVehiclesController {
         card.setStyle("-fx-border-color: " + color + ";");
 
         var imagen = ExploreCardVisuals.vehiculo(vehiculo, color);
+        prepararGaleria(imagen, vehiculo);
 
         Label equipo = new Label(vehiculo.getEquipo() == null ? "" : vehiculo.getEquipo().toUpperCase(Locale.ROOT));
         equipo.getStyleClass().add("explore-card-team");

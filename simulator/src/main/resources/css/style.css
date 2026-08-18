@@ -1184,3 +1184,50 @@
     -fx-background-color: -fx-bg-0;
     -fx-padding: 10 0 0 0;
 }
+
+/* =============================================================
+   Visor de vistas del monoplaza
+   ============================================================= */
+
+.gallery-root {
+    -fx-background-color: -fx-bg-0;
+    -fx-border-color: -fx-border-1;
+    -fx-border-width: 1;
+}
+
+.gallery-header {
+    -fx-background-color: -fx-bg-header;
+}
+
+.gallery-title {
+    -fx-font-family: "Orbitron", "JetBrains Mono", monospace;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.gallery-team {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.gallery-stage {
+    -fx-background-color: -fx-surface-3;
+}
+
+.gallery-counter {
+    -fx-font-family: "JetBrains Mono", monospace;
+    -fx-font-size: 12px;
+    -fx-text-fill: -fx-text-muted;
+    -fx-min-width: 64;
+    -fx-alignment: CENTER;
+}
+
+/* La foto avisa de que se puede abrir. */
+.explore-card-photo-clickable {
+    -fx-cursor: hand;
+}
+
+.explore-card-photo-clickable:hover {
+    -fx-opacity: 0.88;
+}
