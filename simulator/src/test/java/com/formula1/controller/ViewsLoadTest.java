@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -215,6 +216,43 @@ class ViewsLoadTest {
         }
         if (fallo.get() != null) {
             fail("La vista de Gestión no conservó su estado", fallo.get());
+        }
+    }
+
+    @Test
+    void detalleDeCircuitoVuelveAlMismoContextoDeGestion() {
+        if (!toolkitListo) {
+            return;
+        }
+        AtomicReference<Throwable> fallo = new AtomicReference<>();
+        CountDownLatch hecho = new CountDownLatch(1);
+        Platform.runLater(() -> {
+            try {
+                StackPane centro = new StackPane();
+                Navigator.registrar(centro);
+                Navigator.ir("gestion");
+                Node vistaGestion = centro.getChildren().get(0);
+
+                Navigator.irConRetorno("circuit-detail");
+                assertTrue(Navigator.volver());
+
+                assertSame(vistaGestion, centro.getChildren().get(0));
+            } catch (Throwable t) {
+                fallo.set(t);
+            } finally {
+                hecho.countDown();
+            }
+        });
+        try {
+            if (!hecho.await(20, TimeUnit.SECONDS)) {
+                fail("La comprobación de retorno desde Circuito no terminó");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            fail(e);
+        }
+        if (fallo.get() != null) {
+            fail("El detalle no restauró el contexto de Gestión", fallo.get());
         }
     }
 }

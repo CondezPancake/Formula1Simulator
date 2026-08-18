@@ -16,7 +16,7 @@
         <Tab fx:id="tabVehiculos" text="VEHÍCULOS">
             <fx:include source="vehicles.fxml"/>
         </Tab>
-        <Tab text="CIRCUITOS">
+        <Tab fx:id="tabCircuitos" text="CIRCUITOS">
             <fx:include source="circuits.fxml"/>
         </Tab>
     </tabs>

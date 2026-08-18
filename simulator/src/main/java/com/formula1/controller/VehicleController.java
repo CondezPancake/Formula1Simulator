@@ -138,8 +138,11 @@ public class VehicleController {
         Forms.asignarPilotos(seleccionado, pilotos.porEquipo(seleccionado.getEquipo()))
                 .ifPresent(ids -> {
                     try {
-                        vehiculos.asignarPilotos(seleccionado, ids);
+                        Vehicle actualizado = vehiculos.asignarPilotos(seleccionado, ids);
                         refrescar();
+                        tabla.refresh();
+                        tabla.getSelectionModel().clearSelection();
+                        tabla.getSelectionModel().select(actualizado);
                     } catch (ValidationException e) {
                         Navigator.error("Asignación no válida", e.getMessage());
                     }

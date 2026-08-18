@@ -16,6 +16,7 @@ import javafx.scene.control.ProgressIndicator;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
+import javafx.application.Platform;
 
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -158,6 +159,13 @@ public class ShellController {
     private void onConfigHistorial() {
         Navigator.ir("config-historial");
         marcarActivo(btnConfig);
+    }
+
+    @FXML
+    private void onSalir() {
+        if (Navigator.confirmar("¿Quieres salir del simulador?")) {
+            Platform.exit();
+        }
     }
 
     // --- API para que la sesión alimente la cabecera ---------------------

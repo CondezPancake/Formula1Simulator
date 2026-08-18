@@ -287,27 +287,8 @@ public class SimulationController {
         if (ultima == null) {
             return;
         }
-        if (ultima.getCircuito() != null) {
-            selectorCircuito.setValue(ultima.getCircuito());
-        }
-        if (ultima.getVehiculo() != null) {
-            selectorVehiculo.setValue(ultima.getVehiculo());
-        }
-        seleccionarPiloto(ultima.getPilotoId());
-        if (ultima.getModo() != null) {
-            modo = ultima.getModo();
-        }
-        if (ultima.getAerodinamica() != null) {
-            aero = ultima.getAerodinamica();
-        }
-        if (ultima.getPresion() != null) {
-            presion = ultima.getPresion();
-        }
-        if (ultima.getCombustible() != null) {
-            combustible = ultima.getCombustible();
-        }
+        precargarConfiguracion(ultima);
         lblEstado.setText("Configuración recuperada");
-        mostrarPuestaAPunto();
     }
 
     /** Resume la puesta a punto vigente, que se ajusta en la otra pantalla. */
@@ -489,6 +470,26 @@ public class SimulationController {
         barraDesgasteTelemetria.setProgress(muestra.desgasteNeumaticosPorcentaje() / 100);
         barraTempNeumaticos.setProgress(muestra.temperaturaNeumaticosC() / 125);
         barraTempMotor.setProgress(muestra.temperaturaMotorC() / 125);
+    }
+
+    /** Precarga una configuración elegida en Historial sin iniciar ni borrar la sesión actual. */
+    public void precargarConfiguracion(SimulationConfig config) {
+        if (config == null) {
+            return;
+        }
+        if (config.getCircuito() != null && selectorCircuito.getItems().contains(config.getCircuito())) {
+            selectorCircuito.setValue(config.getCircuito());
+        }
+        if (config.getVehiculo() != null && selectorVehiculo.getItems().contains(config.getVehiculo())) {
+            selectorVehiculo.setValue(config.getVehiculo());
+        }
+        seleccionarPiloto(config.getPilotoId());
+        if (config.getModo() != null) modo = config.getModo();
+        if (config.getAerodinamica() != null) aero = config.getAerodinamica();
+        if (config.getPresion() != null) presion = config.getPresion();
+        if (config.getCombustible() != null) combustible = config.getCombustible();
+        lblEstado.setText("Configuración de historial preparada");
+        mostrarPuestaAPunto();
     }
 
     private void actualizarVelocidadMaxima(double velocidadActual) {

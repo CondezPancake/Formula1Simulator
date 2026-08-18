@@ -126,7 +126,12 @@ public class CircuitDetailController {
 
     @FXML
     private void onVolver() {
-        Navigator.ir("circuits");
+        if (!Navigator.volver()) {
+            Navigator.ir("gestion");
+            if (Navigator.ultimoControlador() instanceof ManagementController gestion) {
+                gestion.mostrarCircuitos();
+            }
+        }
     }
 
     /** Consumo y desgaste estimados en este circuito para un modo. */

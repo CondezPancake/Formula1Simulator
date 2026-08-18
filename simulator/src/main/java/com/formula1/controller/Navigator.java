@@ -23,6 +23,8 @@ public final class Navigator {
     private static Object controladorSesion;
     private static Node gestion;
     private static Object controladorGestion;
+    private static Node vistaRetorno;
+    private static Object controladorRetorno;
 
     private Navigator() {
     }
@@ -35,6 +37,8 @@ public final class Navigator {
             controladorSesion = null;
             gestion = null;
             controladorGestion = null;
+            vistaRetorno = null;
+            controladorRetorno = null;
         }
         contenedor = centro;
     }
@@ -72,6 +76,31 @@ public final class Navigator {
         } catch (Exception e) {
             error("No se pudo abrir la vista «" + vista + "»", e.getMessage());
         }
+    }
+
+    /** Abre una vista secundaria recordando exactamente el nodo que la originó. */
+    public static void irConRetorno(String vista) {
+        if (contenedor == null || contenedor.getChildren().isEmpty()) {
+            ir(vista);
+            return;
+        }
+        vistaRetorno = contenedor.getChildren().get(0);
+        controladorRetorno = ultimoControlador;
+        ir(vista);
+    }
+
+    /** Restaura la vista anterior con sus filtros, selección y pestaña intactos. */
+    public static boolean volver() {
+        if (contenedor == null || vistaRetorno == null) {
+            return false;
+        }
+        Node anterior = vistaRetorno;
+        Object controladorAnterior = controladorRetorno;
+        vistaRetorno = null;
+        controladorRetorno = null;
+        contenedor.getChildren().setAll(anterior);
+        ultimoControlador = controladorAnterior;
+        return true;
     }
 
     /** Controlador de la última vista cargada, para pasarle datos. */

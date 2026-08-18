@@ -79,6 +79,10 @@
                 <Button fx:id="btnExplorar" text="EXPLORAR"            styleClass="top-nav-item" onAction="#onExplorar"/>
                 <Button fx:id="btnGestion"  text="GESTIÓN"             styleClass="top-nav-item" onAction="#onGestion"/>
                 <Button fx:id="btnConfig"   text="CONFIG. &amp; HISTORIAL" styleClass="top-nav-item" onAction="#onConfigHistorial"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="SALIR" styleClass="top-nav-item,exit-nav-item" onAction="#onSalir">
+                    <HBox.margin><Insets right="20"/></HBox.margin>
+                </Button>
             </HBox>
         </VBox>
     </top>

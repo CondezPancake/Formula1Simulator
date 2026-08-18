@@ -102,7 +102,7 @@ public class CircuitController {
             Navigator.aviso("Sin selección", "Elige un circuito de la tabla.");
             return;
         }
-        Navigator.ir("circuit-detail");
+        Navigator.irConRetorno("circuit-detail");
         if (Navigator.ultimoControlador() instanceof CircuitDetailController detalle) {
             detalle.mostrar(seleccionado.getNombre());
         }

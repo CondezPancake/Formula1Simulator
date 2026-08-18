@@ -69,7 +69,7 @@ public class ExploreCircuitsController {
         verDetalles.getStyleClass().add("explore-card-cta");
         verDetalles.setMaxWidth(Double.MAX_VALUE);
         verDetalles.setOnAction(e -> {
-            Navigator.ir("circuit-detail");
+            Navigator.irConRetorno("circuit-detail");
             if (Navigator.ultimoControlador() instanceof CircuitDetailController detalle) {
                 detalle.mostrar(circuito.getNombre());
             }

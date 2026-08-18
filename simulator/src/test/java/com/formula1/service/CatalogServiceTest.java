@@ -75,6 +75,17 @@ class CatalogServiceTest {
     }
 
     @Test
+    void desmarcarPilotoEliminaSuAsignacionReal() {
+        Vehicle rb20 = vehiculos.porModelo("RB20").orElseThrow();
+        vehiculos.asignarPilotos(rb20, List.of(1, 2));
+
+        vehiculos.asignarPilotos(rb20, List.of(1));
+
+        assertEquals(List.of(1), vehiculos.porModelo("RB20").orElseThrow().getPilotos());
+        assertFalse(vehiculos.porModelo("RB20").orElseThrow().conduce(2));
+    }
+
+    @Test
     void rechazaDatosInvalidos() {
         assertThrows(ValidationException.class, () -> pilotos.guardar(new Driver(99, "  ", "Ferrari", DriverRole.LIDER, 1)));
         assertThrows(ValidationException.class, () -> pilotos.guardar(new Driver(99, "X", "Equipo Fantasma", DriverRole.LIDER, 1)));

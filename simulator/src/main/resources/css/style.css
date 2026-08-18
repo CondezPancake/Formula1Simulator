@@ -227,6 +227,15 @@
     -fx-border-color: transparent transparent -fx-brand transparent;
 }
 
+.exit-nav-item {
+    -fx-text-fill: #FF8A80;
+}
+
+.exit-nav-item:hover, .exit-nav-item:focused {
+    -fx-background-color: #351416;
+    -fx-text-fill: #FFB4AF;
+}
+
 /* =============================================================
    Barra de sub-tabs dentro de cada seccion (45 px)
    Se aplica sobre un TabPane para reusar fx:include.

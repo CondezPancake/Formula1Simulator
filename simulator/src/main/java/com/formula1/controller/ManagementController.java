@@ -10,6 +10,7 @@ public class ManagementController {
     @FXML private TabPane secciones;
     @FXML private Tab tabEquipos;
     @FXML private Tab tabVehiculos;
+    @FXML private Tab tabCircuitos;
     @FXML private TeamController equiposViewController;
 
     @FXML
@@ -24,5 +25,9 @@ public class ManagementController {
     /** Regresa a la lista que originó una comparación conservando filtros y selección. */
     public void mostrarVehiculos() {
         secciones.getSelectionModel().select(tabVehiculos);
+    }
+
+    public void mostrarCircuitos() {
+        secciones.getSelectionModel().select(tabCircuitos);
     }
 }
