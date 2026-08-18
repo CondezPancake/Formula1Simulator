@@ -1231,3 +1231,16 @@
 .explore-card-photo-clickable:hover {
     -fx-opacity: 0.88;
 }
+
+/* Retrato de la ficha de piloto. */
+.driver-detail-photo {
+    -fx-background-color: #08080A;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+}
+
+.driver-detail-team {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
