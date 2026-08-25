@@ -1,6 +1,6 @@
 # Estado de épicas, HU, RF y RNF
 
-Este documento refleja el estado del proyecto después de implementar HU-36. La referencia histórica sigue siendo `docs/legacy/ProyectoFormula1.md`; el alcance operativo vigente está resumido en el README.
+Este documento refleja el estado del proyecto después del rediseño de interfaz (limpieza de la sección Carrera y tarjeta de piloto al estilo de formula1.com). La referencia histórica sigue siendo `docs/legacy/ProyectoFormula1.md`; el alcance operativo vigente está resumido en el README.
 
 ## Resumen de épicas
 
@@ -12,12 +12,12 @@ Este documento refleja el estado del proyecto después de implementar HU-36. La 
 | E04 | Visualización de resultados | **Terminada** |
 | E05 | Integración y persistencia | **En desarrollo** |
 | E06 | Motor probabilístico de simulación | **Terminada** |
-| E07 | Clima dinámico | **Terminada** |
+| E07 | Clima dinámico | **Terminada** · sin UI propia |
 | E08 | Sistema de eventos aleatorios | **Terminada** |
 | E09 | Telemetría visual | **Terminada** |
-| E10 | Evolución dinámica de pista | **Terminada** |
+| E10 | Evolución dinámica de pista | **Terminada** · sin UI propia |
 | E11 | Sistema de estrategia | **Terminada** |
-| E12 | Análisis automático de la sesión | **Terminada** |
+| E12 | Análisis automático de la sesión | **Retirada** |
 
 ## Historias de usuario
 
@@ -30,19 +30,19 @@ Este documento refleja el estado del proyecto después de implementar HU-36. La 
 | E05 | HU-24 OpenF1 | **En desarrollo** |
 | E05 | HU-25 a HU-27 | **Terminadas** |
 | E06 | HU-28 | **Terminada** |
-| E07 | HU-29 | **Terminada** |
+| E07 | HU-29 | **Terminada** · motor vivo, pestaña retirada |
 | E08 | HU-30 | **Terminada** |
 | E09 | HU-31 a HU-33 | **Terminadas** |
-| E10 | HU-34 | **Terminada** |
+| E10 | HU-34 | **Terminada** · motor vivo, pestaña retirada |
 | E11 | HU-35 | **Terminada** |
-| E12 | HU-36 | **Terminada** |
+| E12 | HU-36 | **Retirada** |
 
 ## Totales
 
-| Elemento | Terminadas | En desarrollo | Total |
-|---|---:|---:|---:|
-| Épicas | 11 | 1 | 12 |
-| Historias de usuario | 35 | 1 | 36 |
+| Elemento | Terminadas | En desarrollo | Retiradas | Total |
+|---|---:|---:|---:|---:|
+| Épicas | 10 | 1 | 1 | 12 |
+| Historias de usuario | 34 | 1 | 1 | 36 |
 
 La única HU pendiente frente al documento legacy es **HU-24 Consumir OpenF1**. OpenF1 está fuera del alcance operativo vigente del README, por eso la aplicación principal ya funciona completa sin depender de esa integración.
 
@@ -59,10 +59,10 @@ La única HU pendiente frente al documento legacy es **HU-24 Consumir OpenF1**. 
 | RF-13 | **Cumplido** | Tiempo de vuelta probabilístico con semilla controlable en pruebas. |
 | RF-14 | **Cumplido** | Ordenamiento, posiciones y diferencias con la pole. |
 | RF-15 | **Cumplido** | Clasificación final visible en JavaFX. |
-| RF-16 | **Cumplido** | Estadísticas, gráfico de métricas, sectores, clima, pista, eventos y análisis automático. |
+| RF-16 | **Cumplido** | Clasificación, telemetría en vivo, sectores y eventos; grip de pista y clima resumidos en el panel principal. |
 | RF-17 | **En desarrollo** | Depende de OpenF1, fuera del alcance operativo vigente. |
 | RF-18 | **Cumplido** | Persistencia duradera en MongoDB con respaldo en memoria. |
-| RF-19 | **Cumplido** | Resultados, eventos, telemetría, clima, sectores, pista y análisis se guardan con la sesión. |
+| RF-19 | **Cumplido** | Resultados, eventos, telemetría, clima, sectores y evolución de pista se guardan con la sesión. |
 | RF-20 | **Cumplido** | Historial de sesiones y configuraciones reutilizables. |
 | RF-21 | **En desarrollo** | Depende de OpenF1, fuera del alcance operativo vigente. |
 
@@ -105,10 +105,10 @@ Resumen POO/calidad: **26 cumplidos de 26**.
 | Control | Estado |
 |---|---|
 | Compilación | Código principal y pruebas compilan con Java 17. |
-| Pruebas automatizadas | **94 pruebas** ejecutadas correctamente. |
-| Integridad FXML | `ViewsLoadTest` carga los **14 FXML**, incluida la pestaña HU-36. |
-| Persistencia histórica | JSON compatible con sesiones antiguas sin telemetría, sectores, evolución de pista o análisis. |
-| Inmutabilidad | Snapshots, eventos, sectores, evolución de pista y análisis son objetos inmutables o expuestos como copias. |
+| Pruebas automatizadas | **112 pruebas** ejecutadas correctamente. |
+| Integridad FXML | `ViewsLoadTest` y `ExploreViewsLoadTest` cargan los **19 FXML**. |
+| Persistencia histórica | JSON compatible con sesiones antiguas; el campo `analisis` de sesiones ya guardadas se ignora al leer. |
+| Inmutabilidad | Snapshots, eventos, sectores y evolución de pista son objetos inmutables o expuestos como copias. |
 | Trazabilidad | Documentos por funcionalidad y matriz actualizada de épicas/HU/RF/RNF. |
 
 ## Observaciones de alcance
@@ -118,4 +118,29 @@ Resumen POO/calidad: **26 cumplidos de 26**.
 - HU-32 persiste 20 muestras de vuelta del piloto seleccionado.
 - HU-33 calcula S1, S2 y S3 para vueltas válidas e identifica mejores sectores.
 - HU-34 acumula goma, limpia pista con lluvia y aplica el grip al motor antes de calcular cada vuelta.
-- HU-36 genera análisis por reglas: pole, margen, sectores, consumo, desgaste, eventos, clima, evolución de pista y telemetría.
+- HU-36 se retira: el análisis por reglas duplicaba lo que ya cuentan la clasificación y la telemetría.
+
+## Rediseño de interfaz
+
+La sección **Carrera** pasa de nueve pestañas a cuatro —Clasificación, Telemetría en
+vivo, Comparación de sectores y Eventos—. Se borran por completo Estadísticas,
+Evolución de vuelta y Análisis (vistas, controladores, servicios, modelos y pruebas).
+
+De Evolución de pista y Clima dinámico se borra solo la interfaz: `TrackEvolutionService`
+y `DynamicWeatherService` siguen vivos porque el tiempo de vuelta, el consumo, el
+desgaste y los eventos dependen de ellos. Lo que el usuario necesita ver de ambos —grip
+inicial y final, temperatura de cielo y asfalto, lluvia y neumático recomendado— sube al
+panel «Evolución del vehículo seleccionado», que pasa a dos filas de cuatro tarjetas y se
+rellena en cuanto arranca la simulación.
+
+La sección **Explorar › Pilotos** reconstruye su tarjeta siguiendo
+<https://www.formula1.com/en/drivers>: fondo con el color del equipo oscurecido para que
+el texto blanco contraste, textura de velocidad teñida con el color vivo, render oficial
+del piloto a la derecha y, a la izquierda, nombre, apellido, equipo, dorsal fantasma y
+bandera. Las cifras del piloto se consultan en su ficha. La tarjeta entera es el enlace,
+con acceso por teclado.
+
+Los recursos (renders, banderas, logos y textura) se descargan de formula1.com con
+`tools/descargar_assets_f1.py`. Se empaqueta **Titillium Web**, tipografía oficial de la
+F1 hasta 2017: la hoja de estilos pedía Orbitron, que no está instalada, así que la
+jerarquía tipográfica del diseño no llegaba a verse.
