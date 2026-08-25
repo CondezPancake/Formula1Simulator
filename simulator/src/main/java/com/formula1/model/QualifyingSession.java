@@ -24,7 +24,6 @@ public class QualifyingSession {
     private List<WeatherSnapshot> evolucionClimatica;
     private List<TelemetrySnapshot> evolucionVuelta;
     private List<TrackEvolutionSnapshot> evolucionPista;
-    private SessionAnalysis analisis;
     private List<EventOccurrence> eventos;
     private String fecha;
 
@@ -34,7 +33,6 @@ public class QualifyingSession {
         this.evolucionClimatica = new ArrayList<>();
         this.evolucionVuelta = new ArrayList<>();
         this.evolucionPista = new ArrayList<>();
-        this.analisis = SessionAnalysis.vacio();
         this.eventos = new ArrayList<>();
     }
 
@@ -135,15 +133,6 @@ public class QualifyingSession {
         this.evolucionPista = evolucionPista == null
                 ? new ArrayList<>()
                 : new ArrayList<>(evolucionPista);
-    }
-
-    /** Diagnostico generado por reglas al cerrar la clasificacion. */
-    public SessionAnalysis getAnalisis() {
-        return analisis == null ? SessionAnalysis.vacio() : analisis;
-    }
-
-    public void setAnalisis(SessionAnalysis analisis) {
-        this.analisis = analisis == null ? SessionAnalysis.vacio() : analisis;
     }
 
     public String getFecha() {

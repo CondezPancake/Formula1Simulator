@@ -16,7 +16,6 @@ import com.formula1.model.LapStatus;
 import com.formula1.model.QualifyingSession;
 import com.formula1.model.SimulationConfig;
 import com.formula1.model.SimulationSnapshot;
-import com.formula1.model.SessionStatistics;
 import com.formula1.model.TirePressure;
 import com.formula1.model.TelemetrySnapshot;
 import com.formula1.model.Vehicle;
@@ -348,20 +347,6 @@ class QualifyingServiceTest {
     }
 
     @Test
-    void laSesionIncluyeAnalisisAutomaticoPersistible() {
-        QualifyingSession sesion = sesiones.simular(
-                config(DrivingMode.NORMAL), WeatherCondition.SECO, null);
-
-        assertNotNull(sesion.getAnalisis());
-        assertTrue(sesion.getAnalisis().tieneResultados());
-        assertEquals(sesion.getPole().getPiloto(), sesion.getAnalisis().pilotoPole());
-        assertEquals(sesion.getPole().getTiempoSegundos(),
-                sesion.getAnalisis().tiempoPoleSegundos(), 1e-9);
-        assertTrue(sesion.getAnalisis().factoresPositivos().size() > 0);
-        assertTrue(sesion.getAnalisis().factoresClave().size() > 0);
-    }
-
-    @Test
     void laLluviaIntensaProduceUnaVueltaMasLentaQueUnaPistaSeca() {
         WeatherSnapshot seco = new WeatherSnapshot(1, 1,
                 com.formula1.model.DynamicWeatherState.SECO,
@@ -376,22 +361,6 @@ class QualifyingServiceTest {
                 verstappen(), rb20(), monza(), List.of(lluvia), config(DrivingMode.NORMAL));
 
         assertTrue(tiempoLluvia > tiempoSeco * 1.15);
-    }
-
-    @Test
-    void calculaEstadisticasDeTodosLosParticipantes() {
-        QualifyingSession sesion = sesiones.simular(
-                config(DrivingMode.NORMAL), WeatherCondition.SECO, null);
-
-        SessionStatistics estadisticas = sesiones.calcularEstadisticas(sesion);
-
-        assertTrue(estadisticas.tieneResultados());
-        assertEquals(20, estadisticas.participantes());
-        assertEquals(sesion.getPole().getTiempoSegundos(), estadisticas.tiempoPole(), 1e-9);
-        assertEquals(sesion.getResultados().get(19).getGap(), estadisticas.diferenciaMaxima(), 1e-9);
-        assertTrue(estadisticas.tiempoPromedio() >= estadisticas.tiempoPole());
-        assertTrue(estadisticas.consumoPromedio() > 0);
-        assertTrue(estadisticas.desgastePromedio() > 0);
     }
 
     @Test
