@@ -7,6 +7,7 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -17,8 +18,22 @@ public class App extends Application {
     private static final String VISTA_PRINCIPAL = "/views/shell.fxml";
     private static final String HOJA_ESTILOS = "/css/style.css";
 
+    /**
+     * Titillium Web fue la tipografia oficial de la F1 entre 2013 y 2017 y es
+     * la base de la actual, que es propietaria. Se empaqueta con la app porque
+     * la hoja de estilos la pide por nombre y no se puede dar por instalada.
+     */
+    private static final String[] FUENTES = {
+        "/fonts/TitilliumWeb-Regular.ttf",
+        "/fonts/TitilliumWeb-SemiBold.ttf",
+        "/fonts/TitilliumWeb-Bold.ttf",
+        "/fonts/TitilliumWeb-Black.ttf",
+    };
+
     @Override
     public void start(Stage escenario) throws IOException {
+        cargarFuentes();
+
         Parent raiz = FXMLLoader.load(getClass().getResource(VISTA_PRINCIPAL));
         Scene escena = new Scene(raiz);
 
@@ -35,6 +50,23 @@ public class App extends Application {
         escenario.setMinHeight(800);
         escenario.setMaximized(true);
         escenario.show();
+    }
+
+    /**
+     * Registra las tipografias empaquetadas antes de aplicar el CSS: si se
+     * cargan despues, las reglas que las nombran ya han caido al fallback.
+     */
+    private void cargarFuentes() {
+        for (String fuente : FUENTES) {
+            try (var flujo = getClass().getResourceAsStream(fuente)) {
+                if (flujo != null) {
+                    Font.loadFont(flujo, 12);
+                }
+            } catch (IOException e) {
+                // Sin la fuente la app sigue siendo usable: el CSS declara
+                // alternativas del sistema para cada familia.
+            }
+        }
     }
 
     /** Libera el pool de hilos y la conexión con MongoDB al cerrar. */
