@@ -5,26 +5,34 @@ import com.formula1.model.Team;
 import com.formula1.service.DriverService;
 import com.formula1.service.TeamService;
 import com.formula1.service.ValidationException;
-import com.formula1.util.ImageCrop;
+import com.formula1.util.F1Assets;
 import com.formula1.util.TeamColors;
 import com.formula1.util.InputValidation;
 
+import javafx.animation.Interpolator;
+import javafx.animation.ScaleTransition;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.control.Tooltip;
+import javafx.scene.effect.Blend;
+import javafx.scene.effect.BlendMode;
+import javafx.scene.effect.ColorInput;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.shape.Shape;
+import javafx.util.Duration;
 
 import java.util.List;
 import java.util.Locale;
@@ -32,20 +40,33 @@ import java.util.Locale;
 /**
  * Catálogo de pilotos en tarjetas, de solo lectura.
  *
- * Reproduce la tarjeta del diseño: foto con el nombre superpuesto, dorsal
- * con el color del equipo, distintivo de rol y una fila de estadísticas.
+ * La tarjeta reproduce la de <a href="https://www.formula1.com/en/drivers">la
+ * web oficial de la F1</a>, que se lee de un vistazo porque no compite consigo
+ * misma: el fondo es el color del equipo oscurecido, el piloto ocupa la mitad
+ * derecha y a la izquierda solo hay nombre, equipo, dorsal y bandera. Las
+ * cifras del piloto —victorias, campeonatos, habilidades— viven en su ficha,
+ * que es donde se consultan de verdad; aquí sobrecargaban la rejilla.
  */
 public class ExploreDriversController {
 
-    private static final double ANCHO_FOTO = 242;
-    /** Algo mas alta que en el mockup: recorta menos los retratos cuadrados. */
-    private static final double ALTO_FOTO = 170;
+    private static final double ANCHO = 340;
+    private static final double ALTO = 250;
     /**
-     * 0 = recorte pegado arriba, 0,5 = centrado. Se queda cerca del borde
-     * superior porque en un retrato la cabeza esta arriba: bajarlo mas la
-     * recortaba en las fotos de plano corto.
+     * El render se ancla por el ancho, no por el alto.
+     *
+     * El CDN de la F1 sirve unos pilotos de cuerpo entero y otros de medio
+     * cuerpo, todos a la misma altura, asi que escalarlos por altura deja a
+     * unos diminutos y a otros gigantes. El script de descarga los recorta al
+     * mismo ancho, de modo que los hombros miden igual en los veinte; aqui solo
+     * hay que fijar ese ancho y anclarlos por la cabeza, dejando que el cuerpo
+     * se salga por abajo como en la referencia.
      */
-    private static final double SESGO_VERTICAL = 0.1;
+    private static final double ANCHO_FOTO = 152;
+    private static final double ANCHO_PATRON = 420;
+    private static final Duration HOVER = Duration.millis(160);
+
+    /** Máscara alfa del patrón de velocidad; se tiñe por equipo en cada tarjeta. */
+    private static final Image PATRON_DRS = cargar(F1Assets.texturaDrs(), ANCHO_PATRON, ALTO);
 
     @FXML private TextField buscador;
     @FXML private FlowPane chips;
@@ -118,119 +139,206 @@ public class ExploreDriversController {
         }
     }
 
-    private VBox tarjeta(Driver piloto) {
-        String color = TeamColors.hex(piloto.getEquipo());
+    /**
+     * La tarjeta va en dos contenedores: el interior recorta las capas a las
+     * esquinas redondeadas y el exterior queda libre para el halo del hover,
+     * que si no lo cortaría el mismo recorte.
+     */
+    private StackPane tarjeta(Driver piloto) {
+        String vivo = TeamColors.hex(piloto.getEquipo());
+        String fondo = TeamColors.accesible(piloto.getEquipo());
 
-        VBox card = new VBox(0);
-        card.getStyleClass().add("explore-card");
-        card.setStyle("-fx-border-color: " + color + ";");
+        StackPane lienzo = new StackPane();
+        lienzo.setMinSize(ANCHO, ALTO);
+        lienzo.setPrefSize(ANCHO, ALTO);
+        lienzo.setMaxSize(ANCHO, ALTO);
+        lienzo.setClip(new Rectangle(ANCHO, ALTO) {{
+            setArcWidth(24);
+            setArcHeight(24);
+        }});
+        lienzo.getChildren().add(capa(fondo));
+        patron(vivo).ifPresent(lienzo.getChildren()::add);
+        lienzo.getChildren().add(degradado(fondo));
 
-        card.getChildren().addAll(cabecera(piloto, color), cuerpo(piloto, color));
-        return card;
+        ImageView foto = foto(piloto);
+        if (foto != null) {
+            lienzo.getChildren().add(foto);
+        } else {
+            lienzo.getChildren().add(marcaDeAgua(piloto));
+        }
+
+        VBox identidad = identidad(piloto);
+        StackPane.setAlignment(identidad, Pos.TOP_LEFT);
+        HBox pie = pie(piloto);
+        StackPane.setAlignment(pie, Pos.BOTTOM_LEFT);
+        lienzo.getChildren().addAll(identidad, pie);
+
+        StackPane tarjeta = new StackPane(lienzo);
+        tarjeta.getStyleClass().add("driver-card");
+        tarjeta.setMinSize(ANCHO, ALTO);
+        tarjeta.setPrefSize(ANCHO, ALTO);
+        tarjeta.setMaxSize(ANCHO, ALTO);
+        tarjeta.setCursor(Cursor.HAND);
+        activar(tarjeta, foto, identidad, vivo, piloto.getId());
+        return tarjeta;
     }
 
-    /** Foto con el dorsal arriba a la derecha y el rol abajo a la izquierda. */
-    private StackPane cabecera(Driver piloto, String color) {
-        StackPane foto = new StackPane();
-        foto.getStyleClass().add("explore-card-photo");
-        foto.setPrefSize(ANCHO_FOTO, ALTO_FOTO);
-        foto.setMinSize(ANCHO_FOTO, ALTO_FOTO);
-        foto.setMaxSize(ANCHO_FOTO, ALTO_FOTO);
-        foto.setClip(esquinasSuperioresRedondeadas());
-
-        imagenDe(piloto).ifPresentOrElse(
-                foto.getChildren()::add,
-                () -> {
-                    Label iniciales = new Label(inicialesDe(piloto.getNombre()));
-                    iniciales.setStyle("-fx-text-fill: " + color
-                            + "; -fx-font-size: 34px; -fx-font-weight: bold;");
-                    foto.getChildren().add(iniciales);
-                });
-
-        Label dorsal = new Label("#" + piloto.getNumero());
-        dorsal.getStyleClass().add("number-badge");
-        dorsal.setStyle("-fx-background-color: " + color + ";");
-        StackPane.setAlignment(dorsal, Pos.TOP_RIGHT);
-        StackPane.setMargin(dorsal, new Insets(10));
-
-        String rol = piloto.getRol() == null ? "ESCUDERO"
-                : piloto.getRol().getEtiqueta().toUpperCase(Locale.ROOT);
-        Label distintivo = new Label(rol);
-        distintivo.getStyleClass().addAll("role-badge",
-                piloto.getRol() == null ? "escudero" : piloto.getRol().name().toLowerCase(Locale.ROOT));
-        StackPane.setAlignment(distintivo, Pos.BOTTOM_LEFT);
-        StackPane.setMargin(distintivo, new Insets(10));
-
-        foto.getChildren().addAll(dorsal, distintivo);
-        return foto;
+    private Region capa(String color) {
+        Region fondo = new Region();
+        fondo.setStyle("-fx-background-color: " + color + ";");
+        return fondo;
     }
 
     /**
-     * Redondea solo arriba, para que la foto siga la curva de la tarjeta sin
-     * separarse del cuerpo por abajo. Un {@code Rectangle} redondea las cuatro
-     * esquinas, de ahí la unión con otro recto que cubre la mitad inferior.
+     * El halftone de velocidad de F1.com. La máscara es blanca con alfa, así que
+     * en vez de recorrer píxeles se pinta el color encima respetando la
+     * transparencia: {@code SRC_ATOP} solo cubre lo que ya era opaco.
      */
-    private Shape esquinasSuperioresRedondeadas() {
-        Rectangle redondeado = new Rectangle(ANCHO_FOTO, ALTO_FOTO);
-        redondeado.setArcWidth(14);
-        redondeado.setArcHeight(14);
-        Rectangle inferior = new Rectangle(0, ALTO_FOTO / 2, ANCHO_FOTO, ALTO_FOTO / 2);
-        return Shape.union(redondeado, inferior);
+    private java.util.Optional<ImageView> patron(String colorEquipo) {
+        if (PATRON_DRS == null) {
+            return java.util.Optional.empty();
+        }
+        ImageView vista = new ImageView(PATRON_DRS);
+        vista.setFitWidth(ANCHO_PATRON);
+        vista.setFitHeight(ALTO);
+        vista.setEffect(new Blend(BlendMode.SRC_ATOP, null,
+                new ColorInput(0, 0, ANCHO_PATRON, ALTO, Color.web(colorEquipo))));
+        vista.setOpacity(0.5);
+        StackPane.setAlignment(vista, Pos.CENTER_RIGHT);
+        return java.util.Optional.of(vista);
     }
 
-    private VBox cuerpo(Driver piloto, String color) {
-        VBox cuerpo = new VBox(6);
-        cuerpo.getStyleClass().add("explore-card-body");
+    /** Vela el patrón bajo el texto: sin esto el nombre pelea con la textura. */
+    private Region degradado(String color) {
+        Region velo = new Region();
+        velo.setStyle("-fx-background-color: linear-gradient(to right, "
+                + color + " 0%, " + color + "e6 40%, transparent 88%);");
+        return velo;
+    }
 
-        Label nombre = new Label(piloto.getNombre());
-        nombre.getStyleClass().add("explore-card-name");
+    private ImageView foto(Driver piloto) {
+        Image imagen = cargar(F1Assets.render(piloto.getCodigo()), ANCHO_FOTO * 2, 0);
+        if (imagen == null) {
+            return null;
+        }
+        ImageView vista = new ImageView(imagen);
+        vista.setFitWidth(ANCHO_FOTO);
+        vista.setPreserveRatio(true);
+        vista.setSmooth(true);
+        vista.getStyleClass().add("driver-card-photo");
+        StackPane.setAlignment(vista, Pos.TOP_RIGHT);
+        StackPane.setMargin(vista, new Insets(-4, -4, 0, 0));
+        return vista;
+    }
+
+    /** Respaldo cuando falta el render: iniciales grandes, muy tenues. */
+    private Label marcaDeAgua(Driver piloto) {
+        Label iniciales = new Label(inicialesDe(piloto.getNombre()));
+        iniciales.getStyleClass().add("driver-card-watermark");
+        StackPane.setAlignment(iniciales, Pos.CENTER_RIGHT);
+        StackPane.setMargin(iniciales, new Insets(0, 24, 0, 0));
+        return iniciales;
+    }
+
+    private VBox identidad(Driver piloto) {
+        String nombre = piloto.getNombre() == null ? "" : piloto.getNombre().trim();
+        int corte = nombre.lastIndexOf(' ');
+
+        Label pila = new Label(corte < 0 ? "" : nombre.substring(0, corte));
+        pila.getStyleClass().add("driver-card-first");
+
+        Label apellido = new Label(corte < 0 ? nombre : nombre.substring(corte + 1));
+        apellido.getStyleClass().add("driver-card-last");
 
         Label equipo = new Label(piloto.getEquipo() == null ? ""
                 : piloto.getEquipo().toUpperCase(Locale.ROOT));
-        equipo.getStyleClass().add("explore-card-team");
-        equipo.setStyle("-fx-text-fill: " + color + ";");
+        equipo.getStyleClass().add("driver-card-team");
 
-        HBox stats = new HBox(20);
-        stats.setPadding(new Insets(6, 0, 5, 0));
-        stats.getChildren().addAll(
-                estadistica(String.valueOf(piloto.getVictorias()), "VICTORIAS", "#FFC906"),
-                estadistica(String.valueOf(piloto.getCampeonatos()), "CAMPS.", "#E10600"),
-                estadistica(piloto.getExperiencia() + " años", "EXPERIENCIA", "#39B54A"));
+        Label dorsal = new Label(String.valueOf(piloto.getNumero()));
+        dorsal.getStyleClass().add("driver-card-number");
 
-        Label tituloHabilidades = new Label("HABILIDADES · ESCALA 0–100");
-        tituloHabilidades.getStyleClass().add("card-label");
-        HBox habilidades = new HBox(12,
-                habilidad(piloto, Driver.HABILIDAD_VELOCIDAD, "VELOCIDAD", "#59A5FF",
-                        "Capacidad para marcar un ritmo rápido y reducir el tiempo de vuelta."),
-                habilidad(piloto, Driver.HABILIDAD_CONSISTENCIA, "CONSIST.", "#FFC906",
-                        "Capacidad para mantener un rendimiento estable durante toda la vuelta."),
-                habilidad(piloto, Driver.HABILIDAD_LLUVIA, "LLUVIA", "#64D8CB",
-                        "Capacidad para conservar ritmo y control con la pista mojada."));
-
-        HBox pie = new HBox();
-        pie.setAlignment(Pos.CENTER_LEFT);
-        Label nacionalidad = new Label(piloto.getNacionalidad() == null ? "" : piloto.getNacionalidad());
-        nacionalidad.getStyleClass().add("explore-card-foot");
-        Region relleno = new Region();
-        HBox.setHgrow(relleno, Priority.ALWAYS);
-        Button detalle = new Button("VER DETALLE ▸");
-        detalle.getStyleClass().add("card-link");
-        detalle.setStyle("-fx-text-fill: " + color + ";");
-        // Abre la ficha en vez del formulario de edicion: «ver detalle» es
-        // consultar, no modificar. La edicion vive en la seccion de gestion.
-        detalle.setOnAction(e -> abrirFicha(piloto.getId()));
-        pie.getChildren().addAll(nacionalidad, relleno, detalle);
-        pie.getStyleClass().add("explore-card-actions");
-
-        cuerpo.getChildren().addAll(nombre, equipo, stats, tituloHabilidades, habilidades, pie);
-        return cuerpo;
+        VBox bloque = new VBox(pila, apellido, equipo, dorsal);
+        bloque.setSpacing(0);
+        bloque.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+        bloque.setPadding(new Insets(16, 16, 0, 18));
+        VBox.setMargin(dorsal, new Insets(2, 0, 0, 0));
+        return bloque;
     }
 
-    private VBox habilidad(Driver piloto, String clave, String etiqueta,
-                           String color, String explicacion) {
-        VBox celda = estadistica(piloto.getHabilidad(clave) + "/100", etiqueta, color);
-        Tooltip.install(celda, new Tooltip(explicacion + " Escala: 0 (baja) a 100 (élite)."));
-        return celda;
+    private HBox pie(Driver piloto) {
+        HBox pie = new HBox(8);
+        pie.setAlignment(Pos.CENTER_LEFT);
+        pie.setPadding(new Insets(0, 18, 16, 18));
+        pie.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+
+        Image bandera = cargar(F1Assets.bandera(piloto.getNacionalidad()), 34, 0);
+        if (bandera != null) {
+            ImageView vista = new ImageView(bandera);
+            vista.setFitWidth(34);
+            vista.setPreserveRatio(true);
+            vista.setSmooth(true);
+            Rectangle recorte = new Rectangle(34, 34 * bandera.getHeight() / bandera.getWidth());
+            recorte.setArcWidth(4);
+            recorte.setArcHeight(4);
+            vista.setClip(recorte);
+            pie.getChildren().add(vista);
+        }
+
+        Label codigo = new Label(piloto.getCodigo() == null
+                ? piloto.getNacionalidad() : piloto.getCodigo());
+        codigo.getStyleClass().add("driver-card-code");
+        pie.getChildren().add(codigo);
+        return pie;
+    }
+
+    /**
+     * Toda la tarjeta es el enlace, como en la referencia. Al no haber botón hay
+     * que devolver el acceso por teclado a mano: sin esto la sección dejaría de
+     * poder recorrerse con TAB.
+     */
+    private void activar(StackPane tarjeta, ImageView foto, VBox identidad,
+                         String colorEquipo, int pilotoId) {
+        String halo = "-fx-effect: dropshadow(gaussian, " + colorEquipo + ", 22, 0.3, 0, 6);";
+        tarjeta.setFocusTraversable(true);
+        tarjeta.setOnMouseClicked(e -> abrirFicha(pilotoId));
+        tarjeta.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.ENTER || e.getCode() == KeyCode.SPACE) {
+                abrirFicha(pilotoId);
+            }
+        });
+        tarjeta.setOnMouseEntered(e -> {
+            tarjeta.setStyle(halo);
+            subrayar(identidad, true);
+            escalar(foto, 1.04);
+        });
+        tarjeta.setOnMouseExited(e -> {
+            tarjeta.setStyle("");
+            subrayar(identidad, false);
+            escalar(foto, 1);
+        });
+        tarjeta.focusedProperty().addListener((obs, antes, enfocada) ->
+                tarjeta.setStyle(enfocada ? halo : ""));
+    }
+
+    private void subrayar(VBox identidad, boolean activo) {
+        for (Node nodo : identidad.getChildren()) {
+            if (nodo instanceof Label etiqueta
+                    && (etiqueta.getStyleClass().contains("driver-card-first")
+                        || etiqueta.getStyleClass().contains("driver-card-last"))) {
+                etiqueta.setUnderline(activo);
+            }
+        }
+    }
+
+    private void escalar(ImageView foto, double destino) {
+        if (foto == null) {
+            return;
+        }
+        ScaleTransition zoom = new ScaleTransition(HOVER, foto);
+        zoom.setToX(destino);
+        zoom.setToY(destino);
+        zoom.setInterpolator(Interpolator.EASE_BOTH);
+        zoom.play();
     }
 
     void guardar(Driver piloto) {
@@ -242,23 +350,20 @@ public class ExploreDriversController {
         }
     }
 
-    private VBox estadistica(String valor, String etiqueta, String color) {
-        VBox celda = new VBox(1);
-        Label valorLbl = new Label(valor);
-        valorLbl.getStyleClass().add("tile-value");
-        valorLbl.setStyle("-fx-text-fill: " + color + ";");
-        Label etiquetaLbl = new Label(etiqueta);
-        etiquetaLbl.getStyleClass().add("tile-label");
-        celda.getChildren().addAll(valorLbl, etiquetaLbl);
-        return celda;
-    }
-
     /**
-     * Las fotos vienen con proporciones muy dispares, así que se recortan
-     * centradas en vez de estirarse.
+     * Carga del classpath. Un cero en ancho o alto deja que JavaFX deduzca esa
+     * dimensión por proporción.
      */
-    private java.util.Optional<ImageView> imagenDe(Driver piloto) {
-        return ImageCrop.desdeClasspath(piloto.getImagen(), ANCHO_FOTO, ALTO_FOTO, SESGO_VERTICAL);
+    private static Image cargar(String ruta, double ancho, double alto) {
+        if (ruta == null) {
+            return null;
+        }
+        var recurso = ExploreDriversController.class.getResource(ruta);
+        if (recurso == null) {
+            return null;
+        }
+        Image imagen = new Image(recurso.toExternalForm(), ancho, alto, true, true, false);
+        return imagen.isError() || imagen.getWidth() <= 0 ? null : imagen;
     }
 
     private String inicialesDe(String nombre) {

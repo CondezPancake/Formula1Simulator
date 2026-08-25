@@ -33,7 +33,7 @@
     -fx-accent-pink: #FF87BC;
 
     -fx-background-color: -fx-bg-0;
-    -fx-font-family: "Adwaita Sans", "Open Sans", sans-serif;
+    -fx-font-family: "Titillium Web", "Adwaita Sans", sans-serif;
     -fx-font-size: 13px;
 }
 
@@ -46,14 +46,16 @@
     -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
 }
 
-/* Wordmark y cifras hero. */
+/* Wordmark y titulos. Titillium Web se empaqueta en /fonts y la carga
+   App.cargarFuentes(); fue la tipografia oficial de la F1 hasta 2017 y es la
+   base de la actual, que es propietaria. */
 .display {
-    -fx-font-family: "Orbitron", "Adwaita Sans", sans-serif;
+    -fx-font-family: "Titillium Web", "Adwaita Sans", sans-serif;
 }
 
 /* Etiquetas en mayuscula del mockup. */
 .micro-label {
-    -fx-font-family: "InputSansCondensed Nerd Font", "Adwaita Sans", sans-serif;
+    -fx-font-family: "Titillium Web", "Adwaita Sans", sans-serif;
     -fx-font-size: 10px;
     -fx-font-weight: bold;
     -fx-text-fill: -fx-text-faint;
@@ -97,7 +99,7 @@
 }
 
 .brand-mark {
-    -fx-font-family: "Orbitron", "Adwaita Sans", sans-serif;
+    -fx-font-family: "Titillium Web", "Adwaita Sans", sans-serif;
     -fx-font-size: 26px;
     -fx-font-weight: bold;
     -fx-text-fill: -fx-brand;
@@ -142,7 +144,7 @@
 
 /* Contador de segmento (el "VUELTA 18/58" del mockup). */
 .counter-value {
-    -fx-font-family: "Orbitron", "JetBrains Mono", monospace;
+    -fx-font-family: "JetBrains Mono", monospace;
     -fx-font-size: 19px;
     -fx-font-weight: bold;
     -fx-text-fill: -fx-accent-amber;
@@ -185,7 +187,7 @@
 }
 
 .header-clock {
-    -fx-font-family: "Orbitron", "JetBrains Mono", monospace;
+    -fx-font-family: "JetBrains Mono", monospace;
     -fx-font-size: 20px;
     -fx-font-weight: bold;
     -fx-text-fill: -fx-text-hero;
@@ -360,7 +362,7 @@
 }
 
 .hero-number {
-    -fx-font-family: "Orbitron", "JetBrains Mono", monospace;
+    -fx-font-family: "JetBrains Mono", monospace;
     -fx-font-size: 44px;
     -fx-font-weight: bold;
     -fx-text-fill: -fx-text-hero;
@@ -448,7 +450,7 @@
 }
 
 .card-value {
-    -fx-font-family: "Orbitron", "JetBrains Mono", monospace;
+    -fx-font-family: "JetBrains Mono", monospace;
     -fx-font-size: 28px;
     -fx-font-weight: bold;
     -fx-text-fill: -fx-brand;
@@ -546,6 +548,66 @@
 
 .explore-card-cta:pressed {
     -fx-background-color: #B80600;
+}
+
+/* =============================================================
+   Tarjeta de piloto, calcada de formula1.com/en/drivers
+
+   Casi todo el color va inline desde ExploreDriversController porque
+   depende del equipo (fondo oscurecido, tinte del patron, halo del
+   hover). Aqui solo queda lo que es igual en las veinte tarjetas.
+   ============================================================= */
+
+.driver-card {
+    -fx-background-color: transparent;
+    -fx-background-radius: 12;
+    -fx-padding: 0;
+}
+
+/* El nombre en dos pesos es lo que da la jerarquia de la referencia:
+   el apellido manda y el nombre de pila lo acompana. */
+.driver-card-first {
+    -fx-font-size: 19px;
+    -fx-text-fill: -fx-text-hero;
+    -fx-opacity: 0.92;
+}
+
+.driver-card-last {
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.driver-card-team {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+    -fx-opacity: 0.72;
+}
+
+/* Dorsal fantasma. La F1 lo publica como imagen, pero solo para 2026:
+   en 2024 el CDN devuelve un PNG en blanco, asi que va como texto. */
+.driver-card-number {
+    -fx-font-size: 34px;
+    -fx-font-weight: 900;
+    -fx-text-fill: white;
+    -fx-opacity: 0.3;
+}
+
+.driver-card-code {
+    -fx-font-family: "JetBrains Mono", monospace;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+    -fx-opacity: 0.8;
+}
+
+/* Respaldo cuando falta el render del piloto. */
+.driver-card-watermark {
+    -fx-font-size: 76px;
+    -fx-font-weight: 900;
+    -fx-text-fill: white;
+    -fx-opacity: 0.16;
 }
 
 /* Detalle de circuito: el viewport y cada bloque conservan el tema oscuro. */
@@ -646,14 +708,6 @@
     -fx-font-size: 10px;
     -fx-font-weight: bold;
     -fx-text-fill: -fx-text-faint;
-}
-
-.card-link {
-    -fx-background-color: transparent;
-    -fx-padding: 3 0 3 8;
-    -fx-font-size: 10px;
-    -fx-font-weight: bold;
-    -fx-cursor: hand;
 }
 
 /* Numero del piloto sobre la foto. */
@@ -841,12 +895,10 @@
 }
 
 /* =============================================================
-   Paneles de sesion (telemetria, clima, analisis…)
+   Paneles de sesion (evolucion, telemetria, sectores)
    ============================================================= */
 
-.evolution-panel, .telemetry-panel, .weather-panel,
-.lap-evolution-panel, .sector-comparison-panel,
-.track-evolution-panel, .session-analysis-panel {
+.evolution-panel, .telemetry-panel, .sector-comparison-panel {
     -fx-background-color: -fx-surface-1;
     -fx-background-radius: 8;
     -fx-border-color: -fx-border-2;
@@ -854,8 +906,7 @@
     -fx-padding: 16;
 }
 
-.evolution-card, .telemetry-card, .telemetry-summary,
-.weather-card, .analysis-card {
+.evolution-card, .telemetry-card, .telemetry-summary {
     -fx-background-color: -fx-surface-2;
     -fx-background-radius: 6;
     -fx-border-color: -fx-border-2;
@@ -865,18 +916,15 @@
 
 .evolution-card { -fx-min-width: 190; }
 .telemetry-card, .telemetry-summary { -fx-min-width: 210; }
-.weather-card { -fx-min-width: 130; }
-.analysis-card { -fx-min-width: 170; }
 
-.metric-value, .telemetry-value, .weather-value,
-.analysis-pole, .analysis-value {
+.metric-value, .telemetry-value {
     -fx-font-family: "JetBrains Mono", monospace;
     -fx-font-size: 17px;
     -fx-font-weight: bold;
     -fx-text-fill: -fx-text-hero;
 }
 
-.telemetry-title, .weather-title, .analysis-title {
+.telemetry-title {
     -fx-font-size: 13px;
     -fx-font-weight: bold;
     -fx-text-fill: -fx-text-hero;
@@ -900,15 +948,6 @@
     -fx-font-weight: bold;
 }
 
-.weather-state {
-    -fx-background-color: #101823;
-    -fx-background-radius: 3;
-    -fx-padding: 3 10 3 10;
-    -fx-text-fill: -fx-accent-blue;
-    -fx-font-size: 10px;
-    -fx-font-weight: bold;
-}
-
 .delta-faster, .sector-winner, .best-sector {
     -fx-text-fill: -fx-accent-green;
     -fx-font-weight: bold;
@@ -916,10 +955,6 @@
 
 .delta-slower {
     -fx-text-fill: -fx-accent-red;
-}
-
-.session-analysis-panel .list-view {
-    -fx-min-height: 140;
 }
 
 /* Barras de progreso por metrica. */
@@ -934,6 +969,15 @@
     -fx-background-radius: 3;
 }
 
+/* Sin alto minimo, VBox aplasta las barras a cero en cuanto el panel de
+   evolucion compite por altura con la tabla de resultados: la metrica
+   desaparecia sin que nada fallara. */
+.evolution-card .progress-bar,
+.telemetry-card .progress-bar {
+    -fx-min-height: 8;
+    -fx-pref-height: 8;
+}
+
 .progress-bar.metric-speed > .bar        { -fx-background-color: -fx-accent-red; }
 .progress-bar.metric-consumption > .bar  { -fx-background-color: -fx-accent-blue; }
 .progress-bar.metric-wear > .bar         { -fx-background-color: -fx-accent-amber; }
@@ -943,7 +987,6 @@
 .progress-bar.metric-engine > .bar       { -fx-background-color: -fx-brand; }
 .progress-bar.metric-grip > .bar         { -fx-background-color: -fx-accent-green; }
 .progress-bar.metric-traction > .bar     { -fx-background-color: -fx-accent-blue; }
-.progress-bar.metric-braking > .bar      { -fx-background-color: #FF8000; }
 
 /* =============================================================
    Graficos
@@ -983,20 +1026,6 @@
     -fx-text-fill: -fx-text-muted;
 }
 
-.lap-evolution-panel .chart-series-line {
-    -fx-stroke: -fx-brand;
-    -fx-stroke-width: 2px;
-}
-
-.track-evolution-panel .default-color0.chart-series-line {
-    -fx-stroke: -fx-accent-green;
-    -fx-stroke-width: 2px;
-}
-
-.track-evolution-panel .default-color1.chart-series-line {
-    -fx-stroke: -fx-accent-amber;
-    -fx-stroke-width: 2px;
-}
 
 /* =============================================================
    Controles
@@ -1200,7 +1229,7 @@
 }
 
 .gallery-title {
-    -fx-font-family: "Orbitron", "JetBrains Mono", monospace;
+    -fx-font-family: "JetBrains Mono", monospace;
     -fx-font-size: 24px;
     -fx-font-weight: bold;
     -fx-text-fill: -fx-text-hero;
@@ -1269,7 +1298,7 @@
 }
 
 .grid-car-model {
-    -fx-font-family: "Orbitron", "JetBrains Mono", monospace;
+    -fx-font-family: "JetBrains Mono", monospace;
     -fx-font-size: 15px;
     -fx-font-weight: bold;
     -fx-text-fill: -fx-text-hero;
