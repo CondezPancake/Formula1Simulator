@@ -12,6 +12,22 @@
 
 # Formula1Simulator
 
+## Introducción
+
+La Fórmula 1 es una disciplina que lleva la ingeniería y la estrategia al límite, donde milésimas de segundo separan la victoria de la derrota. **Formula1Simulator** es una aplicación de escritorio desarrollada en Java 17 y JavaFX que captura esta emoción, ofreciendo una simulación interactiva y altamente detallada de una sesión de clasificación de F1. 
+## Problemática
+
+En el automovilismo deportivo moderno, el éxito no depende únicamente de pisar el acelerador a fondo. Es el resultado de una compleja interacción entre la configuración técnica del vehículo, las condiciones climáticas cambiantes y las características únicas de cada trazado. 
+
+A menudo, los aficionados y estudiantes de desarrollo de software carecen de herramientas accesibles que ilustren cómo se gestionan e impactan estas variables en un sistema interconectado. El desafío principal de este proyecto fue diseñar un sistema modular que pudiera:
+1. Mantener un registro CRUD eficiente de las entidades del deporte (vehículos, pilotos, circuitos).
+2. Procesar reglas de negocio complejas (aerodinámica, desgaste, consumo) sin bloquear la interfaz de usuario.
+3. Simular eventos aleatorios y evolución de pista de manera concurrente para reflejar el caos controlado de una sesión de clasificación real.
+
+Formula1Simulator resuelve esto mediante una arquitectura limpia y el uso de hilos en segundo plano, ofreciendo una experiencia inmersiva y un código mantenible.
+A diferencia de los gestores de bases de datos convencionales, esta plataforma no solo permite administrar el ecosistema de la competición (circuitos, escuderías, pilotos y vehículos), sino que pone a prueba estos datos en un entorno dinámico. El motor de simulación calcula los tiempos de vuelta en tiempo real ponderando la habilidad del piloto, las capacidades del monoplaza, los reglajes elegidos y la evolución impredecible del clima y la pista.
+
+
 Aplicación de escritorio en **Java 17 + JavaFX** para simular una sesión de **clasificación de Fórmula 1**: gestión de pilotos, equipos, vehículos y circuitos, configuración del monoplaza, y una sesión en la que los 20 pilotos marcan tiempo según su habilidad, su coche, el circuito, el clima y los ajustes elegidos.
 
 La especificación que sigue el proyecto es [`f1project.md`](f1project.md).
@@ -362,8 +378,3 @@ El archivo se genera con `tools/gen_seed.py` para que los datos sean reproducibl
 | **`feat: ⚡ Simulación con hilos e historial`** | `feature/ui-simulation` | Sesión completa y almacenamiento |
 | **`docs: 📝 Realinear el README`** | `docs/realign` | Este documento |
 
-## Pendiente
-
-- **Pestañas de análisis** (clima dinámico, eventos, evolución de vuelta, sectores, evolución de pista, análisis) y **comparación de vehículos**: ya heredan la paleta y los componentes nuevos, pero su composición todavía no está trabajada al detalle del resto.
-- **Sonido**: el semáforo se sintetiza con `javax.sound.sampled` en lugar de reproducir una grabación, para no añadir `javafx-media` ni archivos de audio al repositorio.
-- Imágenes de **equipos y vehículos**: `seed.json` trae las URL de 3 logos y ninguna foto de coche; además los trazados son SVG remotos y JavaFX no renderiza SVG sin `javafx-web`. Las tarjetas usan un marcador propio mientras tanto.

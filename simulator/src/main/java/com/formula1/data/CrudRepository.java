@@ -8,15 +8,18 @@ import java.util.Optional;
  * es lo que permite que la aplicación siga funcionando cuando MongoDB no
  * está disponible: basta con no invocar al repositorio.
  */
+
+// Define q metodos debe tener una clase q la implemente, pero no como lo hace
+
 public interface CrudRepository<T, ID> {
 
-    T save(T entidad);
+    T save(T entidad); 
 
-    Optional<T> findById(ID id);
+    Optional<T> findById(ID id);  
 
-    List<T> findAll();
+    List<T> findAll(); 
 
-    void deleteById(ID id);
+    void deleteById(ID id); 
 
-    void saveAll(List<T> entidades);
+    void saveAll(List<T> entidades); 
 }
