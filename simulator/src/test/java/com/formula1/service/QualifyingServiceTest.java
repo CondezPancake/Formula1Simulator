@@ -285,6 +285,44 @@ class QualifyingServiceTest {
     }
 
     @Test
+    void publicaLaClasificacionOrdenadaMientrasAvanzaLaSesion() {
+        List<List<LapResult>> parciales = new ArrayList<>();
+
+        QualifyingSession sesion = sesiones.simular(
+                config(DrivingMode.NORMAL), WeatherCondition.SECO, null,
+                null, null, null, parciales::add);
+
+        assertEquals(QualifyingService.SEGMENTOS_EVOLUCION, parciales.size());
+        for (List<LapResult> parcial : parciales) {
+            assertEquals(sesion.getResultados().size(), parcial.size());
+            for (int posicion = 0; posicion < parcial.size(); posicion++) {
+                assertEquals(posicion + 1, parcial.get(posicion).getPosicion());
+                if (posicion > 0 && parcial.get(posicion).isVueltaValida()) {
+                    assertTrue(parcial.get(posicion - 1).getTiempoSegundos()
+                            <= parcial.get(posicion).getTiempoSegundos());
+                }
+            }
+        }
+
+        List<LapResult> ultima = parciales.get(parciales.size() - 1);
+        assertEquals(sesion.getResultados().stream().map(LapResult::getPiloto).toList(),
+                ultima.stream().map(LapResult::getPiloto).toList());
+
+        List<LapResult> primera = parciales.get(0);
+        boolean huboCambioDePosicion = sesion.getResultados().stream().anyMatch(resultado -> {
+            int posicionInicial = primera.stream()
+                    .filter(fila -> fila.getPilotoId() == resultado.getPilotoId())
+                    .findFirst().orElseThrow().getPosicion();
+            return parciales.stream().skip(1).anyMatch(fotograma ->
+                    fotograma.stream()
+                            .filter(fila -> fila.getPilotoId() == resultado.getPilotoId())
+                            .findFirst().orElseThrow().getPosicion() != posicionInicial);
+        });
+        assertTrue(huboCambioDePosicion,
+                "la torre debe reflejar al menos un adelantamiento durante la vuelta");
+    }
+
+    @Test
     void guardaLaEvolucionAunqueLaSimulacionNoTengaCallbacksVisuales() {
         QualifyingSession sesion = sesiones.simular(
                 config(DrivingMode.NORMAL), WeatherCondition.SECO, null);

@@ -463,7 +463,8 @@ public class SimulationController {
                     mostrarTelemetria(muestra);
                     mostrarClimaResumen(muestra.clima());
                 }),
-                muestra -> Platform.runLater(() -> mostrarEvolucionPista(muestra)));
+                muestra -> Platform.runLater(() -> mostrarEvolucionPista(muestra)),
+                resultados -> Platform.runLater(() -> mostrarClasificacionEnVivo(resultados)));
 
         // Enlazar en vez de asignar: el Task publica sus cambios en el hilo
         // de JavaFX, así que la interfaz se actualiza sola y sin bloquearse.
@@ -493,6 +494,21 @@ public class SimulationController {
         });
 
         Async.ejecutar(tarea);
+    }
+
+    /** Refresca las dos tablas mientras los pilotos van completando sus vueltas. */
+    private void mostrarClasificacionEnVivo(List<LapResult> resultados) {
+        ObservableList<LapResult> parcial = FXCollections.observableArrayList(resultados);
+        tabla.setItems(parcial);
+        tablaDashboard.setItems(parcial);
+        if (resultados.isEmpty()) {
+            return;
+        }
+        LapResult lider = resultados.get(0);
+        lblDashboardEvento.setText("EN VIVO");
+        lblDashboardMensaje.setText("Líder provisional: " + lider.getPiloto()
+                + " · " + FormatUtils.formatLapResult(lider)
+                + " · " + resultados.size() + " clasificados");
     }
 
     private void reiniciarEvolucion() {

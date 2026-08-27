@@ -50,7 +50,8 @@ ya contenga pantallas, datos o servicios que puedan reutilizarse como punto de p
 | E09 | HU-31 a HU-33 | **Terminadas** |
 | E10 | HU-34 | **Terminada** · sin pestaña independiente |
 | E11 | HU-35 | **Terminada** |
-| E13 | HU-37 a HU-40 | **Pendientes** |
+| E13 | HU-38 y HU-39 | **Terminadas** |
+| E13 | HU-37 y HU-40 | **Pendientes** |
 | E14 | HU-41 y HU-42 | **Pendientes** |
 | E15 | HU-43 | **Pendiente** |
 | E16 | HU-44 | **Terminada** |
@@ -67,7 +68,7 @@ ya contenga pantallas, datos o servicios que puedan reutilizarse como punto de p
 | Elemento | Terminadas | Pendientes | Total vigente |
 |---|---:|---:|---:|
 | Épicas | 11 | 10 | 21 |
-| Historias de usuario | 34 | 21 | 55 |
+| Historias de usuario | 36 | 19 | 55 |
 
 ## Requisitos funcionales
 
@@ -120,7 +121,7 @@ Resumen RNF generales: **11 cumplidos de 11 requisitos vigentes**.
 
 Resumen POO/calidad: **26 cumplidos de 26**.
 
-## Backlog técnico pendiente
+## Backlog técnico y seguimiento
 
 ### E13 — Rediseño de experiencia de Carrera
 
@@ -136,13 +137,13 @@ Resumen POO/calidad: **26 cumplidos de 26**.
 - Actualizar visualmente la posición de los pilotos.
 - Identificar cada piloto y diferenciar el piloto fijado.
 
-#### HU-38 — Integrar clima básico
+#### HU-38 — Integrar clima básico — **Terminada**
 
 - Mostrar temperatura, humedad, lluvia y condición actual.
 - Actualizar el clima dinámicamente.
 - Integrarlo visualmente con el Dashboard.
 
-#### HU-39 — Integrar comparación dinámica de sectores
+#### HU-39 — Integrar comparación dinámica de sectores — **Terminada**
 
 - Mostrar S1, S2 y S3.
 - Identificar el mejor sector y la diferencia entre pilotos.
@@ -326,7 +327,7 @@ Prioridad: **opcional / baja**.
 | Fase / Sprint | Prioridad | Descripción | Historias de usuario |
 |---|---|---|---|
 | Sprint / Fase 1 | Alta | Núcleo de la nueva experiencia | HU-37, HU-40, HU-48, HU-49, HU-50, HU-51 |
-| Sprint / Fase 2 | Alta | Integración visual | HU-38, HU-39, HU-41, HU-42, HU-43 |
+| Sprint / Fase 2 | Alta | Integración visual pendiente | HU-41, HU-42, HU-43 |
 | Sprint / Fase 3 | Media | Explorar | HU-44, HU-45, HU-46, HU-47 |
 | Sprint / Fase 4 | Media | Resultado y multimedia | HU-52, HU-53, HU-54 |
 | Sprint / Fase 5 | Baja | Arquitectura | HU-55, HU-56 |
