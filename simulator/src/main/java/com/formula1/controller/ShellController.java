@@ -64,6 +64,9 @@ public class ShellController {
     @FXML private Button btnGestion;
     @FXML private Button btnConfig;
 
+    /** App inyecta aquí cómo volver al menú principal, para no depender de él. */
+    private Runnable alVolverAlMenu = () -> { };
+
     @FXML
     public void initialize() {
         instancia = this;
@@ -240,6 +243,15 @@ public class ShellController {
         if (Navigator.confirmar("¿Quieres salir del simulador?")) {
             Platform.exit();
         }
+    }
+
+    public void setAlVolverAlMenu(Runnable callback) {
+        this.alVolverAlMenu = callback;
+    }
+
+    @FXML
+    private void onVolverAlMenu() {
+        alVolverAlMenu.run();
     }
 
     // --- API para que la sesión alimente la cabecera ---------------------

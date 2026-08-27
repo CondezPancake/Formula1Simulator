@@ -22,7 +22,7 @@
             <HBox fx:id="cabecera" styleClass="app-header" spacing="0" alignment="CENTER_LEFT">
                 <padding><Insets left="20" right="20"/></padding>
 
-                <Label text="F1" styleClass="brand-mark"/>
+                <Button text="F1" styleClass="brand-mark,brand-mark-boton" onAction="#onVolverAlMenu"/>
 
                 <Region styleClass="header-divider">
                     <HBox.margin><Insets left="18" right="18"/></HBox.margin>
