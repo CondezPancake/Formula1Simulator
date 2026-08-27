@@ -4,12 +4,13 @@
 <?import javafx.scene.control.TabPane?>
 
 <TabPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+         fx:id="secciones" fx:controller="com.formula1.controller.ConfigHistorialController"
          styleClass="subnav" tabClosingPolicy="UNAVAILABLE">
     <tabs>
-        <Tab text="CONFIGURACIÓN">
+        <Tab fx:id="tabConfiguracion" text="CONFIGURACIÓN">
             <fx:include source="config.fxml"/>
         </Tab>
-        <Tab text="HISTORIAL">
+        <Tab fx:id="tabHistorial" text="HISTORIAL">
             <fx:include source="history.fxml"/>
         </Tab>
     </tabs>
