@@ -9,6 +9,8 @@ import javafx.scene.media.MediaPlayer;
 import javafx.util.Duration;
 
 import java.net.URL;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.prefs.Preferences;
 
 /**
@@ -35,25 +37,55 @@ public final class AudioManager {
 
     private static MediaPlayer musicaActual;
 
+    /**
+     * Los efectos se cachean porque construir un {@link AudioClip} decodifica
+     * el mp3 en el hilo llamante, que es el de FX: hacerlo en cada clic o en
+     * cada hover metía un tirón justo cuando arranca la animación. Un
+     * {@code AudioClip} ya cargado se puede volver a disparar sin coste, y
+     * admite solaparse consigo mismo.
+     */
+    private static final Map<String, AudioClip> CLIPS = new ConcurrentHashMap<>();
+
     private AudioManager() {
     }
 
     /** Reproduce un efecto corto una sola vez (clic, stinger). */
     public static void reproducirSfx(String recursoClasspath) {
+        reproducirSfx(recursoClasspath, 1.0);
+    }
+
+    /**
+     * Igual que {@link #reproducirSfx(String)} pero atenuando el efecto, para
+     * los sonidos de acompañamiento que no deben tapar al de confirmación.
+     */
+    public static void reproducirSfx(String recursoClasspath, double factorVolumen) {
         if (silenciado || recursoClasspath == null) {
             return;
         }
-        URL recurso = AudioManager.class.getResource(recursoClasspath);
-        if (recurso == null) {
+        AudioClip clip = clipDe(recursoClasspath);
+        if (clip == null) {
             return;
         }
         try {
-            AudioClip clip = new AudioClip(recurso.toExternalForm());
-            clip.setVolume(volumenSfx);
-            clip.play();
+            clip.play(Math.max(0, Math.min(1, volumenSfx * factorVolumen)));
         } catch (RuntimeException ignorado) {
             // Sin el archivo o sin códec disponible, la app sigue siendo usable en silencio.
         }
+    }
+
+    /** Devuelve {@code null} —sin cachearlo— si el recurso no existe o no carga. */
+    private static AudioClip clipDe(String recursoClasspath) {
+        return CLIPS.computeIfAbsent(recursoClasspath, ruta -> {
+            URL recurso = AudioManager.class.getResource(ruta);
+            if (recurso == null) {
+                return null;
+            }
+            try {
+                return new AudioClip(recurso.toExternalForm());
+            } catch (RuntimeException ignorado) {
+                return null;
+            }
+        });
     }
 
     /** Arranca música de fondo, deteniendo la anterior si la había. */
