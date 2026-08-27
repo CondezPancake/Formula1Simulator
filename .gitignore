@@ -10,3 +10,8 @@ target/
 # tools/copiar_imagenes.py.
 docs/assets/F1_Recursos_Multimedia/img-vehiculos/
 docs/assets/F1_Recursos_Multimedia/img-circuitos/
+
+# Material de video original (410 MB). La app consume el loop corto de
+# simulator/src/main/resources/videos/menu-loop.mp4, generado con ffmpeg
+# (ver docs/features/ui-menu.md).
+media-src/
