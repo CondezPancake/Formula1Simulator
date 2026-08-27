@@ -32,6 +32,10 @@ public final class Navigator {
     private static Object controladorRetorno;
     private static String vistaRetornoNombre;
 
+    /** Entrada de pantalla viva, para poder cortarla si llega otra navegación. */
+    private static ParallelTransition entradaEnCurso;
+    private static Node nodoEntrando;
+
     private Navigator() {
     }
 
@@ -123,6 +127,18 @@ public final class Navigator {
 
     /** Fade + leve subida para que cada vista se sienta como una llegada, no un corte. */
     private static void mostrarConEntrada(Node contenido) {
+        // Navegar dos veces seguidas más rápido que la animación dejaba dos
+        // transiciones escribiendo sobre el mismo nodo; y si la anterior se
+        // quedó a medias, su vista cacheada conservaba la opacidad y el
+        // desplazamiento intermedios al volver a mostrarla.
+        if (entradaEnCurso != null) {
+            entradaEnCurso.stop();
+            if (nodoEntrando != null) {
+                nodoEntrando.setOpacity(1);
+                nodoEntrando.setTranslateY(0);
+            }
+        }
+
         contenedor.getChildren().setAll(contenido);
         contenido.setOpacity(0);
         contenido.setTranslateY(15);
@@ -132,7 +148,15 @@ public final class Navigator {
         TranslateTransition t = new TranslateTransition(Animaciones.ENTRADA_PANTALLA, contenido);
         t.setToY(0);
         t.setInterpolator(Animaciones.EASE_OUT);
-        new ParallelTransition(f, t).play();
+
+        ParallelTransition entrada = new ParallelTransition(f, t);
+        nodoEntrando = contenido;
+        entradaEnCurso = entrada;
+        entrada.setOnFinished(e -> {
+            entradaEnCurso = null;
+            nodoEntrando = null;
+        });
+        entrada.play();
     }
 
     private static void prepararSesionPendiente() {
