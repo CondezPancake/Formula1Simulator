@@ -9,7 +9,6 @@ import com.formula1.util.Animaciones;
 import com.formula1.util.Async;
 
 import javafx.animation.FadeTransition;
-import javafx.animation.ParallelTransition;
 import javafx.animation.TranslateTransition;
 import javafx.application.Application;
 import javafx.concurrent.Task;
@@ -32,8 +31,11 @@ public class App extends Application {
     private static final String HOJA_ESTILOS = "/css/style.css";
     private static final Duration CRUCE = Duration.millis(400);
 
-    /** Se guarda para poder soltar su vídeo al entrar al shell. */
+    /** Se guarda para poder soltar su slideshow al entrar al shell. */
     private MainMenuController menuActual;
+
+    /** Ídem al revés: el shell tiene que soltar su reloj al volver al menú. */
+    private ShellController shellActual;
 
     /**
      * Titillium Web fue la tipografia oficial de la F1 entre 2013 y 2017 y es
@@ -91,6 +93,10 @@ public class App extends Application {
      */
     private void mostrarMenu(StackPane raizEscena, boolean regresando) {
         try {
+            if (shellActual != null) {
+                shellActual.liberar();
+                shellActual = null;
+            }
             FXMLLoader cargador = new FXMLLoader(getClass().getResource(VISTA_MENU));
             Parent menu = cargador.load();
             MainMenuController controlador = cargador.getController();
@@ -117,9 +123,12 @@ public class App extends Application {
             FXMLLoader cargador = new FXMLLoader(getClass().getResource(VISTA_SHELL));
             Parent shell = cargador.load();
             ShellController controlador = cargador.getController();
+            shellActual = controlador;
             controlador.setAlVolverAlMenu(() -> mostrarMenu(raizEscena, true));
+            // Antes de entrar, para que el shell ya muestre la sección
+            // elegida mientras se desliza en vez de aparecer y saltar.
+            controlador.arrancar(alTerminarDeCargar);
             cruzarSeccion(raizEscena, shell, true);
-            alTerminarDeCargar.run();
         } catch (IOException e) {
             throw new IllegalStateException("No se pudo cargar la aplicación", e);
         }
@@ -127,46 +136,40 @@ public class App extends Application {
 
     /** Añade {@code entrante} con fade-in mientras desvanece lo que hubiera en la raíz. */
     private void cruzar(StackPane raizEscena, Node entrante) {
+        // Se retira el nodo concreto que sale, no «el que esté en la posición
+        // 0»: si dos cruces se solapan, el índice ya no señala a quien toca.
+        Node saliente = raizEscena.getChildren().isEmpty() ? null : raizEscena.getChildren().get(0);
         entrante.setOpacity(0);
         raizEscena.getChildren().add(entrante);
         FadeTransition entrada = new FadeTransition(CRUCE, entrante);
         entrada.setToValue(1);
-        entrada.setOnFinished(e -> raizEscena.getChildren().remove(0));
+        entrada.setOnFinished(e -> raizEscena.getChildren().remove(saliente));
         entrada.play();
     }
 
     /**
-     * Cruce con slide entre el menú y el shell: el entrante llega desde un
-     * lado con fundido, el saliente se va hacia el contrario, para que se
-     * sienta como continuación del menú y no como un corte a negro.
+     * Cambio con slide entre el menú y el shell: la pantalla entrante se
+     * desliza desde un lado por encima de la saliente, para que se sienta
+     * como continuación del menú y no como un corte a negro.
      * {@code avanzando} decide el sentido; llamar con {@code false} produce
      * la animación inversa (volver al menú).
      */
     private void cruzarSeccion(StackPane raizEscena, Node entrante, boolean avanzando) {
+        // Sin fundidos: cruzar opacidades dejaba a las dos pantallas a media
+        // transparencia a la vez y, con el fondo casi negro de la raíz
+        // asomando entre ambas, se veía un bajón oscuro —el «fade out, negro,
+        // fade in» que precisamente se quería evitar—. Ahora la pantalla
+        // entrante es opaca (la regla .root le da fondo) y se desliza por
+        // encima de la saliente, que se retira ya tapada.
         Node saliente = raizEscena.getChildren().isEmpty() ? null : raizEscena.getChildren().get(0);
-        double desplazamiento = avanzando ? 36 : -36;
 
-        entrante.setOpacity(0);
-        entrante.setTranslateX(desplazamiento);
+        entrante.setTranslateX(avanzando ? 36 : -36);
         raizEscena.getChildren().add(entrante);
 
-        FadeTransition entradaFade = new FadeTransition(Animaciones.TRANSICION_SECCION, entrante);
-        entradaFade.setToValue(1);
-        TranslateTransition entradaSlide = new TranslateTransition(Animaciones.TRANSICION_SECCION, entrante);
-        entradaSlide.setToX(0);
-        entradaSlide.setInterpolator(Animaciones.EASE_OUT);
-        ParallelTransition entrada = new ParallelTransition(entradaFade, entradaSlide);
-
-        if (saliente != null) {
-            FadeTransition salidaFade = new FadeTransition(Animaciones.TRANSICION_SECCION, saliente);
-            salidaFade.setToValue(0);
-            TranslateTransition salidaSlide = new TranslateTransition(Animaciones.TRANSICION_SECCION, saliente);
-            salidaSlide.setToX(-desplazamiento * 0.4);
-            salidaSlide.setInterpolator(Animaciones.EASE_OUT);
-            new ParallelTransition(salidaFade, salidaSlide).play();
-        }
-
-        entrada.setOnFinished(e -> raizEscena.getChildren().remove(0));
+        TranslateTransition entrada = new TranslateTransition(Animaciones.TRANSICION_SECCION, entrante);
+        entrada.setToX(0);
+        entrada.setInterpolator(Animaciones.EASE_OUT);
+        entrada.setOnFinished(e -> raizEscena.getChildren().remove(saliente));
         entrada.play();
     }
 

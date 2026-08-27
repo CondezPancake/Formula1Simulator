@@ -67,6 +67,8 @@ public class ShellController {
     /** App inyecta aquí cómo volver al menú principal, para no depender de él. */
     private Runnable alVolverAlMenu = () -> { };
 
+    private Timeline reloj;
+
     @FXML
     public void initialize() {
         instancia = this;
@@ -74,21 +76,37 @@ public class ShellController {
         Navigator.registrar(contenido);
         arrancarReloj();
 
+        navegacion.setDisable(true);
+        cargando.setVisible(true);
+        lblEstado.setText("Cargando datos…");
+    }
+
+    /**
+     * Abre el shell en la sección que se eligió en el menú.
+     *
+     * La navegación inicial vive aquí y no en {@link #initialize()} porque
+     * depende de algo que solo sabe quien carga la vista. Antes el shell se
+     * abría siempre en Carrera y la sección pedida se aplicaba después: si
+     * los datos aún no habían terminado de cargarse, el {@code Task} remataba
+     * más tarde volviendo a Carrera y se llevaba por delante la elección del
+     * usuario, que acababa en una sección distinta de la que había pulsado.
+     *
+     * @param destinoInicial sección a abrir; {@code null} abre Carrera
+     */
+    public void arrancar(Runnable destinoInicial) {
+        Runnable destino = destinoInicial != null ? destinoInicial : this::onCarrera;
+
         // El menú principal ya dispara DataStore.cargar() en paralelo a la
         // intro; cargar() no es idempotente, así que si ya terminó no se
         // vuelve a invocar. El Task de abajo es solo el respaldo para cuando
-        // el shell se carga directo (por ejemplo, en pruebas).
+        // el shell se abre sin haber pasado por el menú.
         if (DataStore.getInstance().estaCargado()) {
             lblEstado.setText(resumen());
             navegacion.setDisable(false);
             cargando.setVisible(false);
-            onCarrera();
+            destino.run();
             return;
         }
-
-        navegacion.setDisable(true);
-        cargando.setVisible(true);
-        lblEstado.setText("Cargando datos…");
 
         Task<String> carga = new Task<>() {
             @Override
@@ -101,7 +119,7 @@ public class ShellController {
             lblEstado.setText(carga.getValue() + "  ·  " + resumen());
             navegacion.setDisable(false);
             cargando.setVisible(false);
-            onCarrera();
+            destino.run();
         });
 
         carga.setOnFailed(e -> {
@@ -117,11 +135,23 @@ public class ShellController {
     /** Reloj de la cabecera, con el huso horario real de la máquina. */
     private void arrancarReloj() {
         lblZonaHoraria.setText("UTC" + desplazamientoHorario());
-        Timeline reloj = new Timeline(new KeyFrame(Duration.ZERO,
+        reloj = new Timeline(new KeyFrame(Duration.ZERO,
                 e -> lblReloj.setText(LocalTime.now().format(RELOJ))),
                 new KeyFrame(Duration.seconds(1)));
         reloj.setCycleCount(Animation.INDEFINITE);
         reloj.play();
+    }
+
+    /**
+     * Suelta lo que seguiría corriendo tras abandonar el shell. Ahora que se
+     * puede volver al menú, sin esto cada ida y vuelta dejaría atrás otro
+     * reloj vivo actualizando una etiqueta que ya no está en pantalla.
+     */
+    public void liberar() {
+        if (reloj != null) {
+            reloj.stop();
+            reloj = null;
+        }
     }
 
     private String desplazamientoHorario() {
