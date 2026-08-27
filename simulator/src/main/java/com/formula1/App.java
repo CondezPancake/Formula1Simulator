@@ -2,11 +2,15 @@ package com.formula1;
 
 import com.formula1.controller.IntroController;
 import com.formula1.controller.MainMenuController;
+import com.formula1.controller.ShellController;
 import com.formula1.data.DataStore;
 import com.formula1.data.MongoConnection;
+import com.formula1.util.Animaciones;
 import com.formula1.util.Async;
 
 import javafx.animation.FadeTransition;
+import javafx.animation.ParallelTransition;
+import javafx.animation.TranslateTransition;
 import javafx.application.Application;
 import javafx.concurrent.Task;
 import javafx.fxml.FXMLLoader;
@@ -76,34 +80,45 @@ public class App extends Application {
         };
         Async.ejecutar(carga);
 
-        Node intro = IntroController.crear(() -> mostrarMenu(raizEscena));
+        Node intro = IntroController.crear(() -> mostrarMenu(raizEscena, false));
         raizEscena.getChildren().setAll(intro);
     }
 
-    /** Carga el menú principal y hace un cruce de opacidad con lo que hubiera antes. */
-    private void mostrarMenu(StackPane raizEscena) {
+    /**
+     * Carga el menú principal. La primera vez (desde la intro) usa el fundido
+     * simple de siempre; al volver desde el shell usa el mismo slide de
+     * {@link #cruzarSeccion} que la sección, pero en sentido inverso.
+     */
+    private void mostrarMenu(StackPane raizEscena, boolean regresando) {
         try {
             FXMLLoader cargador = new FXMLLoader(getClass().getResource(VISTA_MENU));
             Parent menu = cargador.load();
             MainMenuController controlador = cargador.getController();
             menuActual = controlador;
             controlador.setAlEntrarAlShell(irA -> mostrarShell(raizEscena, irA));
-            cruzar(raizEscena, menu);
+            if (regresando) {
+                cruzarSeccion(raizEscena, menu, false);
+            } else {
+                cruzar(raizEscena, menu);
+            }
         } catch (IOException e) {
             throw new IllegalStateException("No se pudo cargar el menú principal", e);
         }
     }
 
-    /** Carga el shell (ya con su sección inicial resuelta) y hace el mismo cruce. */
+    /** Carga el shell (ya con su sección inicial resuelta) y hace la transición con slide. */
     private void mostrarShell(StackPane raizEscena, Runnable alTerminarDeCargar) {
         try {
-            // Sin esto el vídeo del menú seguiría decodificando durante la sesión.
+            // Sin esto el slideshow del menú seguiría corriendo durante la sesión.
             if (menuActual != null) {
                 menuActual.liberar();
                 menuActual = null;
             }
-            Parent shell = FXMLLoader.load(getClass().getResource(VISTA_SHELL));
-            cruzar(raizEscena, shell);
+            FXMLLoader cargador = new FXMLLoader(getClass().getResource(VISTA_SHELL));
+            Parent shell = cargador.load();
+            ShellController controlador = cargador.getController();
+            controlador.setAlVolverAlMenu(() -> mostrarMenu(raizEscena, true));
+            cruzarSeccion(raizEscena, shell, true);
             alTerminarDeCargar.run();
         } catch (IOException e) {
             throw new IllegalStateException("No se pudo cargar la aplicación", e);
@@ -116,6 +131,41 @@ public class App extends Application {
         raizEscena.getChildren().add(entrante);
         FadeTransition entrada = new FadeTransition(CRUCE, entrante);
         entrada.setToValue(1);
+        entrada.setOnFinished(e -> raizEscena.getChildren().remove(0));
+        entrada.play();
+    }
+
+    /**
+     * Cruce con slide entre el menú y el shell: el entrante llega desde un
+     * lado con fundido, el saliente se va hacia el contrario, para que se
+     * sienta como continuación del menú y no como un corte a negro.
+     * {@code avanzando} decide el sentido; llamar con {@code false} produce
+     * la animación inversa (volver al menú).
+     */
+    private void cruzarSeccion(StackPane raizEscena, Node entrante, boolean avanzando) {
+        Node saliente = raizEscena.getChildren().isEmpty() ? null : raizEscena.getChildren().get(0);
+        double desplazamiento = avanzando ? 36 : -36;
+
+        entrante.setOpacity(0);
+        entrante.setTranslateX(desplazamiento);
+        raizEscena.getChildren().add(entrante);
+
+        FadeTransition entradaFade = new FadeTransition(Animaciones.TRANSICION_SECCION, entrante);
+        entradaFade.setToValue(1);
+        TranslateTransition entradaSlide = new TranslateTransition(Animaciones.TRANSICION_SECCION, entrante);
+        entradaSlide.setToX(0);
+        entradaSlide.setInterpolator(Animaciones.EASE_OUT);
+        ParallelTransition entrada = new ParallelTransition(entradaFade, entradaSlide);
+
+        if (saliente != null) {
+            FadeTransition salidaFade = new FadeTransition(Animaciones.TRANSICION_SECCION, saliente);
+            salidaFade.setToValue(0);
+            TranslateTransition salidaSlide = new TranslateTransition(Animaciones.TRANSICION_SECCION, saliente);
+            salidaSlide.setToX(-desplazamiento * 0.4);
+            salidaSlide.setInterpolator(Animaciones.EASE_OUT);
+            new ParallelTransition(salidaFade, salidaSlide).play();
+        }
+
         entrada.setOnFinished(e -> raizEscena.getChildren().remove(0));
         entrada.play();
     }
