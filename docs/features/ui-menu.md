@@ -2,163 +2,129 @@
 
 ## Qué es
 
-Antes de entrar al shell, la aplicación pasa por dos pantallas nuevas:
+Antes de entrar al shell, la aplicación pasa por dos pantallas:
 
 1. **Intro** (`IntroController`, Java puro, sin FXML): el logo de F1 aparece
-   con fundido y escala sobre un campo de brasas animado. Dura ~5,4 s y se
+   con fundido y escala sobre un campo de brasas animado. Dura ~6 s y se
    puede saltar con clic, `ESC`, `ENTER` o `ESPACIO`.
-2. **Menú principal** (`menu.fxml` + `MainMenuController`): hub estilo
-   videojuego con fondo de fotos en slideshow, cinco tarjetas y salida.
+2. **Menú principal** (`menu.fxml` + `MainMenuController`): reproducción del
+   menú del videojuego **F1 23**.
 
-`App` encadena intro → menú → shell sobre una única `Scene`, cruzando con
-fundidos de 400 ms. Mantener un solo `Stage`/`Scene` evita el parpadeo y el
-salto de tamaño que provocaría recrear la ventana estando maximizada.
+`App` encadena intro → menú → shell sobre una única `Scene`.
 
-## Geometría: por qué no hay `HBox`
+## Sin transiciones
 
-El diseño de referencia es `docs/assets/menu_mockup.png` (1672×941). Las cinco
-tarjetas **no** forman una rejilla: tienen anchos distintos (las tres oscuras
-se estrechan de izquierda a derecha), alturas distintas y bordes superiores
-distintos. Ningún contenedor estándar reproduce eso, así que van en un `Pane`
-con los hijos sin gestionar (`setManaged(false)`) y recolocados con
-`resizeRelocate` a partir de fracciones del lienzo.
+Los cambios de pantalla son **relevos secos** (`App.mostrar()`, un
+`getChildren().setAll(...)`), y dentro del shell también
+(`Navigator.mostrarVista()`). No hay fundidos ni deslizamientos en ningún
+punto: se retiraron a propósito. La intro conserva su animación interna,
+que es su razón de ser, y como termina desvaneciéndose sola antes de invocar
+su callback, el corte hacia el menú no llega a verse.
 
-> No se usa `layoutXProperty().bind(...)`: `Pane.layoutChildren()` llama a
-> `relocate()` sobre los hijos gestionados, lo que escribiría sobre una
-> propiedad enlazada y lanzaría una excepción.
+La única animación que queda en toda la aplicación es la de la intro.
 
-El **chaflán** (corte a 45° de 20 px en la esquina superior derecha) es un
-`Polygon` puesto como `clip`, con los puntos recalculados en cada cambio de
-tamaño para que el corte mida siempre lo mismo. Como el `clip` se aplica
-*después* del `effect`, el resplandor rojo de la tarjeta principal va en un
-`StackPane` envoltura y no en el `Button` recortado; si se pusieran juntos, el
-recorte se comería el resplandor. Por lo mismo, el contorno gris de AJUSTES es
-un `Polygon` hermano y no un borde CSS.
+## El menú
+
+Referencia: `docs/assets/f1-23-menu-referencia.jpg`.
+
+`GridPane` con dos columnas de `percentWidth` 47/53, la proporción de la
+captura. Es una rejilla de verdad, a diferencia del menú anterior, que
+posicionaba tarjetas por fracciones del lienzo porque no formaban rejilla.
+
+**Columna izquierda** — logo + `TEMPORADA 2025`, la lista de cinco opciones,
+la descripción de la resaltada y, abajo, `SALIR` con la barra de pistas de
+teclado.
+
+Cada fila se compone de dos piezas con una responsabilidad distinta:
+
+- la **fila** (`HBox`) ocupa todo el ancho y es la zona sensible al ratón, para
+  que el cursor la coja entera y no solo encima de la palabra;
+- el **marco** (`StackPane` interior) ciñe al texto y es quien recibe la clase
+  `menu-opcion-activa`. En la referencia el recuadro termina justo después de
+  la palabra, no en el borde de la columna.
+
+A la derecha del marco van tres **galones** (`SVGPath`) de opacidad
+decreciente, visibles solo en la fila activa: es el rasgo que más identifica
+al menú de F1 23.
+
+**Columna derecha** — bloque gráfico, sin fotografía: degradado, franjas
+diagonales, un resplandor rojo de marca, la tira de contadores arriba a la
+derecha y el título de la sección abajo.
+
+> **El orden de las capas de `-fx-background-color` importa y va al revés que
+> en CSS de web**: en JavaFX el primer fondo de la lista se pinta *abajo* y los
+> siguientes encima. Con la base opaca al final tapaba las franjas y el
+> resplandor, y el panel se veía plano.
+
+Los contadores (`21 PILOTOS · 11 EQUIPOS · …`) salen de `DataStore` y se
+pintan **una sola vez**. Si la carga aún no ha terminado quedan guiones: la
+intro dura ~6 s y la carga corre en paralelo desde `App.start()`, así que en
+la práctica siempre está lista, y montar un temporizador para un dato
+decorativo contradiría el «menú estático».
+
+## Interacción
+
+Ratón y teclado, como un menú de consola: el cursor solo **mueve** el
+resaltado y el clic **confirma**; `↑`/`↓` (o `W`/`S`) recorren la lista con
+envolvente, `ENTER`/`ESPACIO` confirman y `ESC` va a SALIR.
+
+> El teclado se engancha con un **filtro en la escena**, no con un manejador en
+> la raíz. Un manejador en la raíz solo dispara si el foco está justamente
+> ahí, y basta que lo tenga el botón SALIR para que las flechas dejen de
+> responder. Como la aplicación reutiliza una única `Scene` para todas las
+> pantallas, el filtro **se retira** cuando el menú la abandona; si no,
+> seguiría interceptando las flechas dentro del shell.
+
+Las cinco opciones y su destino, en el orden en que aparecen:
+
+| Opción | Destino |
+|---|---|
+| CLASIFICACIÓN | `ShellController.irACarrera()` → vista `simulation` |
+| GESTIÓN DE EQUIPOS | `ShellController.irAGestion()` → vista `gestion` |
+| EXPLORAR | `ShellController.irAExplorar()` → vista `explorar` |
+| HISTORIAL | `ShellController.irAHistorial()` → `config-historial`, pestaña Historial |
+| AJUSTES | `AjustesDialog.mostrar()` (modal; no navega) |
+
+El destino no se ejecuta directamente: se pasa a `App`, que se lo entrega a
+`ShellController.arrancar(destino)` para que el shell abra ya en la sección
+elegida. Ese rodeo existe porque, si los datos aún no han terminado de
+cargarse, el shell remataba volviendo a Carrera y se llevaba por delante la
+elección del usuario.
+
+`MenuNavegacionTest` cubre el orden de las opciones, la envolvente del teclado
+y que el panel derecho siga a la opción activa; se comprobó que falla contra
+implementaciones defectuosas antes de darlo por bueno.
 
 ## Tipografía
 
-JavaFX 17 **no tiene `-fx-letter-spacing`** (solo `-fx-line-spacing`), así que
-el tracking de `TEMPORADA 2025`, la línea de contadores y `SALIR` se compone
-carácter a carácter en un `HBox` de nodos `Text`.
-
 Los cuerpos de letra no están en el CSS: los calcula el controlador desde la
-altura de la escena, porque el mockup escala la tipografía con la ventana.
+altura de la escena, porque el menú escala con la ventana.
 
-El mockup usa una condensada que Titillium Web no es. Reproducir su métrica
-exacta exigiría comprimir al ~54 % y deformaría la letra, así que se reproduce
-el efecto —título grande, de sangrado a sangrado— con una compresión acotada
-(`Scale` con pivote en el borde izquierdo) y, si aun al máximo no cabe, se baja
-el cuerpo lo justo. Sin `setMinWidth(USE_PREF_SIZE)` el `Label` se recortaría
-con puntos suspensivos: la `Scale` comprime lo que se ve, pero no reduce los
-límites de layout.
+> Hay un tope de cordura (`medidaValida`, 8000 px). En algunos compositores
+> (visto en Hyprland/Wayland) `Stage.setMaximized` hace que, durante un único
+> pulso, la ventana informe un alto disparatado —miles de millones de px—
+> antes de que llegue el real. Sin el tope ese valor se propagaba a los
+> cuerpos de letra y reventaba el cálculo interno de ajuste de texto de
+> JavaFX de forma permanente: la pantalla se quedaba en blanco y no se
+> recuperaba sola.
 
-Los iconos son `SVGPath` escritos a mano en caja `0 0 24 24`, escalados con un
-`Scale` enlazado a la altura de la escena. Viven en el FXML para que
-`ViewsLoadTest` valide que las rutas parsean.
-
-## Fondo: slideshow de fotos
-
-El fondo del menú fue en su día un vídeo en bucle; se retiró porque cargaba la
-CPU de forma notoria. Hoy `MainMenuController.montarFondoSlideshow()` cicla
-entre hasta tres fotos (`images/menu-fondo/fondo-01/02/03.jpg`), cada una con
-comportamiento *cover* (se escala por el lado que se queda corto y el
-sobrante se recorta, igual que hacía el vídeo).
-
-Ritmo, centralizado en `util/Animaciones`:
-
-- Cada foto se mantiene `FONDO_HOLD` (3 s).
-- Al cambiar, la siguiente foto entra encima con opacidad 0 y funde a 1 en
-  `FONDO_CROSSFADE` (1000 ms) —el mismo patrón aditivo que usa `App.cruzar()`—
-  y solo entonces se retira la anterior del `StackPane`.
-- Cada foto tiene su propio *Ken Burns*: un `Timeline` de una sola pasada
-  (sin `autoReverse` ni ciclo infinito, a diferencia del respaldo estático que
-  tenía el vídeo) que escala de 1.00 a 1.03 durante exactamente el tiempo que
-  la foto está visible, para que el zoom se note pero termine justo cuando
-  sale de escena.
-
-Si falta algún fichero se salta sin más; si faltan los tres, `capaFondo` se
-queda con un `Region` vacío y el scrim ya deja el fondo en negro —la misma
-degradación silenciosa que tenía el respaldo del vídeo.
-
-`MainMenuController.liberar()` —invocado desde `App` al salir del menú— para
-el `Timeline` del ciclo y el Ken Burns en curso; sin eso seguirían corriendo
-de fondo durante toda la sesión.
-
-## Interacción del menú
-
-**Hover**: la tarjeta bajo el cursor escala a 1.03 (`Animaciones.HOVER` =
-180 ms, `EASE_OUT`) y las otras cuatro bajan a opacidad 0.72, para dar foco a
-la activa. El aumento de brillo y el acento rojo más visible los cubre el CSS
-`:hover` que ya existía para cada variante de tarjeta; la roja además gana un
-glow más intenso (`.menu-tile-wrap-primary:hover`).
-
-Todo eso lo decide **un solo método**, `resaltar(activa)`, que recalcula el
-estado de las cinco tarjetas a partir de cuál está bajo el cursor —con
-`activa == null` cuando no hay ninguna—. Repartirlo entre un manejador de
-entrada y otro de salida daba dos problemas: al pasar de una tarjeta a la
-vecina, las tres ajenas recibían a la vez un destino de opacidad por cada
-evento y se peleaban; y si la salida no llegaba nunca (un modal que se abre
-encima, el cursor que reaparece en otro punto) la tarjeta activa se quedaba
-atenuada. `MenuHoverTest` cubre el segundo caso, que es el que falla de forma
-determinista. Cada tarjeta reutiliza una única transición de opacidad y otra
-de escala, que se detienen antes de redirigirse.
-
-**Elegir una sección** (CLASIFICACIÓN/GESTIÓN/EXPLORAR/HISTORIAL): la tarjeta
-pulsa (escala a 1.06, `Animaciones.PULSO_TILE` = 110 ms) y `App` entra al
-shell con `cruzarSeccion()`, que **desliza sin fundir**: la pantalla entrante
-es opaca —se lo da la regla `.root`— y pasa por encima de la saliente, que se
-retira ya tapada. Antes esto cruzaba opacidades y además apagaba el menú a
-0.25/0.35: las dos pantallas quedaban medio transparentes a la vez y el fondo
-casi negro de la raíz asomaba entre ambas, que es exactamente el bajón a
-negro que se quería evitar. La confirmación se lee igual de bien solo con la
-escala. Pulso + slide (`Animaciones.TRANSICION_SECCION`, 380 ms) ≈ 490 ms.
-AJUSTES recibe solo el pulso: abre un diálogo modal sobre el propio menú, no
-navega a ninguna parte.
-
-**Volver al menú**: el "F1" de la cabecera del shell (antes un `Label`, ahora
-un `Button`, ver `ShellController.onVolverAlMenu`) llama a
-`App.mostrarMenu(raiz, true)`, que reutiliza `cruzarSeccion()` en sentido
-inverso. El menú se recarga desde FXML igual que la primera vez, así que el
-slideshow **arranca de nuevo desde la primera foto** en vez de recordar en
-qué imagen se quedó —cachear ese estado exigiría un cambio de arquitectura
-(igual al de `Navigator` con sesión/gestión) desproporcionado para una
-diferencia cosmética.
-
-## Entrada de pantallas dentro del shell
-
-`Navigator.mostrarConEntrada()` envuelve los cuatro sitios donde antes se
-hacía `contenedor.getChildren().setAll(...)` a secas: la vista nueva entra con
-opacidad 0→1 y `translateY` 15px→0 en `Animaciones.ENTRADA_PANTALLA` (360 ms,
-`EASE_OUT`). Se aplica igual a una vista recién cargada por FXML que a una
-restaurada de caché (sesión de simulación, gestión): en ambos casos el
-usuario "llega" a la pantalla. No hay *stagger* interno (título primero,
-contenido después): tocar cada vista individualmente para eso no compensaba
-frente a una entrada uniforme del contenedor.
+El tracking de `TEMPORADA 2025` se compone carácter a carácter en un `HBox` de
+nodos `Text`: JavaFX 17 no tiene `-fx-letter-spacing`, solo `-fx-line-spacing`.
 
 ## Sonido
 
 | Fichero | Uso |
 |---|---|
-| `audio/sound1.mp3` | Confirmar: entrar a una sección principal del menú |
-| `audio/sound2.mp3` | Acción secundaria: AJUSTES y SALIR, y hover de tarjeta al 35 % |
-| `audio/sound-intro.mp3` | Stinger corto al arrancar la intro |
-| `audio/intro-f1.mp3` | Tema de fondo de la intro, sin loop (dura lo que dura la intro) |
+| `audio/sound1.mp3` | Confirmar una opción |
+| `audio/sound2.mp3` | Recorrer la lista (al 35 %) y SALIR |
+| `audio/sound-intro.mp3` | Stinger al arrancar la intro |
+| `audio/intro-f1.mp3` | Tema de fondo de la intro, sin loop |
 
-Los dos de la intro se lanzan juntos al construir `IntroController`, y se
-cortan (`AudioManager.detenerMusica()`) en el mismo punto de salida que ya
-cubre tanto el fin natural como el salto (`terminarUnaVez`, protegido por un
-`AtomicBoolean`).
+Los dos de la intro **no están todavía** en `resources/audio/`: hasta que se
+añadan, la intro va en silencio. Toda carga de audio es defensiva —si el
+fichero falta o no hay códec, se degrada a silencio y nunca tumba el arranque—
+y `AudioManager` cachea cada efecto, porque construir un `AudioClip`
+decodifica el mp3 en el hilo de FX y hacerlo en cada pulsación metía un tirón.
 
-`AudioManager` **cachea cada efecto**: construir un `AudioClip` decodifica el
-mp3 en el hilo llamante, que es el de FX, así que hacerlo en cada clic y en
-cada hover metía un tirón justo cuando arrancaba la animación. El hover suena
-además atenuado (35 %) y con una espera mínima de 350 ms entre disparos, para
-que acompañe sin tapar el sonido de confirmación al elegir sección.
-
-**No hay música de fondo del menú/shell**: no se ha entregado ninguna pista.
-`AudioManager` sigue ofreciendo `reproducirMusica`/`crossfadeMusica` para
-cuando se añada. Toda carga de audio es defensiva: si el fichero falta o no
-hay códec, se degrada a silencio y nunca tumba el arranque.
-
-El volumen de música y efectos, y el silencio, se ajustan desde AJUSTES y se
-guardan con `java.util.prefs.Preferences`.
+El volumen y el silencio se ajustan desde AJUSTES y se guardan con
+`java.util.prefs.Preferences`.
