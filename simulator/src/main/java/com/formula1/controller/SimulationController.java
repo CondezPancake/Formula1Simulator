@@ -1,6 +1,7 @@
 package com.formula1.controller;
 
 import com.formula1.model.AerodynamicLoad;
+import com.formula1.model.Circuit;
 import com.formula1.model.Driver;
 import com.formula1.model.DrivingMode;
 import com.formula1.model.EventOccurrence;
@@ -27,8 +28,13 @@ import javafx.application.Platform;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.XYChart;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -59,20 +65,6 @@ public class SimulationController {
     @FXML private ProgressBar progreso;
     @FXML private Label lblEstado;
     @FXML private Label lblClima;
-    @FXML private Label lblPilotoEvolucion;
-    @FXML private Label lblVelocidad;
-    @FXML private Label lblVelocidadMaxima;
-    @FXML private Label lblConsumoEvolucion;
-    @FXML private Label lblDesgasteEvolucion;
-    @FXML private ProgressBar progresoVuelta;
-    @FXML private ProgressBar barraVelocidad;
-    @FXML private ProgressBar barraConsumo;
-    @FXML private ProgressBar barraDesgaste;
-    @FXML private Label lblSegmentoEvolucion;
-    @FXML private Label lblTiempoEvolucion;
-    @FXML private Label lblRpmEvolucion;
-    @FXML private Label lblCombustibleRestante;
-    @FXML private Label lblTemperaturasEvolucion;
     @FXML private Label lblGripPista;
     @FXML private ProgressBar barraGripPista;
     @FXML private Label lblCambioGrip;
@@ -82,10 +74,36 @@ public class SimulationController {
     @FXML private Label lblLluviaEvolucion;
     @FXML private Label lblNeumaticoEvolucion;
     @FXML private Label lblEstrategiaEvolucion;
-    @FXML private Label lblSectorEvolucion;
-    @FXML private Label lblEstadoVueltaEvolucion;
     @FXML private TabPane panelResultados;
+    @FXML private Tab tabDashboard;
     @FXML private Tab tabTelemetria;
+    @FXML private TableView<LapResult> tablaDashboard;
+    @FXML private TableColumn<LapResult, Number> colDashboardPosicion;
+    @FXML private TableColumn<LapResult, String> colDashboardPiloto;
+    @FXML private TableColumn<LapResult, String> colDashboardGap;
+    @FXML private TableColumn<LapResult, String> colDashboardTiempo;
+    @FXML private Label lblMapaTitulo;
+    @FXML private Label lblMapaPista;
+    @FXML private Label lblMapaGrip;
+    @FXML private ImageView imagenMapaCircuito;
+    @FXML private Label lblDashboardEvento;
+    @FXML private Label lblDashboardMensaje;
+    @FXML private Label lblDashboardCombustible;
+    @FXML private Label lblDashboardDesgaste;
+    @FXML private LineChart<Number, Number> graficaDesgasteDashboard;
+    @FXML private LineChart<Number, Number> graficaCombustibleDashboard;
+    @FXML private ImageView imagenPilotoUno;
+    @FXML private ImageView imagenPilotoDos;
+    @FXML private Label lblPilotoUno;
+    @FXML private Label lblEquipoUno;
+    @FXML private Label lblVehiculoUno;
+    @FXML private Label lblRolUno;
+    @FXML private Label lblExperienciaUno;
+    @FXML private Label lblPilotoDos;
+    @FXML private Label lblEquipoDos;
+    @FXML private Label lblVehiculoDos;
+    @FXML private Label lblRolDos;
+    @FXML private Label lblExperienciaDos;
     @FXML private Label lblTelemetriaPiloto;
     @FXML private Label lblEstadoPista;
     @FXML private Label lblVelocidadTelemetria;
@@ -141,6 +159,8 @@ public class SimulationController {
     private long versionConfiguracionAplicada = -1;
     private double consumoVueltaAcumulado;
     private double consumoVueltaTotal;
+    private final XYChart.Series<Number, Number> serieDesgasteDashboard = new XYChart.Series<>();
+    private final XYChart.Series<Number, Number> serieCombustibleDashboard = new XYChart.Series<>();
 
     public SimulationController() {
         this(new QualifyingService(), new CircuitService(), new VehicleService(), new DriverService());
@@ -161,8 +181,10 @@ public class SimulationController {
 
         // El vehículo delimita los pilotos válidos y evita combinaciones de
         // escuderías distintas antes de que lleguen a la capa de servicio.
-        selectorVehiculo.valueProperty().addListener((obs, anterior, actual) ->
-                cargarPilotosDelVehiculo(actual));
+        selectorVehiculo.valueProperty().addListener((obs, anterior, actual) -> {
+            cargarPilotosDelVehiculo(actual);
+            actualizarTarjetasPilotos();
+        });
 
         colPosicion.setCellValueFactory(f -> new SimpleIntegerProperty(f.getValue().getPosicion()));
         colPiloto.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getPiloto()));
@@ -182,6 +204,20 @@ public class SimulationController {
                 f.getValue().getEventoResumen()));
         configurarTablaEventos();
 
+        // Timing tower del nuevo Dashboard. Es una vista resumida del mismo
+        // ObservableList; la clasificación original conserva todas sus columnas.
+        colDashboardPosicion.setCellValueFactory(f ->
+                new SimpleIntegerProperty(f.getValue().getPosicion()));
+        colDashboardPiloto.setCellValueFactory(f ->
+                new SimpleStringProperty(codigoPiloto(f.getValue())));
+        colDashboardGap.setCellValueFactory(f -> new SimpleStringProperty(
+                f.getValue().isVueltaValida()
+                        ? FormatUtils.formatGap(f.getValue().getGap()) : "—"));
+        colDashboardTiempo.setCellValueFactory(f -> new SimpleStringProperty(
+                FormatUtils.formatLapResult(f.getValue())));
+        colDashboardGap.getStyleClass().add("mono-col");
+        colDashboardTiempo.getStyleClass().add("mono-col");
+
         // La pole se resalta con la clase .pole-row de la hoja de estilos.
         // Cada fila lleva a la izquierda la franja del color de su escudería,
         // igual que la tabla de tiempos del diseño.
@@ -189,6 +225,15 @@ public class SimulationController {
             TableRow<LapResult> fila = filaConColorDeEquipo();
             // Doble clic sobre un piloto abre su ficha, como en cualquier
             // tabla de resultados: la fila es el acceso natural al detalle.
+            fila.setOnMouseClicked(e -> {
+                if (e.getClickCount() == 2 && !fila.isEmpty() && fila.getItem() != null) {
+                    ExploreDriversController.abrirFicha(fila.getItem().getPilotoId());
+                }
+            });
+            return fila;
+        });
+        tablaDashboard.setRowFactory(t -> {
+            TableRow<LapResult> fila = filaConColorDeEquipo();
             fila.setOnMouseClicked(e -> {
                 if (e.getClickCount() == 2 && !fila.isEmpty() && fila.getItem() != null) {
                     ExploreDriversController.abrirFicha(fila.getItem().getPilotoId());
@@ -219,7 +264,43 @@ public class SimulationController {
         colTiempo.getStyleClass().add("mono-col");
         colGap.getStyleClass().add("mono-col");
 
+        selectorCircuito.valueProperty().addListener((o, a, b) -> actualizarMapaCircuito(b));
+        selectorPiloto.valueProperty().addListener((o, a, b) -> actualizarTarjetasPilotos());
+        graficaDesgasteDashboard.getData().add(serieDesgasteDashboard);
+        graficaCombustibleDashboard.getData().add(serieCombustibleDashboard);
+
         precargarUltimaConfiguracion();
+        actualizarMapaCircuito(selectorCircuito.getValue());
+        actualizarTarjetasPilotos();
+        reiniciarGraficasDashboard();
+    }
+
+    private String codigoPiloto(LapResult resultado) {
+        return pilotos.porId(resultado.getPilotoId())
+                .map(Driver::getCodigo)
+                .filter(codigo -> codigo != null && !codigo.isBlank())
+                .orElse(resultado.getPiloto());
+    }
+
+    private void actualizarMapaCircuito(String nombre) {
+        if (nombre == null) {
+            imagenMapaCircuito.setImage(null);
+            lblMapaTitulo.setText("MAPA DEL CIRCUITO");
+            return;
+        }
+        circuitos.porNombre(nombre).ifPresent(circuito -> {
+            lblMapaTitulo.setText(circuito.getNombre().toUpperCase() + " · MAPA");
+            lblMapaPista.setText("Pista: " + circuito.getLongitudKm() + " km");
+            imagenMapaCircuito.setImage(cargarImagenCircuito(circuito));
+        });
+    }
+
+    private Image cargarImagenCircuito(Circuit circuito) {
+        if (circuito.getImagen() == null || circuito.getImagen().isBlank()) {
+            return null;
+        }
+        var recurso = getClass().getResource(circuito.getImagen());
+        return recurso == null ? null : new Image(recurso.toExternalForm());
     }
 
     /**
@@ -234,17 +315,23 @@ public class SimulationController {
             return;
         }
         lblClima.setText(resumenClimatico(sesion));
-        tabla.setItems(FXCollections.observableArrayList(sesion.getResultados()));
+        ObservableList<LapResult> resultados =
+                FXCollections.observableArrayList(sesion.getResultados());
+        tabla.setItems(resultados);
+        tablaDashboard.setItems(resultados);
         tablaEventos.setItems(FXCollections.observableArrayList(sesion.getEventos()));
         comparacionSectoresController.cargar(sesion.getResultados());
         mostrarPistaDeSesion(sesion);
         LapResult pole = sesion.getPole();
         lblEstado.setText(pole == null ? "Sesión sin resultados"
                 : "Pole: " + pole.getPiloto() + " — " + FormatUtils.formatLapTime(pole.getTiempoSegundos()));
+        lblDashboardMensaje.setText(pole == null ? "Sesión terminada sin vueltas válidas"
+                : "Pole para " + pole.getPiloto() + " con "
+                        + FormatUtils.formatLapTime(pole.getTiempoSegundos()));
+        lblDashboardEvento.setText(sesion.getEventos().isEmpty()
+                ? "SIN EVENTOS" : sesion.getEventos().size() + " EVENTOS");
         ShellController.estadoSesion(ShellController.Estado.TERMINADA);
-        // Terminada la vuelta, lo que interesa es la parrilla, no la
-        // telemetría en directo que ya dejó de moverse.
-        panelResultados.getSelectionModel().selectFirst();
+        panelResultados.getSelectionModel().select(tabDashboard);
     }
 
     /**
@@ -340,7 +427,7 @@ public class SimulationController {
         reiniciarEvolucion();
         reiniciarTelemetria();
         comparacionSectoresController.reiniciar();
-        panelResultados.getSelectionModel().select(tabTelemetria);
+        panelResultados.getSelectionModel().select(tabDashboard);
 
         // La cabecera de la aplicación acompaña a la sesión: evento, estado,
         // contador de segmento, clima y bandera.
@@ -362,6 +449,7 @@ public class SimulationController {
         lblEstado.textProperty().bind(tarea.messageProperty());
         btnSimular.disableProperty().bind(tarea.runningProperty());
         tabla.getItems().clear();
+        tablaDashboard.getItems().clear();
         tablaEventos.getItems().clear();
         lblClima.setText("");
 
@@ -389,22 +477,8 @@ public class SimulationController {
         velocidadMaximaAlcanzada = 0;
         consumoVueltaAcumulado = 0;
         consumoVueltaTotal = 0;
-        lblPilotoEvolucion.setText("Esperando inicio de vuelta");
-        lblVelocidad.setText("0 km/h");
-        lblVelocidadMaxima.setText("Máxima alcanzada: 0 km/h");
-        lblConsumoEvolucion.setText("0.00 / 0.00 u");
-        lblDesgasteEvolucion.setText("0.00 / 0.00 u");
-        progresoVuelta.setProgress(0);
-        barraVelocidad.setProgress(0);
-        barraConsumo.setProgress(0);
-        barraDesgaste.setProgress(0);
-        lblSegmentoEvolucion.setText("Segmento —/20");
-        lblTiempoEvolucion.setText("—");
-        lblRpmEvolucion.setText("— rpm");
-        lblCombustibleRestante.setText("Restante —");
-        lblTemperaturasEvolucion.setText("—");
-        lblSectorEvolucion.setText("—");
-        lblEstadoVueltaEvolucion.setText("—");
+        lblDashboardMensaje.setText("Preparando datos de la vuelta seleccionada");
+        lblDashboardEvento.setText("SIN EVENTOS");
         reiniciarPistaYClima();
     }
 
@@ -412,20 +486,8 @@ public class SimulationController {
     private void mostrarEvolucion(SimulationSnapshot muestra) {
         consumoVueltaAcumulado = muestra.consumoAcumulado();
         consumoVueltaTotal = muestra.consumoTotal();
-        lblPilotoEvolucion.setText(muestra.piloto() + " · " + muestra.vehiculo());
-        lblVelocidad.setText(String.format("%.0f km/h", muestra.velocidadKmh()));
         actualizarVelocidadMaxima(muestra.velocidadKmh());
-        lblConsumoEvolucion.setText(String.format("%.2f / %.2f u",
-                muestra.consumoAcumulado(), muestra.consumoTotal()));
-        lblDesgasteEvolucion.setText(String.format("%.2f / %.2f u",
-                muestra.desgasteAcumulado(), muestra.desgasteTotal()));
-        progresoVuelta.setProgress(muestra.progreso());
-        barraVelocidad.setProgress(muestra.velocidadRelativa());
-        lblSegmentoEvolucion.setText(String.format("Segmento %d/%d",
-                muestra.segmento(), muestra.totalSegmentos()));
         ShellController.segmento(muestra.segmento(), muestra.totalSegmentos());
-        barraConsumo.setProgress(muestra.progreso());
-        barraDesgaste.setProgress(muestra.progreso());
     }
 
     private void reiniciarTelemetria() {
@@ -444,12 +506,15 @@ public class SimulationController {
         lblEventoTelemetria.setText("Sin evento");
         lblEstadoPiloto.setText("Vuelta válida");
         lblDelta.getStyleClass().removeAll("delta-faster", "delta-slower");
+        lblDashboardCombustible.setText("100 %");
+        lblDashboardDesgaste.setText("100 %");
         barraVelocidadTelemetria.setProgress(0);
         barraRpm.setProgress(0);
         barraCombustible.setProgress(0);
         barraDesgasteTelemetria.setProgress(0);
         barraTempNeumaticos.setProgress(0);
         barraTempMotor.setProgress(0);
+        reiniciarGraficasDashboard();
     }
 
     /** Representa una lectura ya calculada; no ejecuta lógica del motor en JavaFX. */
@@ -474,20 +539,23 @@ public class SimulationController {
         lblDelta.setText(muestra.estadoVuelta() == LapStatus.VALID
                 ? FormatUtils.formatDelta(muestra.deltaSegundos()) : "INVALID");
         lblEstadoPiloto.setText(muestra.estadoVuelta().getEtiqueta());
-        lblRpmEvolucion.setText(String.format("%,d rpm", muestra.rpm()));
-        lblCombustibleRestante.setText(String.format("Restante %.0f %%",
-                muestra.combustibleRestantePorcentaje()));
-        lblTemperaturasEvolucion.setText(String.format("Neumáticos %.0f °C · Motor %.0f °C",
-                muestra.temperaturaNeumaticosC(), muestra.temperaturaMotorC()));
-        lblTiempoEvolucion.setText(muestra.estadoVuelta() == LapStatus.VALID
-                ? FormatUtils.formatLapTime(muestra.tiempoVueltaSegundos())
-                        + " · " + FormatUtils.formatDelta(muestra.deltaSegundos())
-                : FormatUtils.formatLapTime(muestra.tiempoVueltaSegundos()) + " · INVALID");
-        lblSectorEvolucion.setText("Sector " + muestra.sectorActual() + " de 3");
-        lblEstadoVueltaEvolucion.setText(muestra.estadoVuelta().getEtiqueta());
         if (muestra.evento().ocurrio()) {
             lblEventoTelemetria.setText(muestra.evento().resumen());
+            lblDashboardEvento.setText(muestra.evento().tipo().getEtiqueta().toUpperCase());
+            lblDashboardMensaje.setText(muestra.evento().resumen());
+        } else {
+            lblDashboardEvento.setText("EN VIVO");
+            lblDashboardMensaje.setText(muestra.piloto() + " · Sector "
+                    + muestra.sectorActual() + " · "
+                    + muestra.estadoVuelta().getEtiqueta());
         }
+
+        lblDashboardCombustible.setText(String.format("%.0f %%",
+                muestra.combustibleRestantePorcentaje()));
+        double vidaNeumatico = Math.max(0, 100 - muestra.desgasteNeumaticosPorcentaje());
+        lblDashboardDesgaste.setText(String.format("%.0f %%", vidaNeumatico));
+        actualizarGraficasDashboard(muestra.segmento(), vidaNeumatico,
+                muestra.combustibleRestantePorcentaje());
 
         lblDelta.getStyleClass().removeAll("delta-faster", "delta-slower");
         lblDelta.getStyleClass().add(muestra.estadoVuelta() != LapStatus.VALID
@@ -536,8 +604,24 @@ public class SimulationController {
     private void actualizarVelocidadMaxima(double velocidadActual) {
         velocidadMaximaAlcanzada = Math.max(velocidadMaximaAlcanzada, velocidadActual);
         String maxima = String.format("Máxima alcanzada: %.0f km/h", velocidadMaximaAlcanzada);
-        lblVelocidadMaxima.setText(maxima);
         lblVelocidadMaximaTelemetria.setText(maxima);
+    }
+
+    private void reiniciarGraficasDashboard() {
+        serieDesgasteDashboard.getData().clear();
+        serieCombustibleDashboard.getData().clear();
+        serieDesgasteDashboard.getData().add(new XYChart.Data<>(0, 100));
+        serieCombustibleDashboard.getData().add(new XYChart.Data<>(0, 100));
+        lblDashboardDesgaste.setText("100 %");
+        lblDashboardCombustible.setText("100 %");
+    }
+
+    private void actualizarGraficasDashboard(int segmento, double vidaNeumatico,
+                                              double combustibleRestante) {
+        serieDesgasteDashboard.getData().add(
+                new XYChart.Data<>(segmento, vidaNeumatico));
+        serieCombustibleDashboard.getData().add(
+                new XYChart.Data<>(segmento, combustibleRestante));
     }
 
     /**
@@ -559,6 +643,7 @@ public class SimulationController {
                 muestra.intensidadLluviaPorcentaje(), muestra.humedadPorcentaje()));
         lblNeumaticoEvolucion.setText(muestra.neumaticoRecomendado());
         lblEstrategiaEvolucion.setText(muestra.estrategiaRecomendada());
+        lblMapaPista.setText("Pista: " + muestra.estadoPista());
     }
 
     /**
@@ -598,6 +683,7 @@ public class SimulationController {
         lblCambioGrip.setText(String.format("%+.2f pts · %s", finalGrip - inicial, tendencia));
         lblGomaPista.setText(goma);
         barraGripPista.setProgress(finalGrip / 100);
+        lblMapaGrip.setText(String.format("Grip: %.0f %%", finalGrip));
     }
 
     private void reiniciarPistaYClima() {
@@ -610,6 +696,7 @@ public class SimulationController {
         lblLluviaEvolucion.setText("—");
         lblNeumaticoEvolucion.setText("—");
         lblEstrategiaEvolucion.setText("—");
+        lblMapaGrip.setText("Grip: —");
     }
 
     private String resumenClimatico(QualifyingSession sesion) {
@@ -667,6 +754,58 @@ public class SimulationController {
         if (!selectorPiloto.getItems().isEmpty()) {
             selectorPiloto.setValue(selectorPiloto.getItems().get(0));
         }
+    }
+
+    /**
+     * Las dos tarjetas inferiores muestran al piloto elegido y a su compañero.
+     * Son un resumen visual de datos existentes; no introducen estadísticas de
+     * evolución del vehículo en el Dashboard.
+     */
+    private void actualizarTarjetasPilotos() {
+        List<Driver> equipo = new ArrayList<>(selectorPiloto.getItems());
+        Driver seleccionado = selectorPiloto.getValue() != null
+                ? selectorPiloto.getValue()
+                : equipo.stream().findFirst().orElse(null);
+        Driver companero = seleccionado == null ? null : equipo.stream()
+                .filter(piloto -> !piloto.equals(seleccionado))
+                .findFirst()
+                .orElse(null);
+
+        pintarTarjetaPiloto(seleccionado, imagenPilotoUno, lblPilotoUno,
+                lblEquipoUno, lblVehiculoUno, lblRolUno, lblExperienciaUno);
+        pintarTarjetaPiloto(companero, imagenPilotoDos, lblPilotoDos,
+                lblEquipoDos, lblVehiculoDos, lblRolDos, lblExperienciaDos);
+    }
+
+    private void pintarTarjetaPiloto(Driver piloto, ImageView imagen, Label nombre,
+                                     Label equipo, Label vehiculo, Label rol,
+                                     Label experiencia) {
+        if (piloto == null) {
+            imagen.setImage(null);
+            nombre.setText("—");
+            equipo.setText("—");
+            vehiculo.setText(selectorVehiculo.getValue() == null
+                    ? "—" : selectorVehiculo.getValue());
+            rol.setText("—");
+            experiencia.setText("—");
+            return;
+        }
+
+        imagen.setImage(cargarImagenPiloto(piloto));
+        nombre.setText(piloto.getNombre());
+        equipo.setText(piloto.getEquipo());
+        vehiculo.setText(selectorVehiculo.getValue());
+        rol.setText(piloto.getRol() == null ? "Piloto" : piloto.getRol().getEtiqueta());
+        experiencia.setText("#" + piloto.getNumero() + " · "
+                + piloto.getExperiencia() + " años de experiencia");
+    }
+
+    private Image cargarImagenPiloto(Driver piloto) {
+        if (piloto.getImagen() == null || piloto.getImagen().isBlank()) {
+            return null;
+        }
+        var recurso = getClass().getResource(piloto.getImagen());
+        return recurso == null ? null : new Image(recurso.toExternalForm());
     }
 
     /** Recupera por identificador porque el historial se persiste entre ejecuciones. */
