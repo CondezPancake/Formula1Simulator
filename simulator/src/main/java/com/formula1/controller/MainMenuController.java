@@ -2,12 +2,14 @@ package com.formula1.controller;
 
 import com.formula1.data.DataStore;
 import com.formula1.util.AudioManager;
+import com.formula1.util.Animaciones;
 
 import javafx.animation.Animation;
+import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
-import javafx.animation.PauseTransition;
+import javafx.animation.ParallelTransition;
 import javafx.animation.ScaleTransition;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
@@ -29,23 +31,19 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.media.Media;
-import javafx.scene.media.MediaPlayer;
-import javafx.scene.media.MediaView;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.StrokeType;
 import javafx.scene.text.Text;
 import javafx.scene.transform.Scale;
-import javafx.scene.transform.Translate;
 import javafx.util.Duration;
 
 import java.io.InputStream;
-import java.net.URL;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 /**
@@ -58,8 +56,6 @@ import java.util.function.Consumer;
  */
 public class MainMenuController {
 
-    private static final Duration HOVER = Duration.millis(160);
-
     /** Alto y ancho del mockup del que salen todas las proporciones. */
     private static final double REF_ALTO = 941;
     private static final double REF_ANCHO = 1672;
@@ -67,10 +63,15 @@ public class MainMenuController {
     /** Corte a 45 grados de la esquina superior derecha, constante en px. */
     private static final double CHAFLAN = 20;
 
-    private static final double VIDEO_ANCHO = 1280;
-    private static final double VIDEO_ALTO = 720;
-    private static final double FONDO_ANCHO = 1920;
-    private static final double FONDO_ALTO = 1080;
+    /** Ancho al que se piden las fotos del fondo, para acotar memoria. */
+    private static final double ANCHO_CARGA_FONDO = 1920;
+
+    /** Fotos del slideshow de fondo, en el orden en que se ciclan. */
+    private static final String[] FONDOS = {
+        "/images/menu-fondo/fondo-01.jpg",
+        "/images/menu-fondo/fondo-02.jpg",
+        "/images/menu-fondo/fondo-03.jpg",
+    };
 
     /** Confirmación: entrar a una sección principal. */
     private static final String SFX_PRINCIPAL = "/audio/sound1.mp3";
@@ -144,14 +145,14 @@ public class MainMenuController {
     /** App inyecta aquí cómo pasar de este menú al shell, para no depender de él. */
     private Consumer<Runnable> alEntrarAlShell = irA -> { };
 
-    private final AtomicBoolean respaldoActivo = new AtomicBoolean(false);
-    private MediaPlayer reproductorFondo;
-    private Timeline kenBurns;
+    private Timeline cicloFondo;
+    private Timeline kenBurnsActual;
+    private int indiceFondo = 0;
     private Timeline sondeoDatos;
 
     @FXML
     public void initialize() {
-        montarFondo();
+        montarFondoSlideshow();
         montarCapaDeTarjetas();
         montarChaflanes();
         montarEscalado();
@@ -447,114 +448,89 @@ public class MainMenuController {
         rellenarTracking(cajaStats, linea, "menu-stat-glifo", px(15, h), w);
     }
 
-    // --- fondo de vídeo ---------------------------------------------------
+    // --- fondo: slideshow de fotos -----------------------------------------
 
-    private void montarFondo() {
+    private void montarFondoSlideshow() {
         cargarLogo();
         capaFondo.setClip(recorteDe(capaFondo));
 
-        URL recurso = getClass().getResource("/videos/menu-loop.mp4");
-        if (recurso == null) {
-            activarRespaldo();
+        List<Image> imagenes = cargarImagenesFondo();
+        if (imagenes.isEmpty()) {
+            capaFondo.getChildren().setAll(new Region());   // el scrim ya deja el fondo en negro
             return;
         }
-        try {
-            Media media = new Media(recurso.toExternalForm());
-            if (media.getError() != null) {
-                activarRespaldo();
-                return;
-            }
-            media.setOnError(this::activarRespaldo);
 
-            MediaPlayer reproductor = new MediaPlayer(media);
-            if (reproductor.getError() != null) {
-                activarRespaldo();
-                return;
-            }
-            reproductor.setOnError(this::activarRespaldo);
-            reproductor.setOnHalted(this::activarRespaldo);
-            reproductor.statusProperty().addListener((o, previo, estado) -> {
-                if (estado == MediaPlayer.Status.HALTED) {
-                    activarRespaldo();
-                }
-            });
-            reproductor.setCycleCount(MediaPlayer.INDEFINITE);
-            reproductor.setMute(true);
-            reproductor.setAutoPlay(true);
+        ImageView primera = crearVistaFondo(imagenes.get(0));
+        capaFondo.getChildren().setAll(primera);
+        kenBurnsActual = iniciarKenBurns(primera);
 
-            MediaView vista = new MediaView(reproductor);
-            vista.setPreserveRatio(false);
-            vista.setSmooth(true);
-            cubrir(vista.fitWidthProperty(), vista.fitHeightProperty(), VIDEO_ANCHO, VIDEO_ALTO);
-            capaFondo.getChildren().setAll(vista);
-            reproductorFondo = reproductor;
-
-            // Red de seguridad: en esta máquina los libavplugin de JavaFX 17
-            // piden libavcodec.so.54-59 y solo existe la .63, así que el H.264
-            // puede no arrancar nunca sin emitir un error explícito.
-            PauseTransition vigilante = new PauseTransition(Duration.seconds(2.5));
-            vigilante.setOnFinished(e -> {
-                if (reproductor.getStatus() != MediaPlayer.Status.PLAYING) {
-                    activarRespaldo();
-                }
-            });
-            vigilante.play();
-        } catch (RuntimeException | Error sinCodec) {
-            // Incluye Error a propósito: si faltan los .so nativos, lo que
-            // salta es UnsatisfiedLinkError, no una RuntimeException.
-            activarRespaldo();
+        if (imagenes.size() > 1) {
+            cicloFondo = new Timeline(new KeyFrame(Animaciones.FONDO_HOLD, e -> avanzarFondo(imagenes)));
+            cicloFondo.setCycleCount(Animation.INDEFINITE);
+            cicloFondo.play();
         }
     }
 
-    /** Idempotente y siempre en el hilo de FX: los avisos de Media pueden no serlo. */
-    private void activarRespaldo() {
-        if (!respaldoActivo.compareAndSet(false, true)) {
-            return;
-        }
-        Platform.runLater(() -> {
-            if (reproductorFondo != null) {
-                try {
-                    reproductorFondo.stop();
-                    reproductorFondo.dispose();
-                } catch (RuntimeException ignorado) {
-                    // Un reproductor que ya falló no tiene por qué cerrar limpio.
-                }
-                reproductorFondo = null;
+    /** Cada fichero que falte se salta sin más: no hace falta que estén los tres. */
+    private List<Image> cargarImagenesFondo() {
+        List<Image> imagenes = new ArrayList<>();
+        for (String recurso : FONDOS) {
+            InputStream flujo = getClass().getResourceAsStream(recurso);
+            if (flujo == null) {
+                continue;
             }
-            capaFondo.getChildren().setAll(construirRespaldo());
+            imagenes.add(new Image(flujo, ANCHO_CARGA_FONDO, 0, true, true));
+        }
+        return imagenes;
+    }
+
+    /** Añade la siguiente foto encima con opacidad 0 y la funde, como {@code App.cruzar}. */
+    private void avanzarFondo(List<Image> imagenes) {
+        indiceFondo = (indiceFondo + 1) % imagenes.size();
+        ImageView siguiente = crearVistaFondo(imagenes.get(indiceFondo));
+        siguiente.setOpacity(0);
+        capaFondo.getChildren().add(siguiente);
+
+        Timeline kenBurnsAnterior = kenBurnsActual;
+        kenBurnsActual = iniciarKenBurns(siguiente);
+
+        FadeTransition entrada = new FadeTransition(Animaciones.FONDO_CROSSFADE, siguiente);
+        entrada.setToValue(1);
+        entrada.setOnFinished(e -> {
+            capaFondo.getChildren().remove(0);
+            if (kenBurnsAnterior != null) {
+                kenBurnsAnterior.stop();
+            }
         });
+        entrada.play();
     }
 
-    /** Fotograma fijo con paneo y zoom lentos, para que el fondo no quede muerto. */
-    private Node construirRespaldo() {
-        InputStream flujo = getClass().getResourceAsStream("/images/menu-fondo.jpg");
-        if (flujo == null) {
-            return new Region();      // el scrim ya deja el fondo en negro
-        }
-        ImageView foto = new ImageView(new Image(flujo, FONDO_ANCHO, 0, true, true));
-        foto.setPreserveRatio(false);
-        foto.setSmooth(true);
-        cubrir(foto.fitWidthProperty(), foto.fitHeightProperty(), FONDO_ANCHO, FONDO_ALTO);
+    private ImageView crearVistaFondo(Image imagen) {
+        ImageView vista = new ImageView(imagen);
+        vista.setPreserveRatio(false);
+        vista.setSmooth(true);
+        cubrir(vista.fitWidthProperty(), vista.fitHeightProperty(), imagen.getWidth(), imagen.getHeight());
+        return vista;
+    }
 
+    /**
+     * Zoom lentísimo de una sola pasada: cada foto solo vive lo que dura su
+     * turno (hold + crossfade), así que no hace falta {@code autoReverse} ni
+     * ciclo infinito como tenía el respaldo Ken Burns anterior.
+     */
+    private Timeline iniciarKenBurns(ImageView vista) {
         Scale zoom = new Scale(1, 1, 0, 0);
-        Translate paneo = new Translate();
-        foto.getTransforms().addAll(zoom, paneo);
+        vista.getTransforms().add(zoom);
 
-        kenBurns = new Timeline(
+        Timeline kenBurns = new Timeline(
                 new KeyFrame(Duration.ZERO,
                         new KeyValue(zoom.xProperty(), 1.00),
-                        new KeyValue(zoom.yProperty(), 1.00),
-                        new KeyValue(paneo.xProperty(), 0.0),
-                        new KeyValue(paneo.yProperty(), 0.0)),
-                new KeyFrame(Duration.seconds(17),
-                        new KeyValue(zoom.xProperty(), 1.075, Interpolator.EASE_BOTH),
-                        new KeyValue(zoom.yProperty(), 1.075, Interpolator.EASE_BOTH),
-                        new KeyValue(paneo.xProperty(), -46.0, Interpolator.EASE_BOTH),
-                        new KeyValue(paneo.yProperty(), -22.0, Interpolator.EASE_BOTH)));
-        kenBurns.setAutoReverse(true);
-        kenBurns.setCycleCount(Animation.INDEFINITE);
+                        new KeyValue(zoom.yProperty(), 1.00)),
+                new KeyFrame(Animaciones.FONDO_HOLD.add(Animaciones.FONDO_CROSSFADE),
+                        new KeyValue(zoom.xProperty(), 1.03, Interpolator.EASE_BOTH),
+                        new KeyValue(zoom.yProperty(), 1.03, Interpolator.EASE_BOTH)));
         kenBurns.play();
-        return foto;
+        return kenBurns;
     }
 
     /**
@@ -588,20 +564,15 @@ public class MainMenuController {
         logoF1.setViewport(RECORTE_LOGO);
     }
 
-    /** Suelta el vídeo y las animaciones al abandonar el menú. */
+    /** Suelta el slideshow y las animaciones al abandonar el menú. */
     public void liberar() {
-        if (reproductorFondo != null) {
-            try {
-                reproductorFondo.stop();
-                reproductorFondo.dispose();
-            } catch (RuntimeException ignorado) {
-                // Cerrar el menú nunca debe fallar por el reproductor.
-            }
-            reproductorFondo = null;
+        if (cicloFondo != null) {
+            cicloFondo.stop();
+            cicloFondo = null;
         }
-        if (kenBurns != null) {
-            kenBurns.stop();
-            kenBurns = null;
+        if (kenBurnsActual != null) {
+            kenBurnsActual.stop();
+            kenBurnsActual = null;
         }
         if (sondeoDatos != null) {
             sondeoDatos.stop();
@@ -611,42 +582,66 @@ public class MainMenuController {
 
     // --- interacción ------------------------------------------------------
 
+    private StackPane[] todasLasEnvolturas() {
+        return new StackPane[]{envolturaClasificacion, envolturaGestion, envolturaExplorar,
+                                envolturaHistorial, envolturaAjustes};
+    }
+
     private void aplicarHover(StackPane envoltura) {
-        envoltura.setOnMouseEntered(e -> escalar(envoltura, 1.025));
-        envoltura.setOnMouseExited(e -> escalar(envoltura, 1.0));
+        envoltura.setOnMouseEntered(e -> {
+            escalar(envoltura, 1.03);
+            atenuarHermanas(envoltura, true);
+        });
+        envoltura.setOnMouseExited(e -> {
+            escalar(envoltura, 1.0);
+            atenuarHermanas(envoltura, false);
+        });
     }
 
     private void escalar(StackPane envoltura, double destino) {
-        ScaleTransition zoom = new ScaleTransition(HOVER, envoltura);
+        ScaleTransition zoom = new ScaleTransition(Animaciones.HOVER, envoltura);
         zoom.setToX(destino);
         zoom.setToY(destino);
-        zoom.setInterpolator(Interpolator.EASE_BOTH);
+        zoom.setInterpolator(Animaciones.EASE_OUT);
         zoom.play();
+    }
+
+    /** Las tarjetas que no son la activa bajan de opacidad para dar foco a la elegida. */
+    private void atenuarHermanas(StackPane activa, boolean atenuar) {
+        for (StackPane otra : todasLasEnvolturas()) {
+            if (otra == activa) {
+                continue;
+            }
+            FadeTransition f = new FadeTransition(Animaciones.HOVER, otra);
+            f.setToValue(atenuar ? 0.72 : 1.0);
+            f.play();
+        }
     }
 
     @FXML
     private void onClasificacion() {
-        irAlShell(ShellController::irACarrera);
+        irAlShell(ShellController::irACarrera, envolturaClasificacion);
     }
 
     @FXML
     private void onGestionEquipos() {
-        irAlShell(ShellController::irAGestion);
+        irAlShell(ShellController::irAGestion, envolturaGestion);
     }
 
     @FXML
     private void onExplorar() {
-        irAlShell(ShellController::irAExplorar);
+        irAlShell(ShellController::irAExplorar, envolturaExplorar);
     }
 
     @FXML
     private void onHistorial() {
-        irAlShell(ShellController::irAHistorial);
+        irAlShell(ShellController::irAHistorial, envolturaHistorial);
     }
 
     @FXML
     private void onAjustes() {
         AudioManager.reproducirSfx(SFX_SECUNDARIO);
+        pulsoConfirmacion(envolturaAjustes).play();
         AjustesDialog.mostrar();
     }
 
@@ -658,8 +653,39 @@ public class MainMenuController {
         }
     }
 
-    private void irAlShell(Runnable destinoEnShell) {
+    private void irAlShell(Runnable destinoEnShell, StackPane seleccionada) {
         AudioManager.reproducirSfx(SFX_PRINCIPAL);
-        alEntrarAlShell.accept(destinoEnShell);
+        animarSalidaHaciaSeccion(seleccionada, () -> alEntrarAlShell.accept(destinoEnShell));
+    }
+
+    /**
+     * La tarjeta elegida pulsa y el resto del menú se apaga antes de navegar,
+     * para que la salida se sienta como parte del propio menú y no como un
+     * corte a negro seguido de otra pantalla.
+     */
+    private void animarSalidaHaciaSeccion(StackPane seleccionada, Runnable alTerminar) {
+        ParallelTransition salida = new ParallelTransition(pulsoConfirmacion(seleccionada));
+        for (StackPane otra : todasLasEnvolturas()) {
+            if (otra == seleccionada) {
+                continue;
+            }
+            FadeTransition f = new FadeTransition(Animaciones.PULSO_TILE, otra);
+            f.setToValue(0.25);
+            salida.getChildren().add(f);
+        }
+        FadeTransition atenuarContenido = new FadeTransition(Animaciones.PULSO_TILE, capaContenido);
+        atenuarContenido.setToValue(0.35);
+        salida.getChildren().add(atenuarContenido);
+
+        salida.setOnFinished(e -> alTerminar.run());
+        salida.play();
+    }
+
+    private ScaleTransition pulsoConfirmacion(StackPane envoltura) {
+        ScaleTransition pulso = new ScaleTransition(Animaciones.PULSO_TILE, envoltura);
+        pulso.setToX(1.06);
+        pulso.setToY(1.06);
+        pulso.setInterpolator(Animaciones.EASE_OUT);
+        return pulso;
     }
 }

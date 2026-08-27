@@ -11,7 +11,7 @@ target/
 docs/assets/F1_Recursos_Multimedia/img-vehiculos/
 docs/assets/F1_Recursos_Multimedia/img-circuitos/
 
-# Material de video original (410 MB). La app consume el loop corto de
-# simulator/src/main/resources/videos/menu-loop.mp4, generado con ffmpeg
-# (ver docs/features/ui-menu.md).
+# Metraje original del fondo de vídeo que tuvo el menú (410 MB). Ya no se usa
+# -el fondo es un slideshow de fotos, ver docs/features/ui-menu.md- pero se
+# deja ignorado por si el fichero sigue en disco.
 media-src/
