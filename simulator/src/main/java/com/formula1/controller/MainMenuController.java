@@ -11,6 +11,7 @@ import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.ParallelTransition;
 import javafx.animation.ScaleTransition;
+import javafx.animation.SequentialTransition;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
@@ -63,6 +64,17 @@ public class MainMenuController {
     /** Corte a 45 grados de la esquina superior derecha, constante en px. */
     private static final double CHAFLAN = 20;
 
+    /**
+     * Cota superior de cordura para cualquier medida de layout. En algunos
+     * compositores (visto en Hyprland/Wayland) {@code Stage.setMaximized}
+     * hace que, durante un único pulso, la ventana informe un ancho o alto
+     * disparatado (miles de millones de px) antes de que llegue el tamaño
+     * real. Sin este tope, ese valor se multiplica directamente en
+     * {@code resizeRelocate} y revienta el cálculo interno de ajuste de
+     * texto de JavaFX de forma permanente (no se recupera solo).
+     */
+    private static final double LADO_MAXIMO_RAZONABLE = 8000;
+
     /** Ancho al que se piden las fotos del fondo, para acotar memoria. */
     private static final double ANCHO_CARGA_FONDO = 1920;
 
@@ -75,8 +87,15 @@ public class MainMenuController {
 
     /** Confirmación: entrar a una sección principal. */
     private static final String SFX_PRINCIPAL = "/audio/sound1.mp3";
-    /** Acción secundaria: ajustes, salir. */
+    /** Sonido ligero: seleccionar/hover una tarjeta y acciones secundarias (ajustes, salir). */
     private static final String SFX_SECUNDARIO = "/audio/sound2.mp3";
+
+    /**
+     * sound1.mp3/sound2.mp3 duran ~3 s; sin cortafuego, barrer el ratón por
+     * las 5 tarjetas apilaría varias instancias del mismo clip. Se ignora
+     * un nuevo hover si el anterior sonó hace menos de esto.
+     */
+    private static final long ESPERA_SFX_SELECCION_MS = 350;
 
     /**
      * El wordmark ocupa solo la banda central de LogoF1.png (920x800): sin
@@ -149,6 +168,7 @@ public class MainMenuController {
     private Timeline kenBurnsActual;
     private int indiceFondo = 0;
     private Timeline sondeoDatos;
+    private long ultimoSfxSeleccionMs = 0;
 
     @FXML
     public void initialize() {
@@ -190,7 +210,7 @@ public class MainMenuController {
         InvalidationListener recolocar = observable -> {
             double w = capaTarjetas.getWidth();
             double h = capaTarjetas.getHeight();
-            if (w <= 0 || h <= 0) {
+            if (!medidaValida(w) || !medidaValida(h)) {
                 return;
             }
             cajas.forEach((nodo, caja) ->
@@ -268,7 +288,7 @@ public class MainMenuController {
     private void aplicarEscalado() {
         double h = raiz.getHeight();
         double w = raiz.getWidth();
-        if (h <= 0 || w <= 0) {
+        if (!medidaValida(w) || !medidaValida(h)) {
             return;
         }
 
@@ -340,6 +360,9 @@ public class MainMenuController {
 
     /** El graphic del Button debe ocupar todo el área útil, no su tamaño preferido. */
     private static void ajustarCuerpo(VBox cuerpo, Button tile) {
+        if (!medidaValida(tile.getWidth()) || !medidaValida(tile.getHeight())) {
+            return;
+        }
         double w = tile.getWidth() - tile.getInsets().getLeft() - tile.getInsets().getRight();
         double h = tile.getHeight() - tile.getInsets().getTop() - tile.getInsets().getBottom();
         if (w <= 0 || h <= 0) {
@@ -356,6 +379,9 @@ public class MainMenuController {
      * suave acotada por {@code sxMinimo}.
      */
     private void ajustarTitulo(Label titulo, Button tile, double cuerpo, double sxMinimo) {
+        if (!medidaValida(tile.getWidth())) {
+            return;
+        }
         double util = tile.getWidth() - tile.getInsets().getLeft() - tile.getInsets().getRight();
         if (util <= 0) {
             return;
@@ -412,6 +438,11 @@ public class MainMenuController {
 
     private static long redondear(double valor) {
         return Math.max(1, Math.round(valor));
+    }
+
+    /** Descarta tanto un tamaño nulo/negativo como uno disparatadamente grande. */
+    private static boolean medidaValida(double v) {
+        return v > 0 && v <= LADO_MAXIMO_RAZONABLE;
     }
 
     // --- datos ------------------------------------------------------------
@@ -541,8 +572,18 @@ public class MainMenuController {
     private void cubrir(DoubleProperty anchoDestino, DoubleProperty altoDestino,
                         double nativoAncho, double nativoAlto) {
         DoubleBinding factor = Bindings.createDoubleBinding(
-                () -> Math.max(capaFondo.getWidth() / nativoAncho,
-                               capaFondo.getHeight() / nativoAlto),
+                () -> {
+                    double w = capaFondo.getWidth();
+                    double h = capaFondo.getHeight();
+                    // Mismo guardarraíl que en el layout de las tarjetas: si el
+                    // compositor informa un tamaño disparatado durante el
+                    // pulso de maximizado, no hay que escalar la imagen a eso
+                    // — se congelaría la app intentando rasterizarla.
+                    if (!medidaValida(w) || !medidaValida(h)) {
+                        return 0.0;
+                    }
+                    return Math.max(w / nativoAncho, h / nativoAlto);
+                },
                 capaFondo.widthProperty(), capaFondo.heightProperty());
         anchoDestino.bind(factor.multiply(nativoAncho));
         altoDestino.bind(factor.multiply(nativoAlto));
@@ -591,11 +632,22 @@ public class MainMenuController {
         envoltura.setOnMouseEntered(e -> {
             escalar(envoltura, 1.03);
             atenuarHermanas(envoltura, true);
+            reproducirSfxSeleccion();
         });
         envoltura.setOnMouseExited(e -> {
             escalar(envoltura, 1.0);
             atenuarHermanas(envoltura, false);
         });
+    }
+
+    /** Con cortafuego: barrer el ratón por varias tarjetas no debe apilar el mismo clip. */
+    private void reproducirSfxSeleccion() {
+        long ahora = System.currentTimeMillis();
+        if (ahora - ultimoSfxSeleccionMs < ESPERA_SFX_SELECCION_MS) {
+            return;
+        }
+        ultimoSfxSeleccionMs = ahora;
+        AudioManager.reproducirSfx(SFX_SECUNDARIO);
     }
 
     private void escalar(StackPane envoltura, double destino) {
@@ -641,8 +693,23 @@ public class MainMenuController {
     @FXML
     private void onAjustes() {
         AudioManager.reproducirSfx(SFX_SECUNDARIO);
-        pulsoConfirmacion(envolturaAjustes).play();
+        pulsoCompleto(envolturaAjustes);
         AjustesDialog.mostrar();
+    }
+
+    /**
+     * Crece y vuelve a 1.0: a diferencia de las cuatro tarjetas que navegan
+     * (donde el menú entero se destruye después, así que no importa que se
+     * queden escaladas), AJUSTES sigue en pantalla tras el pulso, así que
+     * tiene que revertir o quedaría agrandada para siempre.
+     */
+    private void pulsoCompleto(StackPane envoltura) {
+        ScaleTransition crecer = pulsoConfirmacion(envoltura);
+        ScaleTransition encoger = new ScaleTransition(Animaciones.PULSO_TILE, envoltura);
+        encoger.setToX(1.0);
+        encoger.setToY(1.0);
+        encoger.setInterpolator(Animaciones.EASE_OUT);
+        new SequentialTransition(crecer, encoger).play();
     }
 
     @FXML
