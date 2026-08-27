@@ -8,7 +8,7 @@ Antes de entrar al shell, la aplicación pasa por dos pantallas nuevas:
    con fundido y escala sobre un campo de brasas animado. Dura ~5,4 s y se
    puede saltar con clic, `ESC`, `ENTER` o `ESPACIO`.
 2. **Menú principal** (`menu.fxml` + `MainMenuController`): hub estilo
-   videojuego con fondo de vídeo, cinco tarjetas y salida.
+   videojuego con fondo de fotos en slideshow, cinco tarjetas y salida.
 
 `App` encadena intro → menú → shell sobre una única `Scene`, cruzando con
 fundidos de 400 ms. Mantener un solo `Stage`/`Scene` evita el parpadeo y el
@@ -56,81 +56,91 @@ Los iconos son `SVGPath` escritos a mano en caja `0 0 24 24`, escalados con un
 `Scale` enlazado a la altura de la escena. Viven en el FXML para que
 `ViewsLoadTest` valide que las rutas parsean.
 
-## Fondo de vídeo
+## Fondo: slideshow de fotos
 
-`simulator/src/main/resources/videos/menu-loop.mp4` (~5 MB, 16 s, 1280×720,
-sin audio) se reproduce en bucle y mudo, con comportamiento *cover*: se escala
-por el lado que se queda corto y el sobrante se recorta, en vez de dejar bandas
-negras.
+El fondo del menú fue en su día un vídeo en bucle; se retiró porque cargaba la
+CPU de forma notoria. Hoy `MainMenuController.montarFondoSlideshow()` cicla
+entre hasta tres fotos (`images/menu-fondo/fondo-01/02/03.jpg`), cada una con
+comportamiento *cover* (se escala por el lado que se queda corto y el
+sobrante se recorta, igual que hacía el vídeo).
 
-### El clip original no se versiona
+Ritmo, centralizado en `util/Animaciones`:
 
-El material de partida (`F1primerclip.mp4`, 410 MB, 15 min) vive en
-`media-src/`, que está en `.gitignore`. Estaba en `src/main/resources`, donde
-Maven lo copiaba a `target/` en cada compilación y donde habría bloqueado el
-push: GitHub rechaza ficheros de más de 100 MB.
+- Cada foto se mantiene `FONDO_HOLD` (3 s).
+- Al cambiar, la siguiente foto entra encima con opacidad 0 y funde a 1 en
+  `FONDO_CROSSFADE` (1000 ms) —el mismo patrón aditivo que usa `App.cruzar()`—
+  y solo entonces se retira la anterior del `StackPane`.
+- Cada foto tiene su propio *Ken Burns*: un `Timeline` de una sola pasada
+  (sin `autoReverse` ni ciclo infinito, a diferencia del respaldo estático que
+  tenía el vídeo) que escala de 1.00 a 1.03 durante exactamente el tiempo que
+  la foto está visible, para que el zoom se note pero termine justo cuando
+  sale de escena.
 
-Para regenerar el bucle:
+Si falta algún fichero se salta sin más; si faltan los tres, `capaFondo` se
+queda con un `Region` vacío y el scrim ya deja el fondo en negro —la misma
+degradación silenciosa que tenía el respaldo del vídeo.
 
-```bash
-ffmpeg -y -ss 00:02:00 -t 16 -i media-src/F1primerclip.mp4 -an -sn -dn \
-  -vf "fps=30,scale=1280:720:flags=lanczos,eq=brightness=-0.08:saturation=0.72:contrast=1.06,format=yuv420p" \
-  -c:v libx264 -profile:v high -level 4.0 -pix_fmt yuv420p \
-  -crf 27 -preset slow -g 60 -keyint_min 60 -sc_threshold 0 -movflags +faststart \
-  simulator/src/main/resources/videos/menu-loop.mp4
-```
+`MainMenuController.liberar()` —invocado desde `App` al salir del menú— para
+el `Timeline` del ciclo y el Ken Burns en curso; sin eso seguirían corriendo
+de fondo durante toda la sesión.
 
-`-profile:v high -pix_fmt yuv420p` no es opcional: el decodificador de JavaFX
-solo acepta H.264 de 8 bits en 4:2:0. El `eq=` acerca el metraje al tono
-apagado del mockup, y hacerlo aquí evita pagarlo en cada fotograma en runtime.
+## Interacción del menú
 
-### Códec: hace falta `ffmpeg4.4`
+**Hover**: además del `ScaleTransition` de siempre (ahora 1.0→1.03,
+`Animaciones.HOVER` = 180 ms, `EASE_OUT`), las otras cuatro tarjetas bajan a
+opacidad ~0.72 mientras el ratón está sobre una, para dar foco a la activa. El
+aumento de brillo y el acento rojo más visible los cubre el CSS `:hover` que
+ya existía para cada variante de tarjeta; la roja además gana un glow más
+intenso (`.menu-tile-wrap-primary:hover`).
 
-`javafx-media` 17.0.10 trae `libavplugin-{54,56,57,58,59}.so`, que abren
-`libavcodec.so.{54..59}`. Un Arch al día tiene ffmpeg 9 y **solo**
-`libavcodec.so.63`, así que el H.264 no decodifica y salta
-`MediaException MEDIA_UNAVAILABLE`. (El MP3 no se ve afectado: lo decodifica
-`gstreamer-lite` de forma nativa.)
+**Elegir una sección** (CLASIFICACIÓN/GESTIÓN/EXPLORAR/HISTORIAL): la tarjeta
+pulsa (escala a 1.06, `Animaciones.PULSO_TILE` = 110 ms) mientras el resto del
+menú se apaga a opacidad ~0.25-0.35, y solo entonces `App` carga el shell con
+`cruzarSeccion()` —un cruce con *slide* (entra desde un lado con fundido,
+el menú sale hacia el contrario), no el fundido simple que usa intro→menú—
+para que se sienta como continuación del menú y no un corte a negro. Pulso +
+slide suman `Animaciones.TRANSICION_SECCION` (380 ms) ≈ 490 ms en total.
+AJUSTES recibe solo el pulso: abre un diálogo modal sobre el propio menú, no
+navega a ninguna parte, así que apagar el resto no tendría sentido.
 
-```bash
-sudo pacman -S ffmpeg4.4
-pacman -Ql ffmpeg4.4 | grep libavcodec     # confirmar la ruta real
-LD_LIBRARY_PATH=/usr/lib/ffmpeg4.4 mvn -f simulator/pom.xml javafx:run
-```
+**Volver al menú**: el "F1" de la cabecera del shell (antes un `Label`, ahora
+un `Button`, ver `ShellController.onVolverAlMenu`) llama a
+`App.mostrarMenu(raiz, true)`, que reutiliza `cruzarSeccion()` en sentido
+inverso. El menú se recarga desde FXML igual que la primera vez, así que el
+slideshow **arranca de nuevo desde la primera foto** en vez de recordar en
+qué imagen se quedó —cachear ese estado exigiría un cambio de arquitectura
+(igual al de `Navigator` con sesión/gestión) desproporcionado para una
+diferencia cosmética.
 
-`-Djava.library.path` puede no bastar, porque quien hace el `dlopen` es el
-propio `.so` y no la JVM; `LD_LIBRARY_PATH` es la vía fiable.
+## Entrada de pantallas dentro del shell
 
-### Respaldo automático
-
-Si el vídeo no está o no decodifica, el menú cae **sin ruido** a
-`images/menu-fondo.jpg` con un paneo y zoom lentos (Ken Burns), y sigue siendo
-perfectamente usable. Se comprueban todas las vías de fallo —`Media.getError`,
-`setOnError`, `setOnHalted`, el estado `HALTED`, el recurso ausente y un
-vigilante de 2,5 s que verifica que se llegó a `PLAYING`— porque fallan en
-momentos distintos. El `catch` incluye `Error` a propósito: si faltan los `.so`
-nativos lo que salta es `UnsatisfiedLinkError`, que no es `RuntimeException`.
-
-Se descartó una secuencia de fotogramas como respaldo: costaba ~84 MB de heap
-para algo que, con `ffmpeg4.4` instalado, casi nunca se ve.
-
-`MainMenuController.liberar()` —invocado desde `App` al entrar al shell— suelta
-el reproductor y las animaciones; sin eso el vídeo seguiría decodificando
-durante toda la sesión.
+`Navigator.mostrarConEntrada()` envuelve los cuatro sitios donde antes se
+hacía `contenedor.getChildren().setAll(...)` a secas: la vista nueva entra con
+opacidad 0→1 y `translateY` 15px→0 en `Animaciones.ENTRADA_PANTALLA` (360 ms,
+`EASE_OUT`). Se aplica igual a una vista recién cargada por FXML que a una
+restaurada de caché (sesión de simulación, gestión): en ambos casos el
+usuario "llega" a la pantalla. No hay *stagger* interno (título primero,
+contenido después): tocar cada vista individualmente para eso no compensaba
+frente a una entrada uniforme del contenedor.
 
 ## Sonido
 
-Solo hay dos efectos, y se usan al elegir opción:
-
 | Fichero | Uso |
 |---|---|
-| `audio/sound1.mp3` | Confirmar: entrar a una sección principal |
+| `audio/sound1.mp3` | Confirmar: entrar a una sección principal del menú |
 | `audio/sound2.mp3` | Acción secundaria: AJUSTES y SALIR |
+| `audio/sound-intro.mp3` | Stinger corto al arrancar la intro |
+| `audio/intro-f1.mp3` | Tema de fondo de la intro, sin loop (dura lo que dura la intro) |
 
-**No hay música de fondo**: no se ha entregado ninguna pista. `AudioManager`
-sigue ofreciendo `reproducirMusica`/`crossfadeMusica` para cuando se añada.
-Toda carga de audio es defensiva: si el fichero falta o no hay códec, se
-degrada a silencio y nunca tumba el arranque.
+Los dos de la intro se lanzan juntos al construir `IntroController`, y se
+cortan (`AudioManager.detenerMusica()`) en el mismo punto de salida que ya
+cubre tanto el fin natural como el salto (`terminarUnaVez`, protegido por un
+`AtomicBoolean`).
+
+**No hay música de fondo del menú/shell**: no se ha entregado ninguna pista.
+`AudioManager` sigue ofreciendo `reproducirMusica`/`crossfadeMusica` para
+cuando se añada. Toda carga de audio es defensiva: si el fichero falta o no
+hay códec, se degrada a silencio y nunca tumba el arranque.
 
 El volumen de música y efectos, y el silencio, se ajustan desde AJUSTES y se
 guardan con `java.util.prefs.Preferences`.
