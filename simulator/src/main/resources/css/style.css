@@ -1355,148 +1355,134 @@
 }
 
 /* =============================================================
-   Menú principal (hub previo al shell)
+   Menú principal — reproducción del menú de F1 23
 
-   Geometria y color muestreados de docs/assets/menu_mockup.png
-   (espacio de referencia 1672x941). Los cuerpos de letra NO van aqui:
-   los calcula MainMenuController desde la altura de escena, porque el
-   mockup escala la tipografia con la ventana.
+   Referencia: docs/assets/f1-23-menu-referencia.jpg. Pantalla partida:
+   columna izquierda oscura con la lista de opciones (la activa dentro de
+   un marco y con galones), columna derecha con el título de la sección.
+
+   Los cuerpos de letra NO van aqui: los calcula MainMenuController desde
+   la altura de la escena, porque el menu escala con la ventana.
    ============================================================= */
 
-.menu-root      { -fx-background-color: -fx-bg-0; }
-.menu-bg-layer  { -fx-background-color: -fx-bg-0; }
+.menu-root { -fx-background-color: #08080A; }
 
-/* Viñeta del mockup: calido y visible arriba, negro absoluto por debajo
-   de la mitad para que las tarjetas recorten con nitidez. */
-.menu-scrim {
-    -fx-background-color:
-        radial-gradient(center 50% 40%, radius 82%,
-            transparent 34%, rgba(0,0,0,0.30) 68%, rgba(0,0,0,0.78) 100%),
-        linear-gradient(to bottom,
-            rgba(6,6,8,0.70)  0%,
-            rgba(6,6,8,0.26) 26%,
-            rgba(6,6,8,0.52) 46%,
-            rgba(4,4,6,0.92) 66%,
-            #030304          88%,
-            #000000         100%);
+/* --- columna izquierda ------------------------------------------- */
+
+.menu-panel {
+    -fx-background-color: #0B0B0D;
 }
 
-/* --- cabecera --------------------------------------------------- */
-
-.menu-year {
-    -fx-font-family: "Titillium Web Black", "Titillium Web", "Adwaita Sans", sans-serif;
-    -fx-font-weight: 900;
-    -fx-text-fill: #E6E6E8;
-}
-
-/* Los glifos del tracking son nodos Text: se colorean con -fx-fill. */
-.menu-temporada-glifo,
-.menu-stat-glifo,
-.menu-salir-glifo {
+.menu-marca {
     -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-fill: #8A8A8D;
 }
 
-.menu-temporada-glifo { -fx-fill: #888586; }
-.menu-stat-glifo      { -fx-fill: #9A9A9A; }
-.menu-salir-glifo     { -fx-fill: #7D7C7B; }
-
-.menu-exit-rule { -fx-background-color: #565554; }
-
-/* --- envolturas: llevan el efecto, el clip va en el Button interior --
-   El clip se aplica DESPUES del effect, asi que un dropshadow puesto en
-   el mismo nodo recortado desaparece. */
-
-.menu-tile-wrap { -fx-background-color: transparent; }
-
-.menu-tile-wrap-primary {
-    -fx-effect: dropshadow(gaussian, rgba(225,6,0,0.55), 38, 0.12, 0, 10);
-}
-
-.menu-tile-wrap-primary:hover {
-    -fx-effect: dropshadow(gaussian, rgba(225,6,0,0.75), 46, 0.16, 0, 12);
-}
-
-/* --- tarjetas ---------------------------------------------------- */
-
-.menu-tile {
-    -fx-background-radius: 0;
-    -fx-border-color: transparent;
+/* La fila coge todo el ancho (zona de raton); el marco cine al texto. */
+.menu-opcion {
+    -fx-background-color: transparent;
     -fx-cursor: hand;
-    -fx-content-display: graphic-only;
-    -fx-graphic-text-gap: 0;
-    -fx-alignment: TOP_LEFT;
 }
 
-.menu-tile:focused { -fx-background-insets: 0; }
-
-.menu-tile-primary {
-    -fx-background-color: linear-gradient(to bottom, #CB0101 0%, #A30100 52%, #710103 100%);
-    -fx-padding: 50 30 46 35;
+.menu-opcion-marco {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-border-width: 1;
+    -fx-padding: 7 22 9 18;
 }
 
-.menu-tile-primary:hover {
-    -fx-background-color: linear-gradient(to bottom, #E10600 0%, #B60100 52%, #820103 100%);
+.menu-opcion-activa {
+    -fx-background-color: rgba(255,255,255,0.07);
+    -fx-border-color: rgba(255,255,255,0.55);
 }
 
-/* La franja roja izquierda va como capa de fondo, no como borde: un
-   -fx-border-color no admite degradado vertical y el clip lo deformaria
-   en el chaflan. */
-.menu-tile-secondary {
-    -fx-background-color:
-        linear-gradient(to bottom, #E10600 0%, #6A0200 100%),
-        linear-gradient(to bottom, rgba(19,18,20,0.985) 0%, rgba(7,7,9,0.985) 100%);
-    -fx-background-insets: 0, 0 0 0 12;
-    -fx-padding: 48 24 48 42;
-}
-
-.menu-tile-secondary:hover {
-    -fx-background-color:
-        linear-gradient(to bottom, #FF1E0F 0%, #8A0200 100%),
-        linear-gradient(to bottom, rgba(30,29,33,0.95) 0%, rgba(13,13,17,0.95) 100%);
-}
-
-/* AJUSTES: sin franja roja. Su contorno gris es un Polygon hermano,
-   porque un borde CSS no seguiria el chaflan del clip. */
-.menu-tile-quiet {
-    -fx-background-color: linear-gradient(to bottom, rgba(19,18,20,0.97) 0%, rgba(6,7,8,0.97) 100%);
-    -fx-padding: 23 20 25 24;
-}
-
-.menu-tile-quiet:hover {
-    -fx-background-color: linear-gradient(to bottom, rgba(32,31,36,0.94) 0%, rgba(12,12,16,0.94) 100%);
-}
-
-/* --- contenido de las tarjetas ----------------------------------- */
-
-.menu-tile-title {
+.menu-opcion-texto {
     -fx-font-family: "Titillium Web Black", "Titillium Web", "Adwaita Sans", sans-serif;
     -fx-font-weight: 900;
-    -fx-text-fill: -fx-text-hero;
+    -fx-text-fill: rgba(255,255,255,0.74);
 }
 
-.menu-tile-subtitle {
-    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
-    -fx-text-fill: #9A9A9A;
+.menu-opcion-activa .menu-opcion-texto {
+    -fx-text-fill: #FFFFFF;
 }
 
-.menu-tile-primary .menu-tile-subtitle { -fx-text-fill: rgba(255,255,255,0.88); }
-
-/* Filete blanco corto entre titulo y subtitulo: solo en la roja. */
-.menu-tile-rule { -fx-background-color: rgba(255,255,255,0.92); }
-
-/* --- iconos SVGPath ---------------------------------------------- */
-
-.menu-icon-solid {
-    -fx-fill: white;
-    -fx-stroke: null;
-}
-
-.menu-icon-line {
+/* Galones a la derecha de la fila activa: el rasgo mas reconocible
+   del menu de F1 23. Van como SVGPath para que el trazo escale. */
+.menu-galon {
     -fx-fill: transparent;
-    -fx-stroke: white;
-    -fx-stroke-width: 1.8;
+    -fx-stroke: rgba(255,255,255,0.5);
+    -fx-stroke-width: 2;
     -fx-stroke-line-cap: round;
     -fx-stroke-line-join: round;
+}
+
+.menu-descripcion {
+    -fx-text-fill: #8F8F93;
+}
+
+.menu-salir {
+    -fx-font-family: "Titillium Web", "Adwaita Sans", sans-serif;
+    -fx-font-weight: bold;
+    -fx-text-fill: #B9B9BD;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 4 0 4 0;
+    -fx-cursor: hand;
+}
+
+.menu-salir:hover { -fx-text-fill: -fx-brand; }
+
+.menu-pistas {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-text-fill: #5E5E62;
+}
+
+/* --- columna derecha ---------------------------------------------
+   Sin fotografia: el bloque se sostiene con el degradado, las franjas
+   diagonales y el titulo. Las franjas usan el ciclo `repeat`, que es
+   como JavaFX expresa un patron repetido en un gradiente lineal. */
+
+.menu-escenario {
+    /* OJO con el orden: en JavaFX el primer fondo de la lista se pinta
+       ABAJO y los siguientes encima, al reves que en CSS de web. La base
+       opaca va primero; las franjas, al final, o taparian todo. */
+    -fx-background-color:
+        linear-gradient(to bottom right, #24242C 0%, #16161C 45%, #0B0B0F 100%),
+        radial-gradient(center 64% 34%, radius 82%,
+            rgba(225,6,0,0.30) 0%, rgba(225,6,0,0.07) 45%, transparent 74%),
+        linear-gradient(from 0px 0px to 13px 13px, repeat,
+            rgba(255,255,255,0.055) 0%, rgba(255,255,255,0.055) 46%,
+            transparent 46%, transparent 100%);
+    /* El orden de los lados es arriba, derecha, abajo, izquierda. */
+    -fx-border-color: transparent transparent transparent rgba(255,255,255,0.10);
+    -fx-border-width: 0 0 0 1;
+}
+
+.menu-hud {
+    -fx-background-color: rgba(0,0,0,0.42);
+    -fx-border-color: rgba(255,255,255,0.10);
+    -fx-border-width: 1;
+    -fx-padding: 7 14 7 14;
+}
+
+.menu-hud-glifo {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-fill: #A9A9AD;
+}
+
+.menu-hud-separador { -fx-fill: #4A4A4E; }
+
+.menu-escenario-titulo {
+    -fx-font-family: "Titillium Web Black", "Titillium Web", "Adwaita Sans", sans-serif;
+    -fx-font-weight: 900;
+    -fx-text-fill: #FFFFFF;
+}
+
+.menu-escenario-filete { -fx-background-color: -fx-brand; }
+
+.menu-escenario-pie {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-text-fill: #7E7E82;
 }
 
 .intro-skip {
