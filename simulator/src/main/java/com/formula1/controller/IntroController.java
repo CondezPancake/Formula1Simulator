@@ -1,5 +1,7 @@
 package com.formula1.controller;
 
+import com.formula1.util.AudioManager;
+
 import javafx.animation.AnimationTimer;
 import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;
@@ -74,9 +76,14 @@ public final class IntroController {
         Runnable terminarUnaVez = () -> {
             if (terminado.compareAndSet(false, true)) {
                 particulas.stop();
+                AudioManager.detenerMusica();
                 alTerminar.run();
             }
         };
+
+        // Stinger corto + tema de fondo sin loop, sincronizados con el arranque.
+        AudioManager.reproducirSfx("/audio/sound-intro.mp3");
+        AudioManager.reproducirMusica("/audio/intro-f1.mp3", false);
 
         ParallelTransition entradaLogo = new ParallelTransition(
                 fade(logo, 0, 1, ENTRADA),
