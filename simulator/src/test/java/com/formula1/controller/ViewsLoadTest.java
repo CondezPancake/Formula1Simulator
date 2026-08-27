@@ -93,9 +93,9 @@ class ViewsLoadTest {
     }
 
     @Test
-    void cargaElShellYLaPortada() {
+    void cargaElShellYElMenu() {
         cargar("shell");
-        cargar("home");
+        cargar("menu");
     }
 
     @Test

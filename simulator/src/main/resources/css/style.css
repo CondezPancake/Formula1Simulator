@@ -1341,3 +1341,149 @@
     -fx-font-size: 10px;
     -fx-font-weight: bold;
 }
+
+/* =============================================================
+   Menú principal (hub previo al shell)
+
+   Geometria y color muestreados de docs/assets/menu_mockup.png
+   (espacio de referencia 1672x941). Los cuerpos de letra NO van aqui:
+   los calcula MainMenuController desde la altura de escena, porque el
+   mockup escala la tipografia con la ventana.
+   ============================================================= */
+
+.menu-root      { -fx-background-color: -fx-bg-0; }
+.menu-bg-layer  { -fx-background-color: -fx-bg-0; }
+
+/* Viñeta del mockup: calido y visible arriba, negro absoluto por debajo
+   de la mitad para que las tarjetas recorten con nitidez. */
+.menu-scrim {
+    -fx-background-color:
+        radial-gradient(center 50% 40%, radius 82%,
+            transparent 34%, rgba(0,0,0,0.30) 68%, rgba(0,0,0,0.78) 100%),
+        linear-gradient(to bottom,
+            rgba(6,6,8,0.70)  0%,
+            rgba(6,6,8,0.26) 26%,
+            rgba(6,6,8,0.52) 46%,
+            rgba(4,4,6,0.92) 66%,
+            #030304          88%,
+            #000000         100%);
+}
+
+/* --- cabecera --------------------------------------------------- */
+
+.menu-year {
+    -fx-font-family: "Titillium Web Black", "Titillium Web", "Adwaita Sans", sans-serif;
+    -fx-font-weight: 900;
+    -fx-text-fill: #E6E6E8;
+}
+
+/* Los glifos del tracking son nodos Text: se colorean con -fx-fill. */
+.menu-temporada-glifo,
+.menu-stat-glifo,
+.menu-salir-glifo {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+}
+
+.menu-temporada-glifo { -fx-fill: #888586; }
+.menu-stat-glifo      { -fx-fill: #9A9A9A; }
+.menu-salir-glifo     { -fx-fill: #7D7C7B; }
+
+.menu-exit-rule { -fx-background-color: #565554; }
+
+/* --- envolturas: llevan el efecto, el clip va en el Button interior --
+   El clip se aplica DESPUES del effect, asi que un dropshadow puesto en
+   el mismo nodo recortado desaparece. */
+
+.menu-tile-wrap { -fx-background-color: transparent; }
+
+.menu-tile-wrap-primary {
+    -fx-effect: dropshadow(gaussian, rgba(225,6,0,0.55), 38, 0.12, 0, 10);
+}
+
+/* --- tarjetas ---------------------------------------------------- */
+
+.menu-tile {
+    -fx-background-radius: 0;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
+    -fx-content-display: graphic-only;
+    -fx-graphic-text-gap: 0;
+    -fx-alignment: TOP_LEFT;
+}
+
+.menu-tile:focused { -fx-background-insets: 0; }
+
+.menu-tile-primary {
+    -fx-background-color: linear-gradient(to bottom, #CB0101 0%, #A30100 52%, #710103 100%);
+    -fx-padding: 50 30 46 35;
+}
+
+.menu-tile-primary:hover {
+    -fx-background-color: linear-gradient(to bottom, #E10600 0%, #B60100 52%, #820103 100%);
+}
+
+/* La franja roja izquierda va como capa de fondo, no como borde: un
+   -fx-border-color no admite degradado vertical y el clip lo deformaria
+   en el chaflan. */
+.menu-tile-secondary {
+    -fx-background-color:
+        linear-gradient(to bottom, #E10600 0%, #6A0200 100%),
+        linear-gradient(to bottom, rgba(19,18,20,0.985) 0%, rgba(7,7,9,0.985) 100%);
+    -fx-background-insets: 0, 0 0 0 12;
+    -fx-padding: 48 24 48 42;
+}
+
+.menu-tile-secondary:hover {
+    -fx-background-color:
+        linear-gradient(to bottom, #FF1E0F 0%, #8A0200 100%),
+        linear-gradient(to bottom, rgba(30,29,33,0.95) 0%, rgba(13,13,17,0.95) 100%);
+}
+
+/* AJUSTES: sin franja roja. Su contorno gris es un Polygon hermano,
+   porque un borde CSS no seguiria el chaflan del clip. */
+.menu-tile-quiet {
+    -fx-background-color: linear-gradient(to bottom, rgba(19,18,20,0.97) 0%, rgba(6,7,8,0.97) 100%);
+    -fx-padding: 23 20 25 24;
+}
+
+.menu-tile-quiet:hover {
+    -fx-background-color: linear-gradient(to bottom, rgba(32,31,36,0.94) 0%, rgba(12,12,16,0.94) 100%);
+}
+
+/* --- contenido de las tarjetas ----------------------------------- */
+
+.menu-tile-title {
+    -fx-font-family: "Titillium Web Black", "Titillium Web", "Adwaita Sans", sans-serif;
+    -fx-font-weight: 900;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.menu-tile-subtitle {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-text-fill: #9A9A9A;
+}
+
+.menu-tile-primary .menu-tile-subtitle { -fx-text-fill: rgba(255,255,255,0.88); }
+
+/* Filete blanco corto entre titulo y subtitulo: solo en la roja. */
+.menu-tile-rule { -fx-background-color: rgba(255,255,255,0.92); }
+
+/* --- iconos SVGPath ---------------------------------------------- */
+
+.menu-icon-solid {
+    -fx-fill: white;
+    -fx-stroke: null;
+}
+
+.menu-icon-line {
+    -fx-fill: transparent;
+    -fx-stroke: white;
+    -fx-stroke-width: 1.8;
+    -fx-stroke-line-cap: round;
+    -fx-stroke-line-join: round;
+}
+
+.intro-skip {
+    -fx-fill: -fx-text-muted;
+    -fx-cursor: hand;
+}
