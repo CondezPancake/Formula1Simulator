@@ -92,18 +92,34 @@ public class SimulationController {
     @FXML private Label lblDashboardDesgaste;
     @FXML private LineChart<Number, Number> graficaDesgasteDashboard;
     @FXML private LineChart<Number, Number> graficaCombustibleDashboard;
-    @FXML private ImageView imagenPilotoUno;
-    @FXML private ImageView imagenPilotoDos;
     @FXML private Label lblPilotoUno;
     @FXML private Label lblEquipoUno;
     @FXML private Label lblVehiculoUno;
-    @FXML private Label lblRolUno;
     @FXML private Label lblExperienciaUno;
     @FXML private Label lblPilotoDos;
     @FXML private Label lblEquipoDos;
     @FXML private Label lblVehiculoDos;
-    @FXML private Label lblRolDos;
     @FXML private Label lblExperienciaDos;
+    @FXML private Label lblLlantasUno;
+    @FXML private Label lblTempLlantasUno;
+    @FXML private Label lblFuelUno;
+    @FXML private Label lblTempMotorUno;
+    @FXML private Label lblMarchaUno;
+    @FXML private Label lblRpmUno;
+    @FXML private Label lblPaceUno;
+    @FXML private Label lblFuelModeUno;
+    @FXML private Label lblErsUno;
+    @FXML private ProgressBar barraErsUno;
+    @FXML private Label lblLlantasDos;
+    @FXML private Label lblTempLlantasDos;
+    @FXML private Label lblFuelDos;
+    @FXML private Label lblTempMotorDos;
+    @FXML private Label lblMarchaDos;
+    @FXML private Label lblRpmDos;
+    @FXML private Label lblPaceDos;
+    @FXML private Label lblFuelModeDos;
+    @FXML private Label lblErsDos;
+    @FXML private ProgressBar barraErsDos;
     @FXML private Label lblTelemetriaPiloto;
     @FXML private Label lblEstadoPista;
     @FXML private Label lblVelocidadTelemetria;
@@ -159,6 +175,8 @@ public class SimulationController {
     private long versionConfiguracionAplicada = -1;
     private double consumoVueltaAcumulado;
     private double consumoVueltaTotal;
+    private double ersPiloto = 100;
+    private double ersCompanero = 100;
     private final XYChart.Series<Number, Number> serieDesgasteDashboard = new XYChart.Series<>();
     private final XYChart.Series<Number, Number> serieCombustibleDashboard = new XYChart.Series<>();
 
@@ -403,6 +421,10 @@ public class SimulationController {
     private void mostrarPuestaAPunto() {
         lblPuestaAPunto.setText(modo.getEtiqueta() + " · " + aero.getEtiqueta()
                 + " · " + presion.getEtiqueta() + " · " + combustible.getEtiqueta());
+        if (lblPaceUno != null) {
+            lblPaceUno.setText(etiquetaPaceInicial());
+            lblFuelModeUno.setText(etiquetaCombustible(combustible));
+        }
     }
 
     /** Deep-link desde Explorar » Garaje: precarga el vehículo elegido. */
@@ -514,6 +536,7 @@ public class SimulationController {
         barraDesgasteTelemetria.setProgress(0);
         barraTempNeumaticos.setProgress(0);
         barraTempMotor.setProgress(0);
+        reiniciarTelemetriaTarjetas();
         reiniciarGraficasDashboard();
     }
 
@@ -566,6 +589,7 @@ public class SimulationController {
         barraDesgasteTelemetria.setProgress(muestra.desgasteNeumaticosPorcentaje() / 100);
         barraTempNeumaticos.setProgress(muestra.temperaturaNeumaticosC() / 125);
         barraTempMotor.setProgress(muestra.temperaturaMotorC() / 125);
+        actualizarTelemetriaTarjetas(muestra);
     }
 
     /** Precarga una configuración elegida en Historial sin iniciar ni borrar la sesión actual. */
@@ -756,11 +780,7 @@ public class SimulationController {
         }
     }
 
-    /**
-     * Las dos tarjetas inferiores muestran al piloto elegido y a su compañero.
-     * Son un resumen visual de datos existentes; no introducen estadísticas de
-     * evolución del vehículo en el Dashboard.
-     */
+    /** Las dos tarjetas inferiores muestran al piloto elegido y a su compañero. */
     private void actualizarTarjetasPilotos() {
         List<Driver> equipo = new ArrayList<>(selectorPiloto.getItems());
         Driver seleccionado = selectorPiloto.getValue() != null
@@ -771,41 +791,163 @@ public class SimulationController {
                 .findFirst()
                 .orElse(null);
 
-        pintarTarjetaPiloto(seleccionado, imagenPilotoUno, lblPilotoUno,
-                lblEquipoUno, lblVehiculoUno, lblRolUno, lblExperienciaUno);
-        pintarTarjetaPiloto(companero, imagenPilotoDos, lblPilotoDos,
-                lblEquipoDos, lblVehiculoDos, lblRolDos, lblExperienciaDos);
+        pintarTarjetaPiloto(seleccionado, lblPilotoUno, lblEquipoUno,
+                lblVehiculoUno, lblExperienciaUno);
+        pintarTarjetaPiloto(companero, lblPilotoDos, lblEquipoDos,
+                lblVehiculoDos, lblExperienciaDos);
+        lblFuelModeUno.setText(etiquetaCombustible(combustible));
+        lblFuelModeDos.setText("BALANCEADA");
     }
 
-    private void pintarTarjetaPiloto(Driver piloto, ImageView imagen, Label nombre,
-                                     Label equipo, Label vehiculo, Label rol,
-                                     Label experiencia) {
+    private void pintarTarjetaPiloto(Driver piloto, Label nombre, Label equipo,
+                                     Label vehiculo, Label dorsal) {
         if (piloto == null) {
-            imagen.setImage(null);
             nombre.setText("—");
             equipo.setText("—");
             vehiculo.setText(selectorVehiculo.getValue() == null
                     ? "—" : selectorVehiculo.getValue());
-            rol.setText("—");
-            experiencia.setText("—");
+            dorsal.setText("—");
             return;
         }
 
-        imagen.setImage(cargarImagenPiloto(piloto));
         nombre.setText(piloto.getNombre());
         equipo.setText(piloto.getEquipo());
         vehiculo.setText(selectorVehiculo.getValue());
-        rol.setText(piloto.getRol() == null ? "Piloto" : piloto.getRol().getEtiqueta());
-        experiencia.setText("#" + piloto.getNumero() + " · "
-                + piloto.getExperiencia() + " años de experiencia");
+        dorsal.setText("#" + piloto.getNumero());
     }
 
-    private Image cargarImagenPiloto(Driver piloto) {
-        if (piloto.getImagen() == null || piloto.getImagen().isBlank()) {
-            return null;
+    private void reiniciarTelemetriaTarjetas() {
+        ersPiloto = 100;
+        ersCompanero = 100;
+        pintarLecturaTarjeta(lblLlantasUno, lblTempLlantasUno, lblFuelUno,
+                lblTempMotorUno, lblMarchaUno, lblRpmUno, lblPaceUno,
+                lblErsUno, barraErsUno, 100, 0, 100, 0, "N", 0,
+                etiquetaPaceInicial(), ersPiloto);
+        pintarLecturaTarjeta(lblLlantasDos, lblTempLlantasDos, lblFuelDos,
+                lblTempMotorDos, lblMarchaDos, lblRpmDos, lblPaceDos,
+                lblErsDos, barraErsDos, 100, 0, 100, 0, "N", 0,
+                "NORMAL", ersCompanero);
+        lblFuelModeUno.setText(etiquetaCombustible(combustible));
+        lblFuelModeDos.setText("BALANCEADA");
+    }
+
+    /**
+     * La primera tarjeta usa la lectura real emitida por el motor. La segunda
+     * conserva el mismo estado de pista con una variación pequeña y estable,
+     * representando el coche gemelo sin inventar saltos aleatorios en pantalla.
+     */
+    private void actualizarTelemetriaTarjetas(TelemetrySnapshot muestra) {
+        double cargaErs = muestra.velocidadRelativa() < 0.52 ? 1.8
+                : muestra.velocidadRelativa() > 0.76 ? -2.8 : -0.6;
+        if (muestra.evento().impacto().bandera() != TrackFlag.GREEN) {
+            cargaErs = 2.2;
         }
-        var recurso = getClass().getResource(piloto.getImagen());
-        return recurso == null ? null : new Image(recurso.toExternalForm());
+        ersPiloto = limitar(ersPiloto + cargaErs, 20, 100);
+
+        double oscilacion = Math.sin(muestra.segmento() * 0.72);
+        double velocidadCompanero = limitar(
+                muestra.velocidadKmh() * (0.975 + 0.012 * oscilacion),
+                0, muestra.velocidadMaximaKmh());
+        double velocidadRelativaCompanero = velocidadCompanero / muestra.velocidadMaximaKmh();
+        double cargaErsCompanero = velocidadRelativaCompanero < 0.50 ? 1.6
+                : velocidadRelativaCompanero > 0.75 ? -2.6 : -0.5;
+        ersCompanero = limitar(ersCompanero + cargaErsCompanero, 20, 100);
+
+        pintarLecturaTarjeta(lblLlantasUno, lblTempLlantasUno, lblFuelUno,
+                lblTempMotorUno, lblMarchaUno, lblRpmUno, lblPaceUno,
+                lblErsUno, barraErsUno,
+                100 - muestra.desgasteNeumaticosPorcentaje(),
+                muestra.temperaturaNeumaticosC(),
+                combustibleVisible(muestra.combustibleRestantePorcentaje()),
+                muestra.temperaturaMotorC(),
+                marchaPara(muestra.velocidadKmh()), muestra.rpm(), pacePara(muestra),
+                ersPiloto);
+
+        pintarLecturaTarjeta(lblLlantasDos, lblTempLlantasDos, lblFuelDos,
+                lblTempMotorDos, lblMarchaDos, lblRpmDos, lblPaceDos,
+                lblErsDos, barraErsDos,
+                limitar(100 - muestra.desgasteNeumaticosPorcentaje() * 1.06, 0, 100),
+                limitar(muestra.temperaturaNeumaticosC() + 1.7 * oscilacion, 0, 150),
+                limitar(combustibleVisible(muestra.combustibleRestantePorcentaje())
+                        - 0.5 + 0.3 * oscilacion, 0, 100),
+                limitar(muestra.temperaturaMotorC() + 1.2 * oscilacion, 0, 160),
+                marchaPara(velocidadCompanero),
+                (int) Math.round(limitar(muestra.rpm() * (0.98 + 0.01 * oscilacion), 0, 20_000)),
+                paceCompanero(muestra, velocidadRelativaCompanero), ersCompanero);
+    }
+
+    private void pintarLecturaTarjeta(Label llantas, Label tempLlantas, Label fuel,
+                                      Label tempMotor, Label marcha, Label rpm,
+                                      Label pace, Label ers, ProgressBar barraErs,
+                                      double vidaLlantas, double temperaturaLlantas,
+                                      double combustibleRestante, double temperaturaMotor,
+                                      String marchaActual, int rpmActual, String paceActual,
+                                      double cargaErs) {
+        llantas.setText(String.format("%.0f %%", limitar(vidaLlantas, 0, 100)));
+        tempLlantas.setText(temperaturaLlantas <= 0
+                ? "— °C" : String.format("%.0f °C", temperaturaLlantas));
+        fuel.setText(String.format("%.0f %%", limitar(combustibleRestante, 0, 100)));
+        tempMotor.setText(temperaturaMotor <= 0
+                ? "— °C motor" : String.format("%.0f °C motor", temperaturaMotor));
+        marcha.setText(marchaActual);
+        rpm.setText(String.format("%,d RPM", rpmActual));
+        pace.setText(paceActual);
+        ers.setText(String.format("%.0f %%", cargaErs));
+        barraErs.setProgress(cargaErs / 100);
+    }
+
+    private String marchaPara(double velocidadKmh) {
+        if (velocidadKmh < 1) return "N";
+        if (velocidadKmh < 82) return "2";
+        if (velocidadKmh < 125) return "3";
+        if (velocidadKmh < 168) return "4";
+        if (velocidadKmh < 212) return "5";
+        if (velocidadKmh < 255) return "6";
+        if (velocidadKmh < 295) return "7";
+        return "8";
+    }
+
+    /** El snapshot expresa el combustible asignado a la vuelta; la tarjeta lo
+     * traduce al porcentaje del depósito, cuya caída en una vuelta ronda 12 %. */
+    private double combustibleVisible(double porcentajeAsignadoRestante) {
+        return 88 + 0.12 * porcentajeAsignadoRestante;
+    }
+
+    private String pacePara(TelemetrySnapshot muestra) {
+        if (muestra.estadoVuelta() != LapStatus.VALID) return "BOX";
+        if (muestra.evento().impacto().bandera() != TrackFlag.GREEN) return "CAUTION";
+        if (modo == DrivingMode.AHORRO) return "SAVE";
+        if (modo == DrivingMode.AGRESIVA || muestra.deltaSegundos() < -0.15) return "PUSH";
+        if (muestra.velocidadRelativa() < 0.48) return "BUILD";
+        return "NORMAL";
+    }
+
+    private String paceCompanero(TelemetrySnapshot muestra, double velocidadRelativa) {
+        if (muestra.estadoVuelta() != LapStatus.VALID) return "BOX";
+        if (muestra.evento().impacto().bandera() != TrackFlag.GREEN) return "CAUTION";
+        if (velocidadRelativa > 0.82) return "PUSH";
+        if (velocidadRelativa < 0.46) return "BUILD";
+        return "NORMAL";
+    }
+
+    private String etiquetaPaceInicial() {
+        return switch (modo) {
+            case AGRESIVA -> "PUSH";
+            case NORMAL -> "NORMAL";
+            case AHORRO -> "SAVE";
+        };
+    }
+
+    private String etiquetaCombustible(FuelStrategy estrategia) {
+        return switch (estrategia) {
+            case AGRESIVA -> "PUSH";
+            case BALANCEADA -> "BALANCEADA";
+            case AHORRO -> "AHORRO";
+        };
+    }
+
+    private double limitar(double valor, double minimo, double maximo) {
+        return Math.max(minimo, Math.min(maximo, valor));
     }
 
     /** Recupera por identificador porque el historial se persiste entre ejecuciones. */

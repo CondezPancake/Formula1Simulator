@@ -111,41 +111,101 @@
                         </VBox>
                     </HBox>
 
-                    <!-- La franja inferior reproduce la jerarquía de la imagen:
-                         pilotos a la izquierda, ingeniería y telemetría a la derecha. -->
+                    <!-- La franja inferior conserva las dos tarjetas de pilotos,
+                         ahora sin fotografías y con la información operativa del coche. -->
                     <HBox spacing="10" styleClass="race-lower-deck">
                         <HBox spacing="10" HBox.hgrow="ALWAYS">
-                            <HBox spacing="12" styleClass="race-driver-card" HBox.hgrow="ALWAYS">
-                                <ImageView fx:id="imagenPilotoUno" fitWidth="94" fitHeight="126"
-                                           preserveRatio="true" smooth="true"/>
-                                <VBox spacing="5" HBox.hgrow="ALWAYS">
-                                    <Label fx:id="lblPilotoUno" text="Piloto seleccionado"
-                                           styleClass="race-driver-name"/>
-                                    <Label fx:id="lblEquipoUno" text="—" styleClass="race-driver-team"/>
-                                    <Separator/>
-                                    <Label text="MONOPLAZA" styleClass="card-label"/>
-                                    <Label fx:id="lblVehiculoUno" text="—" styleClass="stat-value"/>
-                                    <Label fx:id="lblRolUno" text="—" styleClass="hint"/>
-                                    <Region VBox.vgrow="ALWAYS"/>
-                                    <Label fx:id="lblExperienciaUno" text="—" styleClass="hint"/>
-                                </VBox>
-                            </HBox>
+                            <VBox spacing="7" styleClass="race-driver-card" HBox.hgrow="ALWAYS">
+                                <HBox alignment="CENTER_LEFT">
+                                    <VBox spacing="0">
+                                        <Label fx:id="lblPilotoUno" text="Piloto seleccionado"
+                                               styleClass="race-driver-name"/>
+                                        <Label fx:id="lblEquipoUno" text="—" styleClass="race-driver-team"/>
+                                    </VBox>
+                                    <Region HBox.hgrow="ALWAYS"/>
+                                    <VBox spacing="0" alignment="CENTER_RIGHT">
+                                        <Label fx:id="lblVehiculoUno" text="—" styleClass="race-car-name"/>
+                                        <Label fx:id="lblExperienciaUno" text="—" styleClass="race-driver-number"/>
+                                    </VBox>
+                                </HBox>
+                                <HBox spacing="6" styleClass="race-car-readings">
+                                    <VBox spacing="1" styleClass="race-car-reading" HBox.hgrow="ALWAYS">
+                                        <Label text="LLANTAS" styleClass="card-label"/>
+                                        <Label fx:id="lblLlantasUno" text="100 %" styleClass="race-reading-value"/>
+                                        <Label fx:id="lblTempLlantasUno" text="— °C" styleClass="race-reading-detail"/>
+                                    </VBox>
+                                    <VBox spacing="1" styleClass="race-car-reading" HBox.hgrow="ALWAYS">
+                                        <Label text="FUEL" styleClass="card-label"/>
+                                        <Label fx:id="lblFuelUno" text="100 %" styleClass="race-reading-value"/>
+                                        <Label fx:id="lblTempMotorUno" text="— °C motor" styleClass="race-reading-detail"/>
+                                    </VBox>
+                                    <VBox spacing="1" alignment="CENTER" styleClass="race-car-reading,race-gear-reading">
+                                        <Label text="MARCHA" styleClass="card-label"/>
+                                        <Label fx:id="lblMarchaUno" text="N" styleClass="race-gear-value"/>
+                                        <Label fx:id="lblRpmUno" text="0 RPM" styleClass="race-reading-detail"/>
+                                    </VBox>
+                                </HBox>
+                                <HBox spacing="6" styleClass="race-car-modes">
+                                    <VBox spacing="0" styleClass="race-mode-cell" HBox.hgrow="ALWAYS">
+                                        <Label text="PACE" styleClass="card-label"/>
+                                        <Label fx:id="lblPaceUno" text="NORMAL" styleClass="race-mode-value"/>
+                                    </VBox>
+                                    <VBox spacing="0" styleClass="race-mode-cell" HBox.hgrow="ALWAYS">
+                                        <Label text="FUEL" styleClass="card-label"/>
+                                        <Label fx:id="lblFuelModeUno" text="BALANCEADA" styleClass="race-mode-value"/>
+                                    </VBox>
+                                    <VBox spacing="0" styleClass="race-mode-cell" HBox.hgrow="ALWAYS">
+                                        <HBox><Label text="ERS" styleClass="card-label"/><Region HBox.hgrow="ALWAYS"/><Label fx:id="lblErsUno" text="100 %" styleClass="race-mode-value"/></HBox>
+                                        <ProgressBar fx:id="barraErsUno" progress="1" maxWidth="1.7976931348623157E308"/>
+                                    </VBox>
+                                </HBox>
+                            </VBox>
 
-                            <HBox spacing="12" styleClass="race-driver-card" HBox.hgrow="ALWAYS">
-                                <ImageView fx:id="imagenPilotoDos" fitWidth="94" fitHeight="126"
-                                           preserveRatio="true" smooth="true"/>
-                                <VBox spacing="5" HBox.hgrow="ALWAYS">
-                                    <Label fx:id="lblPilotoDos" text="Compañero de equipo"
-                                           styleClass="race-driver-name"/>
-                                    <Label fx:id="lblEquipoDos" text="—" styleClass="race-driver-team"/>
-                                    <Separator/>
-                                    <Label text="MONOPLAZA" styleClass="card-label"/>
-                                    <Label fx:id="lblVehiculoDos" text="—" styleClass="stat-value"/>
-                                    <Label fx:id="lblRolDos" text="—" styleClass="hint"/>
-                                    <Region VBox.vgrow="ALWAYS"/>
-                                    <Label fx:id="lblExperienciaDos" text="—" styleClass="hint"/>
-                                </VBox>
-                            </HBox>
+                            <VBox spacing="7" styleClass="race-driver-card" HBox.hgrow="ALWAYS">
+                                <HBox alignment="CENTER_LEFT">
+                                    <VBox spacing="0">
+                                        <Label fx:id="lblPilotoDos" text="Compañero de equipo"
+                                               styleClass="race-driver-name"/>
+                                        <Label fx:id="lblEquipoDos" text="—" styleClass="race-driver-team"/>
+                                    </VBox>
+                                    <Region HBox.hgrow="ALWAYS"/>
+                                    <VBox spacing="0" alignment="CENTER_RIGHT">
+                                        <Label fx:id="lblVehiculoDos" text="—" styleClass="race-car-name"/>
+                                        <Label fx:id="lblExperienciaDos" text="—" styleClass="race-driver-number"/>
+                                    </VBox>
+                                </HBox>
+                                <HBox spacing="6" styleClass="race-car-readings">
+                                    <VBox spacing="1" styleClass="race-car-reading" HBox.hgrow="ALWAYS">
+                                        <Label text="LLANTAS" styleClass="card-label"/>
+                                        <Label fx:id="lblLlantasDos" text="100 %" styleClass="race-reading-value"/>
+                                        <Label fx:id="lblTempLlantasDos" text="— °C" styleClass="race-reading-detail"/>
+                                    </VBox>
+                                    <VBox spacing="1" styleClass="race-car-reading" HBox.hgrow="ALWAYS">
+                                        <Label text="FUEL" styleClass="card-label"/>
+                                        <Label fx:id="lblFuelDos" text="100 %" styleClass="race-reading-value"/>
+                                        <Label fx:id="lblTempMotorDos" text="— °C motor" styleClass="race-reading-detail"/>
+                                    </VBox>
+                                    <VBox spacing="1" alignment="CENTER" styleClass="race-car-reading,race-gear-reading">
+                                        <Label text="MARCHA" styleClass="card-label"/>
+                                        <Label fx:id="lblMarchaDos" text="N" styleClass="race-gear-value"/>
+                                        <Label fx:id="lblRpmDos" text="0 RPM" styleClass="race-reading-detail"/>
+                                    </VBox>
+                                </HBox>
+                                <HBox spacing="6" styleClass="race-car-modes">
+                                    <VBox spacing="0" styleClass="race-mode-cell" HBox.hgrow="ALWAYS">
+                                        <Label text="PACE" styleClass="card-label"/>
+                                        <Label fx:id="lblPaceDos" text="NORMAL" styleClass="race-mode-value"/>
+                                    </VBox>
+                                    <VBox spacing="0" styleClass="race-mode-cell" HBox.hgrow="ALWAYS">
+                                        <Label text="FUEL" styleClass="card-label"/>
+                                        <Label fx:id="lblFuelModeDos" text="BALANCEADA" styleClass="race-mode-value"/>
+                                    </VBox>
+                                    <VBox spacing="0" styleClass="race-mode-cell" HBox.hgrow="ALWAYS">
+                                        <HBox><Label text="ERS" styleClass="card-label"/><Region HBox.hgrow="ALWAYS"/><Label fx:id="lblErsDos" text="100 %" styleClass="race-mode-value"/></HBox>
+                                        <ProgressBar fx:id="barraErsDos" progress="1" maxWidth="1.7976931348623157E308"/>
+                                    </VBox>
+                                </HBox>
+                            </VBox>
                         </HBox>
 
                         <VBox spacing="8" prefWidth="445" minWidth="390" maxWidth="480">

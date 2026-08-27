@@ -994,12 +994,8 @@
     -fx-min-width: 265;
 }
 
-.race-driver-card .image-view {
-    -fx-effect: dropshadow(gaussian, -fx-bg-0, 8, 0.45, 0, 2);
-}
-
 .race-driver-name {
-    -fx-font-size: 18px;
+    -fx-font-size: 16px;
     -fx-font-weight: bold;
     -fx-text-fill: -fx-text-hero;
 }
@@ -1007,6 +1003,72 @@
 .race-driver-team {
     -fx-font-size: 13px;
     -fx-text-fill: -fx-text-muted;
+}
+
+.race-car-name {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-2;
+}
+
+.race-driver-number {
+    -fx-font-size: 19px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.race-car-readings,
+.race-car-modes {
+    -fx-padding: 1 0 0 0;
+}
+
+.race-car-reading,
+.race-mode-cell {
+    -fx-background-color: -fx-surface-2;
+    -fx-background-radius: 4;
+    -fx-border-color: -fx-border-2;
+    -fx-border-radius: 4;
+    -fx-padding: 5 7 5 7;
+    -fx-min-width: 72;
+}
+
+.race-gear-reading {
+    -fx-min-width: 66;
+}
+
+.race-reading-value {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.race-gear-value {
+    -fx-font-size: 25px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-accent-red;
+}
+
+.race-reading-detail {
+    -fx-font-size: 9px;
+    -fx-text-fill: -fx-text-muted;
+}
+
+.race-mode-value {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.race-mode-cell .progress-bar {
+    -fx-pref-height: 5;
+    -fx-min-height: 5;
+    -fx-max-height: 5;
+}
+
+.race-mode-cell .progress-bar .bar {
+    -fx-background-color: -fx-accent-amber;
+    -fx-background-insets: 0;
+    -fx-background-radius: 2;
 }
 
 .race-bottom-telemetry {
