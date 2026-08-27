@@ -1,10 +1,5 @@
 package com.formula1.controller;
 
-import com.formula1.util.Animaciones;
-
-import javafx.animation.FadeTransition;
-import javafx.animation.ParallelTransition;
-import javafx.animation.TranslateTransition;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
@@ -32,10 +27,6 @@ public final class Navigator {
     private static Object controladorRetorno;
     private static String vistaRetornoNombre;
 
-    /** Entrada de pantalla viva, para poder cortarla si llega otra navegación. */
-    private static ParallelTransition entradaEnCurso;
-    private static Node nodoEntrando;
-
     private Navigator() {
     }
 
@@ -61,14 +52,14 @@ public final class Navigator {
         }
         if (VISTA_SESION.equals(vista) && sesion != null) {
             ultimoControlador = controladorSesion;
-            mostrarConEntrada(sesion);
+            mostrarVista(sesion);
             prepararSesionPendiente();
             ShellController.sincronizarVista(vista);
             return;
         }
         if (VISTA_GESTION.equals(vista) && gestion != null) {
             ultimoControlador = controladorGestion;
-            mostrarConEntrada(gestion);
+            mostrarVista(gestion);
             ShellController.sincronizarVista(vista);
             return;
         }
@@ -86,7 +77,7 @@ public final class Navigator {
                 gestion = contenido;
                 controladorGestion = ultimoControlador;
             }
-            mostrarConEntrada(contenido);
+            mostrarVista(contenido);
             if (VISTA_SESION.equals(vista)) {
                 prepararSesionPendiente();
             }
@@ -119,44 +110,15 @@ public final class Navigator {
         vistaRetorno = null;
         controladorRetorno = null;
         vistaRetornoNombre = null;
-        mostrarConEntrada(anterior);
+        mostrarVista(anterior);
         ultimoControlador = controladorAnterior;
         ShellController.sincronizarVista(seccionAnterior);
         return true;
     }
 
-    /** Fade + leve subida para que cada vista se sienta como una llegada, no un corte. */
-    private static void mostrarConEntrada(Node contenido) {
-        // Navegar dos veces seguidas más rápido que la animación dejaba dos
-        // transiciones escribiendo sobre el mismo nodo; y si la anterior se
-        // quedó a medias, su vista cacheada conservaba la opacidad y el
-        // desplazamiento intermedios al volver a mostrarla.
-        if (entradaEnCurso != null) {
-            entradaEnCurso.stop();
-            if (nodoEntrando != null) {
-                nodoEntrando.setOpacity(1);
-                nodoEntrando.setTranslateY(0);
-            }
-        }
-
+    /** Coloca la vista en el centro del shell. Cambio seco, sin transición. */
+    private static void mostrarVista(Node contenido) {
         contenedor.getChildren().setAll(contenido);
-        contenido.setOpacity(0);
-        contenido.setTranslateY(15);
-
-        FadeTransition f = new FadeTransition(Animaciones.ENTRADA_PANTALLA, contenido);
-        f.setToValue(1);
-        TranslateTransition t = new TranslateTransition(Animaciones.ENTRADA_PANTALLA, contenido);
-        t.setToY(0);
-        t.setInterpolator(Animaciones.EASE_OUT);
-
-        ParallelTransition entrada = new ParallelTransition(f, t);
-        nodoEntrando = contenido;
-        entradaEnCurso = entrada;
-        entrada.setOnFinished(e -> {
-            entradaEnCurso = null;
-            nodoEntrando = null;
-        });
-        entrada.play();
     }
 
     private static void prepararSesionPendiente() {
