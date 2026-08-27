@@ -6,4 +6,3 @@ public class Main {
         App.launch(App.class, args);
     }
 }
- 
