@@ -9,9 +9,7 @@ import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
-import javafx.animation.ParallelTransition;
 import javafx.animation.ScaleTransition;
-import javafx.animation.SequentialTransition;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
@@ -42,6 +40,7 @@ import javafx.util.Duration;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -85,17 +84,22 @@ public class MainMenuController {
         "/images/menu-fondo/fondo-03.jpg",
     };
 
-    /** Confirmación: entrar a una sección principal. */
+    /** Confirmación: elegir una sección principal. Es el sonido protagonista. */
     private static final String SFX_PRINCIPAL = "/audio/sound1.mp3";
-    /** Sonido ligero: seleccionar/hover una tarjeta y acciones secundarias (ajustes, salir). */
+    /** Acciones secundarias: ajustes y salir. */
     private static final String SFX_SECUNDARIO = "/audio/sound2.mp3";
+    /** Acompañamiento al recorrer las tarjetas, por debajo del de confirmación. */
+    private static final String SFX_HOVER = "/audio/sound2.mp3";
 
-    /**
-     * sound1.mp3/sound2.mp3 duran ~3 s; sin cortafuego, barrer el ratón por
-     * las 5 tarjetas apilaría varias instancias del mismo clip. Se ignora
-     * un nuevo hover si el anterior sonó hace menos de esto.
-     */
-    private static final long ESPERA_SFX_SELECCION_MS = 350;
+    /** Espera mínima entre dos sonidos de hover consecutivos. */
+    private static final long ESPERA_SFX_HOVER_MS = 350;
+    /** El hover solo acompaña: nunca debe competir con el sonido al elegir. */
+    private static final double VOLUMEN_HOVER = 0.35;
+
+    /** Opacidad de las tarjetas que no están bajo el cursor. */
+    private static final double ATENUACION_HERMANA = 0.72;
+    private static final double ESCALA_HOVER = 1.03;
+    private static final double ESCALA_PULSO = 1.06;
 
     /**
      * El wordmark ocupa solo la banda central de LogoF1.png (920x800): sin
@@ -168,7 +172,11 @@ public class MainMenuController {
     private Timeline kenBurnsActual;
     private int indiceFondo = 0;
     private Timeline sondeoDatos;
-    private long ultimoSfxSeleccionMs = 0;
+    private long ultimoSfxHoverMs = 0;
+
+    /** Una transición viva por tarjeta: reutilizarlas evita que se pisen entre sí. */
+    private final Map<StackPane, FadeTransition> fundidos = new HashMap<>();
+    private final Map<StackPane, ScaleTransition> escalados = new HashMap<>();
 
     @FXML
     public void initialize() {
@@ -619,6 +627,7 @@ public class MainMenuController {
             sondeoDatos.stop();
             sondeoDatos = null;
         }
+        detenerAnimacionesDeHover();
     }
 
     // --- interacción ------------------------------------------------------
@@ -630,44 +639,84 @@ public class MainMenuController {
 
     private void aplicarHover(StackPane envoltura) {
         envoltura.setOnMouseEntered(e -> {
-            escalar(envoltura, 1.03);
-            atenuarHermanas(envoltura, true);
-            reproducirSfxSeleccion();
+            resaltar(envoltura);
+            reproducirSfxHover();
         });
-        envoltura.setOnMouseExited(e -> {
-            escalar(envoltura, 1.0);
-            atenuarHermanas(envoltura, false);
-        });
+        envoltura.setOnMouseExited(e -> resaltar(null));
     }
 
-    /** Con cortafuego: barrer el ratón por varias tarjetas no debe apilar el mismo clip. */
-    private void reproducirSfxSeleccion() {
-        long ahora = System.currentTimeMillis();
-        if (ahora - ultimoSfxSeleccionMs < ESPERA_SFX_SELECCION_MS) {
+    /**
+     * Única fuente de verdad del estado visual de las tarjetas.
+     *
+     * Antes el hover se repartía entre dos métodos —uno al entrar y otro al
+     * salir—, y al pasar el ratón de una tarjeta a la de al lado JavaFX
+     * dispara primero la salida y luego la entrada: las tres tarjetas que no
+     * intervienen recibían a la vez un fundido hacia 1.0 (por la salida) y
+     * otro hacia 0.72 (por la entrada), peleándose por la misma propiedad y
+     * dejando opacidades a medias. Recalculando el estado completo desde la
+     * tarjeta activa, cada nodo recibe un único destino coherente.
+     *
+     * @param activa tarjeta bajo el cursor, o {@code null} si no hay ninguna
+     */
+    private void resaltar(StackPane activa) {
+        for (StackPane envoltura : todasLasEnvolturas()) {
+            boolean esActiva = envoltura == activa;
+            animarOpacidad(envoltura, activa == null || esActiva ? 1.0 : ATENUACION_HERMANA);
+            animarEscala(envoltura, esActiva ? ESCALA_HOVER : 1.0);
+        }
+    }
+
+    /** Reutiliza una transición por nodo y la detiene antes de redirigirla. */
+    private void animarOpacidad(StackPane nodo, double destino) {
+        FadeTransition fundido = fundidos.computeIfAbsent(nodo,
+                n -> new FadeTransition(Animaciones.HOVER, n));
+        if (yaEsta(nodo.getOpacity(), destino, fundido)) {
             return;
         }
-        ultimoSfxSeleccionMs = ahora;
-        AudioManager.reproducirSfx(SFX_SECUNDARIO);
+        fundido.stop();
+        fundido.setFromValue(nodo.getOpacity());
+        fundido.setToValue(destino);
+        fundido.play();
     }
 
-    private void escalar(StackPane envoltura, double destino) {
-        ScaleTransition zoom = new ScaleTransition(Animaciones.HOVER, envoltura);
+    private void animarEscala(StackPane nodo, double destino) {
+        ScaleTransition zoom = escalados.computeIfAbsent(nodo,
+                n -> new ScaleTransition(Animaciones.HOVER, n));
+        if (yaEsta(nodo.getScaleX(), destino, zoom)) {
+            return;
+        }
+        zoom.stop();
+        zoom.setFromX(nodo.getScaleX());
+        zoom.setFromY(nodo.getScaleY());
         zoom.setToX(destino);
         zoom.setToY(destino);
         zoom.setInterpolator(Animaciones.EASE_OUT);
         zoom.play();
     }
 
-    /** Las tarjetas que no son la activa bajan de opacidad para dar foco a la elegida. */
-    private void atenuarHermanas(StackPane activa, boolean atenuar) {
-        for (StackPane otra : todasLasEnvolturas()) {
-            if (otra == activa) {
-                continue;
-            }
-            FadeTransition f = new FadeTransition(Animaciones.HOVER, otra);
-            f.setToValue(atenuar ? 0.72 : 1.0);
-            f.play();
+    private static boolean yaEsta(double actual, double destino, Animation animacion) {
+        return Math.abs(actual - destino) < 0.001
+                && animacion.getStatus() != Animation.Status.RUNNING;
+    }
+
+    /** Deja las tarjetas quietas antes de una animación que las controla por completo. */
+    private void detenerAnimacionesDeHover() {
+        fundidos.values().forEach(Animation::stop);
+        escalados.values().forEach(Animation::stop);
+    }
+
+    /**
+     * Acompañamiento del hover, atenuado y con cortafuego: los clips duran
+     * ~1,5 s, así que barrer el ratón por las cinco tarjetas apilaría varias
+     * copias y taparía el sonido de confirmación al elegir.
+     */
+    private void reproducirSfxHover() {
+        long ahora = System.currentTimeMillis();
+        if (ahora - ultimoSfxHoverMs < ESPERA_SFX_HOVER_MS) {
+            return;
         }
+        ultimoSfxHoverMs = ahora;
+        AudioManager.reproducirSfx(SFX_HOVER, VOLUMEN_HOVER);
     }
 
     @FXML
@@ -693,23 +742,13 @@ public class MainMenuController {
     @FXML
     private void onAjustes() {
         AudioManager.reproducirSfx(SFX_SECUNDARIO);
-        pulsoCompleto(envolturaAjustes);
+        animarEscala(envolturaAjustes, ESCALA_PULSO);
         AjustesDialog.mostrar();
-    }
-
-    /**
-     * Crece y vuelve a 1.0: a diferencia de las cuatro tarjetas que navegan
-     * (donde el menú entero se destruye después, así que no importa que se
-     * queden escaladas), AJUSTES sigue en pantalla tras el pulso, así que
-     * tiene que revertir o quedaría agrandada para siempre.
-     */
-    private void pulsoCompleto(StackPane envoltura) {
-        ScaleTransition crecer = pulsoConfirmacion(envoltura);
-        ScaleTransition encoger = new ScaleTransition(Animaciones.PULSO_TILE, envoltura);
-        encoger.setToX(1.0);
-        encoger.setToY(1.0);
-        encoger.setInterpolator(Animaciones.EASE_OUT);
-        new SequentialTransition(crecer, encoger).play();
+        // El diálogo es modal y bloquea: mientras está abierto el ratón sale
+        // de la tarjeta sin que llegue el evento, así que al volver hay que
+        // recomponer el estado a mano o AJUSTES se queda agrandada y el resto
+        // del menú atenuado para siempre.
+        resaltar(null);
     }
 
     @FXML
@@ -717,7 +756,10 @@ public class MainMenuController {
         AudioManager.reproducirSfx(SFX_SECUNDARIO);
         if (Navigator.confirmar("¿Quieres salir del simulador?")) {
             Platform.exit();
+            return;
         }
+        // Mismo motivo que en AJUSTES: tras un modal el hover queda obsoleto.
+        resaltar(null);
     }
 
     private void irAlShell(Runnable destinoEnShell, StackPane seleccionada) {
@@ -731,28 +773,20 @@ public class MainMenuController {
      * corte a negro seguido de otra pantalla.
      */
     private void animarSalidaHaciaSeccion(StackPane seleccionada, Runnable alTerminar) {
-        ParallelTransition salida = new ParallelTransition(pulsoConfirmacion(seleccionada));
-        for (StackPane otra : todasLasEnvolturas()) {
-            if (otra == seleccionada) {
-                continue;
-            }
-            FadeTransition f = new FadeTransition(Animaciones.PULSO_TILE, otra);
-            f.setToValue(0.25);
-            salida.getChildren().add(f);
-        }
-        FadeTransition atenuarContenido = new FadeTransition(Animaciones.PULSO_TILE, capaContenido);
-        atenuarContenido.setToValue(0.35);
-        salida.getChildren().add(atenuarContenido);
+        // A partir de aquí manda la salida: si quedara viva una transición de
+        // hover, las dos escribirían sobre la misma opacidad o escala.
+        detenerAnimacionesDeHover();
 
-        salida.setOnFinished(e -> alTerminar.run());
-        salida.play();
-    }
-
-    private ScaleTransition pulsoConfirmacion(StackPane envoltura) {
-        ScaleTransition pulso = new ScaleTransition(Animaciones.PULSO_TILE, envoltura);
-        pulso.setToX(1.06);
-        pulso.setToY(1.06);
+        // Solo el pulso de la tarjeta elegida. Antes el resto del menú se
+        // apagaba a la vez, y encadenado con el cruce hacia el shell daba la
+        // sensación de fundido a negro que se quería quitar; la confirmación
+        // se lee igual de bien con la escala sola, y así el menú se mantiene
+        // nítido hasta que la sección lo tapa.
+        ScaleTransition pulso = new ScaleTransition(Animaciones.PULSO_TILE, seleccionada);
+        pulso.setToX(ESCALA_PULSO);
+        pulso.setToY(ESCALA_PULSO);
         pulso.setInterpolator(Animaciones.EASE_OUT);
-        return pulso;
+        pulso.setOnFinished(e -> alTerminar.run());
+        pulso.play();
     }
 }
