@@ -105,6 +105,18 @@
     -fx-text-fill: -fx-brand;
 }
 
+/* El F1 de la cabecera es un boton que vuelve al menu: sin fondo/borde de boton. */
+.brand-mark-boton {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+}
+
+.brand-mark-boton:hover {
+    -fx-opacity: 0.8;
+}
+
 .header-title {
     -fx-font-size: 13px;
     -fx-font-weight: bold;
@@ -1398,6 +1410,10 @@
 
 .menu-tile-wrap-primary {
     -fx-effect: dropshadow(gaussian, rgba(225,6,0,0.55), 38, 0.12, 0, 10);
+}
+
+.menu-tile-wrap-primary:hover {
+    -fx-effect: dropshadow(gaussian, rgba(225,6,0,0.75), 46, 0.16, 0, 12);
 }
 
 /* --- tarjetas ---------------------------------------------------- */
