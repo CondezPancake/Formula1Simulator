@@ -1,5 +1,10 @@
 package com.formula1.controller;
 
+import com.formula1.util.Animaciones;
+
+import javafx.animation.FadeTransition;
+import javafx.animation.ParallelTransition;
+import javafx.animation.TranslateTransition;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
@@ -52,14 +57,14 @@ public final class Navigator {
         }
         if (VISTA_SESION.equals(vista) && sesion != null) {
             ultimoControlador = controladorSesion;
-            contenedor.getChildren().setAll(sesion);
+            mostrarConEntrada(sesion);
             prepararSesionPendiente();
             ShellController.sincronizarVista(vista);
             return;
         }
         if (VISTA_GESTION.equals(vista) && gestion != null) {
             ultimoControlador = controladorGestion;
-            contenedor.getChildren().setAll(gestion);
+            mostrarConEntrada(gestion);
             ShellController.sincronizarVista(vista);
             return;
         }
@@ -77,7 +82,7 @@ public final class Navigator {
                 gestion = contenido;
                 controladorGestion = ultimoControlador;
             }
-            contenedor.getChildren().setAll(contenido);
+            mostrarConEntrada(contenido);
             if (VISTA_SESION.equals(vista)) {
                 prepararSesionPendiente();
             }
@@ -110,10 +115,24 @@ public final class Navigator {
         vistaRetorno = null;
         controladorRetorno = null;
         vistaRetornoNombre = null;
-        contenedor.getChildren().setAll(anterior);
+        mostrarConEntrada(anterior);
         ultimoControlador = controladorAnterior;
         ShellController.sincronizarVista(seccionAnterior);
         return true;
+    }
+
+    /** Fade + leve subida para que cada vista se sienta como una llegada, no un corte. */
+    private static void mostrarConEntrada(Node contenido) {
+        contenedor.getChildren().setAll(contenido);
+        contenido.setOpacity(0);
+        contenido.setTranslateY(15);
+
+        FadeTransition f = new FadeTransition(Animaciones.ENTRADA_PANTALLA, contenido);
+        f.setToValue(1);
+        TranslateTransition t = new TranslateTransition(Animaciones.ENTRADA_PANTALLA, contenido);
+        t.setToY(0);
+        t.setInterpolator(Animaciones.EASE_OUT);
+        new ParallelTransition(f, t).play();
     }
 
     private static void prepararSesionPendiente() {
