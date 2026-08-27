@@ -50,8 +50,8 @@ ya contenga pantallas, datos o servicios que puedan reutilizarse como punto de p
 | E09 | HU-31 a HU-33 | **Terminadas** |
 | E10 | HU-34 | **Terminada** · sin pestaña independiente |
 | E11 | HU-35 | **Terminada** |
-| E13 | HU-38 y HU-39 | **Terminadas** |
-| E13 | HU-37 y HU-40 | **Pendientes** |
+| E13 | HU-38 a HU-40 | **Terminadas** |
+| E13 | HU-37 | **Pendiente** |
 | E14 | HU-41 y HU-42 | **Pendientes** |
 | E15 | HU-43 | **Pendiente** |
 | E16 | HU-44 | **Terminada** |
@@ -68,7 +68,7 @@ ya contenga pantallas, datos o servicios que puedan reutilizarse como punto de p
 | Elemento | Terminadas | Pendientes | Total vigente |
 |---|---:|---:|---:|
 | Épicas | 11 | 10 | 21 |
-| Historias de usuario | 36 | 19 | 55 |
+| Historias de usuario | 37 | 18 | 55 |
 
 ## Requisitos funcionales
 
@@ -150,7 +150,7 @@ Resumen POO/calidad: **26 cumplidos de 26**.
 - Integrar la comparación con la clasificación.
 - Actualizarla según el piloto seleccionado.
 
-#### HU-40 — Configurar duración de simulación
+#### HU-40 — Configurar duración de simulación — **Terminada**
 
 - Incorporar un selector con 5, 10, 30 y 60 segundos, 2 minutos y duración personalizada.
 - Permitir la finalización manual.
@@ -160,6 +160,11 @@ Resumen POO/calidad: **26 cumplidos de 26**.
 
 > La duración debe ser una configuración real del motor, no un `Thread.sleep()` más
 > largo en JavaFX.
+
+La duración forma parte de `SimulationConfig` y el motor la distribuye entre
+los segmentos mediante un regulador independiente de JavaFX. La finalización
+manual conserva y guarda la última clasificación, telemetría, clima y eventos
+que ya fueron emitidos.
 
 ### E14 — Información detallada bajo demanda
 
@@ -326,7 +331,7 @@ Prioridad: **opcional / baja**.
 
 | Fase / Sprint | Prioridad | Descripción | Historias de usuario |
 |---|---|---|---|
-| Sprint / Fase 1 | Alta | Núcleo de la nueva experiencia | HU-37, HU-40, HU-48, HU-49, HU-50, HU-51 |
+| Sprint / Fase 1 | Alta | Núcleo de la nueva experiencia | HU-37, HU-48, HU-49, HU-50, HU-51 |
 | Sprint / Fase 2 | Alta | Integración visual pendiente | HU-41, HU-42, HU-43 |
 | Sprint / Fase 3 | Media | Explorar | HU-44, HU-45, HU-46, HU-47 |
 | Sprint / Fase 4 | Media | Resultado y multimedia | HU-52, HU-53, HU-54 |

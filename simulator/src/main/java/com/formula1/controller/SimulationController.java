@@ -25,6 +25,8 @@ import com.formula1.util.TeamColors;
 import com.formula1.util.FormatUtils;
 
 import javafx.application.Platform;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -45,9 +47,13 @@ import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.control.TextInputDialog;
+import javafx.util.Duration;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Configura y lanza una sesión de clasificación.
@@ -60,10 +66,13 @@ public class SimulationController {
     @FXML private ComboBox<String> selectorCircuito;
     @FXML private ComboBox<String> selectorVehiculo;
     @FXML private ComboBox<Driver> selectorPiloto;
+    @FXML private ComboBox<OpcionDuracion> selectorDuracion;
     @FXML private Label lblPuestaAPunto;
     @FXML private Button btnSimular;
+    @FXML private Button btnFinalizar;
     @FXML private ProgressBar progreso;
     @FXML private Label lblEstado;
+    @FXML private Label lblContador;
     @FXML private Label lblClima;
     @FXML private Label lblGripPista;
     @FXML private ProgressBar barraGripPista;
@@ -172,11 +181,16 @@ public class SimulationController {
     private AerodynamicLoad aero = AerodynamicLoad.MEDIA;
     private TirePressure presion = TirePressure.ESTANDAR;
     private FuelStrategy combustible = FuelStrategy.BALANCEADA;
+    private int duracionSegundos = SimulationConfig.DURACION_PREDETERMINADA_SEGUNDOS;
     private long versionConfiguracionAplicada = -1;
     private double consumoVueltaAcumulado;
     private double consumoVueltaTotal;
     private double ersPiloto = 100;
     private double ersCompanero = 100;
+    private final AtomicBoolean finalizarSolicitado = new AtomicBoolean();
+    private Timeline relojInterfaz;
+    private long inicioInterfazNanos;
+    private boolean actualizandoSelectorDuracion;
     private final XYChart.Series<Number, Number> serieDesgasteDashboard = new XYChart.Series<>();
     private final XYChart.Series<Number, Number> serieCombustibleDashboard = new XYChart.Series<>();
 
@@ -196,6 +210,7 @@ public class SimulationController {
     public void initialize() {
         circuitos.listar().forEach(c -> selectorCircuito.getItems().add(c.getNombre()));
         vehiculos.listar().forEach(v -> selectorVehiculo.getItems().add(v.getModelo()));
+        configurarSelectorDuracion();
 
         // El vehículo delimita los pilotos válidos y evita combinaciones de
         // escuderías distintas antes de que lleguen a la capa de servicio.
@@ -427,6 +442,76 @@ public class SimulationController {
         }
     }
 
+    private void configurarSelectorDuracion() {
+        selectorDuracion.getItems().setAll(
+                new OpcionDuracion(5, "5 segundos"),
+                new OpcionDuracion(10, "10 segundos"),
+                new OpcionDuracion(30, "30 segundos"),
+                new OpcionDuracion(60, "60 segundos"),
+                new OpcionDuracion(120, "2 minutos"),
+                new OpcionDuracion(null, "Personalizada…"));
+        selectorDuracion.valueProperty().addListener((o, anterior, seleccion) -> {
+            if (actualizandoSelectorDuracion || seleccion == null) {
+                return;
+            }
+            if (seleccion.segundos() == null) {
+                solicitarDuracionPersonalizada(anterior);
+            } else {
+                duracionSegundos = seleccion.segundos();
+                actualizarContadorEnReposo();
+            }
+        });
+        seleccionarDuracion(duracionSegundos);
+    }
+
+    private void solicitarDuracionPersonalizada(OpcionDuracion anterior) {
+        TextInputDialog dialogo = new TextInputDialog(String.valueOf(duracionSegundos));
+        dialogo.setTitle("Duración personalizada");
+        dialogo.setHeaderText("Duración de la simulación");
+        dialogo.setContentText("Segundos (1 a 3600):");
+        Optional<String> respuesta = dialogo.showAndWait();
+        if (respuesta.isEmpty()) {
+            seleccionarDuracion(anterior != null && anterior.segundos() != null
+                    ? anterior.segundos() : duracionSegundos);
+            return;
+        }
+        try {
+            int segundos = Integer.parseInt(respuesta.get().trim());
+            if (segundos < SimulationConfig.DURACION_MINIMA_SEGUNDOS
+                    || segundos > SimulationConfig.DURACION_MAXIMA_SEGUNDOS) {
+                throw new NumberFormatException();
+            }
+            duracionSegundos = segundos;
+            seleccionarDuracion(segundos);
+            actualizarContadorEnReposo();
+        } catch (NumberFormatException e) {
+            Navigator.aviso("Duración no válida",
+                    "Introduce un número entre 1 y 3600 segundos.");
+            seleccionarDuracion(anterior != null && anterior.segundos() != null
+                    ? anterior.segundos() : duracionSegundos);
+        }
+    }
+
+    private void seleccionarDuracion(int segundos) {
+        selectorDuracion.getItems().removeIf(valor -> valor.segundos() != null
+                && valor.segundos() != 5 && valor.segundos() != 10
+                && valor.segundos() != 30 && valor.segundos() != 60
+                && valor.segundos() != 120);
+        OpcionDuracion opcion = selectorDuracion.getItems().stream()
+                .filter(valor -> Integer.valueOf(segundos).equals(valor.segundos()))
+                .findFirst()
+                .orElseGet(() -> new OpcionDuracion(segundos,
+                        formatoDuracion(segundos) + " (personalizada)"));
+        if (!selectorDuracion.getItems().contains(opcion)) {
+            selectorDuracion.getItems().add(selectorDuracion.getItems().size() - 1, opcion);
+        }
+        actualizandoSelectorDuracion = true;
+        selectorDuracion.setValue(opcion);
+        actualizandoSelectorDuracion = false;
+        duracionSegundos = segundos;
+        actualizarContadorEnReposo();
+    }
+
     /** Deep-link desde Explorar » Garaje: precarga el vehículo elegido. */
     public void precargarVehiculo(String modelo) {
         if (selectorVehiculo.getItems().contains(modelo)) {
@@ -445,6 +530,13 @@ public class SimulationController {
         SimulationConfig config = new SimulationConfig(
                 selectorCircuito.getValue(), selectorPiloto.getValue().getId(), selectorVehiculo.getValue(),
                 modo, aero, presion, combustible);
+        config.setDuracionSegundos(duracionSegundos);
+        com.formula1.data.DataStore.getInstance().guardarConfiguracion(config);
+        versionConfiguracionAplicada = com.formula1.data.DataStore.getInstance()
+                .versionConfiguracion();
+        finalizarSolicitado.set(false);
+        btnFinalizar.setText("Finalizar");
+        iniciarContador();
 
         reiniciarEvolucion();
         reiniciarTelemetria();
@@ -464,26 +556,36 @@ public class SimulationController {
                     mostrarClimaResumen(muestra.clima());
                 }),
                 muestra -> Platform.runLater(() -> mostrarEvolucionPista(muestra)),
-                resultados -> Platform.runLater(() -> mostrarClasificacionEnVivo(resultados)));
+                resultados -> Platform.runLater(() -> mostrarClasificacionEnVivo(resultados)),
+                finalizarSolicitado::get);
 
         // Enlazar en vez de asignar: el Task publica sus cambios en el hilo
         // de JavaFX, así que la interfaz se actualiza sola y sin bloquearse.
         progreso.progressProperty().bind(tarea.progressProperty());
         lblEstado.textProperty().bind(tarea.messageProperty());
         btnSimular.disableProperty().bind(tarea.runningProperty());
+        btnFinalizar.disableProperty().bind(tarea.runningProperty().not());
+        selectorDuracion.disableProperty().bind(tarea.runningProperty());
         tabla.getItems().clear();
         tablaDashboard.getItems().clear();
         tablaEventos.getItems().clear();
         lblClima.setText("");
 
         tarea.setOnSucceeded(e -> {
+            boolean finalizadaManualmente = finalizarSolicitado.get();
+            detenerContador(!finalizadaManualmente);
             desenlazar();
             mostrarSesion(tarea.getValue());
+            if (finalizadaManualmente) {
+                lblEstado.setText("Sesión finalizada manualmente · resultados guardados");
+                lblDashboardEvento.setText("FINALIZADA");
+            }
             // Guardar en segundo plano: la parrilla ya está en pantalla.
             Async.ejecutar(() -> sesiones.guardar(tarea.getValue()));
         });
 
         tarea.setOnFailed(e -> {
+            detenerContador(false);
             desenlazar();
             progreso.setProgress(0);
             lblEstado.setText("La simulación falló");
@@ -494,6 +596,53 @@ public class SimulationController {
         });
 
         Async.ejecutar(tarea);
+    }
+
+    @FXML
+    private void onFinalizar() {
+        if (finalizarSolicitado.compareAndSet(false, true)) {
+            btnFinalizar.setText("Finalizando…");
+        }
+    }
+
+    private void iniciarContador() {
+        if (relojInterfaz != null) {
+            relojInterfaz.stop();
+        }
+        inicioInterfazNanos = System.nanoTime();
+        actualizarContador(0);
+        relojInterfaz = new Timeline(new KeyFrame(Duration.millis(100), e -> {
+            long transcurridos = Math.min(duracionSegundos,
+                    (System.nanoTime() - inicioInterfazNanos) / 1_000_000_000L);
+            actualizarContador((int) transcurridos);
+        }));
+        relojInterfaz.setCycleCount(Timeline.INDEFINITE);
+        relojInterfaz.play();
+    }
+
+    private void detenerContador(boolean completar) {
+        if (relojInterfaz != null) {
+            relojInterfaz.stop();
+        }
+        int transcurridos = completar ? duracionSegundos : (int) Math.min(duracionSegundos,
+                (System.nanoTime() - inicioInterfazNanos) / 1_000_000_000L);
+        actualizarContador(transcurridos);
+    }
+
+    private void actualizarContadorEnReposo() {
+        if (lblContador != null && (relojInterfaz == null
+                || relojInterfaz.getStatus() != Timeline.Status.RUNNING)) {
+            actualizarContador(0);
+        }
+    }
+
+    private void actualizarContador(int transcurridos) {
+        lblContador.setText(formatoDuracion(transcurridos) + " / "
+                + formatoDuracion(duracionSegundos));
+    }
+
+    private String formatoDuracion(int totalSegundos) {
+        return String.format("%02d:%02d", totalSegundos / 60, totalSegundos % 60);
     }
 
     /** Refresca las dos tablas mientras los pilotos van completando sus vueltas. */
@@ -624,6 +773,7 @@ public class SimulationController {
         if (config.getAerodinamica() != null) aero = config.getAerodinamica();
         if (config.getPresion() != null) presion = config.getPresion();
         if (config.getCombustible() != null) combustible = config.getCombustible();
+        seleccionarDuracion(config.getDuracionSegundos());
         if (!lblEstado.textProperty().isBound()) {
             lblEstado.setText("Configuración preparada para la próxima sesión");
         }
@@ -980,5 +1130,16 @@ public class SimulationController {
         progreso.progressProperty().unbind();
         lblEstado.textProperty().unbind();
         btnSimular.disableProperty().unbind();
+        btnFinalizar.disableProperty().unbind();
+        btnFinalizar.setDisable(true);
+        selectorDuracion.disableProperty().unbind();
+        selectorDuracion.setDisable(false);
+    }
+
+    private record OpcionDuracion(Integer segundos, String etiqueta) {
+        @Override
+        public String toString() {
+            return etiqueta;
+        }
     }
 }

@@ -919,6 +919,24 @@
     -fx-min-width: 142;
 }
 
+.race-stop-button {
+    -fx-min-width: 96;
+    -fx-background-color: -fx-surface-2;
+    -fx-border-color: -fx-accent-red;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.race-stop-button:hover {
+    -fx-background-color: derive(-fx-accent-red, -55%);
+}
+
+.race-session-clock {
+    -fx-font-family: "Monospaced";
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
 .race-dashboard-separator {
     -fx-padding: 0;
 }

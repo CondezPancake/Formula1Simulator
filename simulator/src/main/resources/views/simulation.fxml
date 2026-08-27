@@ -47,12 +47,19 @@
                 <Label text="PUESTA A PUNTO" styleClass="card-label"/>
                 <Label fx:id="lblPuestaAPunto" text="—" styleClass="stat-value"/>
             </VBox>
+            <VBox spacing="4">
+                <Label text="DURACIÓN" styleClass="card-label"/>
+                <ComboBox fx:id="selectorDuracion" prefWidth="170"/>
+            </VBox>
         </FlowPane>
 
         <HBox spacing="12" alignment="CENTER_LEFT" styleClass="race-action-strip">
             <Button fx:id="btnSimular" text="Iniciar clasificación"
                     styleClass="primary,race-start-button" onAction="#onSimular"/>
+            <Button fx:id="btnFinalizar" text="Finalizar"
+                    disable="true" styleClass="race-stop-button" onAction="#onFinalizar"/>
             <ProgressBar fx:id="progreso" progress="0" prefWidth="240"/>
+            <Label fx:id="lblContador" text="00:00 / 00:10" styleClass="race-session-clock"/>
             <Label fx:id="lblEstado" text=""/>
             <Region HBox.hgrow="ALWAYS"/>
             <Label fx:id="lblClima" text="" styleClass="section-title"/>

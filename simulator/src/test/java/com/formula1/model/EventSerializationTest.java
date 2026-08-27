@@ -7,6 +7,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class EventSerializationTest {
 
@@ -62,6 +63,24 @@ class EventSerializationTest {
                 "{\"circuito\":\"Circuito de Monza\"}", QualifyingSession.class);
 
         assertEquals(List.of(), session.getEvolucionVuelta());
+    }
+
+    @Test
+    void simulationDurationSurvivesRoundTripAndOldConfigsUseDefault() throws Exception {
+        SimulationConfig config = new SimulationConfig();
+        config.setDuracionSegundos(120);
+
+        SimulationConfig copy = mapper.readValue(
+                mapper.writeValueAsString(config), SimulationConfig.class);
+        SimulationConfig oldConfig = mapper.readValue("{}", SimulationConfig.class);
+
+        assertEquals(120, copy.getDuracionSegundos());
+        assertEquals(SimulationConfig.DURACION_PREDETERMINADA_SEGUNDOS,
+                oldConfig.getDuracionSegundos());
+        assertThrows(IllegalArgumentException.class,
+                () -> config.setDuracionSegundos(0));
+        assertThrows(IllegalArgumentException.class,
+                () -> config.setDuracionSegundos(3_601));
     }
 
     @Test

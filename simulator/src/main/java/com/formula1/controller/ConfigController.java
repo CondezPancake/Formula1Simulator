@@ -72,6 +72,7 @@ public class ConfigController {
     private AerodynamicLoad aero = AerodynamicLoad.MEDIA;
     private TirePressure presion = TirePressure.ESTANDAR;
     private FuelStrategy combustible = FuelStrategy.BALANCEADA;
+    private int duracionSegundos = SimulationConfig.DURACION_PREDETERMINADA_SEGUNDOS;
 
     public ConfigController() {
         this(new VehicleService(), new CircuitService());
@@ -123,6 +124,7 @@ public class ConfigController {
         aero = previa.getAerodinamica() == null ? aero : previa.getAerodinamica();
         presion = previa.getPresion() == null ? presion : previa.getPresion();
         combustible = previa.getCombustible() == null ? combustible : previa.getCombustible();
+        duracionSegundos = previa.getDuracionSegundos();
     }
 
     /**
@@ -247,6 +249,7 @@ public class ConfigController {
         config.setAerodinamica(aero);
         config.setPresion(presion);
         config.setCombustible(combustible);
+        config.setDuracionSegundos(duracionSegundos);
         return config;
     }
 

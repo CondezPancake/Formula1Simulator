@@ -323,6 +323,22 @@ class QualifyingServiceTest {
     }
 
     @Test
+    void finalizacionManualConservaElUltimoEstadoGenerado() {
+        List<List<LapResult>> fotogramas = new ArrayList<>();
+
+        QualifyingSession sesion = sesiones.simular(
+                config(DrivingMode.NORMAL), WeatherCondition.SECO, null,
+                null, null, null, fotogramas::add,
+                (fotograma, total) -> fotograma < 3);
+
+        assertEquals(3, fotogramas.size());
+        assertEquals(3, sesion.getEvolucionVuelta().size());
+        assertEquals(3, sesion.getEvolucionClimatica().size());
+        assertEquals(fotogramas.get(2).stream().map(LapResult::getTiempoSegundos).toList(),
+                sesion.getResultados().stream().map(LapResult::getTiempoSegundos).toList());
+    }
+
+    @Test
     void guardaLaEvolucionAunqueLaSimulacionNoTengaCallbacksVisuales() {
         QualifyingSession sesion = sesiones.simular(
                 config(DrivingMode.NORMAL), WeatherCondition.SECO, null);
