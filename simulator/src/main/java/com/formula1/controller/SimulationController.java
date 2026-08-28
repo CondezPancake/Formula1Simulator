@@ -4,6 +4,7 @@ import com.formula1.model.AerodynamicLoad;
 import com.formula1.model.Circuit;
 import com.formula1.model.Driver;
 import com.formula1.model.DrivingMode;
+import com.formula1.model.EventCategory;
 import com.formula1.model.EventOccurrence;
 import com.formula1.model.FuelStrategy;
 import com.formula1.model.LapResult;
@@ -26,6 +27,8 @@ import com.formula1.util.FormatUtils;
 
 import javafx.application.Platform;
 import javafx.animation.KeyFrame;
+import javafx.animation.FadeTransition;
+import javafx.animation.PauseTransition;
 import javafx.animation.Timeline;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -48,11 +51,16 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
 import java.util.ArrayList;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -86,6 +94,10 @@ public class SimulationController {
     @FXML private TabPane panelResultados;
     @FXML private Tab tabDashboard;
     @FXML private Tab tabTelemetria;
+    @FXML private Tab tabEventos;
+    @FXML private Button btnVerDetalles;
+    @FXML private Button btnVerEventos;
+    @FXML private ComboBox<Integer> selectorVueltaTelemetria;
     @FXML private TableView<LapResult> tablaDashboard;
     @FXML private TableColumn<LapResult, Number> colDashboardPosicion;
     @FXML private TableColumn<LapResult, String> colDashboardPiloto;
@@ -149,6 +161,18 @@ public class SimulationController {
     @FXML private ProgressBar barraTempMotor;
     @FXML private Label lblEventoTelemetria;
     @FXML private Label lblEstadoPiloto;
+    @FXML private VBox notificacionEvento;
+    @FXML private Label lblNotificacionTipo;
+    @FXML private Label lblNotificacionCategoria;
+    @FXML private Label lblNotificacionPiloto;
+    @FXML private Label lblNotificacionSector;
+    @FXML private Label lblNotificacionImpacto;
+    @FXML private LineChart<Number, Number> graficaVelocidadDetalle;
+    @FXML private LineChart<Number, Number> graficaRpmDetalle;
+    @FXML private LineChart<Number, Number> graficaCombustibleDetalle;
+    @FXML private LineChart<Number, Number> graficaDesgasteDetalle;
+    @FXML private LineChart<Number, Number> graficaTemperaturasDetalle;
+    @FXML private LineChart<Number, Number> graficaDeltaDetalle;
     @FXML private SectorComparisonController comparacionSectoresController;
     @FXML private TableView<LapResult> tabla;
     @FXML private TableColumn<LapResult, Number> colPosicion;
@@ -193,6 +217,11 @@ public class SimulationController {
     private boolean actualizandoSelectorDuracion;
     private final XYChart.Series<Number, Number> serieDesgasteDashboard = new XYChart.Series<>();
     private final XYChart.Series<Number, Number> serieCombustibleDashboard = new XYChart.Series<>();
+    private final List<TelemetrySnapshot> telemetriaSesionActual = new ArrayList<>();
+    private List<List<TelemetrySnapshot>> vueltasTelemetria = List.of();
+    private PauseTransition temporizadorNotificacionEvento;
+    private final Set<String> eventosEnVivoRegistrados = new HashSet<>();
+    private final Deque<EventOccurrence> colaNotificaciones = new ArrayDeque<>();
 
     public SimulationController() {
         this(new QualifyingService(), new CircuitService(), new VehicleService(), new DriverService());
@@ -301,11 +330,17 @@ public class SimulationController {
         selectorPiloto.valueProperty().addListener((o, a, b) -> actualizarTarjetasPilotos());
         graficaDesgasteDashboard.getData().add(serieDesgasteDashboard);
         graficaCombustibleDashboard.getData().add(serieCombustibleDashboard);
+        selectorVueltaTelemetria.valueProperty().addListener((obs, anterior, vuelta) -> {
+            if (vuelta != null && vuelta >= 1 && vuelta <= vueltasTelemetria.size()) {
+                pintarGraficasDetalle(vueltasTelemetria.get(vuelta - 1));
+            }
+        });
 
         precargarUltimaConfiguracion();
         actualizarMapaCircuito(selectorCircuito.getValue());
         actualizarTarjetasPilotos();
         reiniciarGraficasDashboard();
+        cargarVueltasTelemetria(List.of());
     }
 
     private String codigoPiloto(LapResult resultado) {
@@ -353,8 +388,10 @@ public class SimulationController {
         tabla.setItems(resultados);
         tablaDashboard.setItems(resultados);
         tablaEventos.setItems(FXCollections.observableArrayList(sesion.getEventos()));
+        btnVerEventos.setDisable(sesion.getEventos().isEmpty());
         comparacionSectoresController.cargar(sesion.getResultados());
         mostrarPistaDeSesion(sesion);
+        cargarVueltasTelemetria(sesion.getEvolucionVuelta());
         LapResult pole = sesion.getPole();
         lblEstado.setText(pole == null ? "Sesión sin resultados"
                 : "Pole: " + pole.getPiloto() + " — " + FormatUtils.formatLapTime(pole.getTiempoSegundos()));
@@ -557,6 +594,7 @@ public class SimulationController {
                 }),
                 muestra -> Platform.runLater(() -> mostrarEvolucionPista(muestra)),
                 resultados -> Platform.runLater(() -> mostrarClasificacionEnVivo(resultados)),
+                evento -> Platform.runLater(() -> registrarEventoEnVivo(evento)),
                 finalizarSolicitado::get);
 
         // Enlazar en vez de asignar: el Task publica sus cambios en el hilo
@@ -569,6 +607,7 @@ public class SimulationController {
         tabla.getItems().clear();
         tablaDashboard.getItems().clear();
         tablaEventos.getItems().clear();
+        btnVerEventos.setDisable(true);
         lblClima.setText("");
 
         tarea.setOnSucceeded(e -> {
@@ -666,6 +705,9 @@ public class SimulationController {
         consumoVueltaTotal = 0;
         lblDashboardMensaje.setText("Preparando datos de la vuelta seleccionada");
         lblDashboardEvento.setText("SIN EVENTOS");
+        eventosEnVivoRegistrados.clear();
+        colaNotificaciones.clear();
+        ocultarNotificacionEvento();
         reiniciarPistaYClima();
     }
 
@@ -678,6 +720,8 @@ public class SimulationController {
     }
 
     private void reiniciarTelemetria() {
+        telemetriaSesionActual.clear();
+        cargarVueltasTelemetria(List.of());
         lblTelemetriaPiloto.setText("Esperando datos del vehículo seleccionado");
         lblEstadoPista.setText("Estado de pista —");
         lblVelocidadTelemetria.setText("0 km/h");
@@ -707,6 +751,8 @@ public class SimulationController {
 
     /** Representa una lectura ya calculada; no ejecuta lógica del motor en JavaFX. */
     private void mostrarTelemetria(TelemetrySnapshot muestra) {
+        telemetriaSesionActual.add(muestra);
+        cargarVueltasTelemetria(telemetriaSesionActual);
         actualizarVelocidadMaxima(muestra.velocidadKmh());
         lblTelemetriaPiloto.setText(muestra.piloto() + " · " + muestra.vehiculo());
         String bandera = muestra.evento().impacto().bandera() == TrackFlag.GREEN
@@ -812,6 +858,115 @@ public class SimulationController {
                 new XYChart.Data<>(segmento, vidaNeumatico));
         serieCombustibleDashboard.getData().add(
                 new XYChart.Data<>(segmento, combustibleRestante));
+    }
+
+    /** Abre el análisis sin abandonar la sesión ni crear otra pantalla. */
+    @FXML
+    private void onVerDetalles() {
+        if (!vueltasTelemetria.isEmpty()) {
+            panelResultados.getSelectionModel().select(tabTelemetria);
+        }
+    }
+
+    /** Regresa al panel operativo conservando la vuelta elegida. */
+    @FXML
+    private void onVolverDashboard() {
+        panelResultados.getSelectionModel().select(tabDashboard);
+    }
+
+    /** Abre el historial completo desde el resumen compacto del Dashboard. */
+    @FXML
+    private void onVerEventos() {
+        panelResultados.getSelectionModel().select(tabEventos);
+    }
+
+    /**
+     * Reconstruye las vueltas a partir de muestras ordenadas. Un reinicio del
+     * número de segmento marca una nueva vuelta, lo que mantiene compatible
+     * el historial actual y permite representar sesiones con varias vueltas.
+     */
+    private void cargarVueltasTelemetria(List<TelemetrySnapshot> muestras) {
+        List<List<TelemetrySnapshot>> agrupadas = new ArrayList<>();
+        List<TelemetrySnapshot> vuelta = null;
+        int segmentoAnterior = Integer.MAX_VALUE;
+        for (TelemetrySnapshot muestra : muestras) {
+            if (vuelta == null || muestra.segmento() <= segmentoAnterior) {
+                vuelta = new ArrayList<>();
+                agrupadas.add(vuelta);
+            }
+            vuelta.add(muestra);
+            segmentoAnterior = muestra.segmento();
+        }
+        vueltasTelemetria = agrupadas;
+
+        Integer seleccionPrevia = selectorVueltaTelemetria.getValue();
+        selectorVueltaTelemetria.setItems(FXCollections.observableArrayList(
+                java.util.stream.IntStream.rangeClosed(1, agrupadas.size())
+                        .boxed().toList()));
+        boolean sinDatos = agrupadas.isEmpty();
+        selectorVueltaTelemetria.setDisable(sinDatos);
+        btnVerDetalles.setDisable(sinDatos);
+        if (sinDatos) {
+            limpiarGraficasDetalle();
+            return;
+        }
+        int seleccion = seleccionPrevia == null
+                ? agrupadas.size()
+                : Math.min(seleccionPrevia, agrupadas.size());
+        selectorVueltaTelemetria.setValue(seleccion);
+        pintarGraficasDetalle(agrupadas.get(seleccion - 1));
+    }
+
+    private void pintarGraficasDetalle(List<TelemetrySnapshot> muestras) {
+        limpiarGraficasDetalle();
+        XYChart.Series<Number, Number> velocidad = serieDetalle("Velocidad", muestras,
+                TelemetrySnapshot::velocidadKmh);
+        XYChart.Series<Number, Number> rpm = serieDetalle("RPM", muestras,
+                muestra -> muestra.rpm());
+        XYChart.Series<Number, Number> combustible = serieDetalle("Combustible", muestras,
+                TelemetrySnapshot::combustibleRestantePorcentaje);
+        XYChart.Series<Number, Number> desgaste = serieDetalle("Desgaste", muestras,
+                TelemetrySnapshot::desgasteNeumaticosPorcentaje);
+        XYChart.Series<Number, Number> neumaticos = serieDetalle("Neumáticos", muestras,
+                TelemetrySnapshot::temperaturaNeumaticosC);
+        XYChart.Series<Number, Number> motor = serieDetalle("Motor", muestras,
+                TelemetrySnapshot::temperaturaMotorC);
+        XYChart.Series<Number, Number> delta = serieDetalle("Delta", muestras,
+                TelemetrySnapshot::deltaSegundos);
+
+        graficaVelocidadDetalle.getData().add(velocidad);
+        graficaRpmDetalle.getData().add(rpm);
+        graficaCombustibleDetalle.getData().add(combustible);
+        graficaDesgasteDetalle.getData().add(desgaste);
+        graficaTemperaturasDetalle.getData().add(neumaticos);
+        graficaTemperaturasDetalle.getData().add(motor);
+        graficaDeltaDetalle.getData().add(delta);
+
+        if (!muestras.isEmpty()) {
+            TelemetrySnapshot ultima = muestras.get(muestras.size() - 1);
+            lblTelemetriaPiloto.setText(ultima.piloto() + " · " + ultima.vehiculo());
+        }
+    }
+
+    private XYChart.Series<Number, Number> serieDetalle(
+            String nombre, List<TelemetrySnapshot> muestras,
+            java.util.function.ToDoubleFunction<TelemetrySnapshot> valor) {
+        XYChart.Series<Number, Number> serie = new XYChart.Series<>();
+        serie.setName(nombre);
+        for (TelemetrySnapshot muestra : muestras) {
+            serie.getData().add(new XYChart.Data<>(muestra.segmento(),
+                    valor.applyAsDouble(muestra)));
+        }
+        return serie;
+    }
+
+    private void limpiarGraficasDetalle() {
+        graficaVelocidadDetalle.getData().clear();
+        graficaRpmDetalle.getData().clear();
+        graficaCombustibleDetalle.getData().clear();
+        graficaDesgasteDetalle.getData().clear();
+        graficaTemperaturasDetalle.getData().clear();
+        graficaDeltaDetalle.getData().clear();
     }
 
     /**
@@ -925,6 +1080,84 @@ public class SimulationController {
                     evento.impacto().deltaIntensidadLluviaPorcentaje());
         }
         return String.format("%+.3f s", evento.impacto().deltaTiempoSegundos());
+    }
+
+    /** Registra toda incidencia, pero solo interrumpe visualmente si es importante. */
+    private void registrarEventoEnVivo(EventOccurrence evento) {
+        String clave = evento.tipo() + ":" + evento.pilotoId() + ":"
+                + evento.vuelta() + ":" + evento.sector();
+        if (!eventosEnVivoRegistrados.add(clave)) {
+            return;
+        }
+        tablaEventos.getItems().add(evento);
+        btnVerEventos.setDisable(false);
+        if (esEventoImportante(evento.categoria())) {
+            colaNotificaciones.add(evento);
+            mostrarSiguienteNotificacion();
+        }
+    }
+
+    /** Los incidentes leves y positivos quedan en el historial sin generar toast. */
+    static boolean esEventoImportante(EventCategory categoria) {
+        return categoria == EventCategory.MAJOR_NEGATIVE
+                || categoria == EventCategory.WEATHER_TRACK
+                || categoria == EventCategory.EXCEPTIONAL;
+    }
+
+    /** Presenta cada aviso importante por turnos para que ninguno tape a otro. */
+    private void mostrarSiguienteNotificacion() {
+        if (notificacionEvento.isVisible() || colaNotificaciones.isEmpty()) {
+            return;
+        }
+        EventOccurrence evento = colaNotificaciones.removeFirst();
+        lblNotificacionTipo.setText(evento.tipo().getEtiqueta());
+        lblNotificacionCategoria.setText(evento.categoria().getEtiqueta().toUpperCase());
+        lblNotificacionPiloto.setText(evento.piloto());
+        lblNotificacionSector.setText(evento.sector().getEtiqueta().toUpperCase());
+        lblNotificacionImpacto.setText("Impacto · " + describirImpacto(evento));
+        notificacionEvento.getStyleClass().removeAll(
+                "event-toast-major", "event-toast-weather", "event-toast-exceptional");
+        notificacionEvento.getStyleClass().add(switch (evento.categoria()) {
+            case WEATHER_TRACK -> "event-toast-weather";
+            case EXCEPTIONAL -> "event-toast-exceptional";
+            default -> "event-toast-major";
+        });
+
+        if (temporizadorNotificacionEvento != null) {
+            temporizadorNotificacionEvento.stop();
+        }
+        notificacionEvento.setOpacity(0);
+        notificacionEvento.setVisible(true);
+        FadeTransition entrada = new FadeTransition(Duration.millis(160), notificacionEvento);
+        entrada.setToValue(1);
+        entrada.play();
+
+        temporizadorNotificacionEvento = new PauseTransition(Duration.seconds(4));
+        temporizadorNotificacionEvento.setOnFinished(e -> ocultarNotificacionEvento());
+        temporizadorNotificacionEvento.play();
+    }
+
+    private void ocultarNotificacionEvento() {
+        if (temporizadorNotificacionEvento != null) {
+            temporizadorNotificacionEvento.stop();
+        }
+        if (!notificacionEvento.isVisible()) {
+            return;
+        }
+        FadeTransition salida = new FadeTransition(Duration.millis(220), notificacionEvento);
+        salida.setToValue(0);
+        salida.setOnFinished(e -> {
+            notificacionEvento.setVisible(false);
+            mostrarSiguienteNotificacion();
+        });
+        salida.play();
+    }
+
+    /** Permite retirar el aviso inmediatamente sin afectar su registro. */
+    @FXML
+    private void onCerrarNotificacion() {
+        colaNotificaciones.clear();
+        ocultarNotificacionEvento();
     }
 
     private boolean configuracionCompleta() {

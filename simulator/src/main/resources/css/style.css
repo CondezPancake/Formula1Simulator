@@ -1167,6 +1167,169 @@
     -fx-text-fill: -fx-text-hero;
 }
 
+.telemetry-details-button {
+    -fx-font-size: 10px;
+    -fx-padding: 4 10 4 10;
+    -fx-background-color: rgba(54,113,198,0.16);
+    -fx-border-color: rgba(54,113,198,0.65);
+    -fx-text-fill: #8EB9F4;
+}
+
+.telemetry-details-button:hover {
+    -fx-background-color: rgba(54,113,198,0.28);
+    -fx-border-color: -fx-accent-blue;
+}
+
+.telemetry-detail-scroll,
+.telemetry-detail-scroll > .viewport {
+    -fx-background-color: -fx-bg-0;
+}
+
+.telemetry-detail-panel {
+    -fx-background-radius: 0;
+    -fx-border-width: 0;
+    -fx-padding: 20 22 28 22;
+}
+
+.telemetry-detail-toolbar {
+    -fx-background-color: -fx-surface-3;
+    -fx-background-radius: 7;
+    -fx-border-color: -fx-border-1;
+    -fx-border-radius: 7;
+    -fx-padding: 9 12 9 12;
+}
+
+.telemetry-back-button {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 5 8 5 4;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+.telemetry-back-button:hover {
+    -fx-background-color: rgba(255,255,255,0.06);
+}
+
+.telemetry-lap-selector {
+    -fx-background-color: -fx-surface-2;
+    -fx-border-color: #3A3A44;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+}
+
+.telemetry-detail-heading {
+    -fx-padding: 4 2 2 2;
+}
+
+.telemetry-detail-heading .telemetry-title {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+}
+
+.telemetry-subtitle {
+    -fx-font-size: 11px;
+    -fx-text-fill: -fx-text-muted;
+}
+
+.telemetry-driver {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 12px;
+    -fx-text-fill: #B8CFF0;
+}
+
+.telemetry-detail-panel .telemetry-card {
+    -fx-padding: 12 15 12 15;
+    -fx-background-color: linear-gradient(to bottom right, #232329, #1C1C21);
+    -fx-border-width: 0 0 0 3;
+}
+
+.telemetry-detail-panel .telemetry-summary {
+    -fx-padding: 11 14 11 14;
+    -fx-background-color: #18181D;
+}
+
+.telemetry-speed-card { -fx-border-color: -fx-accent-blue; }
+.telemetry-rpm-card { -fx-border-color: -fx-accent-red; }
+.telemetry-fuel-card { -fx-border-color: -fx-accent-green; }
+.telemetry-wear-card { -fx-border-color: -fx-accent-amber; }
+.telemetry-tire-temp-card { -fx-border-color: -fx-accent-pink; }
+.telemetry-engine-card { -fx-border-color: #FF7B3E; }
+
+.telemetry-detail-panel .telemetry-value {
+    -fx-font-size: 19px;
+}
+
+.telemetry-chart-heading {
+    -fx-padding: 8 2 0 2;
+    -fx-border-color: -fx-border-2 transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+}
+
+.telemetry-detail-chart {
+    -fx-pref-width: 480;
+    -fx-pref-height: 255;
+    -fx-min-width: 0;
+    -fx-background-color: linear-gradient(to bottom, #202025, #19191E);
+    -fx-background-radius: 8;
+    -fx-border-color: -fx-border-1;
+    -fx-border-radius: 8;
+    -fx-padding: 8 10 6 4;
+}
+
+.telemetry-detail-chart .chart-plot-background {
+    -fx-background-color: #121216;
+    -fx-background-radius: 4;
+}
+
+.telemetry-detail-chart .chart-title {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-2;
+}
+
+.telemetry-detail-chart .axis-label,
+.telemetry-detail-chart .axis .tick-label {
+    -fx-font-size: 9px;
+    -fx-text-fill: -fx-text-muted;
+}
+
+.telemetry-detail-chart .axis {
+    -fx-tick-label-fill: -fx-text-muted;
+}
+
+.telemetry-detail-chart .chart-horizontal-grid-lines,
+.telemetry-detail-chart .chart-vertical-grid-lines {
+    -fx-stroke: rgba(255,255,255,0.07);
+}
+
+.telemetry-detail-chart .chart-legend {
+    -fx-background-color: transparent;
+    -fx-padding: 3 0 0 0;
+}
+
+.telemetry-detail-chart .chart-legend-item {
+    -fx-text-fill: -fx-text-muted;
+    -fx-font-size: 9px;
+}
+
+.telemetry-detail-chart .default-color0.chart-series-line {
+    -fx-stroke: -fx-accent-blue;
+    -fx-stroke-width: 2;
+}
+
+.telemetry-detail-chart .default-color1.chart-series-line {
+    -fx-stroke: -fx-accent-amber;
+    -fx-stroke-width: 2;
+}
+
+#graficaRpmDetalle .default-color0.chart-series-line { -fx-stroke: -fx-accent-red; }
+#graficaCombustibleDetalle .default-color0.chart-series-line { -fx-stroke: -fx-accent-green; }
+#graficaDesgasteDetalle .default-color0.chart-series-line { -fx-stroke: -fx-accent-amber; }
+#graficaTemperaturasDetalle .default-color0.chart-series-line { -fx-stroke: -fx-accent-pink; }
+#graficaTemperaturasDetalle .default-color1.chart-series-line { -fx-stroke: #FF7B3E; }
+#graficaDeltaDetalle .default-color0.chart-series-line { -fx-stroke: #A78BFA; }
+
 .track-state {
     -fx-background-color: #14261A;
     -fx-background-radius: 3;
@@ -1183,6 +1346,124 @@
     -fx-text-fill: -fx-accent-amber;
     -fx-font-size: 10px;
     -fx-font-weight: bold;
+}
+
+.event-details-button {
+    -fx-background-color: transparent;
+    -fx-border-color: -fx-border-1;
+    -fx-padding: 3 8 3 8;
+    -fx-font-size: 9px;
+    -fx-text-fill: -fx-text-muted;
+}
+
+.event-details-button:hover {
+    -fx-background-color: rgba(255,201,6,0.08);
+    -fx-border-color: rgba(255,201,6,0.55);
+    -fx-text-fill: -fx-accent-amber;
+}
+
+.event-toast {
+    -fx-background-color: linear-gradient(to bottom right, #25252B, #17171C);
+    -fx-background-radius: 8;
+    -fx-border-color: transparent transparent transparent -fx-accent-amber;
+    -fx-border-width: 0 0 0 4;
+    -fx-border-radius: 8;
+    -fx-padding: 8 10 9 11;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.52), 12, 0.15, 0, 4);
+}
+
+.event-toast-kicker {
+    -fx-font-size: 9px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-accent-amber;
+}
+
+.event-toast-category {
+    -fx-background-color: rgba(255,201,6,0.12);
+    -fx-background-radius: 3;
+    -fx-padding: 2 6 2 6;
+    -fx-font-size: 8px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-accent-amber;
+}
+
+.event-toast-weather {
+    -fx-border-color: transparent transparent transparent -fx-accent-blue;
+}
+
+.event-toast-weather .event-toast-kicker,
+.event-toast-weather .event-toast-category {
+    -fx-text-fill: #8EB9F4;
+}
+
+.event-toast-weather .event-toast-category {
+    -fx-background-color: rgba(54,113,198,0.18);
+}
+
+.event-toast-exceptional {
+    -fx-border-color: transparent transparent transparent -fx-brand-hi;
+}
+
+.event-toast-exceptional .event-toast-kicker,
+.event-toast-exceptional .event-toast-category {
+    -fx-text-fill: #FF7772;
+}
+
+.event-toast-exceptional .event-toast-category {
+    -fx-background-color: rgba(225,6,0,0.18);
+}
+
+.event-toast-sector {
+    -fx-background-color: rgba(255,255,255,0.07);
+    -fx-background-radius: 3;
+    -fx-padding: 2 7 2 7;
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 9px;
+    -fx-text-fill: -fx-text-muted;
+}
+
+.event-toast-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.event-toast-driver {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #DADAE2;
+}
+
+.event-toast-impact {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 10px;
+    -fx-text-fill: -fx-text-muted;
+}
+
+.event-toast-close {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-background-radius: 50%;
+    -fx-padding: 0 4 1 4;
+    -fx-font-family: "Adwaita Sans", sans-serif;
+    -fx-font-size: 16px;
+    -fx-text-fill: -fx-text-muted;
+}
+
+.event-toast-close:hover {
+    -fx-background-color: rgba(255,255,255,0.09);
+    -fx-text-fill: -fx-text-hero;
+}
+
+.event-detail-panel {
+    -fx-background-color: -fx-surface-1;
+    -fx-padding: 18;
+}
+
+.event-detail-panel .table-view {
+    -fx-background-radius: 7;
+    -fx-border-color: -fx-border-1;
+    -fx-border-radius: 7;
 }
 
 .delta-faster, .sector-winner, .best-sector {

@@ -52,7 +52,7 @@ ya contenga pantallas, datos o servicios que puedan reutilizarse como punto de p
 | E11 | HU-35 | **Terminada** |
 | E13 | HU-38 a HU-40 | **Terminadas** |
 | E13 | HU-37 | **Pendiente** |
-| E14 | HU-41 y HU-42 | **Pendientes** |
+| E14 | HU-41 y HU-42 | **Terminadas** |
 | E15 | HU-43 | **Pendiente** |
 | E16 | HU-44 | **Terminada** |
 | E16 a HU-47 | **Pendientes** |
@@ -168,14 +168,14 @@ que ya fueron emitidos.
 
 ### E14 — Información detallada bajo demanda
 
-#### HU-41 — Consultar telemetría detallada
+#### HU-41 — Consultar telemetría detallada **Terminada**
 
 - Añadir una acción «Ver detalles».
 - Mostrar gráficas de velocidad, RPM, combustible, desgaste, temperaturas y delta.
 - Permitir elegir la vuelta consultada.
 - Permitir regresar al Dashboard.
 
-#### HU-42 — Consultar eventos detallados
+#### HU-42 — Consultar eventos detallados **Terminada**
 
 - Mostrar notificaciones pequeñas durante la simulación.
 - Incluir tipo de evento, piloto afectado, sector e impacto.
@@ -190,14 +190,13 @@ Se eliminarán como secciones independientes Estadísticas, Evolución de vuelta
 Evolución de pista, Análisis y Clima dinámico.
 
 - Eliminar pestañas, botones y rutas de navegación innecesarias.
-- Integrar en el Dashboard la información que deba conservarse.
 - Mantener los datos necesarios para resultados.
 - Verificar la compatibilidad de las sesiones históricas.
 - Actualizar FXML, controladores y navegación.
 
 ### E16 — Rediseño del módulo Explorar
 
-#### HU-44 — Rediseñar vista principal de pilotos
+#### HU-44 — Rediseñar vista principal de pilotos ** Terminada**
 
 - Crear una nueva vista basada en tarjetas.
 - Mostrar imagen, nombre, equipo e información principal.
@@ -264,7 +263,8 @@ Compuestos contemplados: **S** (Soft), **M** (Medium) y **H** (Hard).
 
 #### HU-52 — Visualizar estrategia de neumáticos
 
-- Mostrar el neumático actual y el historial de compuestos.
+- Mostrar el neumático actual en el dashboard donde estan los pilotos
+- el historial de compuestos.
 - Mostrar número de paradas y vueltas con cada compuesto.
 - Mostrar la estrategia del piloto fijado y los eventos de cambio.
 - Integrar la información en Radio/Box y en la vista posterior a la clasificación.
@@ -284,7 +284,7 @@ Flujo objetivo: `Configuración` → `Simulación` → `Finalización` → `Resu
 
 ### E20 — Recursos multimedia
 
-#### HU-54 — Implementar vídeos de las pistas
+#### HU-54 — Implementar vídeos de las pistas **Cancelada**
 
 - Asociar un vídeo a cada circuito.
 - Incorporar reproductor, reproducción, pausa y controles.
@@ -317,7 +317,7 @@ El README documenta actualmente Repository, Singleton, Strategy, Observer y Fact
 
 ### E22 — Animación inicial (opcional)
 
-#### HU-57 — Implementar animación inicial
+#### HU-57 — Implementar animación inicial **Terminada**
 
 - Crear una pantalla inicial con el logo del proyecto F1.
 - Añadir una animación de duración configurable.
@@ -332,7 +332,7 @@ Prioridad: **opcional / baja**.
 | Fase / Sprint | Prioridad | Descripción | Historias de usuario |
 |---|---|---|---|
 | Sprint / Fase 1 | Alta | Núcleo de la nueva experiencia | HU-37, HU-48, HU-49, HU-50, HU-51 |
-| Sprint / Fase 2 | Alta | Integración visual pendiente | HU-41, HU-42, HU-43 |
+| Sprint / Fase 2 | Alta | Integración visual pendiente | HU-43 |
 | Sprint / Fase 3 | Media | Explorar | HU-44, HU-45, HU-46, HU-47 |
 | Sprint / Fase 4 | Media | Resultado y multimedia | HU-52, HU-53, HU-54 |
 | Sprint / Fase 5 | Baja | Arquitectura | HU-55, HU-56 |

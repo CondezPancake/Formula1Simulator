@@ -143,6 +143,16 @@ public class QualifyingService {
                               EvolucionPista observadorPista,
                               ClasificacionEnVivo clasificacionEnVivo,
                               ControlSimulacion controlSimulacion) {
+        return simular(config, clima, progreso, evolucion, telemetria,
+                observadorPista, clasificacionEnVivo, controlSimulacion, null);
+    }
+
+    QualifyingSession simular(SimulationConfig config, WeatherCondition clima,
+                              Progreso progreso, Evolucion evolucion, Telemetria telemetria,
+                              EvolucionPista observadorPista,
+                              ClasificacionEnVivo clasificacionEnVivo,
+                              ControlSimulacion controlSimulacion,
+                              EventosEnVivo observadorEventos) {
         Circuit circuito = validarSeleccion(config);
         if (clima == null) {
             throw new ValidationException("Las condiciones climáticas no pueden ser nulas");
@@ -228,7 +238,8 @@ public class QualifyingService {
         ordenarParrilla(resultados);
         EstadoReproduccion estadoReproduccion = reproducirVueltaEnVivo(
                 resultados, evolucionSeleccionada, evolucionVuelta,
-                evolucion, telemetria, clasificacionEnVivo, controlSimulacion);
+                evolucion, telemetria, clasificacionEnVivo, controlSimulacion,
+                eventosSesion, observadorEventos);
         List<LapResult> resultadosGuardados = estadoReproduccion.completa()
                 ? resultados : estadoReproduccion.clasificacion();
         int segmentosGenerados = estadoReproduccion.segmentosGenerados();
@@ -257,11 +268,22 @@ public class QualifyingService {
                                         List<TelemetrySnapshot> telemetriaSeleccionada,
                                         Evolucion evolucion, Telemetria telemetria,
                                         ClasificacionEnVivo clasificacionEnVivo,
-                                        ControlSimulacion controlSimulacion) {
+                                        ControlSimulacion controlSimulacion,
+                                        List<EventOccurrence> eventosSesion,
+                                        EventosEnVivo observadorEventos) {
         List<LapResult> ultimaClasificacion = List.of();
         int segmentosGenerados = 0;
         for (int indice = 0; indice < SEGMENTOS_EVOLUCION; indice++) {
             int segmento = indice + 1;
+            TrackSector sector = TrackSector.desdeSegmento(segmento, SEGMENTOS_EVOLUCION);
+            TrackSector sectorAnterior = segmento == 1 ? TrackSector.NONE
+                    : TrackSector.desdeSegmento(segmento - 1, SEGMENTOS_EVOLUCION);
+            if (observadorEventos != null && sector != sectorAnterior) {
+                eventosSesion.stream()
+                        .filter(EventOccurrence::ocurrio)
+                        .filter(evento -> evento.sector() == sector)
+                        .forEach(observadorEventos::actualizar);
+            }
             ultimaClasificacion = clasificacionEnSegmento(resultados, segmento);
             if (clasificacionEnVivo != null) {
                 clasificacionEnVivo.actualizar(ultimaClasificacion);
@@ -426,6 +448,16 @@ public class QualifyingService {
                                               EvolucionPista observadorPista,
                                               ClasificacionEnVivo clasificacionEnVivo,
                                               BooleanSupplier finalizarSolicitado) {
+        return crearTarea(config, evolucion, telemetria, observadorPista,
+                clasificacionEnVivo, null, finalizarSolicitado);
+    }
+
+    public Task<QualifyingSession> crearTarea(SimulationConfig config, Evolucion evolucion,
+                                              Telemetria telemetria,
+                                              EvolucionPista observadorPista,
+                                              ClasificacionEnVivo clasificacionEnVivo,
+                                              EventosEnVivo observadorEventos,
+                                              BooleanSupplier finalizarSolicitado) {
         return new Task<>() {
             @Override
             protected QualifyingSession call() throws Exception {
@@ -451,7 +483,8 @@ public class QualifyingService {
                             updateMessage("Simulación en vivo · segmento "
                                     + fotograma + " de " + total);
                             return regulador.completarFotograma(fotograma, total);
-                        });
+                        },
+                        observadorEventos);
 
                 if (!finalizarSolicitado.getAsBoolean()) {
                     updateProgress(1, 1);
@@ -707,6 +740,12 @@ public class QualifyingService {
     @FunctionalInterface
     public interface ClasificacionEnVivo {
         void actualizar(List<LapResult> resultados);
+    }
+
+    /** Evento de cualquier piloto, emitido al comenzar el sector afectado. */
+    @FunctionalInterface
+    public interface EventosEnVivo {
+        void actualizar(EventOccurrence evento);
     }
 
     /** Punto de extensión del reloj: permite temporizar o finalizar sin acoplar la UI. */
