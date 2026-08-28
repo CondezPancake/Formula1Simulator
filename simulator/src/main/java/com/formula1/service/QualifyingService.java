@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BooleanSupplier;
 
 /**
  * Ejecuta una sesión de clasificación: genera el clima, calcula el tiempo de
@@ -39,13 +40,6 @@ import java.util.Optional;
  */
 public class QualifyingService {
 
-    /**
-     * Pausa por piloto. Sin ella la sesión terminaría en microsegundos y no
-     * se podría apreciar que la interfaz sigue respondiendo mientras el
-     * cálculo corre en otro hilo.
-     */
-    private static final long RITMO_MS = 80;
-    private static final long RITMO_EVOLUCION_MS = 60;
     static final int SEGMENTOS_EVOLUCION = 20;
 
     private final DataStore datos;
@@ -132,6 +126,23 @@ public class QualifyingService {
     QualifyingSession simular(SimulationConfig config, WeatherCondition clima,
                               Progreso progreso, Evolucion evolucion, Telemetria telemetria,
                               EvolucionPista observadorPista) {
+        return simular(config, clima, progreso, evolucion, telemetria,
+                observadorPista, null);
+    }
+
+    QualifyingSession simular(SimulationConfig config, WeatherCondition clima,
+                              Progreso progreso, Evolucion evolucion, Telemetria telemetria,
+                              EvolucionPista observadorPista,
+                              ClasificacionEnVivo clasificacionEnVivo) {
+        return simular(config, clima, progreso, evolucion, telemetria,
+                observadorPista, clasificacionEnVivo, null);
+    }
+
+    QualifyingSession simular(SimulationConfig config, WeatherCondition clima,
+                              Progreso progreso, Evolucion evolucion, Telemetria telemetria,
+                              EvolucionPista observadorPista,
+                              ClasificacionEnVivo clasificacionEnVivo,
+                              ControlSimulacion controlSimulacion) {
         Circuit circuito = validarSeleccion(config);
         if (clima == null) {
             throw new ValidationException("Las condiciones climáticas no pueden ser nulas");
@@ -140,6 +151,7 @@ public class QualifyingService {
         List<Driver> parrilla = participantesConSeleccionPrimero(config.getPilotoId());
         List<LapResult> resultados = new ArrayList<>();
         List<EventOccurrence> eventosSesion = new ArrayList<>();
+        List<SimulationSnapshot> evolucionSeleccionada = new ArrayList<>();
         List<TelemetrySnapshot> evolucionVuelta = new ArrayList<>();
         List<TrackEvolutionSnapshot> historialPista = new ArrayList<>();
         List<WeatherSnapshot> climaBase = climaDinamico.generar(
@@ -202,14 +214,9 @@ public class QualifyingService {
 
             if (piloto.getId() == config.getPilotoId()) {
                 climaSeleccionado = climaVuelta;
-                Telemetria capturarEvolucion = muestra -> {
-                    evolucionVuelta.add(muestra);
-                    if (telemetria != null) {
-                        telemetria.actualizar(muestra);
-                    }
-                };
                 emitirMuestras(piloto, coche, circuito, climaVuelta, configPiloto,
-                        resultado, tiempoBase, eventosVuelta, evolucion, capturarEvolucion);
+                        resultado, tiempoBase, eventosVuelta,
+                        evolucionSeleccionada::add, evolucionVuelta::add);
             }
 
             if (progreso != null) {
@@ -219,16 +226,127 @@ public class QualifyingService {
         }
 
         ordenarParrilla(resultados);
+        EstadoReproduccion estadoReproduccion = reproducirVueltaEnVivo(
+                resultados, evolucionSeleccionada, evolucionVuelta,
+                evolucion, telemetria, clasificacionEnVivo, controlSimulacion);
+        List<LapResult> resultadosGuardados = estadoReproduccion.completa()
+                ? resultados : estadoReproduccion.clasificacion();
+        int segmentosGenerados = estadoReproduccion.segmentosGenerados();
 
         QualifyingSession sesion = new QualifyingSession(circuito.getNombre(), clima, config);
-        sesion.setResultados(resultados);
-        sesion.setEvolucionClimatica(climaSeleccionado.isEmpty() ? climaBase : climaSeleccionado);
-        sesion.setEvolucionVuelta(evolucionVuelta);
+        sesion.setResultados(resultadosGuardados);
+        List<WeatherSnapshot> climaSesion = climaSeleccionado.isEmpty()
+                ? climaBase : climaSeleccionado;
+        sesion.setEvolucionClimatica(primeros(climaSesion, segmentosGenerados));
+        sesion.setEvolucionVuelta(primeros(evolucionVuelta, segmentosGenerados));
         sesion.setEvolucionPista(historialPista);
-        sesion.setEventos(eventosSesion);
+        sesion.setEventos(eventosHasta(eventosSesion, segmentosGenerados));
         sesion.setFecha(DateUtils.format(DateUtils.now()));
         config.setGuardadoEn(sesion.getFecha());
         return sesion;
+    }
+
+    /**
+     * Reproduce una vuelta común para toda la parrilla. Cada fotograma usa el
+     * tiempo acumulado de los sectores de cada piloto, por lo que la torre se
+     * reordena en cuanto uno gana o pierde la posición en pista.
+     */
+    private EstadoReproduccion reproducirVueltaEnVivo(
+                                        List<LapResult> resultados,
+                                        List<SimulationSnapshot> evolucionSeleccionada,
+                                        List<TelemetrySnapshot> telemetriaSeleccionada,
+                                        Evolucion evolucion, Telemetria telemetria,
+                                        ClasificacionEnVivo clasificacionEnVivo,
+                                        ControlSimulacion controlSimulacion) {
+        List<LapResult> ultimaClasificacion = List.of();
+        int segmentosGenerados = 0;
+        for (int indice = 0; indice < SEGMENTOS_EVOLUCION; indice++) {
+            int segmento = indice + 1;
+            ultimaClasificacion = clasificacionEnSegmento(resultados, segmento);
+            if (clasificacionEnVivo != null) {
+                clasificacionEnVivo.actualizar(ultimaClasificacion);
+            }
+            if (evolucion != null && indice < evolucionSeleccionada.size()) {
+                evolucion.actualizar(evolucionSeleccionada.get(indice));
+            }
+            if (telemetria != null && indice < telemetriaSeleccionada.size()) {
+                telemetria.actualizar(telemetriaSeleccionada.get(indice));
+            }
+            segmentosGenerados = segmento;
+            if (controlSimulacion != null
+                    && !controlSimulacion.completarFotograma(segmento, SEGMENTOS_EVOLUCION)) {
+                break;
+            }
+        }
+        return new EstadoReproduccion(ultimaClasificacion, segmentosGenerados,
+                segmentosGenerados == SEGMENTOS_EVOLUCION);
+    }
+
+    private <T> List<T> primeros(List<T> muestras, int cantidad) {
+        return List.copyOf(muestras.subList(0, Math.min(cantidad, muestras.size())));
+    }
+
+    private List<EventOccurrence> eventosHasta(List<EventOccurrence> eventos, int segmento) {
+        TrackSector ultimoSector = segmento <= 0
+                ? TrackSector.NONE : TrackSector.desdeSegmento(segmento, SEGMENTOS_EVOLUCION);
+        return eventos.stream()
+                .filter(evento -> evento.sector().ordinal() <= ultimoSector.ordinal())
+                .toList();
+    }
+
+    private record EstadoReproduccion(List<LapResult> clasificacion,
+                                      int segmentosGenerados,
+                                      boolean completa) { }
+
+    private List<LapResult> clasificacionEnSegmento(List<LapResult> resultados,
+                                                     int segmento) {
+        List<LapResult> parcial = resultados.stream()
+                .map(resultado -> resultadoEnSegmento(resultado, segmento))
+                .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+        ordenarParrilla(parcial);
+        return List.copyOf(parcial);
+    }
+
+    private LapResult resultadoEnSegmento(LapResult resultado, int segmento) {
+        LapResult parcial = copiarResultado(resultado);
+        parcial.setTiempoSegundos(tiempoAcumulado(resultado, segmento));
+
+        boolean incidenteAlcanzado = !resultado.isVueltaValida()
+                && (resultado.getSectorIncidente() == TrackSector.NONE
+                    || resultado.getSectorIncidente().contiene(segmento, SEGMENTOS_EVOLUCION)
+                    || TrackSector.desdeSegmento(segmento, SEGMENTOS_EVOLUCION).ordinal()
+                        > resultado.getSectorIncidente().ordinal());
+        parcial.setEstadoVuelta(incidenteAlcanzado
+                ? resultado.getEstadoVuelta() : LapStatus.VALID);
+        parcial.setSectorIncidente(incidenteAlcanzado
+                ? resultado.getSectorIncidente() : TrackSector.NONE);
+        parcial.setEventos(eventosHasta(resultado.getEventos(), segmento));
+        return parcial;
+    }
+
+    private double tiempoAcumulado(LapResult resultado, int segmento) {
+        double tiempoBase;
+        if (!resultado.hasSectorTimes()) {
+            tiempoBase = resultado.getTiempoSegundos() * segmento / SEGMENTOS_EVOLUCION;
+        } else {
+            var sectores = resultado.getSectorTimes();
+            if (segmento <= 7) {
+                tiempoBase = sectores.sector1Seconds() * segmento / 7.0;
+            } else if (segmento <= 14) {
+                tiempoBase = sectores.sector1Seconds()
+                        + sectores.sector2Seconds() * (segmento - 7) / 7.0;
+            } else {
+                tiempoBase = sectores.sector1Seconds() + sectores.sector2Seconds()
+                        + sectores.sector3Seconds() * (segmento - 14) / 6.0;
+            }
+        }
+
+        // Tráfico, frenada y tracción cambian el orden en microsectores. La
+        // envolvente vale cero en meta, preservando exactamente el resultado final.
+        double progreso = segmento / (double) SEGMENTOS_EVOLUCION;
+        double variacionMicrosector = 1.25 * Math.sin(Math.PI * progreso)
+                * Math.sin(resultado.getPilotoId() * 1.37 + 4 * Math.PI * progreso);
+        return Math.max(0.001, tiempoBase + variacionMicrosector);
     }
 
     /** Ordena por tiempo, asigna posiciones y calcula la diferencia con la pole. */
@@ -256,6 +374,21 @@ public class QualifyingService {
         }
     }
 
+    /** Copia estable para no compartir resultados mutables con el hilo JavaFX. */
+    private LapResult copiarResultado(LapResult original) {
+        LapResult copia = new LapResult(original.getPilotoId(), original.getPiloto(),
+                original.getEquipo(), original.getVehiculo(), original.getTiempoSegundos());
+        copia.setPosicion(original.getPosicion());
+        copia.setGap(original.getGap());
+        copia.setConsumoEstimado(original.getConsumoEstimado());
+        copia.setDesgasteEstimado(original.getDesgasteEstimado());
+        copia.setSectorTimes(original.getSectorTimes());
+        copia.setEstadoVuelta(original.getEstadoVuelta());
+        copia.setSectorIncidente(original.getSectorIncidente());
+        copia.setEventos(original.getEventos());
+        return copia;
+    }
+
     /**
      * Envuelve la simulación en un {@link Task} para ejecutarla fuera del
      * hilo de JavaFX. El {@code Task} ya publica progreso y mensajes en el
@@ -277,52 +410,58 @@ public class QualifyingService {
     public Task<QualifyingSession> crearTarea(SimulationConfig config, Evolucion evolucion,
                                               Telemetria telemetria,
                                               EvolucionPista observadorPista) {
+        return crearTarea(config, evolucion, telemetria, observadorPista, null);
+    }
+
+    public Task<QualifyingSession> crearTarea(SimulationConfig config, Evolucion evolucion,
+                                              Telemetria telemetria,
+                                              EvolucionPista observadorPista,
+                                              ClasificacionEnVivo clasificacionEnVivo) {
+        return crearTarea(config, evolucion, telemetria, observadorPista,
+                clasificacionEnVivo, () -> false);
+    }
+
+    public Task<QualifyingSession> crearTarea(SimulationConfig config, Evolucion evolucion,
+                                              Telemetria telemetria,
+                                              EvolucionPista observadorPista,
+                                              ClasificacionEnVivo clasificacionEnVivo,
+                                              BooleanSupplier finalizarSolicitado) {
         return new Task<>() {
             @Override
             protected QualifyingSession call() throws Exception {
                 Circuit circuito = validarSeleccion(config);
+                SimulationPacer regulador = new SimulationPacer(
+                        config.getDuracionSegundos(), finalizarSolicitado);
 
                 WeatherCondition clima = generarClima(circuito);
                 updateMessage("Clima de la sesión: " + clima.getEtiqueta());
-                Thread.sleep(RITMO_MS * 2);
-
-                Evolucion evolucionConRitmo = evolucion == null ? null : muestra -> {
-                    evolucion.actualizar(muestra);
-                    if (telemetria == null) {
-                        dormir(RITMO_EVOLUCION_MS);
-                    }
-                };
-                Telemetria telemetriaConRitmo = telemetria == null ? null : muestra -> {
-                    telemetria.actualizar(muestra);
-                    // Ambas lecturas corresponden al mismo segmento; se pausa una sola vez.
-                    dormir(RITMO_EVOLUCION_MS);
-                };
 
                 QualifyingSession sesion = simular(
                         config,
                         clima,
                         (hecho, total, mensaje) -> {
-                            updateProgress(hecho, total);
-                            updateMessage(mensaje);
-                            dormir(RITMO_MS);
+                            updateMessage("Preparando parrilla · " + mensaje);
                         },
-                        evolucionConRitmo,
-                        telemetriaConRitmo,
-                        observadorPista);
+                        evolucion,
+                        telemetria,
+                        observadorPista,
+                        clasificacionEnVivo,
+                        (fotograma, total) -> {
+                            updateProgress(fotograma, total);
+                            updateMessage("Simulación en vivo · segmento "
+                                    + fotograma + " de " + total);
+                            return regulador.completarFotograma(fotograma, total);
+                        });
 
-                updateProgress(1, 1);
+                if (!finalizarSolicitado.getAsBoolean()) {
+                    updateProgress(1, 1);
+                }
                 LapResult pole = sesion.getPole();
-                updateMessage(pole == null ? "Sesión sin resultados"
+                updateMessage(finalizarSolicitado.getAsBoolean()
+                        ? "Sesión finalizada manualmente y preparada para guardar"
+                        : pole == null ? "Sesión sin resultados"
                         : "Pole: " + pole.getPiloto() + " — " + FormatUtils.formatLapTime(pole.getTiempoSegundos()));
                 return sesion;
-            }
-
-            private void dormir(long milisegundos) {
-                try {
-                    Thread.sleep(milisegundos);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
             }
         };
     }
@@ -562,5 +701,17 @@ public class QualifyingService {
     @FunctionalInterface
     public interface EvolucionPista {
         void actualizar(TrackEvolutionSnapshot muestra);
+    }
+
+    /** Clasificación provisional, ya ordenada, tras completar cada vuelta. */
+    @FunctionalInterface
+    public interface ClasificacionEnVivo {
+        void actualizar(List<LapResult> resultados);
+    }
+
+    /** Punto de extensión del reloj: permite temporizar o finalizar sin acoplar la UI. */
+    @FunctionalInterface
+    interface ControlSimulacion {
+        boolean completarFotograma(int fotograma, int totalFotogramas);
     }
 }

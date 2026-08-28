@@ -1,6 +1,13 @@
 # Estado de épicas, HU, RF y RNF
 
-Este documento refleja el estado del proyecto después del rediseño de interfaz (limpieza de la sección Carrera y tarjeta de piloto al estilo de formula1.com). La referencia histórica sigue siendo `docs/legacy/ProyectoFormula1.md`; el alcance operativo vigente está resumido en el README.
+Este documento separa el estado implementado del nuevo backlog de trabajo. La
+persistencia ya está terminada; las épicas E13 a E22 se incorporan como planificación
+pendiente para desarrollarlas progresivamente. La referencia histórica sigue siendo
+`docs/legacy/ProyectoFormula1.md` y el alcance operativo actual está resumido en el
+README.
+
+Una HU permanece **pendiente** hasta completar todos sus criterios, aunque el proyecto
+ya contenga pantallas, datos o servicios que puedan reutilizarse como punto de partida.
 
 ## Resumen de épicas
 
@@ -10,14 +17,23 @@ Este documento refleja el estado del proyecto después del rediseño de interfaz
 | E02 | Configuración de la simulación | **Terminada** |
 | E03 | Motor de simulación | **Terminada** |
 | E04 | Visualización de resultados | **Terminada** |
-| E05 | Integración y persistencia | **En desarrollo** |
+| E05 | Persistencia de datos | **Terminada** |
 | E06 | Motor probabilístico de simulación | **Terminada** |
-| E07 | Clima dinámico | **Terminada** · sin UI propia |
+| E07 | Clima dinámico | **Terminada** · integrado en Carrera |
 | E08 | Sistema de eventos aleatorios | **Terminada** |
 | E09 | Telemetría visual | **Terminada** |
-| E10 | Evolución dinámica de pista | **Terminada** · sin UI propia |
+| E10 | Evolución dinámica de pista | **Terminada** · integrada en Carrera |
 | E11 | Sistema de estrategia | **Terminada** |
-| E12 | Análisis automático de la sesión | **Retirada** |
+| E13 | Rediseño de experiencia de Carrera | **Pendiente** |
+| E14 | Información detallada bajo demanda | **Pendiente** |
+| E15 | Simplificación del módulo Carrera | **Pendiente** |
+| E16 | Rediseño del módulo Explorar | **Pendiente** |
+| E17 | Seguimiento dinámico del piloto | **Pendiente** |
+| E18 | Estrategia y Pit Stop | **Pendiente** |
+| E19 | Resultados de clasificación | **Pendiente** |
+| E20 | Recursos multimedia | **Cancelada** |
+| E21 | Arquitectura y patrones de diseño | **Pendiente** |
+| E22 | Animación inicial | **Terminada** · opcional |
 
 ## Historias de usuario
 
@@ -27,24 +43,32 @@ Este documento refleja el estado del proyecto después del rediseño de interfaz
 | E02 | HU-07 a HU-13 | **Terminadas** |
 | E03 | HU-14 a HU-19 | **Terminadas** |
 | E04 | HU-20 a HU-23 | **Terminadas** |
-| E05 | HU-24 OpenF1 | **En desarrollo** |
 | E05 | HU-25 a HU-27 | **Terminadas** |
 | E06 | HU-28 | **Terminada** |
-| E07 | HU-29 | **Terminada** · motor vivo, pestaña retirada |
+| E07 | HU-29 | **Terminada** · sin pestaña independiente |
 | E08 | HU-30 | **Terminada** |
 | E09 | HU-31 a HU-33 | **Terminadas** |
-| E10 | HU-34 | **Terminada** · motor vivo, pestaña retirada |
+| E10 | HU-34 | **Terminada** · sin pestaña independiente |
 | E11 | HU-35 | **Terminada** |
-| E12 | HU-36 | **Retirada** |
+| E13 | HU-38 a HU-40 | **Terminadas** |
+| E13 | HU-37 | **Pendiente** |
+| E14 | HU-41 y HU-42 | **Pendientes** |
+| E15 | HU-43 | **Pendiente** |
+| E16 | HU-44 | **Terminada** |
+| E16 a HU-47 | **Pendientes** |
+| E17 | HU-48 y HU-49 | **Pendientes** |
+| E18 | HU-50 a HU-52 | **Pendientes** |
+| E19 | HU-53 | **Pendiente** |
+| E20 | HU-54 | **Cancelada** |
+| E21 | HU-55 y HU-56 | **Pendientes** |
+| E22 | HU-57 | **Terminada** · opcional |
 
-## Totales
+## Totales del alcance vigente
 
-| Elemento | Terminadas | En desarrollo | Retiradas | Total |
-|---|---:|---:|---:|---:|
-| Épicas | 10 | 1 | 1 | 12 |
-| Historias de usuario | 34 | 1 | 1 | 36 |
-
-La única HU pendiente frente al documento legacy es **HU-24 Consumir OpenF1**. OpenF1 está fuera del alcance operativo vigente del README, por eso la aplicación principal ya funciona completa sin depender de esa integración.
+| Elemento | Terminadas | Pendientes | Total vigente |
+|---|---:|---:|---:|
+| Épicas | 11 | 10 | 21 |
+| Historias de usuario | 37 | 18 | 55 |
 
 ## Requisitos funcionales
 
@@ -59,88 +83,289 @@ La única HU pendiente frente al documento legacy es **HU-24 Consumir OpenF1**. 
 | RF-13 | **Cumplido** | Tiempo de vuelta probabilístico con semilla controlable en pruebas. |
 | RF-14 | **Cumplido** | Ordenamiento, posiciones y diferencias con la pole. |
 | RF-15 | **Cumplido** | Clasificación final visible en JavaFX. |
-| RF-16 | **Cumplido** | Clasificación, telemetría en vivo, sectores y eventos; grip de pista y clima resumidos en el panel principal. |
-| RF-17 | **En desarrollo** | Depende de OpenF1, fuera del alcance operativo vigente. |
+| RF-16 | **Cumplido** | Clasificación, telemetría en vivo, sectores y eventos; grip y clima se resumen en Carrera. |
 | RF-18 | **Cumplido** | Persistencia duradera en MongoDB con respaldo en memoria. |
 | RF-19 | **Cumplido** | Resultados, eventos, telemetría, clima, sectores y evolución de pista se guardan con la sesión. |
 | RF-20 | **Cumplido** | Historial de sesiones y configuraciones reutilizables. |
-| RF-21 | **En desarrollo** | Depende de OpenF1, fuera del alcance operativo vigente. |
 
-Resumen RF: **19 cumplidos de 21**; los 2 restantes corresponden a OpenF1.
+Resumen RF: **19 cumplidos de 19 requisitos vigentes**.
 
 ## Requisitos no funcionales generales
 
 | Requisito | Estado | Evidencia |
 |---|---|---|
-| RNF-01 | **Cumplido** | Java 17 configurado en Maven y compilación verificada con `javac --release 17`. |
-| RNF-02 | **Parcial** | UI JavaFX consistente; imágenes externas del diseño/escuderías no están integradas. |
+| RNF-01 | **Cumplido** | Java 17 configurado en Maven. |
+| RNF-02 | **Cumplido** | Interfaz JavaFX consistente con imágenes de pilotos, vehículos, circuitos, escuderías y recursos del menú empaquetados. |
 | RNF-03 | **Cumplido** | MongoDB con Repository y modo memoria resiliente. |
-| RNF-04 | **En desarrollo** | Consumo OpenF1 no implementado. |
-| RNF-05 | **Cumplido** | Separación actual en `model`, `data`, `service`, `event`, `controller` y `util`. |
+| RNF-05 | **Cumplido** | Separación en `model`, `data`, `service`, `event`, `controller` y `util`. |
 | RNF-06 | **Cumplido** | Packages cohesionados por responsabilidad. |
-| RNF-07 | **Cumplido** | Validación en UI y servicios. |
-| RNF-08 | **Parcial** | Errores de entrada y persistencia cubiertos; OpenF1 no aplica todavía. |
+| RNF-07 | **Cumplido** | Validación en interfaz y servicios. |
+| RNF-08 | **Cumplido** | Errores de entrada, carga multimedia y persistencia tratados sin cerrar la aplicación. |
 | RNF-09 | **Cumplido** | Carga y simulación en `Task`/pool de hilos, sin bloquear JavaFX. |
 | RNF-10 | **Cumplido** | Flujo completo desde la interfaz, sin manejo manual de MongoDB. |
 | RNF-11 | **Cumplido** | Dependencias declaradas en Maven. |
 | RNF-12 | **Cumplido** | Repositorio versionado y documentación de cambios. |
 
-Resumen RNF generales: **9 cumplidos, 2 parciales, 1 en desarrollo**.
+Resumen RNF generales: **11 cumplidos de 11 requisitos vigentes**.
 
 ## POO y calidad
 
 | Requisitos | Estado | Evidencia |
 |---|---|---|
 | RNF-18 a RNF-23 | **Cumplidos** | Encapsulamiento, objetos de dominio, records inmutables, herencia de eventos y control de visibilidad. |
-| RNF-24 | **Cumplido** | Estrategias de conducción/fuel/aerodinámica/neumáticos encapsulan comportamiento mediante enums con factores y reglas propias. |
-| RNF-25 a RNF-28 | **Cumplidos** | Interfaces, sobrecarga útil, lambdas y Streams en búsquedas, métricas, análisis y callbacks. |
+| RNF-24 | **Cumplido** | Estrategias de conducción, combustible, aerodinámica y presión encapsulan factores y reglas propias. |
+| RNF-25 a RNF-28 | **Cumplidos** | Interfaces, sobrecarga útil, lambdas y Streams en búsquedas, métricas y callbacks. |
 | RNF-29 a RNF-30 | **Cumplidos** | Concurrencia con pool, `Task` y actualización segura de JavaFX. |
-| RNF-31 a RNF-34 | **Cumplidos** | Excepciones de validación/datos y ausencia de `System.exit` en flujo normal. |
+| RNF-31 a RNF-34 | **Cumplidos** | Excepciones de validación/datos y ausencia de `System.exit` en el flujo normal. |
 | RNF-35 a RNF-43 | **Cumplidos** | Responsabilidades acotadas, imports explícitos, utilidades enfocadas y comentarios solo en decisiones no obvias. |
 
 Resumen POO/calidad: **26 cumplidos de 26**.
+
+## Backlog técnico y seguimiento
+
+### E13 — Rediseño de experiencia de Carrera
+
+> Es la épica de mayor prioridad dentro del nuevo alcance.
+
+#### HU-37 — Rediseñar Dashboard de Carrera
+
+- Rediseñar el Dashboard.
+- Integrar clasificación, evolución, información del vehículo, circuito y clima básico.
+- Integrar la selección desde la clasificación.
+- Crear una representación visual del circuito.
+- Mostrar los pilotos mediante círculos sobre el circuito.
+- Actualizar visualmente la posición de los pilotos.
+- Identificar cada piloto y diferenciar el piloto fijado.
+
+#### HU-38 — Integrar clima básico — **Terminada**
+
+- Mostrar temperatura, humedad, lluvia y condición actual.
+- Actualizar el clima dinámicamente.
+- Integrarlo visualmente con el Dashboard.
+
+#### HU-39 — Integrar comparación dinámica de sectores — **Terminada**
+
+- Mostrar S1, S2 y S3.
+- Identificar el mejor sector y la diferencia entre pilotos.
+- Integrar la comparación con la clasificación.
+- Actualizarla según el piloto seleccionado.
+
+#### HU-40 — Configurar duración de simulación — **Terminada**
+
+- Incorporar un selector con 5, 10, 30 y 60 segundos, 2 minutos y duración personalizada.
+- Permitir la finalización manual.
+- Mostrar el contador y la duración seleccionada.
+- Detener la simulación al alcanzar el límite.
+- Guardar los resultados generados.
+
+> La duración debe ser una configuración real del motor, no un `Thread.sleep()` más
+> largo en JavaFX.
+
+La duración forma parte de `SimulationConfig` y el motor la distribuye entre
+los segmentos mediante un regulador independiente de JavaFX. La finalización
+manual conserva y guarda la última clasificación, telemetría, clima y eventos
+que ya fueron emitidos.
+
+### E14 — Información detallada bajo demanda
+
+#### HU-41 — Consultar telemetría detallada
+
+- Añadir una acción «Ver detalles».
+- Mostrar gráficas de velocidad, RPM, combustible, desgaste, temperaturas y delta.
+- Permitir elegir la vuelta consultada.
+- Permitir regresar al Dashboard.
+
+#### HU-42 — Consultar eventos detallados
+
+- Mostrar notificaciones pequeñas durante la simulación.
+- Incluir tipo de evento, piloto afectado, sector e impacto.
+- Conservar un historial de eventos.
+- Ofrecer una vista detallada bajo demanda.
+
+### E15 — Simplificación del módulo Carrera
+
+#### HU-43 — Eliminar y reorganizar secciones de Carrera
+
+Se eliminarán como secciones independientes Estadísticas, Evolución de vuelta,
+Evolución de pista, Análisis y Clima dinámico.
+
+- Eliminar pestañas, botones y rutas de navegación innecesarias.
+- Integrar en el Dashboard la información que deba conservarse.
+- Mantener los datos necesarios para resultados.
+- Verificar la compatibilidad de las sesiones históricas.
+- Actualizar FXML, controladores y navegación.
+
+### E16 — Rediseño del módulo Explorar
+
+#### HU-44 — Rediseñar vista principal de pilotos
+
+- Crear una nueva vista basada en tarjetas.
+- Mostrar imagen, nombre, equipo e información principal.
+- Permitir seleccionar el piloto y acceder a su detalle.
+
+#### HU-45 — Rediseñar detalle de pilotos
+
+- Mostrar foto, nombre, equipo, palmarés, habilidades y rendimiento histórico.
+- Añadir información adicional y navegación de regreso.
+
+> El proyecto ya dispone de fichas con parte de esta información; la HU comprende su
+> rediseño e integración dentro del nuevo flujo.
+
+#### HU-46 — Rediseñar detalle de vehículos
+
+- Incorporar una galería de imágenes.
+- Mostrar estadísticas de velocidad y aceleración.
+- Mostrar características técnicas e información del equipo.
+- Añadir navegación de regreso.
+
+#### HU-47 — Rediseñar circuitos
+
+- Crear nuevas tarjetas, paleta y diseño dinámico.
+- Mostrar imagen o trazado, nombre, ubicación, longitud y vueltas.
+- Permitir acceder al detalle.
+
+### E17 — Seguimiento dinámico del piloto
+
+#### HU-48 — Fijar piloto durante la simulación
+
+- Seleccionar y fijar visualmente un piloto.
+- Mantener el piloto fijado aunque se consulte otro.
+- Permitir cambiarlo y mostrar un indicador visual.
+- Mantenerlo fijado al finalizar.
+
+> Piloto seleccionado y piloto fijado son estados distintos. El usuario puede consultar
+> a un piloto mientras mantiene a otro fijado en el Dashboard.
+
+#### HU-49 — Mostrar Radio/Box del piloto
+
+- Mostrar la radio del piloto fijado.
+- Generar mensajes contextuales sobre posición, vuelta, vehículo y eventos.
+- Informar entradas y salidas de boxes, cambios de neumáticos e incidentes.
+- Mostrar información de estrategia y actualizarla en vivo.
+
+### E18 — Estrategia y Pit Stop
+
+#### HU-50 — Implementar parada en boxes
+
+- Implementar entrada, estado visual o animación, tiempo de parada y salida de boxes.
+- Actualizar la posición tras la parada.
+- Crear el evento de pit stop y su registro histórico.
+- Integrarlo con la radio.
+
+#### HU-51 — Implementar cambio de neumáticos
+
+Compuestos contemplados: **S** (Soft), **M** (Medium) y **H** (Hard).
+
+- Mantener el estado del neumático actual.
+- Permitir todos los cambios entre S, M y H.
+- Aplicar el impacto del compuesto al rendimiento.
+- Registrar y visualizar cada cambio.
+- Integrarlo con el pit stop.
+
+#### HU-52 — Visualizar estrategia de neumáticos
+
+- Mostrar el neumático actual y el historial de compuestos.
+- Mostrar número de paradas y vueltas con cada compuesto.
+- Mostrar la estrategia del piloto fijado y los eventos de cambio.
+- Integrar la información en Radio/Box y en la vista posterior a la clasificación.
+
+### E19 — Resultados de clasificación
+
+#### HU-53 — Crear sección posterior a la clasificación
+
+Al terminar la simulación se mostrarán:
+
+- Clasificación final, piloto fijado, tiempo, gap y sectores.
+- Neumáticos, paradas, eventos y radio relevante.
+- Estadísticas, vehículo y configuración utilizada.
+- Información general de la sesión.
+
+Flujo objetivo: `Configuración` → `Simulación` → `Finalización` → `Resultados`.
+
+### E20 — Recursos multimedia
+
+#### HU-54 — Implementar vídeos de las pistas
+
+- Asociar un vídeo a cada circuito.
+- Incorporar reproductor, reproducción, pausa y controles.
+- Crear una pantalla de vídeo.
+- Mostrar un estado alternativo si no existe vídeo.
+- Manejar errores sin bloquear la aplicación.
+
+> Requisito solicitado por Mayorga.
+
+### E21 — Arquitectura y patrones de diseño
+
+#### HU-55 — Implementar arquitectura hexagonal
+
+- Evitar que el dominio dependa de JavaFX o MongoDB.
+- Evitar que la aplicación dependa directamente de infraestructura.
+- Definir un puerto de persistencia implementado por MongoDB.
+- Hacer que JavaFX consuma casos de uso.
+- Orientar las dependencias hacia el dominio.
+
+#### HU-56 — Revisar e implementar patrones de diseño
+
+El README documenta actualmente Repository, Singleton, Strategy, Observer y Factory.
+
+- Identificar y revisar los patrones existentes.
+- Determinar cuáles aportan valor real.
+- Seleccionar los dos patrones principales que se defenderán en el proyecto.
+- Documentar nombre, problema, solución, ubicación y clases involucradas.
+- Refactorizar patrones mal aplicados.
+- Evitar patrones incorporados únicamente para cumplir un requisito.
+
+### E22 — Animación inicial (opcional)
+
+#### HU-57 — Implementar animación inicial
+
+- Crear una pantalla inicial con el logo del proyecto F1.
+- Añadir una animación de duración configurable.
+- Permitir omitirla.
+- Implementar la transición al Dashboard.
+- Manejar errores sin bloquear la carga.
+
+Prioridad: **opcional / baja**.
+
+## Backlog priorizado
+
+| Fase / Sprint | Prioridad | Descripción | Historias de usuario |
+|---|---|---|---|
+| Sprint / Fase 1 | Alta | Núcleo de la nueva experiencia | HU-37, HU-48, HU-49, HU-50, HU-51 |
+| Sprint / Fase 2 | Alta | Integración visual pendiente | HU-41, HU-42, HU-43 |
+| Sprint / Fase 3 | Media | Explorar | HU-44, HU-45, HU-46, HU-47 |
+| Sprint / Fase 4 | Media | Resultado y multimedia | HU-52, HU-53, HU-54 |
+| Sprint / Fase 5 | Baja | Arquitectura | HU-55, HU-56 |
+| Opcional | Baja | Extras y flujo de interfaz | HU-57 |
+
+## Persistencia de datos
+
+La persistencia está **terminada**. `DataStore` mantiene mapas concurrentes como fuente
+de verdad durante la ejecución y realiza escrituras *write-through* mediante
+`MongoRepository`. Al arrancar intenta recuperar MongoDB; si no está disponible, carga
+el seed y conserva un modo memoria operativo.
+
+Se persisten pilotos, equipos, vehículos, circuitos y sesiones. Cada sesión incluye la
+configuración utilizada, clasificación, telemetría, sectores, eventos, clima y evolución
+de pista, y puede recuperarse desde el historial entre ejecuciones.
 
 ## Controles de calidad aplicados
 
 | Control | Estado |
 |---|---|
 | Compilación | Código principal y pruebas compilan con Java 17. |
-| Pruebas automatizadas | **112 pruebas** ejecutadas correctamente. |
-| Integridad FXML | `ViewsLoadTest` y `ExploreViewsLoadTest` cargan los **19 FXML**. |
-| Persistencia histórica | JSON compatible con sesiones antiguas; el campo `analisis` de sesiones ya guardadas se ignora al leer. |
-| Inmutabilidad | Snapshots, eventos, sectores y evolución de pista son objetos inmutables o expuestos como copias. |
+| Pruebas automatizadas | **112 pruebas** ejecutadas correctamente con Maven. |
+| Integridad FXML | `ViewsLoadTest` y `ExploreViewsLoadTest` comprueban la carga de las vistas FXML. |
+| Persistencia histórica | JSON compatible con sesiones antiguas; el campo `analisis` ya retirado se ignora al leer. |
+| Inmutabilidad | Snapshots, eventos, sectores y evolución de pista son inmutables o se exponen como copias. |
 | Trazabilidad | Documentos por funcionalidad y matriz actualizada de épicas/HU/RF/RNF. |
 
-## Observaciones de alcance
+## Recursos visuales y multimedia
 
-- HU-29 genera y persiste evolución climática; grip, tracción, frenado, temperaturas, consumo, desgaste y tiempo reaccionan a ella.
-- HU-30 incorpora eventos ponderados con impactos reales sobre tiempo, pista, clima, telemetría y validez de vuelta.
-- HU-32 persiste 20 muestras de vuelta del piloto seleccionado.
-- HU-33 calcula S1, S2 y S3 para vueltas válidas e identifica mejores sectores.
-- HU-34 acumula goma, limpia pista con lluvia y aplica el grip al motor antes de calcular cada vuelta.
-- HU-36 se retira: el análisis por reglas duplicaba lo que ya cuentan la clasificación y la telemetría.
+Los renders, banderas, logos, trazados y textura se empaquetan como recursos locales.
+También se incluye Titillium Web y un vídeo optimizado para el fondo del menú, con una
+imagen estática animada como respaldo si JavaFX no puede reproducirlo.
 
-## Rediseño de interfaz
-
-La sección **Carrera** pasa de nueve pestañas a cuatro —Clasificación, Telemetría en
-vivo, Comparación de sectores y Eventos—. Se borran por completo Estadísticas,
-Evolución de vuelta y Análisis (vistas, controladores, servicios, modelos y pruebas).
-
-De Evolución de pista y Clima dinámico se borra solo la interfaz: `TrackEvolutionService`
-y `DynamicWeatherService` siguen vivos porque el tiempo de vuelta, el consumo, el
-desgaste y los eventos dependen de ellos. Lo que el usuario necesita ver de ambos —grip
-inicial y final, temperatura de cielo y asfalto, lluvia y neumático recomendado— sube al
-panel «Evolución del vehículo seleccionado», que pasa a dos filas de cuatro tarjetas y se
-rellena en cuanto arranca la simulación.
-
-La sección **Explorar › Pilotos** reconstruye su tarjeta siguiendo
-<https://www.formula1.com/en/drivers>: fondo con el color del equipo oscurecido para que
-el texto blanco contraste, textura de velocidad teñida con el color vivo, render oficial
-del piloto a la derecha y, a la izquierda, nombre, apellido, equipo, dorsal fantasma y
-bandera. Las cifras del piloto se consultan en su ficha. La tarjeta entera es el enlace,
-con acceso por teclado.
-
-Los recursos (renders, banderas, logos y textura) se descargan de formula1.com con
-`tools/descargar_assets_f1.py`. Se empaqueta **Titillium Web**, tipografía oficial de la
-F1 hasta 2017: la hoja de estilos pedía Orbitron, que no está instalada, así que la
-jerarquía tipográfica del diseño no llegaba a verse.
+La intro, el menú y el shell comparten una sola `Scene`; las transiciones liberan los
+reproductores y animaciones al abandonar cada pantalla para no consumir recursos en
+segundo plano.

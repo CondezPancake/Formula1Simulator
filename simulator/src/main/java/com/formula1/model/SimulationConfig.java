@@ -15,6 +15,10 @@ import java.util.UUID;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SimulationConfig {
 
+    public static final int DURACION_PREDETERMINADA_SEGUNDOS = 10;
+    public static final int DURACION_MINIMA_SEGUNDOS = 1;
+    public static final int DURACION_MAXIMA_SEGUNDOS = 3_600;
+
     private String id;
     private String circuito;
     private Integer pilotoId;
@@ -23,6 +27,7 @@ public class SimulationConfig {
     private AerodynamicLoad aerodinamica;
     private TirePressure presion;
     private FuelStrategy combustible;
+    private int duracionSegundos;
     private String guardadoEn;
 
     public SimulationConfig() {
@@ -31,6 +36,7 @@ public class SimulationConfig {
         this.aerodinamica = AerodynamicLoad.MEDIA;
         this.presion = TirePressure.ESTANDAR;
         this.combustible = FuelStrategy.BALANCEADA;
+        this.duracionSegundos = DURACION_PREDETERMINADA_SEGUNDOS;
     }
 
     public SimulationConfig(String circuito, Integer pilotoId, String vehiculo, DrivingMode modo,
@@ -127,6 +133,21 @@ public class SimulationConfig {
         this.combustible = combustible;
     }
 
+    public int getDuracionSegundos() {
+        return duracionSegundos <= 0
+                ? DURACION_PREDETERMINADA_SEGUNDOS : duracionSegundos;
+    }
+
+    public void setDuracionSegundos(int duracionSegundos) {
+        if (duracionSegundos < DURACION_MINIMA_SEGUNDOS
+                || duracionSegundos > DURACION_MAXIMA_SEGUNDOS) {
+            throw new IllegalArgumentException("La duración debe estar entre "
+                    + DURACION_MINIMA_SEGUNDOS + " y "
+                    + DURACION_MAXIMA_SEGUNDOS + " segundos");
+        }
+        this.duracionSegundos = duracionSegundos;
+    }
+
     public String getGuardadoEn() {
         return guardadoEn;
     }
@@ -153,6 +174,7 @@ public class SimulationConfig {
                 ? vehiculo
                 : "Piloto #" + pilotoId + " · " + vehiculo;
         return seleccion + " · " + modo + " · Aero " + aerodinamica
-                + " · Presión " + presion + " · " + combustible;
+                + " · Presión " + presion + " · " + combustible
+                + " · " + getDuracionSegundos() + " s";
     }
 }

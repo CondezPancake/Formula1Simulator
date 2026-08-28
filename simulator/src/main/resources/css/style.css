@@ -898,6 +898,231 @@
    Paneles de sesion (evolucion, telemetria, sectores)
    ============================================================= */
 
+/* El dashboard de Carrera conserva la paleta y la tipografia globales. Estas
+   reglas solo reproducen la geometria de consola de la referencia. */
+.race-dashboard,
+.race-command-deck,
+.race-dashboard-content {
+    -fx-background-color: -fx-bg-0;
+}
+
+.race-command-deck {
+    -fx-border-color: transparent transparent -fx-border-2 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.race-action-strip {
+    -fx-min-height: 32;
+}
+
+.race-start-button {
+    -fx-min-width: 142;
+}
+
+.race-stop-button {
+    -fx-min-width: 96;
+    -fx-background-color: -fx-surface-2;
+    -fx-border-color: -fx-accent-red;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.race-stop-button:hover {
+    -fx-background-color: derive(-fx-accent-red, -55%);
+}
+
+.race-session-clock {
+    -fx-font-family: "Monospaced";
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.race-dashboard-separator {
+    -fx-padding: 0;
+}
+
+.race-dashboard-separator .line {
+    -fx-border-color: -fx-border-2;
+    -fx-border-width: 1 0 0 0;
+}
+
+.race-tabs > .tab-content-area {
+    -fx-background-color: -fx-bg-0;
+}
+
+.race-console-panel {
+    -fx-background-color: -fx-surface-1;
+    -fx-background-radius: 7;
+    -fx-border-color: -fx-border-1;
+    -fx-border-radius: 7;
+    -fx-padding: 10;
+}
+
+.race-panel-title {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.race-compact-table {
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+}
+
+.race-compact-table .table-row-cell {
+    -fx-cell-size: 31;
+}
+
+.race-compact-table .table-cell {
+    -fx-font-size: 11px;
+}
+
+.race-map-panel {
+    -fx-min-width: 430;
+}
+
+.race-map-canvas {
+    -fx-background-color: -fx-surface-3;
+    -fx-background-radius: 5;
+    -fx-border-color: -fx-border-2;
+    -fx-border-radius: 5;
+    -fx-padding: 8;
+    -fx-min-height: 260;
+}
+
+.race-engineer-panel {
+    -fx-min-height: 76;
+}
+
+.race-engineer-message {
+    -fx-text-fill: -fx-text-2;
+}
+
+.race-lower-deck {
+    -fx-min-height: 190;
+    -fx-pref-height: 205;
+}
+
+.race-driver-card {
+    -fx-background-color: -fx-surface-1;
+    -fx-background-radius: 7;
+    -fx-border-color: -fx-border-1;
+    -fx-border-radius: 7;
+    -fx-padding: 10;
+    -fx-min-width: 265;
+}
+
+.race-driver-name {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.race-driver-team {
+    -fx-font-size: 13px;
+    -fx-text-fill: -fx-text-muted;
+}
+
+.race-car-name {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-2;
+}
+
+.race-driver-number {
+    -fx-font-size: 19px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.race-car-readings,
+.race-car-modes {
+    -fx-padding: 1 0 0 0;
+}
+
+.race-car-reading,
+.race-mode-cell {
+    -fx-background-color: -fx-surface-2;
+    -fx-background-radius: 4;
+    -fx-border-color: -fx-border-2;
+    -fx-border-radius: 4;
+    -fx-padding: 5 7 5 7;
+    -fx-min-width: 72;
+}
+
+.race-gear-reading {
+    -fx-min-width: 66;
+}
+
+.race-reading-value {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.race-gear-value {
+    -fx-font-size: 25px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-accent-red;
+}
+
+.race-reading-detail {
+    -fx-font-size: 9px;
+    -fx-text-fill: -fx-text-muted;
+}
+
+.race-mode-value {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.race-mode-cell .progress-bar {
+    -fx-pref-height: 5;
+    -fx-min-height: 5;
+    -fx-max-height: 5;
+}
+
+.race-mode-cell .progress-bar .bar {
+    -fx-background-color: -fx-accent-amber;
+    -fx-background-insets: 0;
+    -fx-background-radius: 2;
+}
+
+.race-bottom-telemetry {
+    -fx-min-height: 112;
+}
+
+.race-chart-tile {
+    -fx-background-color: -fx-surface-2;
+    -fx-background-radius: 4;
+    -fx-padding: 5 7 3 7;
+    -fx-min-width: 175;
+}
+
+.race-telemetry-chart {
+    -fx-padding: 0;
+    -fx-min-height: 48;
+    -fx-max-height: 66;
+}
+
+.race-telemetry-chart .axis {
+    -fx-opacity: 0;
+}
+
+.race-telemetry-chart .chart-plot-background {
+    -fx-background-color: -fx-surface-3;
+}
+
+.race-telemetry-chart .default-color0.chart-series-line {
+    -fx-stroke: -fx-accent-amber;
+    -fx-stroke-width: 2;
+}
+
+.race-telemetry-chart.fuel .default-color0.chart-series-line {
+    -fx-stroke: -fx-accent-blue;
+}
+
 .evolution-panel, .telemetry-panel, .sector-comparison-panel {
     -fx-background-color: -fx-surface-1;
     -fx-background-radius: 8;
@@ -1340,4 +1565,150 @@
 .live-feed-driver {
     -fx-font-size: 10px;
     -fx-font-weight: bold;
+}
+
+/* =============================================================
+   Menú principal (hub previo al shell)
+
+   Geometria y color muestreados de docs/assets/menu_mockup.png
+   (espacio de referencia 1672x941). Los cuerpos de letra NO van aqui:
+   los calcula MainMenuController desde la altura de escena, porque el
+   mockup escala la tipografia con la ventana.
+   ============================================================= */
+
+.menu-root      { -fx-background-color: -fx-bg-0; }
+.menu-bg-layer  { -fx-background-color: -fx-bg-0; }
+
+/* Viñeta del mockup: calido y visible arriba, negro absoluto por debajo
+   de la mitad para que las tarjetas recorten con nitidez. */
+.menu-scrim {
+    -fx-background-color:
+        radial-gradient(center 50% 40%, radius 82%,
+            transparent 34%, rgba(0,0,0,0.30) 68%, rgba(0,0,0,0.78) 100%),
+        linear-gradient(to bottom,
+            rgba(6,6,8,0.70)  0%,
+            rgba(6,6,8,0.26) 26%,
+            rgba(6,6,8,0.52) 46%,
+            rgba(4,4,6,0.92) 66%,
+            #030304          88%,
+            #000000         100%);
+}
+
+/* --- cabecera --------------------------------------------------- */
+
+.menu-year {
+    -fx-font-family: "Titillium Web Black", "Titillium Web", "Adwaita Sans", sans-serif;
+    -fx-font-weight: 900;
+    -fx-text-fill: #E6E6E8;
+}
+
+/* Los glifos del tracking son nodos Text: se colorean con -fx-fill. */
+.menu-temporada-glifo,
+.menu-stat-glifo,
+.menu-salir-glifo {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+}
+
+.menu-temporada-glifo { -fx-fill: #888586; }
+.menu-stat-glifo      { -fx-fill: #9A9A9A; }
+.menu-salir-glifo     { -fx-fill: #7D7C7B; }
+
+.menu-exit-rule { -fx-background-color: #565554; }
+
+/* --- envolturas: llevan el efecto, el clip va en el Button interior --
+   El clip se aplica DESPUES del effect, asi que un dropshadow puesto en
+   el mismo nodo recortado desaparece. */
+
+.menu-tile-wrap { -fx-background-color: transparent; }
+
+.menu-tile-wrap-primary {
+    -fx-effect: dropshadow(gaussian, rgba(225,6,0,0.55), 38, 0.12, 0, 10);
+}
+
+/* --- tarjetas ---------------------------------------------------- */
+
+.menu-tile {
+    -fx-background-radius: 0;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
+    -fx-content-display: graphic-only;
+    -fx-graphic-text-gap: 0;
+    -fx-alignment: TOP_LEFT;
+}
+
+.menu-tile:focused { -fx-background-insets: 0; }
+
+.menu-tile-primary {
+    -fx-background-color: linear-gradient(to bottom, #CB0101 0%, #A30100 52%, #710103 100%);
+    -fx-padding: 50 30 46 35;
+}
+
+.menu-tile-primary:hover {
+    -fx-background-color: linear-gradient(to bottom, #E10600 0%, #B60100 52%, #820103 100%);
+}
+
+/* La franja roja izquierda va como capa de fondo, no como borde: un
+   -fx-border-color no admite degradado vertical y el clip lo deformaria
+   en el chaflan. */
+.menu-tile-secondary {
+    -fx-background-color:
+        linear-gradient(to bottom, #E10600 0%, #6A0200 100%),
+        linear-gradient(to bottom, rgba(19,18,20,0.985) 0%, rgba(7,7,9,0.985) 100%);
+    -fx-background-insets: 0, 0 0 0 12;
+    -fx-padding: 48 24 48 42;
+}
+
+.menu-tile-secondary:hover {
+    -fx-background-color:
+        linear-gradient(to bottom, #FF1E0F 0%, #8A0200 100%),
+        linear-gradient(to bottom, rgba(30,29,33,0.95) 0%, rgba(13,13,17,0.95) 100%);
+}
+
+/* AJUSTES: sin franja roja. Su contorno gris es un Polygon hermano,
+   porque un borde CSS no seguiria el chaflan del clip. */
+.menu-tile-quiet {
+    -fx-background-color: linear-gradient(to bottom, rgba(19,18,20,0.97) 0%, rgba(6,7,8,0.97) 100%);
+    -fx-padding: 23 20 25 24;
+}
+
+.menu-tile-quiet:hover {
+    -fx-background-color: linear-gradient(to bottom, rgba(32,31,36,0.94) 0%, rgba(12,12,16,0.94) 100%);
+}
+
+/* --- contenido de las tarjetas ----------------------------------- */
+
+.menu-tile-title {
+    -fx-font-family: "Titillium Web Black", "Titillium Web", "Adwaita Sans", sans-serif;
+    -fx-font-weight: 900;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.menu-tile-subtitle {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-text-fill: #9A9A9A;
+}
+
+.menu-tile-primary .menu-tile-subtitle { -fx-text-fill: rgba(255,255,255,0.88); }
+
+/* Filete blanco corto entre titulo y subtitulo: solo en la roja. */
+.menu-tile-rule { -fx-background-color: rgba(255,255,255,0.92); }
+
+/* --- iconos SVGPath ---------------------------------------------- */
+
+.menu-icon-solid {
+    -fx-fill: white;
+    -fx-stroke: null;
+}
+
+.menu-icon-line {
+    -fx-fill: transparent;
+    -fx-stroke: white;
+    -fx-stroke-width: 1.8;
+    -fx-stroke-line-cap: round;
+    -fx-stroke-line-join: round;
+}
+
+.intro-skip {
+    -fx-fill: -fx-text-muted;
+    -fx-cursor: hand;
 }

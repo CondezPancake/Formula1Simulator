@@ -47,6 +47,7 @@ public final class DataStore {
             new MongoRepository<>("sesiones", QualifyingSession.class, QualifyingSession::getId);
 
     private volatile boolean modoMemoria = true;
+    private volatile boolean cargado = false;
     private volatile String estado = "Sin cargar";
     private volatile SimulationConfig configuracionActual;
     private final AtomicLong versionConfiguracion = new AtomicLong();
@@ -79,29 +80,38 @@ public final class DataStore {
      * @return descripción del origen de los datos, para la barra de estado.
      */
     public synchronized String cargar() {
-        if (MongoConnection.getInstance().isDisponible()) {
-            modoMemoria = false;
-            try {
-                cargarDesdeMongo();
-                if (pilotos.isEmpty()) {
+        try {
+            if (MongoConnection.getInstance().isDisponible()) {
+                modoMemoria = false;
+                try {
+                    cargarDesdeMongo();
+                    if (pilotos.isEmpty()) {
+                        sembrar();
+                        volcarAMongo();
+                        estado = "MongoDB conectado — base sembrada con los datos iniciales";
+                    } else {
+                        estado = "MongoDB conectado";
+                    }
+                    return estado;
+                } catch (RuntimeException e) {
+                    modoMemoria = true;
                     sembrar();
-                    volcarAMongo();
-                    estado = "MongoDB conectado — base sembrada con los datos iniciales";
-                } else {
-                    estado = "MongoDB conectado";
+                    estado = "MongoDB falló (" + e.getMessage() + ") — modo memoria";
+                    return estado;
                 }
-                return estado;
-            } catch (RuntimeException e) {
-                modoMemoria = true;
-                sembrar();
-                estado = "MongoDB falló (" + e.getMessage() + ") — modo memoria";
-                return estado;
             }
+            modoMemoria = true;
+            sembrar();
+            estado = "Sin MongoDB — modo memoria";
+            return estado;
+        } finally {
+            cargado = true;
         }
-        modoMemoria = true;
-        sembrar();
-        estado = "Sin MongoDB — modo memoria";
-        return estado;
+    }
+
+    /** Indica si {@link #cargar()} ya terminó, para no repetir la carga inicial. */
+    public boolean estaCargado() {
+        return cargado;
     }
 
     private void cargarDesdeMongo() {

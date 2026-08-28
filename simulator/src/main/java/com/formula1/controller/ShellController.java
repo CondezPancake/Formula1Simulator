@@ -69,10 +69,23 @@ public class ShellController {
         instancia = this;
         vistaActual = null;
         Navigator.registrar(contenido);
+        arrancarReloj();
+
+        // El menú principal ya dispara DataStore.cargar() en paralelo a la
+        // intro; cargar() no es idempotente, así que si ya terminó no se
+        // vuelve a invocar. El Task de abajo es solo el respaldo para cuando
+        // el shell se carga directo (por ejemplo, en pruebas).
+        if (DataStore.getInstance().estaCargado()) {
+            lblEstado.setText(resumen());
+            navegacion.setDisable(false);
+            cargando.setVisible(false);
+            onCarrera();
+            return;
+        }
+
         navegacion.setDisable(true);
         cargando.setVisible(true);
         lblEstado.setText("Cargando datos…");
-        arrancarReloj();
 
         Task<String> carga = new Task<>() {
             @Override
@@ -149,14 +162,44 @@ public class ShellController {
         Navigator.ir("explorar");
     }
 
+    /** Navega a Explorar pasando por el shell, igual que {@link #irACarrera()}. */
+    public static void irAExplorar() {
+        if (instancia != null) {
+            instancia.onExplorar();
+        } else {
+            Navigator.ir("explorar");
+        }
+    }
+
     @FXML
     private void onGestion() {
         Navigator.ir("gestion");
     }
 
+    /** Navega a Gestión pasando por el shell, igual que {@link #irACarrera()}. */
+    public static void irAGestion() {
+        if (instancia != null) {
+            instancia.onGestion();
+        } else {
+            Navigator.ir("gestion");
+        }
+    }
+
     @FXML
     private void onConfigHistorial() {
         Navigator.ir("config-historial");
+    }
+
+    /** Navega a Config. &amp; Historial y deja seleccionada la sub-pestaña Historial. */
+    public static void irAHistorial() {
+        if (instancia != null) {
+            instancia.onConfigHistorial();
+        } else {
+            Navigator.ir("config-historial");
+        }
+        if (Navigator.ultimoControlador() instanceof ConfigHistorialController controlador) {
+            controlador.mostrarHistorial();
+        }
     }
 
     /** La vista confirmada por Navigator es la única fuente del módulo activo. */
@@ -165,7 +208,7 @@ public class ShellController {
             return;
         }
         String seccion = switch (vista) {
-            case "simulation", "home" -> "simulation";
+            case "simulation" -> "simulation";
             case "explorar", "explore-drivers", "explore-vehicles", "explore-circuits",
                  "driver-detail" -> "explorar";
             case "gestion", "teams", "drivers", "vehicles", "circuits", "vehicle-compare" -> "gestion";

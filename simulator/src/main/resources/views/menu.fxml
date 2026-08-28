@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.Group?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.SVGPath?>
+<?import javafx.scene.transform.Scale?>
+
+<!--
+  Menu principal. La geometria fina (posicion y tamaño de las cinco
+  tarjetas, chaflanes, cuerpos de letra y tracking) la aplica
+  MainMenuController: el mockup escala todo con la ventana y las tarjetas
+  no forman una rejilla regular que HBox pueda reproducir.
+-->
+<StackPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+           fx:controller="com.formula1.controller.MainMenuController"
+           fx:id="raiz" styleClass="menu-root">
+
+    <!-- capa 1: video (o el fotograma de respaldo) -->
+    <StackPane fx:id="capaFondo" styleClass="menu-bg-layer"/>
+
+    <!-- capa 2: viñeta -->
+    <Region styleClass="menu-scrim"/>
+
+    <!-- capa 3: cabecera y pie -->
+    <BorderPane fx:id="capaContenido" styleClass="menu-content" pickOnBounds="false">
+        <padding><Insets top="30" right="36" bottom="26" left="38"/></padding>
+
+        <top>
+            <HBox alignment="TOP_LEFT" pickOnBounds="false">
+                <VBox spacing="6" alignment="TOP_LEFT">
+                    <HBox spacing="14" alignment="CENTER_LEFT">
+                        <ImageView fx:id="logoF1" preserveRatio="true"/>
+                        <Label fx:id="lblAnio" text="25" styleClass="menu-year"/>
+                    </HBox>
+                    <!-- lo rellena el controlador: JavaFX 17 no tiene -fx-letter-spacing -->
+                    <HBox fx:id="cajaTemporada" alignment="CENTER_LEFT"/>
+                </VBox>
+
+                <Region HBox.hgrow="ALWAYS"/>
+
+                <HBox fx:id="cajaStats" alignment="TOP_RIGHT"/>
+            </HBox>
+        </top>
+
+        <bottom>
+            <VBox spacing="7" alignment="BOTTOM_LEFT" pickOnBounds="false">
+                <HBox fx:id="cajaSalir" alignment="CENTER_LEFT" onMouseClicked="#onSalir"
+                      styleClass="menu-exit-link" maxWidth="-Infinity"/>
+                <Region fx:id="fileteSalir" styleClass="menu-exit-rule"
+                        prefHeight="2" maxHeight="2" prefWidth="33" maxWidth="33"/>
+            </VBox>
+        </bottom>
+    </BorderPane>
+
+    <!-- capa 4: tarjetas, posicionadas a mano por el controlador -->
+    <Pane fx:id="capaTarjetas" styleClass="menu-tiles-layer" pickOnBounds="false">
+
+        <!-- ================= CLASIFICACION ================= -->
+        <StackPane fx:id="envolturaClasificacion" styleClass="menu-tile-wrap, menu-tile-wrap-primary">
+            <Button fx:id="tileClasificacion" onAction="#onClasificacion"
+                    styleClass="menu-tile, menu-tile-primary"
+                    maxWidth="Infinity" maxHeight="Infinity">
+                <graphic>
+                    <VBox fx:id="cuerpoClasificacion" alignment="TOP_LEFT" spacing="0"
+                          maxWidth="Infinity" maxHeight="Infinity">
+                        <Group>
+                            <SVGPath styleClass="menu-icon, menu-icon-solid" fillRule="EVEN_ODD"
+                                     content="M2.4 1.6 h2 v20.8 h-2 z
+                                              M5.2 2.4 C9 0.9 12.6 4 16.4 2.8 C18 2.3 19.8 2.2 21.6 2.6 L21.6 13.2 C19.8 12.8 18 12.9 16.4 13.4 C12.6 14.6 9 11.5 5.2 13 Z
+                                              M6.5 5 h3.5 v3 h-3.5 z
+                                              M13.5 5 h3.5 v3 h-3.5 z
+                                              M10 8 h3.5 v3 h-3.5 z
+                                              M17 8 h3.5 v3 h-3.5 z"/>
+                            <transforms><Scale fx:id="escalaIconoClasificacion"/></transforms>
+                        </Group>
+                        <Region VBox.vgrow="ALWAYS"/>
+                        <Label fx:id="tituloClasificacion" text="CLASIFICACIÓN" styleClass="menu-tile-title"/>
+                        <Region fx:id="fileteClasificacion" styleClass="menu-tile-rule"
+                                prefHeight="4" maxHeight="4" prefWidth="58" maxWidth="58">
+                            <VBox.margin><Insets top="22" bottom="20"/></VBox.margin>
+                        </Region>
+                        <Label fx:id="subtituloClasificacion" text="Compite contra la IA a pista"
+                               styleClass="menu-tile-subtitle"/>
+                    </VBox>
+                </graphic>
+            </Button>
+        </StackPane>
+
+        <!-- ================= GESTION DE EQUIPOS ================= -->
+        <StackPane fx:id="envolturaGestion" styleClass="menu-tile-wrap">
+            <Button fx:id="tileGestion" onAction="#onGestionEquipos"
+                    styleClass="menu-tile, menu-tile-secondary"
+                    maxWidth="Infinity" maxHeight="Infinity">
+                <graphic>
+                    <VBox fx:id="cuerpoGestion" alignment="TOP_LEFT" spacing="0"
+                          maxWidth="Infinity" maxHeight="Infinity">
+                        <Group>
+                            <SVGPath styleClass="menu-icon, menu-icon-line"
+                                     content="M1 9.6 L12 2.6 L23 9.6
+                                              M3.2 11.6 V21.4 H20.8 V11.6
+                                              M5.6 12.6 H18.4
+                                              M6.6 18.6 c0.5 -2 1.4 -3 2.9 -3 h4.4 c1.7 0 3 1 4 3 h0.9
+                                              M5.8 18.6 H19"/>
+                            <transforms><Scale fx:id="escalaIconoGestion"/></transforms>
+                        </Group>
+                        <Region VBox.vgrow="ALWAYS"/>
+                        <Label fx:id="tituloGestion" text="GESTIÓN DE EQUIPOS" styleClass="menu-tile-title"/>
+                        <Label fx:id="subtituloGestion" text="Pilotos, equipos y vehículos"
+                               styleClass="menu-tile-subtitle" wrapText="true">
+                            <VBox.margin><Insets top="14"/></VBox.margin>
+                        </Label>
+                    </VBox>
+                </graphic>
+            </Button>
+        </StackPane>
+
+        <!-- ================= EXPLORAR ================= -->
+        <StackPane fx:id="envolturaExplorar" styleClass="menu-tile-wrap">
+            <Button fx:id="tileExplorar" onAction="#onExplorar"
+                    styleClass="menu-tile, menu-tile-secondary"
+                    maxWidth="Infinity" maxHeight="Infinity">
+                <graphic>
+                    <VBox fx:id="cuerpoExplorar" alignment="TOP_LEFT" spacing="0"
+                          maxWidth="Infinity" maxHeight="Infinity">
+                        <Group>
+                            <SVGPath styleClass="menu-icon, menu-icon-line"
+                                     content="M10.6 3.4 a7.2 7.2 0 1 0 0.01 0 z
+                                              M15.8 15.8 L21.6 21.6"/>
+                            <transforms><Scale fx:id="escalaIconoExplorar"/></transforms>
+                        </Group>
+                        <Region VBox.vgrow="ALWAYS"/>
+                        <Label fx:id="tituloExplorar" text="EXPLORAR" styleClass="menu-tile-title"/>
+                        <Label fx:id="subtituloExplorar" text="Fichas de pilotos, garaje circuitos"
+                               styleClass="menu-tile-subtitle" wrapText="true">
+                            <VBox.margin><Insets top="14"/></VBox.margin>
+                        </Label>
+                    </VBox>
+                </graphic>
+            </Button>
+        </StackPane>
+
+        <!-- ================= HISTORIAL ================= -->
+        <StackPane fx:id="envolturaHistorial" styleClass="menu-tile-wrap">
+            <Button fx:id="tileHistorial" onAction="#onHistorial"
+                    styleClass="menu-tile, menu-tile-secondary"
+                    maxWidth="Infinity" maxHeight="Infinity">
+                <graphic>
+                    <VBox fx:id="cuerpoHistorial" alignment="TOP_LEFT" spacing="0"
+                          maxWidth="Infinity" maxHeight="Infinity">
+                        <Group>
+                            <!-- aro y polilinea van separados: mezclarlos en una sola
+                                 ruta EVEN_ODD abriria agujeros donde se solapan -->
+                            <SVGPath styleClass="menu-icon, menu-icon-line"
+                                     content="M10.4 2.4 a8.2 8.2 0 1 0 0.01 0 z
+                                              M10.4 5.6 V10.6 H14.4"/>
+                            <SVGPath styleClass="menu-icon, menu-icon-line"
+                                     content="M12.6 19.8 L16.2 16.2 L18.6 18.6 L22.4 14.4"/>
+                            <SVGPath styleClass="menu-icon, menu-icon-solid"
+                                     content="M12.6 18.2 a1.6 1.6 0 1 0 0.01 0 z
+                                              M18.6 17 a1.6 1.6 0 1 0 0.01 0 z
+                                              M22.4 12.8 a1.6 1.6 0 1 0 0.01 0 z"/>
+                            <transforms><Scale fx:id="escalaIconoHistorial"/></transforms>
+                        </Group>
+                        <Region VBox.vgrow="ALWAYS"/>
+                        <Label fx:id="tituloHistorial" text="HISTORIAL" styleClass="menu-tile-title"/>
+                        <Label fx:id="subtituloHistorial" text="Sesiones anteriores y comparativas"
+                               styleClass="menu-tile-subtitle" wrapText="true">
+                            <VBox.margin><Insets top="14"/></VBox.margin>
+                        </Label>
+                    </VBox>
+                </graphic>
+            </Button>
+        </StackPane>
+
+        <!-- ================= AJUSTES ================= -->
+        <StackPane fx:id="envolturaAjustes" styleClass="menu-tile-wrap">
+            <Button fx:id="tileAjustes" onAction="#onAjustes"
+                    styleClass="menu-tile, menu-tile-quiet"
+                    maxWidth="Infinity" maxHeight="Infinity">
+                <graphic>
+                    <VBox fx:id="cuerpoAjustes" alignment="TOP_LEFT" spacing="0"
+                          maxWidth="Infinity" maxHeight="Infinity">
+                        <Group>
+                            <SVGPath styleClass="menu-icon, menu-icon-line"
+                                     content="M19.31 8.75 L22.00 9.13 L22.00 14.87 L19.31 15.25 L19.47 14.87 L21.10 17.04
+                                              L17.04 21.10 L14.87 19.47 L15.25 19.31 L14.87 22.00 L9.13 22.00 L8.75 19.31
+                                              L9.13 19.47 L6.96 21.10 L2.90 17.04 L4.53 14.87 L4.69 15.25 L2.00 14.87
+                                              L2.00 9.13 L4.69 8.75 L4.53 9.13 L2.90 6.96 L6.96 2.90 L9.13 4.53 L8.75 4.69
+                                              L9.13 2.00 L14.87 2.00 L15.25 4.69 L14.87 4.53 L17.04 2.90 L21.10 6.96 L19.47 9.13 Z
+                                              M12 8.6 a3.4 3.4 0 1 0 0.01 0 z"/>
+                            <transforms><Scale fx:id="escalaIconoAjustes"/></transforms>
+                        </Group>
+                        <Region VBox.vgrow="ALWAYS"/>
+                        <Label fx:id="tituloAjustes" text="AJUSTES" styleClass="menu-tile-title"/>
+                    </VBox>
+                </graphic>
+            </Button>
+        </StackPane>
+    </Pane>
+</StackPane>
