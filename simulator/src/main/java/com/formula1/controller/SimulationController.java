@@ -22,6 +22,7 @@ import com.formula1.service.DriverService;
 import com.formula1.service.QualifyingService;
 import com.formula1.service.VehicleService;
 import com.formula1.util.Async;
+import com.formula1.util.Imagenes;
 import com.formula1.util.TeamColors;
 import com.formula1.util.FormatUtils;
 
@@ -106,6 +107,9 @@ public class SimulationController {
     @FXML private Label lblMapaTitulo;
     @FXML private Label lblMapaPista;
     @FXML private Label lblMapaGrip;
+    /** Ancho al que simulation.fxml pinta el mapa; se decodifica a esa medida. */
+    private static final double ANCHO_MAPA_CIRCUITO = 720;
+
     @FXML private ImageView imagenMapaCircuito;
     @FXML private Label lblDashboardEvento;
     @FXML private Label lblDashboardMensaje;
@@ -367,8 +371,9 @@ public class SimulationController {
         if (circuito.getImagen() == null || circuito.getImagen().isBlank()) {
             return null;
         }
-        var recurso = getClass().getResource(circuito.getImagen());
-        return recurso == null ? null : new Image(recurso.toExternalForm());
+        // Acotado al tamaño de pintado: antes se decodificaba a resolución
+        // nativa. Es presentación pura, no toca nada de la simulación.
+        return Imagenes.cargar(circuito.getImagen(), ANCHO_MAPA_CIRCUITO, 0);
     }
 
     /**

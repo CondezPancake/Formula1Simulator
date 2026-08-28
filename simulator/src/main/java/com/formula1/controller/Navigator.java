@@ -16,6 +16,12 @@ public final class Navigator {
 
     private static final String VISTA_SESION = "simulation";
     private static final String VISTA_GESTION = "gestion";
+    /**
+     * Explorar es, con diferencia, la vista mas cara de construir: monta las
+     * rejillas de tarjetas con sus imagenes. Se cachea como las otras dos, o
+     * cada visita la reconstruye entera.
+     */
+    private static final String VISTA_EXPLORAR = "explorar";
 
     private static StackPane contenedor;
     private static Object ultimoControlador;
@@ -23,6 +29,8 @@ public final class Navigator {
     private static Object controladorSesion;
     private static Node gestion;
     private static Object controladorGestion;
+    private static Node explorar;
+    private static Object controladorExplorar;
     private static Node vistaRetorno;
     private static Object controladorRetorno;
     private static String vistaRetornoNombre;
@@ -38,6 +46,8 @@ public final class Navigator {
             controladorSesion = null;
             gestion = null;
             controladorGestion = null;
+            explorar = null;
+            controladorExplorar = null;
             vistaRetorno = null;
             controladorRetorno = null;
             vistaRetornoNombre = null;
@@ -63,6 +73,12 @@ public final class Navigator {
             ShellController.sincronizarVista(vista);
             return;
         }
+        if (VISTA_EXPLORAR.equals(vista) && explorar != null) {
+            ultimoControlador = controladorExplorar;
+            mostrarVista(explorar);
+            ShellController.sincronizarVista(vista);
+            return;
+        }
         try {
             FXMLLoader cargador = new FXMLLoader(Navigator.class.getResource("/views/" + vista + ".fxml"));
             Node contenido = cargador.load();
@@ -76,6 +92,9 @@ public final class Navigator {
             } else if (VISTA_GESTION.equals(vista)) {
                 gestion = contenido;
                 controladorGestion = ultimoControlador;
+            } else if (VISTA_EXPLORAR.equals(vista)) {
+                explorar = contenido;
+                controladorExplorar = ultimoControlador;
             }
             mostrarVista(contenido);
             if (VISTA_SESION.equals(vista)) {

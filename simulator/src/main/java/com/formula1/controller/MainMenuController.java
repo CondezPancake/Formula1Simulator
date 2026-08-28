@@ -2,6 +2,7 @@ package com.formula1.controller;
 
 import com.formula1.data.DataStore;
 import com.formula1.util.AudioManager;
+import com.formula1.util.Imagenes;
 
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
@@ -418,11 +419,11 @@ public class MainMenuController {
     }
 
     private void cargarLogo() {
-        InputStream flujo = getClass().getResourceAsStream("/images/LogoF1.png");
-        if (flujo == null) {
+        Image logo = Imagenes.cargar("/images/LogoF1.png", 840, 0);
+        if (logo == null) {
             return;
         }
-        logoF1.setImage(new Image(flujo));
+        logoF1.setImage(logo);
         logoF1.setViewport(RECORTE_LOGO);
     }
 }
