@@ -4,6 +4,7 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.image.ImageView?>
+<?import javafx.scene.Group?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
@@ -67,6 +68,15 @@
     <!-- ==================== columna derecha ==================== -->
     <StackPane fx:id="escenario" styleClass="menu-escenario"
                GridPane.columnIndex="1" GridPane.rowIndex="0">
+
+        <!-- Arte de la opción activa. Va el primero: es el fondo, y todo lo
+             demás (velos, HUD, título) se pinta encima. Lo rellena el
+             controlador, que es quien sabe qué opción está seleccionada. -->
+        <Group fx:id="capaArte" managed="false"/>
+
+        <!-- Velos sobre la foto: funden su borde izquierdo con la mitad negra
+             del panel y oscurecen la parte baja para que el título se lea. -->
+        <Region fx:id="veloArte" styleClass="menu-arte-velo" mouseTransparent="true"/>
 
         <!-- tira de estado, arriba a la derecha -->
         <HBox fx:id="cajaHud" styleClass="menu-hud" alignment="CENTER_RIGHT"

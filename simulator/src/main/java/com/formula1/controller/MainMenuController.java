@@ -2,6 +2,7 @@ package com.formula1.controller;
 
 import com.formula1.data.DataStore;
 import com.formula1.util.AudioManager;
+import com.formula1.util.ImageCrop;
 import com.formula1.util.Imagenes;
 
 import javafx.application.Platform;
@@ -11,10 +12,12 @@ import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.CacheHint;
 import javafx.scene.Group;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Labeled;
+import javafx.scene.effect.PerspectiveTransform;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
@@ -73,34 +76,46 @@ public class MainMenuController {
     /** Galón de la fila activa, en caja 0 0 12 24. */
     private static final String RUTA_GALON = "M2 3 L10 12 L2 21";
 
+    /** Se decodifica el arte por encima del tamaño de pintado, por nitidez. */
+    private static final double FACTOR_NITIDEZ_ARTE = 1.25;
+    /** Recorte sesgado hacia arriba: menu-explorar.png es vertical. */
+    private static final double SESGO_ARTE = 0.18;
+    /** Cuánto se recoge el lado izquierdo del arte, como fracción del alto. */
+    private static final double RETRANQUEO_ARTE = 0.035;
+
     /**
      * Una entrada del menú: lo que se lee, lo que explica y a dónde lleva.
      *
      * El orden del array es el orden en pantalla, y se conserva del menú
      * anterior a propósito.
      */
-    private record Opcion(String titulo, String descripcion, Runnable destino) { }
+    private record Opcion(String titulo, String descripcion, String arte, Runnable destino) { }
 
     private final Opcion[] opciones = {
         new Opcion("CLASIFICACIÓN",
                 "Monta una sesión de clasificación: elige circuito, monoplaza y piloto, "
                         + "y pelea por la pole contra el resto de la parrilla.",
+                "/images/menu-clasificacion.png",
                 () -> entrarAlShell(ShellController::irACarrera)),
         new Opcion("GESTIÓN DE EQUIPOS",
                 "Administra la parrilla: da de alta y edita escuderías, pilotos, "
                         + "vehículos y circuitos, y compara monoplazas entre sí.",
+                "/images/menu-gestionequipo.png",
                 () -> entrarAlShell(ShellController::irAGestion)),
         new Opcion("EXPLORAR",
                 "Consulta las fichas de los pilotos, el garaje de monoplazas y "
                         + "los trazados disponibles para la sesión.",
+                "/images/menu-explorar.png",
                 () -> entrarAlShell(ShellController::irAExplorar)),
         new Opcion("HISTORIAL",
                 "Revisa las sesiones ya disputadas, con sus victorias, podios "
                         + "y tiempos por sector.",
+                "/images/menu-historial.jpg",
                 () -> entrarAlShell(ShellController::irAHistorial)),
         new Opcion("AJUSTES",
                 "Ajusta el volumen de la música y de los efectos, o silencia "
                         + "el simulador por completo.",
+                "/images/menu-ajustes.jpg",
                 AjustesDialog::mostrar),
     };
 
@@ -116,6 +131,8 @@ public class MainMenuController {
     @FXML private Label lblPistas;
 
     @FXML private StackPane escenario;
+    @FXML private Group capaArte;
+    @FXML private Region veloArte;
     @FXML private HBox cajaHud;
     @FXML private VBox cajaTitulo;
     @FXML private Region fileteTitulo;
@@ -301,7 +318,65 @@ public class MainMenuController {
         lblDescripcion.setText(opcion.descripcion());
         lblTituloSeccion.setText(opcion.titulo());
         lblPieSeccion.setText("SIMULADOR DE FÓRMULA 1");
+        pintarArte(opcion);
         aplicarEscalado();
+    }
+
+    // --- arte del panel derecho -------------------------------------------
+
+    /**
+     * Coloca la imagen de la opción activa en el panel derecho.
+     *
+     * El encaje es «cover»: se recorta a la proporción del panel en vez de
+     * deformarse. El sesgo del recorte va hacia arriba porque
+     * {@code menu-explorar.png} es vertical y centrarlo dejaría fuera lo que
+     * interesa.
+     */
+    private void pintarArte(Opcion opcion) {
+        double w = escenario.getWidth();
+        double h = escenario.getHeight();
+        if (!medidaValida(w) || !medidaValida(h)) {
+            return;   // aún sin tamaño; el listener del panel repetirá
+        }
+
+        Image imagen = Imagenes.cargar(opcion.arte(), w * FACTOR_NITIDEZ_ARTE, 0);
+        if (imagen == null) {
+            capaArte.getChildren().clear();
+            return;
+        }
+
+        ImageView vista = ImageCrop.encajar(imagen, w, h, SESGO_ARTE);
+        // El Group no lo coloca el StackPane (va sin gestionar), así que la
+        // vista se ancla a mano en el origen del panel.
+        vista.setLayoutX(0);
+        vista.setLayoutY(0);
+        vista.setEffect(relieve(w, h));
+        // El arte no cambia salvo al elegir otra opción: se rasteriza una vez
+        // en vez de recalcular la perspectiva en cada fotograma.
+        vista.setCache(true);
+        vista.setCacheHint(CacheHint.SPEED);
+        capaArte.getChildren().setAll(vista);
+    }
+
+    /**
+     * Da volumen a la imagen para que no parezca una lámina pegada.
+     *
+     * Es un {@link PerspectiveTransform} con las dos esquinas del lado
+     * izquierdo recogidas hacia dentro: ese lado queda «más lejos» y el plano
+     * se lee inclinado, hundiéndose hacia la mitad negra del menú. Sus
+     * coordenadas son absolutas en píxeles, así que hay que rehacerlo cada vez
+     * que cambia el tamaño del panel.
+     *
+     * No lleva animación a propósito: el menú es estático.
+     */
+    private static PerspectiveTransform relieve(double w, double h) {
+        double retranqueo = h * RETRANQUEO_ARTE;
+        PerspectiveTransform perspectiva = new PerspectiveTransform();
+        perspectiva.setUlx(0);      perspectiva.setUly(retranqueo);
+        perspectiva.setUrx(w);      perspectiva.setUry(0);
+        perspectiva.setLrx(w);      perspectiva.setLry(h);
+        perspectiva.setLlx(0);      perspectiva.setLly(h - retranqueo);
+        return perspectiva;
     }
 
     private void activar(int indice) {
@@ -338,6 +413,16 @@ public class MainMenuController {
         InvalidationListener escalar = observable -> aplicarEscalado();
         raiz.widthProperty().addListener(escalar);
         raiz.heightProperty().addListener(escalar);
+
+        // El arte necesita el tamaño del panel derecho, no el de la raíz, y
+        // el GridPane reparte el ancho a sus columnas en una pasada posterior:
+        // cuando la raíz ya mide, `escenario` todavía está a cero. Sin este
+        // listener el panel se quedaba vacío hasta que algo volvía a disparar
+        // el escalado —pasar el ratón por la lista—, así que recién arrancado
+        // no se veía ninguna imagen.
+        InvalidationListener repintarArte = observable -> pintarArte(opciones[seleccionada]);
+        escenario.widthProperty().addListener(repintarArte);
+        escenario.heightProperty().addListener(repintarArte);
     }
 
     private void aplicarEscalado() {
@@ -349,7 +434,11 @@ public class MainMenuController {
         double margen = px(64, h);
         panelIzquierdo.setPadding(new Insets(px(58, h), margen, px(44, h), margen));
         panelIzquierdo.setSpacing(px(30, h));
-        escenario.setPadding(new Insets(px(26, h), px(34, h), px(46, h), px(46, h)));
+        // El margen va en el contenido, no en el panel: si lo lleva el panel,
+        // el arte y su velo se quedan dentro del hueco y aparece un marco del
+        // fondo alrededor en vez de llegar a los bordes.
+        StackPane.setMargin(cajaHud, new Insets(px(26, h), px(34, h), 0, 0));
+        StackPane.setMargin(cajaTitulo, new Insets(0, 0, px(46, h), px(46, h)));
 
         logoF1.setFitHeight(px(38, h));
         rellenarTracking(cajaTemporada, "TEMPORADA 2025", px(11, h));
@@ -377,6 +466,8 @@ public class MainMenuController {
                 glifo.setStyle("-fx-font-size: " + redondear(px(11, h)) + "px;");
             }
         }
+
+        pintarArte(opciones[seleccionada]);
 
         fileteTitulo.setPrefSize(px(74, h), Math.max(2, px(5, h)));
         fileteTitulo.setMaxSize(px(74, h), Math.max(2, px(5, h)));
