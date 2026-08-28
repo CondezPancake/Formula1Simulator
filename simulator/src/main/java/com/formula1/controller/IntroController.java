@@ -43,6 +43,9 @@ public final class IntroController {
     /** Ancho al que se pinta el logo; se decodifica al doble por nitidez. */
     private static final double ANCHO_LOGO = 420;
 
+    /** Sonido de apertura. Si el fichero falta, la intro va en silencio. */
+    private static final String SONIDO_INTRO = "/audio/intro-sound.mp3";
+
     private IntroController() {
     }
 
@@ -85,9 +88,13 @@ public final class IntroController {
             }
         };
 
-        // Stinger corto + tema de fondo sin loop, sincronizados con el arranque.
-        AudioManager.reproducirSfx("/audio/sound-intro.mp3");
-        AudioManager.reproducirMusica("/audio/intro-f1.mp3", false);
+        // Arranca con la animación y se corta en terminarUnaVez, que es el
+        // embudo por el que pasan tanto el final natural como el salto.
+        //
+        // Va como música y no como efecto porque un AudioClip no se puede
+        // parar a media reproducción: si el usuario salta la intro, el sonido
+        // seguiría sonando ya dentro del menú.
+        AudioManager.reproducirMusica(SONIDO_INTRO, false);
 
         ParallelTransition entradaLogo = new ParallelTransition(
                 fade(logo, 0, 1, ENTRADA),
