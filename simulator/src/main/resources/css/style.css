@@ -1968,6 +1968,51 @@
    del panel —sin esto la foto se ve pegada, con un borde recto— y el
    vertical oscurece la parte baja para que el titulo se lea encima.
    Recordatorio: en JavaFX el primer fondo de la lista se pinta ABAJO. */
+/* =============================================================
+   Tarjetas de escuderia (Explorar > TEAMS)
+
+   Casi todo el color va inline desde ExploreTeamsController, porque
+   depende del equipo; aqui solo lo que es comun a todas.
+   ============================================================= */
+
+.team-card {
+    -fx-background-color: transparent;
+    -fx-background-radius: 12;
+    -fx-padding: 0;
+}
+
+.team-card-name {
+    -fx-font-family: "Titillium Web", "Adwaita Sans", sans-serif;
+    -fx-font-size: 19px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.team-card-meta {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 10px;
+    -fx-text-fill: rgba(255,255,255,0.72);
+}
+
+/* Marcos de la ficha de equipo: el color del borde lo pone el controlador. */
+.team-detail-logo {
+    -fx-background-color: -fx-surface-3;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-width: 2;
+    -fx-min-width: 92;
+    -fx-min-height: 92;
+    -fx-max-width: 92;
+    -fx-max-height: 92;
+}
+
+.team-detail-car {
+    -fx-background-color: -fx-surface-3;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-width: 2;
+}
+
 .menu-arte-velo {
     -fx-background-color:
         linear-gradient(to right,

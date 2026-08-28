@@ -242,8 +242,8 @@ public class ShellController {
         }
         String seccion = switch (vista) {
             case "simulation" -> "simulation";
-            case "explorar", "explore-drivers", "explore-vehicles", "explore-circuits",
-                 "driver-detail" -> "explorar";
+            case "explorar", "explore-drivers", "explore-teams",
+                 "driver-detail", "team-detail" -> "explorar";
             case "gestion", "teams", "drivers", "vehicles", "circuits", "vehicle-compare" -> "gestion";
             case "config-historial", "config", "history" -> "config-historial";
             default -> vistaActual;
