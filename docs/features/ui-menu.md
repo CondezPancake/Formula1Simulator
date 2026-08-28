@@ -47,9 +47,24 @@ A la derecha del marco van tres **galones** (`SVGPath`) de opacidad
 decreciente, visibles solo en la fila activa: es el rasgo que más identifica
 al menú de F1 23.
 
-**Columna derecha** — bloque gráfico, sin fotografía: degradado, franjas
-diagonales, un resplandor rojo de marca, la tira de contadores arriba a la
-derecha y el título de la sección abajo.
+**Columna derecha** — el arte de la opción activa, a sangre, con la tira de
+contadores arriba a la derecha y el título de la sección abajo. Cada opción
+lleva su imagen (`images/menu-<opcion>.{png,jpg}`) y el panel la cambia al
+instante al moverse por la lista: sigue sin haber animación.
+
+Para que no parezca una lámina pegada, la imagen se encaja recortando —con el
+recorte sesgado hacia arriba, porque `menu-explorar.png` es vertical—, un
+`PerspectiveTransform` recoge las dos esquinas del lado izquierdo para que el
+plano se lea inclinado hacia la mitad negra, y un velo funde ese borde con el
+panel y oscurece la parte baja bajo el título.
+
+> Dos trampas que costaron una pasada. El margen estaba en el panel, así que
+> arte y velo se quedaban dentro del hueco y aparecía un marco del fondo
+> alrededor: ahora va en el contenido. Y el arte no aparecía hasta mover el
+> ratón, porque se pintaba desde el escalado —que se dispara con el tamaño de
+> la raíz— y el `GridPane` reparte el ancho a sus columnas en una pasada
+> posterior, cuando el panel derecho todavía mide cero; se escucha el tamaño
+> del propio panel.
 
 > **El orden de las capas de `-fx-background-color` importa y va al revés que
 > en CSS de web**: en JavaFX el primer fondo de la lista se pinta *abajo* y los
@@ -117,11 +132,18 @@ nodos `Text`: JavaFX 17 no tiene `-fx-letter-spacing`, solo `-fx-line-spacing`.
 |---|---|
 | `audio/sound1.mp3` | Confirmar una opción |
 | `audio/sound2.mp3` | Recorrer la lista (al 35 %) y SALIR |
-| `audio/sound-intro.mp3` | Stinger al arrancar la intro |
-| `audio/intro-f1.mp3` | Tema de fondo de la intro, sin loop |
+| `audio/intro-sound.mp3` | Sonido de apertura de la intro |
 
-Los dos de la intro **no están todavía** en `resources/audio/`: hasta que se
-añadan, la intro va en silencio. Toda carga de audio es defensiva —si el
+El de la intro va por `reproducirMusica` y no por `reproducirSfx`: un
+`AudioClip` no se puede parar a media reproducción, así que al saltar la intro
+el sonido seguiría oyéndose ya dentro del menú. Se corta en `terminarUnaVez`.
+
+> La intro estuvo muda mucho tiempo apuntando a `sound-intro.mp3` e
+> `intro-f1.mp3`, que nunca se empaquetaron. Como la carga de audio degrada a
+> silencio a propósito, una ruta mal escrita no da ningún error: simplemente no
+> se oye. `RecursosAudioTest` comprueba que las rutas existen.
+
+Toda carga de audio es defensiva —si el
 fichero falta o no hay códec, se degrada a silencio y nunca tumba el arranque—
 y `AudioManager` cachea cada efecto, porque construir un `AudioClip`
 decodifica el mp3 en el hilo de FX y hacerlo en cada pulsación metía un tirón.
