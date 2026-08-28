@@ -2,7 +2,14 @@ target/
 *.class
 .idea/
 *.iml
-.vscode/
+# Se ignora el CONTENIDO de .vscode, no la carpeta: git no puede volver a
+# incluir un fichero si su directorio padre esta excluido, asi que con
+# ".vscode/" las excepciones de abajo no harian nada.
+.vscode/*
+# La configuracion de arranque si se comparte: sin ella el boton Run de VS Code
+# no sabe por que clase empezar.
+!.vscode/launch.json
+!.vscode/settings.json
 .DS_Store
 
 # Originales de imagenes (18 MB). La aplicacion consume las copias
