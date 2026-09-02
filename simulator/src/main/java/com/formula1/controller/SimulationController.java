@@ -38,9 +38,12 @@ import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
@@ -49,6 +52,9 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
@@ -56,8 +62,10 @@ import javafx.util.Duration;
 import java.util.ArrayList;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -97,11 +105,7 @@ public class SimulationController {
     @FXML private Button btnVerDetalles;
     @FXML private Button btnVerEventos;
     @FXML private ComboBox<Integer> selectorVueltaTelemetria;
-    @FXML private TableView<LapResult> tablaDashboard;
-    @FXML private TableColumn<LapResult, Number> colDashboardPosicion;
-    @FXML private TableColumn<LapResult, String> colDashboardPiloto;
-    @FXML private TableColumn<LapResult, String> colDashboardGap;
-    @FXML private TableColumn<LapResult, String> colDashboardTiempo;
+    @FXML private ListView<LapResult> torreTiempos;
     @FXML private Label lblMapaTitulo;
     @FXML private Label lblMapaPista;
     @FXML private Label lblMapaGrip;
@@ -229,6 +233,8 @@ public class SimulationController {
     private final Set<String> eventosEnVivoRegistrados = new HashSet<>();
     private final Deque<EventOccurrence> colaNotificaciones = new ArrayDeque<>();
     private CircuitoEnVivo circuitoEnVivo;
+    /** Código de tres letras por piloto; lo consulta cada fila de la torre. */
+    private final Map<Integer, String> codigosPiloto = new HashMap<>();
     private final MapaProgreso mapaProgreso = new MapaProgreso();
     /**
      * Segmento en curso. El motor no lo pasa en {@code ClasificacionEnVivo}, pero
@@ -255,7 +261,7 @@ public class SimulationController {
         // método y ya necesita el componente montado.
         circuitoEnVivo = new CircuitoEnVivo(contenedorMapa);
         circuitoEnVivo.setAlSeleccionarPiloto(ExploreDriversController::abrirFicha);
-        circuitoEnVivo.pilotoResaltadoProperty().addListener((o, a, b) -> tablaDashboard.refresh());
+        circuitoEnVivo.pilotoResaltadoProperty().addListener((o, a, b) -> torreTiempos.refresh());
 
         circuitos.listar().forEach(c -> selectorCircuito.getItems().add(c.getNombre()));
         vehiculos.listar().forEach(v -> selectorVehiculo.getItems().add(v.getModelo()));
@@ -286,19 +292,9 @@ public class SimulationController {
                 f.getValue().getEventoResumen()));
         configurarTablaEventos();
 
-        // Timing tower del nuevo Dashboard. Es una vista resumida del mismo
-        // ObservableList; la clasificación original conserva todas sus columnas.
-        colDashboardPosicion.setCellValueFactory(f ->
-                new SimpleIntegerProperty(f.getValue().getPosicion()));
-        colDashboardPiloto.setCellValueFactory(f ->
-                new SimpleStringProperty(codigoPiloto(f.getValue())));
-        colDashboardGap.setCellValueFactory(f -> new SimpleStringProperty(
-                f.getValue().isVueltaValida()
-                        ? FormatUtils.formatGap(f.getValue().getGap()) : "—"));
-        colDashboardTiempo.setCellValueFactory(f -> new SimpleStringProperty(
-                FormatUtils.formatLapResult(f.getValue())));
-        colDashboardGap.getStyleClass().add("mono-col");
-        colDashboardTiempo.getStyleClass().add("mono-col");
+        // Torre de tiempos del Dashboard: la misma lista que la clasificación
+        // completa, pero pintada como la señal de TV en vez de como tabla.
+        torreTiempos.setCellFactory(lista -> new FilaTorre());
 
         // La pole se resalta con la clase .pole-row de la hoja de estilos.
         // Cada fila lleva a la izquierda la franja del color de su escudería,
@@ -314,24 +310,6 @@ public class SimulationController {
             });
             return fila;
         });
-        tablaDashboard.setRowFactory(t -> {
-            TableRow<LapResult> fila = filaConColorDeEquipoResaltable();
-            fila.setOnMouseClicked(e -> {
-                if (e.getClickCount() == 2 && !fila.isEmpty() && fila.getItem() != null) {
-                    ExploreDriversController.abrirFicha(fila.getItem().getPilotoId());
-                }
-            });
-            // La torre y el mapa son la misma información: señalar en una tiene
-            // que señalar en la otra.
-            fila.setOnMouseEntered(e -> {
-                if (!fila.isEmpty() && fila.getItem() != null) {
-                    circuitoEnVivo.resaltar(fila.getItem().getPilotoId());
-                }
-            });
-            fila.setOnMouseExited(e -> circuitoEnVivo.resaltar(null));
-            return fila;
-        });
-
         colPosicion.setCellFactory(c -> new TableCell<>() {
             @Override
             protected void updateItem(Number valor, boolean vacia) {
@@ -371,17 +349,24 @@ public class SimulationController {
         cargarVueltasTelemetria(List.of());
     }
 
+    /**
+     * Abreviatura de tres letras del piloto (VER, HAM, LEC).
+     *
+     * La torre repinta sus veinte filas en cada segmento, así que la consulta
+     * al servicio se cachea: el código de un piloto no cambia en toda la sesión.
+     */
     private String codigoPiloto(LapResult resultado) {
-        return pilotos.porId(resultado.getPilotoId())
-                .map(Driver::getCodigo)
-                .filter(codigo -> codigo != null && !codigo.isBlank())
-                .orElse(resultado.getPiloto());
+        return codigosPiloto.computeIfAbsent(resultado.getPilotoId(), id ->
+                pilotos.porId(id)
+                        .map(Driver::getCodigo)
+                        .filter(codigo -> codigo != null && !codigo.isBlank())
+                        .orElse(resultado.getPiloto()));
     }
 
     private void actualizarMapaCircuito(String nombre) {
         if (nombre == null) {
             circuitoEnVivo.mostrarCircuito(null);
-            lblMapaTitulo.setText("MAPA DEL CIRCUITO");
+            lblMapaTitulo.setText("—");
             lblMapaVueltas.setText("—");
             return;
         }
@@ -389,10 +374,87 @@ public class SimulationController {
     }
 
     private void mostrarCircuitoEnMapa(Circuit circuito) {
-        lblMapaTitulo.setText(circuito.getNombre().toUpperCase() + " · MAPA");
+        lblMapaTitulo.setText(circuito.getNombre().toUpperCase());
         lblMapaPista.setText("Pista: " + circuito.getLongitudKm() + " km");
         lblMapaVueltas.setText(circuito.getVueltas() + " vueltas");
         circuitoEnVivo.mostrarCircuito(circuito);
+    }
+
+    /**
+     * Fila de la torre de tiempos: posición, franja del color de la escudería,
+     * código de tres letras e intervalo, como la señal de televisión.
+     *
+     * El grafo se construye una sola vez por celda y {@code updateItem} solo
+     * reescribe textos y clases; con virtualización eso es un puñado de nodos
+     * aunque la sesión repinte veinte filas por segmento.
+     */
+    private final class FilaTorre extends ListCell<LapResult> {
+
+        private final Label posicion = new Label();
+        private final Region franja = new Region();
+        private final Label codigo = new Label();
+        private final Label intervalo = new Label();
+        private final HBox grafo = new HBox(8);
+
+        private FilaTorre() {
+            posicion.getStyleClass().add("tower-pos");
+            franja.getStyleClass().add("tower-team-bar");
+            codigo.getStyleClass().add("tower-code");
+            intervalo.getStyleClass().add("tower-gap");
+
+            Region espaciador = new Region();
+            HBox.setHgrow(espaciador, Priority.ALWAYS);
+
+            grafo.setAlignment(Pos.CENTER_LEFT);
+            grafo.getStyleClass().add("tower-row");
+            grafo.getChildren().addAll(posicion, franja, codigo, espaciador, intervalo);
+
+            // La torre y el mapa son la misma información: señalar en una tiene
+            // que señalar en la otra.
+            setOnMouseEntered(e -> {
+                if (getItem() != null) {
+                    circuitoEnVivo.resaltar(getItem().getPilotoId());
+                }
+            });
+            setOnMouseExited(e -> circuitoEnVivo.resaltar(null));
+            setOnMouseClicked(e -> {
+                if (e.getClickCount() == 2 && getItem() != null) {
+                    ExploreDriversController.abrirFicha(getItem().getPilotoId());
+                }
+            });
+        }
+
+        @Override
+        protected void updateItem(LapResult resultado, boolean vacia) {
+            super.updateItem(resultado, vacia);
+            grafo.getStyleClass().removeAll("lider", "invalida", "activo");
+            if (vacia || resultado == null) {
+                setGraphic(null);
+                return;
+            }
+
+            posicion.setText(String.valueOf(resultado.getPosicion()));
+            franja.setStyle("-fx-background-color: " + TeamColors.hex(resultado.getEquipo()) + ";");
+            codigo.setText(codigoPiloto(resultado));
+
+            if (!resultado.isVueltaValida()) {
+                intervalo.setText("INVALID");
+                grafo.getStyleClass().add("invalida");
+            } else if (resultado.getPosicion() == 1) {
+                // El líder no tiene intervalo contra nadie: se muestra su vuelta.
+                intervalo.setText(FormatUtils.formatLapResult(resultado));
+                grafo.getStyleClass().add("lider");
+            } else {
+                intervalo.setText(FormatUtils.formatGap(resultado.getGap()));
+            }
+
+            Integer resaltado = circuitoEnVivo == null ? null
+                    : circuitoEnVivo.pilotoResaltadoProperty().get();
+            if (resaltado != null && resaltado == resultado.getPilotoId()) {
+                grafo.getStyleClass().add("activo");
+            }
+            setGraphic(grafo);
+        }
     }
 
     /**
@@ -422,7 +484,7 @@ public class SimulationController {
         ObservableList<LapResult> resultados =
                 FXCollections.observableArrayList(sesion.getResultados());
         tabla.setItems(resultados);
-        tablaDashboard.setItems(resultados);
+        torreTiempos.setItems(resultados);
         tablaEventos.setItems(FXCollections.observableArrayList(sesion.getEventos()));
         btnVerEventos.setDisable(sesion.getEventos().isEmpty());
         comparacionSectoresController.cargar(sesion.getResultados());
@@ -470,34 +532,6 @@ public class SimulationController {
                     getStyleClass().add("invalid-row");
                 } else if (resultado.getPosicion() == 1) {
                     getStyleClass().add("pole-row");
-                }
-                setStyle("-fx-border-color: transparent transparent #17171B "
-                        + TeamColors.hex(resultado.getEquipo())
-                        + "; -fx-border-width: 0 0 1 3;");
-            }
-        };
-    }
-
-    /** Igual que la anterior, más el resaltado que llega desde el mapa. */
-    private TableRow<LapResult> filaConColorDeEquipoResaltable() {
-        return new TableRow<>() {
-            @Override
-            protected void updateItem(LapResult resultado, boolean vacia) {
-                super.updateItem(resultado, vacia);
-                getStyleClass().removeAll("pole-row", "invalid-row", "marcador-activo");
-                if (vacia || resultado == null) {
-                    setStyle("");
-                    return;
-                }
-                if (!resultado.isVueltaValida()) {
-                    getStyleClass().add("invalid-row");
-                } else if (resultado.getPosicion() == 1) {
-                    getStyleClass().add("pole-row");
-                }
-                Integer resaltado = circuitoEnVivo == null ? null
-                        : circuitoEnVivo.pilotoResaltadoProperty().get();
-                if (resaltado != null && resaltado == resultado.getPilotoId()) {
-                    getStyleClass().add("marcador-activo");
                 }
                 setStyle("-fx-border-color: transparent transparent #17171B "
                         + TeamColors.hex(resultado.getEquipo())
@@ -688,7 +722,7 @@ public class SimulationController {
         btnFinalizar.disableProperty().bind(tarea.runningProperty().not());
         selectorDuracion.disableProperty().bind(tarea.runningProperty());
         tabla.getItems().clear();
-        tablaDashboard.getItems().clear();
+        torreTiempos.getItems().clear();
         tablaEventos.getItems().clear();
         btnVerEventos.setDisable(true);
         lblClima.setText("");
@@ -774,7 +808,7 @@ public class SimulationController {
 
         ObservableList<LapResult> parcial = FXCollections.observableArrayList(resultados);
         tabla.setItems(parcial);
-        tablaDashboard.setItems(parcial);
+        torreTiempos.setItems(parcial);
 
         // El mapa se alimenta de esta misma lista: el marcador y la fila no son
         // dos cálculos que puedan discrepar, son el mismo dato.
