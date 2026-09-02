@@ -41,6 +41,7 @@ public class HistoryController {
     @FXML private TableColumn<QualifyingSession, String> colClima;
     @FXML private TableColumn<QualifyingSession, String> colPole;
     @FXML private TableColumn<QualifyingSession, String> colTiempoPole;
+    @FXML private TableColumn<QualifyingSession, Number> colParadas;
     @FXML private TableColumn<QualifyingSession, String> colConfig;
 
     @FXML private TableView<LapResult> tablaResultados;
@@ -86,6 +87,8 @@ public class HistoryController {
         colTiempoPole.setCellValueFactory(f -> new SimpleStringProperty(
                 f.getValue().getPole() == null ? "—"
                         : FormatUtils.formatLapTime(f.getValue().getPole().getTiempoSegundos())));
+        colParadas.setCellValueFactory(f -> new SimpleIntegerProperty(
+                f.getValue().getParadasBoxes().size()));
         colConfig.setCellValueFactory(f -> new SimpleStringProperty(
                 f.getValue().getConfig() == null ? "—" : f.getValue().getConfig().toString()));
 
