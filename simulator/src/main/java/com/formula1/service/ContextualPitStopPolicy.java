@@ -43,9 +43,7 @@ public final class ContextualPitStopPolicy implements PitStopPolicy {
         if (containsAny(result, CAMBIOS_CLIMATICOS)) {
             return decision(result, PitStopReason.WEATHER_CHANGE);
         }
-        double wearAtSegment = result.getDesgasteEstimado()
-                * Math.min(1, segment / (double) totalSegments);
-        return wearAtSegment >= UMBRAL_DESGASTE_PORCENTAJE
+        return result.getDesgasteEstimado() >= UMBRAL_DESGASTE_PORCENTAJE
                 ? decision(result, PitStopReason.EXCESSIVE_WEAR)
                 : Optional.empty();
     }

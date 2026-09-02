@@ -53,6 +53,22 @@ public record SectorTimes(
         };
     }
 
+    /** Aplica una ganancia o pérdida de rendimiento conservando parciales válidos. */
+    public SectorTimes conAjusteTiempo(TrackSector sector, double seconds) {
+        if (sector == null || sector == TrackSector.NONE || !Double.isFinite(seconds)) {
+            throw new IllegalArgumentException("El ajuste debe tener sector y valor finito");
+        }
+        return switch (sector) {
+            case SECTOR_1 -> new SectorTimes(
+                    sector1Seconds + seconds, sector2Seconds, sector3Seconds);
+            case SECTOR_2 -> new SectorTimes(
+                    sector1Seconds, sector2Seconds + seconds, sector3Seconds);
+            case SECTOR_3 -> new SectorTimes(
+                    sector1Seconds, sector2Seconds, sector3Seconds + seconds);
+            case NONE -> throw new IllegalArgumentException("NONE no representa un parcial");
+        };
+    }
+
     @JsonIgnore
     public double tiempoTotal() {
         return sector1Seconds + sector2Seconds + sector3Seconds;
