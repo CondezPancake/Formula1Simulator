@@ -24,10 +24,12 @@ import java.util.random.RandomGenerator;
 public final class PitStopService {
 
     private static final int SEGMENTOS_PARA_COMPLETAR = 3;
-    private static final double PERDIDA_ENTRADA_SEGUNDOS = 7.5;
-    private static final double PERDIDA_SALIDA_SEGUNDOS = 8.0;
-    private static final double DETENCION_MINIMA_SEGUNDOS = 2.0;
-    private static final double DETENCION_MAXIMA_SEGUNDOS = 3.4;
+    // La sesión representa una sola vuelta, no una carrera completa. Se usa
+    // una pérdida escalada: el tránsito no puede consumir 15,5 s de una vuelta.
+    private static final double PERDIDA_ENTRADA_SEGUNDOS = 0.45;
+    private static final double PERDIDA_SALIDA_SEGUNDOS = 0.55;
+    private static final double DETENCION_MINIMA_SEGUNDOS = 1.8;
+    private static final double DETENCION_MAXIMA_SEGUNDOS = 2.8;
 
     private final RandomGenerator random;
     private final Map<Integer, PitStopState> estados = new LinkedHashMap<>();

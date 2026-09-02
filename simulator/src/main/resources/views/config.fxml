@@ -73,6 +73,16 @@
                     </HBox>
                 </VBox>
 
+                <!-- compuesto para el piloto que el usuario seleccione en Carrera -->
+                <VBox spacing="12" styleClass="card">
+                    <HBox styleClass="section-header">
+                        <Label text="COMPUESTO INICIAL" styleClass="card-label"/>
+                    </HBox>
+                    <HBox fx:id="segCompuesto" styleClass="segmented"/>
+                    <Label text="Se aplicará al piloto seleccionado; los rivales mantienen su estrategia automática."
+                           styleClass="option-note" maxWidth="Infinity" wrapText="true"/>
+                </VBox>
+
                 <!-- estrategia de combustible -->
                 <VBox spacing="12" styleClass="card">
                     <HBox styleClass="section-header">
@@ -147,6 +157,11 @@
                 <Label text="Presión" styleClass="hint"/>
                 <Region HBox.hgrow="ALWAYS"/>
                 <Label fx:id="lblResumenPresion" text="—" style="-fx-text-fill: #FFC906; -fx-font-weight: bold;"/>
+            </HBox>
+            <HBox>
+                <Label text="Compuesto inicial" styleClass="hint"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="lblResumenCompuesto" text="—" style="-fx-text-fill: #FFC906; -fx-font-weight: bold;"/>
             </HBox>
             <HBox>
                 <Label text="Combustible" styleClass="hint"/>

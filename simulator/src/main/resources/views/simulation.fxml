@@ -251,6 +251,11 @@
                                     <Label text="TU COCHE" styleClass="hud-hint"/>
                                     <HBox spacing="10">
                                         <VBox spacing="0" HBox.hgrow="ALWAYS" styleClass="hud-tile">
+                                            <Label text="COMPUESTO" styleClass="hud-group-title"/>
+                                            <Label fx:id="lblCompuestoDashboard" text="M"
+                                                   styleClass="hud-tile-value,compound-badge,compound-medium"/>
+                                        </VBox>
+                                        <VBox spacing="0" HBox.hgrow="ALWAYS" styleClass="hud-tile">
                                             <Label text="NEUMÁTICO" styleClass="hud-group-title"/>
                                             <Label fx:id="lblDashboardDesgaste" text="100 %" styleClass="hud-tile-value"/>
                                         </VBox>

@@ -1400,6 +1400,15 @@
 .hud-tile-value.warn { -fx-text-fill: -fx-accent-amber; }
 .hud-tile-value.crit { -fx-text-fill: -fx-accent-red; }
 
+.compound-badge {
+    -fx-font-size: 20px;
+    -fx-font-weight: 900;
+}
+
+.compound-soft   { -fx-text-fill: #E10600; }
+.compound-medium { -fx-text-fill: #F2B705; }
+.compound-hard   { -fx-text-fill: #F4F4F6; }
+
 /* --- Feed de mensajes --- */
 
 .hud-feed {
@@ -1426,6 +1435,7 @@
 .feed-dot.grave    { -fx-background-color: -fx-accent-red; }
 .feed-dot.clima    { -fx-background-color: -fx-accent-blue; }
 .feed-dot.pit      { -fx-background-color: #F2B705; }
+.feed-dot.tire     { -fx-background-color: #F4F4F6; }
 
 .feed-text {
     -fx-font-size: 11px;

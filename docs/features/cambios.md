@@ -57,7 +57,8 @@ ya contenga pantallas, datos o servicios que puedan reutilizarse como punto de p
 | E16 a HU-47 | **Pendientes** |
 | E17 | HU-48 y HU-49 | **Pendientes** |
 | E18 | HU-50 | **Terminada** |
-| E18 | HU-51 y HU-52 | **Pendientes** |
+| E18 | HU-51 | **Terminada** |
+| E18 | HU-52 | **Pendiente** |
 | E19 | HU-53 | **Pendiente** |
 | E20 | HU-54 | **Cancelada** |
 | E21 | HU-55 y HU-56 | **Pendientes** |
@@ -68,7 +69,7 @@ ya contenga pantallas, datos o servicios que puedan reutilizarse como punto de p
 | Elemento | Terminadas | Pendientes | Total vigente |
 |---|---:|---:|---:|
 | Épicas | 12 | 9 | 21 |
-| Historias de usuario | 39 | 16 | 55 |
+| Historias de usuario | 40 | 15 | 55 |
 
 ## Requisitos funcionales
 
@@ -272,7 +273,7 @@ publica como un snapshot inmutable, se refleja en el panel de mensajes y la
 implementación de radio concreta, dejando esos puntos para HU-51 y HU-49.
 Detalle en [`pit-stop.md`](pit-stop.md).
 
-#### HU-51 — Implementar cambio de neumáticos
+#### HU-51 — Implementar cambio de neumáticos — **Terminada**
 
 Compuestos contemplados: **S** (Soft), **M** (Medium) y **H** (Hard).
 
@@ -281,6 +282,15 @@ Compuestos contemplados: **S** (Soft), **M** (Medium) y **H** (Hard).
 - Aplicar el impacto del compuesto al rendimiento.
 - Registrar y visualizar cada cambio.
 - Integrarlo con el pit stop.
+
+El usuario puede elegir Soft, Medium o Hard como compuesto inicial de su piloto;
+los rivales parten con Medium. Al quedar detenidos en boxes, una política
+independiente selecciona el siguiente compuesto según la causa de la parada. El
+cambio reinicia el desgaste del juego montado y sus factores solo afectan al
+tramo posterior. La sesión persiste cada transición asociada al id del pit stop
+y Carrera muestra el compuesto vigente en una nueva lectura del Dashboard,
+además de registrar el cambio en el feed. Detalle en
+[`tire-change.md`](tire-change.md).
 
 #### HU-52 — Visualizar estrategia de neumáticos
 
@@ -352,7 +362,7 @@ Prioridad: **opcional / baja**.
 
 | Fase / Sprint | Prioridad | Descripción | Historias de usuario |
 |---|---|---|---|
-| Sprint / Fase 1 | Alta | Núcleo de la nueva experiencia | ~~HU-37~~, HU-48, HU-49, ~~HU-50~~, HU-51 |
+| Sprint / Fase 1 | Alta | Núcleo de la nueva experiencia | ~~HU-37~~, HU-48, HU-49, ~~HU-50~~, ~~HU-51~~ |
 | Sprint / Fase 2 | Alta | Integración visual pendiente | HU-43 |
 | Sprint / Fase 3 | Media | Explorar | HU-44, HU-45, HU-46, HU-47 |
 | Sprint / Fase 4 | Media | Resultado y multimedia | HU-52, HU-53, HU-54 |
