@@ -43,7 +43,6 @@ import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.chart.LineChart;
-import javafx.scene.chart.XYChart;
 import javafx.animation.Interpolator;
 import javafx.geometry.Pos;
 import javafx.scene.image.ImageView;
@@ -237,13 +236,17 @@ public class SimulationController {
     private long inicioInterfazNanos;
     private boolean actualizandoSelectorDuracion;
     private final List<TelemetrySnapshot> telemetriaSesionActual = new ArrayList<>();
-    private List<List<TelemetrySnapshot>> vueltasTelemetria = List.of();
+    private final ObservableList<LapResult> clasificacionVisible =
+            FXCollections.observableArrayList();
+    private final ObservableList<EventOccurrence> eventosVisibles =
+            FXCollections.observableArrayList();
     private PauseTransition temporizadorNotificacionEvento;
     private final Set<String> eventosEnVivoRegistrados = new HashSet<>();
     private final Deque<EventOccurrence> colaNotificaciones = new ArrayDeque<>();
     private CircuitoEnVivo circuitoEnVivo;
     private PitStopPresenter pitStopPresenter;
     private TireChangePresenter tireChangePresenter;
+    private TelemetryDetailPresenter telemetryDetailPresenter;
     private Integer pilotoSesionActual;
     /** Código de tres letras por piloto; lo consulta cada fila de la torre. */
     private final Map<Integer, String> codigosPiloto = new HashMap<>();
@@ -280,6 +283,11 @@ public class SimulationController {
                 lblDashboardEvento, lblDashboardMensaje, feedEventos);
         tireChangePresenter = new TireChangePresenter(lblCompuestoDashboard,
                 lblDashboardEvento, lblDashboardMensaje, feedEventos);
+        telemetryDetailPresenter = new TelemetryDetailPresenter(
+                selectorVueltaTelemetria, btnVerDetalles, lblTelemetriaPiloto,
+                graficaVelocidadDetalle, graficaRpmDetalle,
+                graficaCombustibleDetalle, graficaDesgasteDetalle,
+                graficaTemperaturasDetalle, graficaDeltaDetalle);
         circuitoEnVivo.setAlSeleccionarPiloto(ExploreDriversController::abrirFicha);
         circuitoEnVivo.pilotoResaltadoProperty().addListener((o, a, b) -> torreTiempos.refresh());
 
@@ -298,23 +306,19 @@ public class SimulationController {
 
         // Torre de tiempos del Dashboard, pintada como la señal de TV.
         torreTiempos.setCellFactory(lista -> new FilaTorre());
+        torreTiempos.setItems(clasificacionVisible);
+        tablaEventos.setItems(eventosVisibles);
 
         selectorCircuito.valueProperty().addListener((o, a, b) -> actualizarMapaCircuito(b));
         selectorPiloto.valueProperty().addListener((o, a, b) -> actualizarTarjetasPilotos());
         // Silueta del monoplaza del panel de telemetría: es decorativa y fija,
         // así que se carga una vez desde la caché de imágenes.
         siluetaCoche.setImage(Imagenes.cargar("/resource-new-dashboard/telemetry-car.jpg", 420, 0));
-        selectorVueltaTelemetria.valueProperty().addListener((obs, anterior, vuelta) -> {
-            if (vuelta != null && vuelta >= 1 && vuelta <= vueltasTelemetria.size()) {
-                pintarGraficasDetalle(vueltasTelemetria.get(vuelta - 1));
-            }
-        });
-
         precargarUltimaConfiguracion();
         actualizarMapaCircuito(selectorCircuito.getValue());
         actualizarTarjetasPilotos();
         reiniciarBaldosasTelemetria();
-        cargarVueltasTelemetria(List.of());
+        telemetryDetailPresenter.load(List.of());
     }
 
     /**
@@ -469,10 +473,8 @@ public class SimulationController {
         // equivocada.
         circuitos.porNombre(sesion.getCircuito()).ifPresent(this::mostrarCircuitoEnMapa);
         lblClima.setText(resumenClimatico(sesion));
-        ObservableList<LapResult> resultados =
-                FXCollections.observableArrayList(sesion.getResultados());
-        torreTiempos.setItems(resultados);
-        tablaEventos.setItems(FXCollections.observableArrayList(sesion.getEventos()));
+        clasificacionVisible.setAll(sesion.getResultados());
+        eventosVisibles.setAll(sesion.getEventos());
         btnVerEventos.setDisable(sesion.getEventos().isEmpty());
         feedEventos.getChildren().clear();
         sesion.getEventos().forEach(this::anadirAlFeed);
@@ -488,7 +490,7 @@ public class SimulationController {
         actualizarEtiquetasSector(sesion.getResultados());
         comparacionSectoresController.cargar(sesion.getResultados());
         mostrarPistaDeSesion(sesion);
-        cargarVueltasTelemetria(sesion.getEvolucionVuelta());
+        telemetryDetailPresenter.load(sesion.getEvolucionVuelta());
         LapResult pole = sesion.getPole();
         lblEstado.setText(pole == null ? "Sesión sin resultados"
                 : "Pole: " + pole.getPiloto() + " — " + FormatUtils.formatLapTime(pole.getTiempoSegundos()));
@@ -711,8 +713,8 @@ public class SimulationController {
         btnSimular.disableProperty().bind(tarea.runningProperty());
         btnFinalizar.disableProperty().bind(tarea.runningProperty().not());
         selectorDuracion.disableProperty().bind(tarea.runningProperty());
-        torreTiempos.getItems().clear();
-        tablaEventos.getItems().clear();
+        clasificacionVisible.clear();
+        eventosVisibles.clear();
         feedEventos.getChildren().clear();
         pilotoFijado = null;
         btnVerEventos.setDisable(true);
@@ -802,8 +804,7 @@ public class SimulationController {
     private void mostrarClasificacionEnVivo(List<LapResult> resultados) {
         segmentoEnVivo = Math.min(segmentoEnVivo + 1, MapaProgreso.TOTAL_SEGMENTOS);
 
-        ObservableList<LapResult> parcial = FXCollections.observableArrayList(resultados);
-        torreTiempos.setItems(parcial);
+        clasificacionVisible.setAll(resultados);
 
         // El mapa se alimenta de esta misma lista: el marcador y la fila no son
         // dos cálculos que puedan discrepar, son el mismo dato.
@@ -882,7 +883,7 @@ public class SimulationController {
 
     private void reiniciarTelemetria() {
         telemetriaSesionActual.clear();
-        cargarVueltasTelemetria(List.of());
+        telemetryDetailPresenter.load(List.of());
         lblTelemetriaPiloto.setText("Esperando datos del vehículo seleccionado");
         lblEstadoPista.setText("Estado de pista —");
         lblVelocidadTelemetria.setText("0 km/h");
@@ -919,7 +920,7 @@ public class SimulationController {
         actualizarVueltaHud();
 
         telemetriaSesionActual.add(muestra);
-        cargarVueltasTelemetria(telemetriaSesionActual);
+        telemetryDetailPresenter.append(muestra);
         actualizarVelocidadMaxima(muestra.velocidadKmh());
         lblTelemetriaPiloto.setText(muestra.piloto() + " · " + muestra.vehiculo());
         String bandera = muestra.evento().impacto().bandera() == TrackFlag.GREEN
@@ -1043,7 +1044,7 @@ public class SimulationController {
     /** Abre el análisis sin abandonar la sesión ni crear otra pantalla. */
     @FXML
     private void onVerDetalles() {
-        if (!vueltasTelemetria.isEmpty()) {
+        if (telemetryDetailPresenter.hasData()) {
             panelResultados.getSelectionModel().select(tabTelemetria);
         }
     }
@@ -1060,94 +1061,6 @@ public class SimulationController {
         panelResultados.getSelectionModel().select(tabEventos);
     }
 
-    /**
-     * Reconstruye las vueltas a partir de muestras ordenadas. Un reinicio del
-     * número de segmento marca una nueva vuelta, lo que mantiene compatible
-     * el historial actual y permite representar sesiones con varias vueltas.
-     */
-    private void cargarVueltasTelemetria(List<TelemetrySnapshot> muestras) {
-        List<List<TelemetrySnapshot>> agrupadas = new ArrayList<>();
-        List<TelemetrySnapshot> vuelta = null;
-        int segmentoAnterior = Integer.MAX_VALUE;
-        for (TelemetrySnapshot muestra : muestras) {
-            if (vuelta == null || muestra.segmento() <= segmentoAnterior) {
-                vuelta = new ArrayList<>();
-                agrupadas.add(vuelta);
-            }
-            vuelta.add(muestra);
-            segmentoAnterior = muestra.segmento();
-        }
-        vueltasTelemetria = agrupadas;
-
-        Integer seleccionPrevia = selectorVueltaTelemetria.getValue();
-        selectorVueltaTelemetria.setItems(FXCollections.observableArrayList(
-                java.util.stream.IntStream.rangeClosed(1, agrupadas.size())
-                        .boxed().toList()));
-        boolean sinDatos = agrupadas.isEmpty();
-        selectorVueltaTelemetria.setDisable(sinDatos);
-        btnVerDetalles.setDisable(sinDatos);
-        if (sinDatos) {
-            limpiarGraficasDetalle();
-            return;
-        }
-        int seleccion = seleccionPrevia == null
-                ? agrupadas.size()
-                : Math.min(seleccionPrevia, agrupadas.size());
-        selectorVueltaTelemetria.setValue(seleccion);
-        pintarGraficasDetalle(agrupadas.get(seleccion - 1));
-    }
-
-    private void pintarGraficasDetalle(List<TelemetrySnapshot> muestras) {
-        limpiarGraficasDetalle();
-        XYChart.Series<Number, Number> velocidad = serieDetalle("Velocidad", muestras,
-                TelemetrySnapshot::velocidadKmh);
-        XYChart.Series<Number, Number> rpm = serieDetalle("RPM", muestras,
-                muestra -> muestra.rpm());
-        XYChart.Series<Number, Number> combustible = serieDetalle("Combustible", muestras,
-                TelemetrySnapshot::combustibleRestantePorcentaje);
-        XYChart.Series<Number, Number> desgaste = serieDetalle("Desgaste", muestras,
-                TelemetrySnapshot::desgasteNeumaticosPorcentaje);
-        XYChart.Series<Number, Number> neumaticos = serieDetalle("Neumáticos", muestras,
-                TelemetrySnapshot::temperaturaNeumaticosC);
-        XYChart.Series<Number, Number> motor = serieDetalle("Motor", muestras,
-                TelemetrySnapshot::temperaturaMotorC);
-        XYChart.Series<Number, Number> delta = serieDetalle("Delta", muestras,
-                TelemetrySnapshot::deltaSegundos);
-
-        graficaVelocidadDetalle.getData().add(velocidad);
-        graficaRpmDetalle.getData().add(rpm);
-        graficaCombustibleDetalle.getData().add(combustible);
-        graficaDesgasteDetalle.getData().add(desgaste);
-        graficaTemperaturasDetalle.getData().add(neumaticos);
-        graficaTemperaturasDetalle.getData().add(motor);
-        graficaDeltaDetalle.getData().add(delta);
-
-        if (!muestras.isEmpty()) {
-            TelemetrySnapshot ultima = muestras.get(muestras.size() - 1);
-            lblTelemetriaPiloto.setText(ultima.piloto() + " · " + ultima.vehiculo());
-        }
-    }
-
-    private XYChart.Series<Number, Number> serieDetalle(
-            String nombre, List<TelemetrySnapshot> muestras,
-            java.util.function.ToDoubleFunction<TelemetrySnapshot> valor) {
-        XYChart.Series<Number, Number> serie = new XYChart.Series<>();
-        serie.setName(nombre);
-        for (TelemetrySnapshot muestra : muestras) {
-            serie.getData().add(new XYChart.Data<>(muestra.segmento(),
-                    valor.applyAsDouble(muestra)));
-        }
-        return serie;
-    }
-
-    private void limpiarGraficasDetalle() {
-        graficaVelocidadDetalle.getData().clear();
-        graficaRpmDetalle.getData().clear();
-        graficaCombustibleDetalle.getData().clear();
-        graficaDesgasteDetalle.getData().clear();
-        graficaTemperaturasDetalle.getData().clear();
-        graficaDeltaDetalle.getData().clear();
-    }
 
     /**
      * Vuelca la muestra climatica en la tarjeta del panel y en la cabecera.

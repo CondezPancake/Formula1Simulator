@@ -42,6 +42,19 @@ En una clasificación real todos los equipos aprietan, así que ahora los rivale
 
 Tabla de sesiones (fecha, circuito, clima, pole y configuración empleada), parrilla completa de la sesión seleccionada, `LineChart` que compara el tiempo de pole entre sesiones del mismo circuito, y reutilización de configuraciones previas. Cubre las tres HU de almacenamiento.
 
+## Mantenibilidad y actualización incremental
+
+`TelemetryDetailPresenter` es responsable de agrupar vueltas, gestionar el
+selector y mantener las siete series del detalle. `SimulationController` solo
+le entrega sesiones completas o nuevas muestras, por lo que ya no contiene el
+algoritmo de construcción de gráficas.
+
+Durante una sesión cada muestra se añade a las series existentes. Antes se
+reconstruían todas las vueltas y todos sus puntos en cada segmento. La torre de
+clasificación y la tabla de eventos también conservan una única
+`ObservableList` y actualizan su contenido con `setAll`, evitando sustituir el
+modelo visual y perder estado de selección en cada fotograma.
+
 ## Verificación
 
 - `mvn clean test` → **40 tests, 0 fallos**, incluida la carga real de `simulation.fxml` e `history.fxml`.
