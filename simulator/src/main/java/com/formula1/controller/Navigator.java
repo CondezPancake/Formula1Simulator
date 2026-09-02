@@ -1,9 +1,12 @@
 package com.formula1.controller;
 
+import javafx.animation.FadeTransition;
+import javafx.animation.Interpolator;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.layout.StackPane;
+import javafx.util.Duration;
 
 /**
  * Cambia la vista central del shell.
@@ -135,9 +138,21 @@ public final class Navigator {
         return true;
     }
 
-    /** Coloca la vista en el centro del shell. Cambio seco, sin transición. */
+    /**
+     * Coloca la vista en el centro del shell con una entrada corta.
+     *
+     * El fade va sobre el nodo entrante y no encadenado con una salida: las
+     * vistas cacheadas se reutilizan, y animar también la saliente dejaría su
+     * opacidad a medias la próxima vez que se muestre.
+     */
     private static void mostrarVista(Node contenido) {
         contenedor.getChildren().setAll(contenido);
+        FadeTransition entrada = new FadeTransition(Duration.millis(200), contenido);
+        entrada.setFromValue(0);
+        entrada.setToValue(1);
+        entrada.setInterpolator(Interpolator.EASE_BOTH);
+        entrada.setOnFinished(e -> contenido.setOpacity(1));
+        entrada.play();
     }
 
     private static void prepararSesionPendiente() {

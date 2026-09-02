@@ -42,15 +42,17 @@ public final class CircuitoEnVivo {
 
     // Paleta tomada de style.css (.root, líneas 8-38). Se repite aquí porque el
     // lienzo pinta con Color y no con CSS; si allí cambia, cambia aquí.
-    private static final Color FONDO = Color.web("#111115");
-    private static final Color ASFALTO = Color.web("#2A2A31");
-    private static final Color BORDE_PISTA = Color.web("#F2F2F5");
+    private static final Color FONDO = Color.web("#08080C");
+    private static final Color CONTORNO = Color.web("#05050A");
+    private static final Color REJILLA = Color.rgb(255, 255, 255, 0.045);
     private static final Color[] SECTORES = {
         Color.web("#FF0101"), Color.web("#3671C6"), Color.web("#FFC906"),
     };
-    private static final Color TEXTO = Color.web("#E8E8F0");
     private static final Color TENUE = Color.web("#565656");
     private static final Color MARCA = Color.web("#E10600");
+
+    /** Separación de la rejilla técnica del fondo, en píxeles. */
+    private static final double PASO_REJILLA = 48;
 
     /** Cortes de sector del motor: {@code TrackSector.desdeSegmento} con 20 segmentos. */
     private static final double[] CORTES_SECTOR = {0.0, 0.35, 0.70, 1.0};
@@ -69,7 +71,8 @@ public final class CircuitoEnVivo {
 
     private TrackLayout trazado;
     private String nombreCircuito = "";
-    private double longitudKm;
+    /** Valor que acompaña a cada rótulo de sector; lo inyecta la pantalla. */
+    private String[] etiquetasSector = new String[3];
 
     private MapaProgreso.Estado anterior;
     private long inicioEaseNanos;
@@ -140,7 +143,7 @@ public final class CircuitoEnVivo {
     public void mostrarCircuito(Circuit circuito) {
         this.trazado = circuito == null ? null : TrackLayouts.de(circuito.getNombre());
         this.nombreCircuito = circuito == null ? "" : circuito.getNombre();
-        this.longitudKm = circuito == null ? 0 : circuito.getLongitudKm();
+        this.etiquetasSector = new String[3];
         this.objetivo.set(null);
         this.anterior = null;
         hornearPista();
@@ -237,6 +240,7 @@ public final class CircuitoEnVivo {
 
         g.setFill(FONDO);
         g.fillRect(0, 0, w, h);
+        pintarRejilla(g, w, h);
         if (trazado == null) {
             mensaje(g, w, h, nombreCircuito.isBlank()
                     ? "Elige un circuito"
@@ -245,28 +249,54 @@ public final class CircuitoEnVivo {
         }
 
         double anchoPista = anchoDePista(w, h);
-        TrackLayout.Encaje encaje = trazado.encajarEn(w, h, anchoPista + 14);
+        TrackLayout.Encaje encaje = trazado.encajarEn(w, h, anchoPista + 18);
 
-        // Borde blanco debajo y asfalto encima: trazar dos veces da la línea de
-        // borde a los dos lados sin calcular la curva desplazada.
-        trazarTramo(g, encaje, 0, 1, BORDE_PISTA, anchoPista + 3, false);
-        trazarTramo(g, encaje, 0, 1, ASFALTO, anchoPista, false);
+        // Contorno oscuro: despega la pista del fondo sin robarle saturación al
+        // color del sector, que es quien tiene que mandar aquí.
+        trazarTramo(g, encaje, 0, 1, CONTORNO, anchoPista + 6, false);
 
-        // El asfalto teñido por sector, como en los mapas oficiales. Los cortes
-        // son los que usa el motor, no unos inventados.
-        g.setGlobalAlpha(0.30);
+        // Resplandor por acumulación de trazos anchos y translúcidos. Es más
+        // barato que un DropShadow sobre el GraphicsContext y no depende de
+        // efectos de píxel, que en este proyecto no se usan en ningún sitio.
+        for (int s = 0; s < 3; s++) {
+            g.setGlobalAlpha(0.10);
+            trazarTramo(g, encaje, CORTES_SECTOR[s], CORTES_SECTOR[s + 1],
+                    SECTORES[s], anchoPista * 2.2, true);
+            g.setGlobalAlpha(0.18);
+            trazarTramo(g, encaje, CORTES_SECTOR[s], CORTES_SECTOR[s + 1],
+                    SECTORES[s], anchoPista * 1.6, true);
+        }
+        g.setGlobalAlpha(1);
+
+        // Cuerpo del sector a color pleno. Los cortes son los que usa el motor
+        // (TrackSector.desdeSegmento con 20 segmentos), no unos inventados.
         for (int s = 0; s < 3; s++) {
             trazarTramo(g, encaje, CORTES_SECTOR[s], CORTES_SECTOR[s + 1],
                     SECTORES[s], anchoPista, true);
         }
+
+        // Trazada iluminada: una veta clara por el centro del asfalto.
+        g.setGlobalAlpha(0.30);
+        trazarTramo(g, encaje, 0, 1, Color.WHITE, anchoPista * 0.28, false);
         g.setGlobalAlpha(1);
 
         pintarMeta(g, encaje, anchoPista);
-        pintarPie(g, w, h);
+    }
+
+    /** Rejilla técnica del fondo: da profundidad sin competir con la pista. */
+    private void pintarRejilla(GraphicsContext g, double w, double h) {
+        g.setStroke(REJILLA);
+        g.setLineWidth(1);
+        for (double x = PASO_REJILLA; x < w; x += PASO_REJILLA) {
+            g.strokeLine(x, 0, x, h);
+        }
+        for (double y = PASO_REJILLA; y < h; y += PASO_REJILLA) {
+            g.strokeLine(0, y, w, y);
+        }
     }
 
     private double anchoDePista(double w, double h) {
-        return Math.max(7, Math.min(16, Math.min(w, h) / 22));
+        return Math.max(9, Math.min(20, Math.min(w, h) / 18));
     }
 
     private void trazarTramo(GraphicsContext g, TrackLayout.Encaje encaje,
@@ -308,16 +338,45 @@ public final class CircuitoEnVivo {
         g.restore();
     }
 
-    private void pintarPie(GraphicsContext g, double w, double h) {
-        g.setFill(TENUE);
-        g.setFont(Font.font("Titillium Web", FontWeight.BOLD, 10));
-        g.setTextAlign(TextAlignment.LEFT);
-        g.setTextBaseline(VPos.BOTTOM);
-        String pie = nombreCircuito.toUpperCase();
-        if (longitudKm > 0) {
-            pie += "  ·  " + String.format(java.util.Locale.ROOT, "%.3f km", longitudKm);
+    /**
+     * Valor que se pinta bajo cada rótulo de sector (por ejemplo "+0.038" o el
+     * mejor tiempo del sector). Lo calcula la pantalla, que es quien tiene los
+     * tiempos por sector; aquí solo se dibuja. Un hueco a {@code null} deja el
+     * rótulo sin cifra.
+     */
+    public void setEtiquetasSector(String[] valores) {
+        this.etiquetasSector = valores == null ? new String[3] : valores.clone();
+        pintarCoches(System.nanoTime());
+    }
+
+    /** Rótulos flotantes de sector, junto al tramo que describen. */
+    private void pintarEtiquetasSector(GraphicsContext g, TrackLayout.Encaje encaje,
+                                       double anchoPista) {
+        for (int s = 0; s < 3; s++) {
+            double medio = (CORTES_SECTOR[s] + CORTES_SECTOR[s + 1]) / 2.0;
+            TrackLayout.Punto p = trazado.puntoEn(medio);
+            // Se desplaza por la normal para no taparse con la propia pista.
+            double nx = -Math.sin(p.angulo());
+            double ny = Math.cos(p.angulo());
+            double x = encaje.x(p.x()) + nx * anchoPista * 2.0;
+            double y = encaje.y(p.y()) + ny * anchoPista * 2.0;
+
+            String titulo = "SECTOR " + (s + 1);
+            String valor = etiquetasSector.length > s ? etiquetasSector[s] : null;
+
+            g.setTextAlign(TextAlignment.LEFT);
+            g.setTextBaseline(VPos.CENTER);
+            // Filete del color del sector a la izquierda del rótulo.
+            g.setFill(SECTORES[s]);
+            g.fillRect(x - 6, y - 9, 2, valor == null ? 12 : 22);
+            g.setFont(Font.font("Titillium Web", FontWeight.BOLD, 10));
+            g.fillText(titulo, x, y - 3);
+            if (valor != null) {
+                g.setFill(Color.WHITE);
+                g.setFont(Font.font("Titillium Web", FontWeight.BOLD, 12));
+                g.fillText(valor, x, y + 10);
+            }
         }
-        g.fillText(pie, 4, h - 3);
     }
 
     private void mensaje(GraphicsContext g, double w, double h, String texto) {
@@ -397,14 +456,17 @@ public final class CircuitoEnVivo {
                 : mezclar(anterior, destino, avance);
 
         double anchoPista = anchoDePista(w, h);
-        TrackLayout.Encaje encaje = trazado.encajarEn(w, h, anchoPista + 14);
-        double radio = Math.max(3.5, Math.min(6.5, Math.min(w, h) / 48));
+        TrackLayout.Encaje encaje = trazado.encajarEn(w, h, anchoPista + 18);
+        double radio = Math.max(4, Math.min(7.5, Math.min(w, h) / 44));
+
+        pintarEtiquetasSector(g, encaje, anchoPista);
 
         // El líder y el piloto del usuario se pintan al final, encima de todos.
         List<MapaProgreso.Marcador> orden = new java.util.ArrayList<>(visible.marcadores());
         orden.sort((a, b) -> Integer.compare(prioridad(a), prioridad(b)));
+        int ultima = visible.marcadores().size();
         for (MapaProgreso.Marcador m : orden) {
-            pintarCoche(g, encaje, m, radio, anchoPista);
+            pintarCoche(g, encaje, m, radio, anchoPista, ultima);
         }
 
         // Cuando el tramo se ha consumido y la sesión terminó, no hay nada más
@@ -429,7 +491,8 @@ public final class CircuitoEnVivo {
     }
 
     private void pintarCoche(GraphicsContext g, TrackLayout.Encaje encaje,
-                             MapaProgreso.Marcador m, double radio, double anchoPista) {
+                             MapaProgreso.Marcador m, double radio, double anchoPista,
+                             int ultimaPosicion) {
         TrackLayout.Punto p = trazado.puntoEn(m.fraccion());
         double x = encaje.x(p.x());
         double y = encaje.y(p.y());
@@ -446,20 +509,29 @@ public final class CircuitoEnVivo {
             return;
         }
 
+        Color color = Color.web(TeamColors.hex(m.equipo()));
+
         // Halo oscuro: separa el marcador del asfalto, que es casi del mismo tono.
         g.setFill(Color.rgb(0, 0, 0, 0.55));
         g.fillOval(x - r - 2, y - r - 2, (r + 2) * 2, (r + 2) * 2);
 
-        g.setFill(Color.web(TeamColors.hex(m.equipo())));
+        // Resplandor del color de la escudería, el mismo recurso que la pista.
+        g.setGlobalAlpha(resaltado ? 0.45 : 0.28);
+        g.setFill(color);
+        g.fillOval(x - r * 2, y - r * 2, r * 4, r * 4);
+        g.setGlobalAlpha(1);
+
+        g.setFill(color);
         g.fillOval(x - r, y - r, r * 2, r * 2);
 
+        boolean destacado = esDelUsuario(m) || resaltado;
         g.setStroke(esDelUsuario(m) ? MARCA : resaltado ? Color.WHITE
                 : m.posicion() == 1 ? Color.WHITE : Color.web("#0A0A0A"));
-        g.setLineWidth(1.3);
+        g.setLineWidth(destacado ? 2.2 : 1.3);
         g.strokeOval(x - r, y - r, r * 2, r * 2);
 
         // Etiqueta solo para los que importan: veinte etiquetas serían barro.
-        if (resaltado || esDelUsuario(m) || m.posicion() == 1) {
+        if (resaltado || esDelUsuario(m) || m.posicion() == 1 || m.posicion() == ultimaPosicion) {
             etiqueta(g, m, x, y, r, anchoPista, p.angulo());
         }
     }

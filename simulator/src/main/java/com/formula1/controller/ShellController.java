@@ -4,17 +4,22 @@ import com.formula1.data.DataStore;
 import com.formula1.model.TrackFlag;
 import com.formula1.model.WeatherSnapshot;
 import com.formula1.util.Async;
+import com.formula1.util.Imagenes;
 
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
+import javafx.scene.shape.SVGPath;
 import javafx.util.Duration;
 import javafx.application.Platform;
 
@@ -36,6 +41,25 @@ import java.util.Locale;
 public class ShellController {
 
     private static final DateTimeFormatter RELOJ = DateTimeFormatter.ofPattern("HH:mm:ss");
+
+    private static final String RUTA_LOGO = "/resource-new-dashboard/LogoF1.png";
+
+    /**
+     * El wordmark ocupa solo la banda central de LogoF1.png (920x800): sin
+     * recortar el margen transparente el logo saldría diminuto.
+     */
+    private static final Rectangle2D RECORTE_LOGO = new Rectangle2D(85, 295, 750, 190);
+
+    /** Engranaje y botón de apagado, en caja 0 0 24 24. */
+    private static final String RUTA_AJUSTES =
+            "M12 8.5 A3.5 3.5 0 1 0 12 15.5 A3.5 3.5 0 1 0 12 8.5 Z "
+            + "M20 12 L22 13.4 L20.4 17 L18 16.4 L16.4 17.4 L16 20 L12 20.6 "
+            + "L10.4 18.4 L8 17.6 L5.8 18.8 L3.4 15.6 L5 13.6 L5 11 L3 9 "
+            + "L5.2 5.6 L7.8 6.4 L10 5.2 L10.6 2.8 L14.6 3 L15.6 5.4 L18 6.4 "
+            + "L20.4 5.6 L22 8.8 L20 10.6 Z";
+
+    private static final String RUTA_SALIR =
+            "M12 3 L12 12 M6.5 6 A7.5 7.5 0 1 0 17.5 6";
 
     private static ShellController instancia;
     private static String vistaActual;
@@ -63,6 +87,9 @@ public class ShellController {
     @FXML private Button btnExplorar;
     @FXML private Button btnGestion;
     @FXML private Button btnConfig;
+    @FXML private Button btnMarca;
+    @FXML private Button btnAjustes;
+    @FXML private Button btnSalirCabecera;
 
     /** App inyecta aquí cómo volver al menú principal, para no depender de él. */
     private Runnable alVolverAlMenu = () -> { };
@@ -74,6 +101,7 @@ public class ShellController {
         instancia = this;
         vistaActual = null;
         Navigator.registrar(contenido);
+        montarIconos();
         arrancarReloj();
 
         navegacion.setDisable(true);
@@ -130,6 +158,37 @@ public class ShellController {
         });
 
         Async.ejecutar(carga);
+    }
+
+    /**
+     * Wordmark y los dos iconos de la derecha.
+     *
+     * El logo es un PNG con mucho margen transparente, así que se recorta a su
+     * banda central igual que en el menú principal. Los iconos van como
+     * {@link SVGPath} porque JavaFX no carga ficheros .svg y los emojis de las
+     * fuentes del sistema no se dibujan; es el mismo recurso que ya usa el
+     * galón del menú.
+     */
+    private void montarIconos() {
+        Image logo = Imagenes.cargar(RUTA_LOGO, 900, 0);
+        if (logo != null) {
+            ImageView vista = new ImageView(logo);
+            vista.setViewport(RECORTE_LOGO);
+            vista.setFitHeight(22);
+            vista.setPreserveRatio(true);
+            btnMarca.setGraphic(vista);
+        } else {
+            btnMarca.setText("F1");
+        }
+        btnAjustes.setGraphic(icono(RUTA_AJUSTES));
+        btnSalirCabecera.setGraphic(icono(RUTA_SALIR));
+    }
+
+    private SVGPath icono(String ruta) {
+        SVGPath icono = new SVGPath();
+        icono.setContent(ruta);
+        icono.getStyleClass().add("header-icon");
+        return icono;
     }
 
     /** Reloj de la cabecera, con el huso horario real de la máquina. */

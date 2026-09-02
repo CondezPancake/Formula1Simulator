@@ -32,6 +32,10 @@
     -fx-accent-blue: #3671C6;
     -fx-accent-pink: #FF87BC;
 
+    /* --- HUD del dashboard de carrera --- */
+    -fx-bg-panel: #0D0D12;
+    -fx-border-hud: #1E1E26;
+
     -fx-background-color: -fx-bg-0;
     -fx-font-family: "Titillium Web", "Adwaita Sans", sans-serif;
     -fx-font-size: 13px;
@@ -86,8 +90,42 @@
     -fx-background-color: -fx-bg-header;
     -fx-border-color: transparent transparent -fx-border-2 transparent;
     -fx-border-width: 0 0 1 0;
-    -fx-min-height: 54;
-    -fx-pref-height: 54;
+    -fx-min-height: 48;
+    -fx-pref-height: 48;
+}
+
+/* Glifo de clima: bloques Unicode, no emoji (JavaFX no dibuja Noto Color). */
+.header-weather-glyph {
+    -fx-font-size: 18px;
+    -fx-text-fill: -fx-text-2;
+}
+
+/* Engranaje y apagado de la derecha de la cabecera. */
+.header-icon-button {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 6;
+    -fx-cursor: hand;
+}
+
+.header-icon-button:hover {
+    -fx-background-color: #17171E;
+}
+
+.header-icon {
+    -fx-fill: transparent;
+    -fx-stroke: -fx-text-muted;
+    -fx-stroke-width: 1.6;
+    -fx-stroke-line-cap: round;
+    -fx-stroke-line-join: round;
+}
+
+.header-icon-button:hover .header-icon {
+    -fx-stroke: -fx-text-hero;
+}
+
+.header-icon-button.peligro:hover .header-icon {
+    -fx-stroke: #FF8A80;
 }
 
 .header-divider {
@@ -220,7 +258,7 @@
 .top-nav-item {
     -fx-background-color: transparent;
     -fx-background-radius: 0;
-    -fx-text-fill: -fx-text-faint;
+    -fx-text-fill: -fx-text-muted;
     -fx-font-size: 11px;
     -fx-font-weight: bold;
     -fx-padding: 0 26 0 26;
@@ -231,7 +269,7 @@
 }
 
 .top-nav-item:hover {
-    -fx-text-fill: -fx-text-2;
+    -fx-text-fill: -fx-text-1;
     -fx-background-color: #131318;
 }
 
@@ -943,10 +981,26 @@
 }
 
 .race-session-clock {
-    -fx-font-family: "Monospaced";
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
     -fx-font-size: 14px;
     -fx-font-weight: bold;
     -fx-text-fill: -fx-text-hero;
+}
+
+/* La barra de la franja hereda -fx-padding: 4 de .progress-bar y queda gorda. */
+.race-progress {
+    -fx-pref-height: 4;
+    -fx-min-height: 4;
+    -fx-max-height: 4;
+}
+
+.race-progress > .bar {
+    -fx-padding: 0;
+    -fx-background-radius: 2;
+}
+
+.race-progress > .track {
+    -fx-background-radius: 2;
 }
 
 .race-dashboard-separator {
@@ -1234,6 +1288,156 @@
 .hud-scroll, .hud-scroll > .viewport {
     -fx-background-color: transparent;
 }
+
+/* --- HUD inferior del coche --- */
+
+.hud-car-strip {
+    -fx-padding: 8 12 8 12;
+}
+
+.hud-portrait {
+    -fx-background-color: #101018;
+    -fx-border-color: -fx-border-hud;
+    -fx-border-width: 1;
+    -fx-min-width: 58;
+    -fx-min-height: 58;
+    -fx-max-width: 58;
+    -fx-max-height: 58;
+}
+
+.hud-driver-name {
+    -fx-font-size: 17px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.hud-selection {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-accent-blue;
+}
+
+.hud-highlight {
+    -fx-background-color: -fx-bg-panel;
+    -fx-border-color: -fx-border-hud;
+    -fx-border-width: 1;
+    -fx-padding: 6 12 6 12;
+}
+
+.hud-bar {
+    -fx-pref-height: 4;
+    -fx-min-height: 4;
+    -fx-max-height: 4;
+}
+
+.hud-bar > .bar {
+    -fx-padding: 0;
+    -fx-background-radius: 2;
+    -fx-background-color: -fx-accent-green;
+}
+
+.hud-bar > .track {
+    -fx-background-color: #1C1C24;
+    -fx-background-radius: 2;
+}
+
+.hud-bar.fuel > .bar {
+    -fx-background-color: -fx-accent-blue;
+}
+
+.hud-bar.ers > .bar {
+    -fx-background-color: -fx-accent-amber;
+}
+
+/* --- Panel derecho --- */
+
+.hud-weather-glyph {
+    -fx-font-size: 26px;
+    -fx-text-fill: -fx-text-2;
+}
+
+.hud-car-frame {
+    -fx-background-color: #06060B;
+    -fx-border-color: -fx-border-hud;
+    -fx-border-width: 1;
+    -fx-padding: 4;
+}
+
+.hud-tile {
+    -fx-background-color: -fx-bg-panel;
+    -fx-border-color: -fx-border-hud;
+    -fx-border-width: 1;
+    -fx-padding: 5 8 5 8;
+}
+
+.hud-tile-value {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 17px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+/* Semáforo de las baldosas: lo pone estadoBaldosa() según el umbral. */
+.hud-tile-value.ok { -fx-text-fill: -fx-accent-green; }
+.hud-tile-value.warn { -fx-text-fill: -fx-accent-amber; }
+.hud-tile-value.crit { -fx-text-fill: -fx-accent-red; }
+
+/* --- Feed de mensajes --- */
+
+.hud-feed {
+    -fx-background-color: transparent;
+}
+
+.feed-row {
+    -fx-padding: 5 2 5 2;
+    -fx-border-color: transparent transparent rgba(255,255,255,0.05) transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.feed-dot {
+    -fx-min-width: 7;
+    -fx-max-width: 7;
+    -fx-min-height: 7;
+    -fx-max-height: 7;
+    -fx-background-radius: 4;
+    -fx-background-color: -fx-text-faint;
+}
+
+.feed-dot.positivo { -fx-background-color: -fx-accent-green; }
+.feed-dot.leve     { -fx-background-color: -fx-accent-amber; }
+.feed-dot.grave    { -fx-background-color: -fx-accent-red; }
+.feed-dot.clima    { -fx-background-color: -fx-accent-blue; }
+
+.feed-text {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-1;
+}
+
+.feed-driver {
+    -fx-font-size: 10px;
+    -fx-text-fill: -fx-text-muted;
+}
+
+.feed-time {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 10px;
+    -fx-text-fill: -fx-text-faint;
+}
+
+/* --- Indicador de estado de vuelta en la torre --- */
+
+.tower-state {
+    -fx-min-width: 7;
+    -fx-max-width: 7;
+    -fx-min-height: 7;
+    -fx-max-height: 7;
+    -fx-background-radius: 4;
+}
+
+.tower-state.valida     { -fx-background-color: -fx-accent-green; }
+.tower-state.invalidada { -fx-background-color: -fx-accent-amber; }
+.tower-state.fuera      { -fx-background-color: #3A3A44; }
 
 /* ---------------------------------------------------------------------
    Torre de tiempos
