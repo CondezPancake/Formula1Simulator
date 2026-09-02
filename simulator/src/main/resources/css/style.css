@@ -2389,23 +2389,214 @@
     -fx-text-fill: rgba(255,255,255,0.72);
 }
 
-/* Marcos de la ficha de equipo: el color del borde lo pone el controlador. */
-.team-detail-logo {
-    -fx-background-color: -fx-surface-3;
-    -fx-background-radius: 10;
-    -fx-border-radius: 10;
-    -fx-border-width: 2;
-    -fx-min-width: 92;
-    -fx-min-height: 92;
-    -fx-max-width: 92;
-    -fx-max-height: 92;
+/* =============================================================
+   Ficha de escuderia (Explorar > TEAMS > detalle)
+
+   Reparto de formula1.com/en/teams/<equipo> con acabado de HUD: el
+   color de cada equipo entra inline desde TeamDetailController, aqui
+   solo lo comun. Radios pequenos a proposito: la referencia de
+   videojuego es angulosa, no redondeada.
+   ============================================================= */
+
+.team-hub, .team-hub-scroll, .team-hub-scroll > .viewport, .team-hub-body {
+    -fx-background-color: -fx-bg-0;
 }
 
-.team-detail-car {
-    -fx-background-color: -fx-surface-3;
-    -fx-background-radius: 10;
-    -fx-border-radius: 10;
-    -fx-border-width: 2;
+.team-hub-scroll > .corner,
+.team-hub-scroll .scroll-bar,
+.team-hub-scroll .scroll-bar .track {
+    -fx-background-color: -fx-bg-0;
+}
+
+.team-hub-scroll .scroll-bar .thumb {
+    -fx-background-color: -fx-border-1;
+    -fx-background-radius: 5;
+}
+
+/* --- hero --- */
+
+.team-hero {
+    -fx-background-color: #08080A;
+}
+
+.team-hero-content {
+    -fx-padding: 22 26 22 26;
+}
+
+.team-hero-logo {
+    -fx-min-height: 58;
+    -fx-max-height: 58;
+}
+
+/* El nombre lo inclina un Shear desde el controlador: la Titillium Web
+   empaquetada no trae cara italica y JavaFX no la sintetiza. */
+.team-hero-name {
+    -fx-font-size: 46px;
+    -fx-font-weight: 900;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.team-hero-meta {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 11px;
+    -fx-text-fill: rgba(255,255,255,0.75);
+}
+
+/* Chip del chasis; el fondo lo pone el color del equipo. */
+.team-hero-chip {
+    -fx-background-radius: 3;
+    -fx-padding: 3 9 3 9;
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+/* --- secciones y cifras --- */
+
+.team-section {
+    -fx-padding: 18 26 18 26;
+}
+
+.team-section-title {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-faint;
+}
+
+.team-rule {
+    -fx-min-height: 1;
+    -fx-max-height: 1;
+    -fx-background-color: rgba(255,255,255,0.06);
+}
+
+.team-stat {
+    -fx-background-color: -fx-bg-panel;
+    -fx-border-color: -fx-border-hud;
+    -fx-border-width: 1;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+    -fx-padding: 12 16 12 16;
+}
+
+.team-stat-value {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.team-stat-label {
+    -fx-font-size: 9px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-faint;
+}
+
+/* --- tarjeta de piloto --- */
+
+.team-driver-card {
+    -fx-background-color: transparent;
+    -fx-background-radius: 6;
+    -fx-padding: 0;
+}
+
+.team-driver-first {
+    -fx-font-size: 17px;
+    -fx-text-fill: rgba(255,255,255,0.88);
+}
+
+.team-driver-last {
+    -fx-font-size: 27px;
+    -fx-font-weight: 900;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.team-driver-code {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 10px;
+    -fx-text-fill: rgba(255,255,255,0.7);
+}
+
+/* Dorsal fantasma, como en la tarjeta del catalogo. */
+.team-driver-number {
+    -fx-font-size: 44px;
+    -fx-font-weight: 900;
+    -fx-text-fill: white;
+    -fx-opacity: 0.25;
+}
+
+.team-skill-label {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 8px;
+    -fx-font-weight: bold;
+    -fx-text-fill: rgba(255,255,255,0.72);
+}
+
+.team-skill-bar {
+    -fx-pref-height: 3;
+    -fx-min-height: 3;
+    -fx-max-height: 3;
+}
+
+.team-skill-bar > .bar {
+    -fx-padding: 0;
+    -fx-background-radius: 2;
+}
+
+.team-skill-bar > .track {
+    -fx-background-color: rgba(0,0,0,0.45);
+    -fx-background-radius: 2;
+}
+
+/* --- summary y profile --- */
+
+.team-glass {
+    -fx-background-color: rgba(255,255,255,0.03);
+    -fx-border-color: rgba(255,255,255,0.10);
+    -fx-border-width: 1;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-padding: 16 18 16 18;
+}
+
+.team-prose {
+    -fx-font-size: 12px;
+    -fx-line-spacing: 3px;
+    -fx-text-fill: -fx-text-2;
+}
+
+.team-summary-value {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 19px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.team-profile-row {
+    -fx-padding: 5 0 5 0;
+    -fx-border-color: transparent transparent rgba(255,255,255,0.05) transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.team-profile-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: -fx-text-muted;
+}
+
+.team-profile-value {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-1;
+}
+
+/* --- galeria --- */
+
+.team-gallery-item {
+    -fx-background-color: #08080A;
+    -fx-border-color: -fx-border-hud;
+    -fx-border-width: 1;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
 }
 
 .menu-arte-velo {

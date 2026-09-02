@@ -370,7 +370,19 @@
         1,
         2
       ],
-      "imagen": "https://upload.wikimedia.org/wikipedia/commons/b/bb/Red_Bull_Racing_Logo.svg"
+      "imagen": "https://upload.wikimedia.org/wikipedia/commons/b/bb/Red_Bull_Racing_Logo.svg",
+      "nombre_completo": "Oracle Red Bull Racing",
+      "base": "Milton Keynes, Reino Unido",
+      "jefe_equipo": "Christian Horner",
+      "jefe_tecnico": "Pierre Waché",
+      "piloto_reserva": "Liam Lawson",
+      "primera_participacion": 2005,
+      "campeonatos": 6,
+      "gran_premios": 379,
+      "victorias": 118,
+      "podios": 285,
+      "poles": 103,
+      "descripcion": "Nacida de la compra de Jaguar en 2005, tardó cinco años en ganar y desde entonces ha dominado dos eras distintas del reglamento. Su fábrica de Milton Keynes es hoy la referencia en aerodinámica de la parrilla."
     },
     {
       "nombre": "Mercedes-AMG Petronas",
@@ -380,7 +392,19 @@
         3,
         4
       ],
-      "imagen": "https://upload.wikimedia.org/wikipedia/commons/3/32/Mercedes_AMG_Petronas_F1_Team_logo.svg"
+      "imagen": "https://upload.wikimedia.org/wikipedia/commons/3/32/Mercedes_AMG_Petronas_F1_Team_logo.svg",
+      "nombre_completo": "Mercedes-AMG PETRONAS Formula One Team",
+      "base": "Brackley, Reino Unido",
+      "jefe_equipo": "Toto Wolff",
+      "jefe_tecnico": "James Allison",
+      "piloto_reserva": "Frederik Vesti",
+      "primera_participacion": 1970,
+      "campeonatos": 8,
+      "gran_premios": 285,
+      "victorias": 125,
+      "podios": 287,
+      "poles": 137,
+      "descripcion": "La escudería que convirtió la llegada de los motores híbridos en ocho títulos de constructores consecutivos. Fabrica su propia unidad de potencia en Brixworth y la suministra a media parrilla."
     },
     {
       "nombre": "Ferrari",
@@ -390,7 +414,19 @@
         5,
         6
       ],
-      "imagen": "https://upload.wikimedia.org/wikipedia/en/d/d4/Scuderia_Ferrari_Logo.svg"
+      "imagen": "https://upload.wikimedia.org/wikipedia/en/d/d4/Scuderia_Ferrari_Logo.svg",
+      "nombre_completo": "Scuderia Ferrari",
+      "base": "Maranello, Italia",
+      "jefe_equipo": "Frédéric Vasseur",
+      "jefe_tecnico": "Enrico Cardile",
+      "piloto_reserva": "Antonio Giovinazzi",
+      "primera_participacion": 1950,
+      "campeonatos": 16,
+      "gran_premios": 1102,
+      "victorias": 246,
+      "podios": 819,
+      "poles": 253,
+      "descripcion": "El único equipo que ha estado en la parrilla desde el primer campeonato de 1950. Diseña y construye chasis y motor en Maranello, y acumula más victorias, podios y poles que ninguna otra escudería."
     },
     {
       "nombre": "McLaren",
@@ -400,7 +436,19 @@
         7,
         8
       ],
-      "imagen": ""
+      "imagen": "",
+      "nombre_completo": "McLaren Formula 1 Team",
+      "base": "Woking, Reino Unido",
+      "jefe_equipo": "Andrea Stella",
+      "jefe_tecnico": "Peter Prodromou",
+      "piloto_reserva": "Ryo Hirakawa",
+      "primera_participacion": 1966,
+      "campeonatos": 9,
+      "gran_premios": 976,
+      "victorias": 189,
+      "podios": 534,
+      "poles": 165,
+      "descripcion": "Fundada por el piloto neozelandés Bruce McLaren, es la segunda más laureada de la historia. Su túnel de viento propio en Woking marcó el regreso al podio tras una larga travesía."
     },
     {
       "nombre": "Aston Martin",
@@ -410,7 +458,19 @@
         9,
         10
       ],
-      "imagen": ""
+      "imagen": "",
+      "nombre_completo": "Aston Martin Aramco Formula One Team",
+      "base": "Silverstone, Reino Unido",
+      "jefe_equipo": "Mike Krack",
+      "jefe_tecnico": "Dan Fallows",
+      "piloto_reserva": "Felipe Drugovich",
+      "primera_participacion": 2021,
+      "campeonatos": 0,
+      "gran_premios": 92,
+      "victorias": 0,
+      "podios": 9,
+      "poles": 0,
+      "descripcion": "El regreso de la marca británica a la F1 tras seis décadas, sobre la estructura de Racing Point. Su nueva fábrica junto al circuito de Silverstone es la más moderna de la parrilla."
     },
     {
       "nombre": "Alpine",
@@ -420,7 +480,19 @@
         11,
         12
       ],
-      "imagen": ""
+      "imagen": "",
+      "nombre_completo": "BWT Alpine F1 Team",
+      "base": "Enstone, Reino Unido",
+      "jefe_equipo": "Bruno Famin",
+      "jefe_tecnico": "Matt Harman",
+      "piloto_reserva": "Jack Doohan",
+      "primera_participacion": 2021,
+      "campeonatos": 0,
+      "gran_premios": 92,
+      "victorias": 1,
+      "podios": 3,
+      "poles": 0,
+      "descripcion": "La marca deportiva de Renault tomó el relevo del equipo de Enstone en 2021. Es el único constructor de la parrilla con chasis en Inglaterra y motor en Francia, en Viry-Châtillon."
     },
     {
       "nombre": "Alfa Romeo",
@@ -430,7 +502,19 @@
         13,
         14
       ],
-      "imagen": ""
+      "imagen": "",
+      "nombre_completo": "Alfa Romeo F1 Team Stake",
+      "base": "Hinwil, Suiza",
+      "jefe_equipo": "Alessandro Alunni Bravi",
+      "jefe_tecnico": "James Key",
+      "piloto_reserva": "Theo Pourchaire",
+      "primera_participacion": 1993,
+      "campeonatos": 0,
+      "gran_premios": 560,
+      "victorias": 1,
+      "podios": 27,
+      "poles": 1,
+      "descripcion": "La estructura de Hinwil, históricamente Sauber, corre bajo licencia de Alfa Romeo. Su túnel de viento suizo es uno de los pocos que quedan en propiedad de un equipo mediano."
     },
     {
       "nombre": "Haas",
@@ -440,7 +524,19 @@
         15,
         16
       ],
-      "imagen": ""
+      "imagen": "",
+      "nombre_completo": "MoneyGram Haas F1 Team",
+      "base": "Kannapolis, Estados Unidos",
+      "jefe_equipo": "Ayao Komatsu",
+      "jefe_tecnico": "Simone Resta",
+      "piloto_reserva": "Pietro Fittipaldi",
+      "primera_participacion": 2016,
+      "campeonatos": 0,
+      "gran_premios": 179,
+      "victorias": 0,
+      "podios": 0,
+      "poles": 1,
+      "descripcion": "El primer equipo estadounidense en tres décadas y el más pequeño de la parrilla: compra a Ferrari todo lo que el reglamento permite comprar y reparte su operación entre Carolina del Norte, Banbury y Maranello."
     },
     {
       "nombre": "AlphaTauri",
@@ -450,7 +546,19 @@
         17,
         18
       ],
-      "imagen": ""
+      "imagen": "",
+      "nombre_completo": "Scuderia AlphaTauri",
+      "base": "Faenza, Italia",
+      "jefe_equipo": "Laurent Mekies",
+      "jefe_tecnico": "Jody Egginton",
+      "piloto_reserva": "Liam Lawson",
+      "primera_participacion": 2006,
+      "campeonatos": 0,
+      "gran_premios": 360,
+      "victorias": 2,
+      "podios": 5,
+      "poles": 1,
+      "descripcion": "El segundo equipo de Red Bull, antes Toro Rosso, es la escuela por la que pasan sus jóvenes promesas. Sus dos victorias llegaron en Monza, con catorce años de diferencia."
     },
     {
       "nombre": "Williams",
@@ -460,7 +568,19 @@
         19,
         20
       ],
-      "imagen": ""
+      "imagen": "",
+      "nombre_completo": "Williams Racing",
+      "base": "Grove, Reino Unido",
+      "jefe_equipo": "James Vowles",
+      "jefe_tecnico": "Pat Fry",
+      "piloto_reserva": "Franco Colapinto",
+      "primera_participacion": 1977,
+      "campeonatos": 9,
+      "gran_premios": 800,
+      "victorias": 114,
+      "podios": 313,
+      "poles": 128,
+      "descripcion": "La escudería de Frank Williams dominó los ochenta y los noventa con nueve títulos de constructores. Tras años en la cola de la parrilla, reconstruye su estructura técnica desde Grove."
     }
   ],
   "vehiculos": [
