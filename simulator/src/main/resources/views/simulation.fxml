@@ -283,7 +283,15 @@
                                     </HBox>
                                     <Label fx:id="lblDashboardMensaje" text="Esperando el inicio de la sesión"
                                            wrapText="true" styleClass="race-engineer-message"/>
-                                    <!-- Feed de incidencias: lo puebla registrarEventoEnVivo. -->
+                                    <HBox spacing="8" alignment="CENTER_LEFT" styleClass="pit-stop-status">
+                                        <Label text="BOX" styleClass="hud-group-title"/>
+                                        <Label fx:id="lblPitStopEstado" text="SIN PARADA"
+                                               styleClass="pit-stop-phase"/>
+                                        <Region HBox.hgrow="ALWAYS"/>
+                                        <Label fx:id="lblPitStopTiempo" text="—"
+                                               styleClass="pit-stop-time"/>
+                                    </HBox>
+                                    <!-- Feed de incidencias y decisiones automáticas de boxes. -->
                                     <ScrollPane fitToWidth="true" styleClass="edge-to-edge,hud-scroll"
                                                 prefHeight="150" minHeight="90">
                                         <VBox fx:id="feedEventos" spacing="0" styleClass="hud-feed"/>

@@ -11,6 +11,7 @@ import com.formula1.model.EventImpact;
 import com.formula1.model.EventOccurrence;
 import com.formula1.model.LapResult;
 import com.formula1.model.LapStatus;
+import com.formula1.model.PitStopRecord;
 import com.formula1.model.QualifyingSession;
 import com.formula1.model.SimulationConfig;
 import com.formula1.model.SimulationSnapshot;
@@ -31,6 +32,7 @@ import javafx.concurrent.Task;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.BooleanSupplier;
 
@@ -54,6 +56,8 @@ public class QualifyingService {
     private final EventManager eventos;
     private final EventContextFactory fabricaContextoEventos;
     private final EventEffectService efectosEventos;
+    private final PitStopService paradasBoxes;
+    private final PitStopPolicy politicaPitStop;
 
     public QualifyingService() {
         this(DataStore.getInstance(), new LapTimeCalculator());
@@ -76,6 +80,19 @@ public class QualifyingService {
 
     QualifyingService(DataStore datos, LapTimeCalculator calculadora,
                       DynamicWeatherService climaDinamico, EventManager eventos) {
+        this(datos, calculadora, climaDinamico, eventos, new PitStopService());
+    }
+
+    QualifyingService(DataStore datos, LapTimeCalculator calculadora,
+                      DynamicWeatherService climaDinamico, EventManager eventos,
+                      PitStopService paradasBoxes) {
+        this(datos, calculadora, climaDinamico, eventos, paradasBoxes,
+                new ContextualPitStopPolicy());
+    }
+
+    QualifyingService(DataStore datos, LapTimeCalculator calculadora,
+                      DynamicWeatherService climaDinamico, EventManager eventos,
+                      PitStopService paradasBoxes, PitStopPolicy politicaPitStop) {
         this.datos = datos;
         this.calculadora = calculadora;
         this.calculadoraTelemetria = new TelemetryCalculator();
@@ -85,6 +102,8 @@ public class QualifyingService {
         this.eventos = eventos;
         this.fabricaContextoEventos = new EventContextFactory();
         this.efectosEventos = new EventEffectService();
+        this.paradasBoxes = paradasBoxes;
+        this.politicaPitStop = politicaPitStop;
         this.pilotos = new DriverService(datos);
         this.vehiculos = new VehicleService(datos);
         this.circuitos = new CircuitService(datos);
@@ -153,6 +172,18 @@ public class QualifyingService {
                               ClasificacionEnVivo clasificacionEnVivo,
                               ControlSimulacion controlSimulacion,
                               EventosEnVivo observadorEventos) {
+        return simular(config, clima, progreso, evolucion, telemetria,
+                observadorPista, clasificacionEnVivo, controlSimulacion,
+                observadorEventos, null);
+    }
+
+    QualifyingSession simular(SimulationConfig config, WeatherCondition clima,
+                              Progreso progreso, Evolucion evolucion, Telemetria telemetria,
+                              EvolucionPista observadorPista,
+                              ClasificacionEnVivo clasificacionEnVivo,
+                              ControlSimulacion controlSimulacion,
+                              EventosEnVivo observadorEventos,
+                              PitStopsEnVivo observadorPitStops) {
         Circuit circuito = validarSeleccion(config);
         if (clima == null) {
             throw new ValidationException("Las condiciones climáticas no pueden ser nulas");
@@ -169,6 +200,7 @@ public class QualifyingService {
         List<WeatherSnapshot> climaSeleccionado = List.of();
         double gomaPista = 0;
         eventos.startSession();
+        paradasBoxes.startSession();
 
         for (int i = 0; i < parrilla.size(); i++) {
             Driver piloto = parrilla.get(i);
@@ -239,9 +271,10 @@ public class QualifyingService {
         EstadoReproduccion estadoReproduccion = reproducirVueltaEnVivo(
                 resultados, evolucionSeleccionada, evolucionVuelta,
                 evolucion, telemetria, clasificacionEnVivo, controlSimulacion,
-                eventosSesion, observadorEventos);
+                eventosSesion, observadorEventos, observadorPitStops);
         List<LapResult> resultadosGuardados = estadoReproduccion.completa()
-                ? resultados : estadoReproduccion.clasificacion();
+                ? resultadosConParadas(resultados)
+                : estadoReproduccion.clasificacion();
         int segmentosGenerados = estadoReproduccion.segmentosGenerados();
 
         QualifyingSession sesion = new QualifyingSession(circuito.getNombre(), clima, config);
@@ -252,6 +285,7 @@ public class QualifyingService {
         sesion.setEvolucionVuelta(primeros(evolucionVuelta, segmentosGenerados));
         sesion.setEvolucionPista(historialPista);
         sesion.setEventos(eventosHasta(eventosSesion, segmentosGenerados));
+        sesion.setParadasBoxes(paradasBoxes.history());
         sesion.setFecha(DateUtils.format(DateUtils.now()));
         config.setGuardadoEn(sesion.getFecha());
         return sesion;
@@ -270,7 +304,8 @@ public class QualifyingService {
                                         ClasificacionEnVivo clasificacionEnVivo,
                                         ControlSimulacion controlSimulacion,
                                         List<EventOccurrence> eventosSesion,
-                                        EventosEnVivo observadorEventos) {
+                                        EventosEnVivo observadorEventos,
+                                        PitStopsEnVivo observadorPitStops) {
         List<LapResult> ultimaClasificacion = List.of();
         int segmentosGenerados = 0;
         for (int indice = 0; indice < SEGMENTOS_EVOLUCION; indice++) {
@@ -284,7 +319,24 @@ public class QualifyingService {
                         .filter(evento -> evento.sector() == sector)
                         .forEach(observadorEventos::actualizar);
             }
+            List<LapResult> clasificacionAntesDeBoxes =
+                    clasificacionEnSegmento(resultados, segmento);
+            clasificacionAntesDeBoxes.stream()
+                    .filter(resultado -> !paradasBoxes.hasStop(resultado.getPilotoId()))
+                    .map(resultado -> politicaPitStop.evaluate(
+                            resultado, segmento, SEGMENTOS_EVOLUCION))
+                    .flatMap(Optional::stream)
+                    .forEach(decision -> paradasBoxes.start(
+                            decision, clasificacionAntesDeBoxes,
+                            segmento, SEGMENTOS_EVOLUCION));
+            paradasBoxes.advance(segmento);
             ultimaClasificacion = clasificacionEnSegmento(resultados, segmento);
+            if (observadorPitStops != null) {
+                paradasBoxes.collectUpdates(ultimaClasificacion)
+                        .forEach(observadorPitStops::actualizar);
+            } else {
+                paradasBoxes.collectUpdates(ultimaClasificacion);
+            }
             if (clasificacionEnVivo != null) {
                 clasificacionEnVivo.actualizar(ultimaClasificacion);
             }
@@ -332,6 +384,8 @@ public class QualifyingService {
     private LapResult resultadoEnSegmento(LapResult resultado, int segmento) {
         LapResult parcial = copiarResultado(resultado);
         parcial.setTiempoSegundos(tiempoAcumulado(resultado, segmento));
+        parcial.setTiempoSegundos(parcial.getTiempoSegundos()
+                + paradasBoxes.timeLossFor(resultado.getPilotoId()));
 
         boolean incidenteAlcanzado = !resultado.isVueltaValida()
                 && (resultado.getSectorIncidente() == TrackSector.NONE
@@ -344,6 +398,32 @@ public class QualifyingService {
                 ? resultado.getSectorIncidente() : TrackSector.NONE);
         parcial.setEventos(eventosHasta(resultado.getEventos(), segmento));
         return parcial;
+    }
+
+    private List<LapResult> resultadosConParadas(List<LapResult> resultados) {
+        Map<Integer, PitStopRecord> porPiloto = paradasBoxes.history().stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        PitStopRecord::pilotoId, parada -> parada));
+        List<LapResult> ajustados = resultados.stream()
+                .map(this::copiarResultado)
+                .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+        for (LapResult resultado : ajustados) {
+            PitStopRecord parada = porPiloto.get(resultado.getPilotoId());
+            if (parada == null || !resultado.isVueltaValida()) {
+                continue;
+            }
+            resultado.setTiempoSegundos(
+                    resultado.getTiempoSegundos() + parada.tiempoPerdidoSegundos());
+            if (resultado.hasSectorTimes()) {
+                TrackSector sector = TrackSector.desdeSegmento(
+                        parada.segmentoEntrada(), SEGMENTOS_EVOLUCION);
+                resultado.setSectorTimes(resultado.getSectorTimes()
+                        .conTiempoAdicional(sector, parada.tiempoPerdidoSegundos()));
+            }
+        }
+        ordenarParrilla(ajustados);
+        paradasBoxes.updateFinalPositions(ajustados);
+        return List.copyOf(ajustados);
     }
 
     private double tiempoAcumulado(LapResult resultado, int segmento) {
@@ -458,6 +538,18 @@ public class QualifyingService {
                                               ClasificacionEnVivo clasificacionEnVivo,
                                               EventosEnVivo observadorEventos,
                                               BooleanSupplier finalizarSolicitado) {
+        return crearTarea(config, evolucion, telemetria, observadorPista,
+                clasificacionEnVivo, observadorEventos, null,
+                finalizarSolicitado);
+    }
+
+    public Task<QualifyingSession> crearTarea(SimulationConfig config, Evolucion evolucion,
+                                              Telemetria telemetria,
+                                              EvolucionPista observadorPista,
+                                              ClasificacionEnVivo clasificacionEnVivo,
+                                              EventosEnVivo observadorEventos,
+                                              PitStopsEnVivo observadorPitStops,
+                                              BooleanSupplier finalizarSolicitado) {
         return new Task<>() {
             @Override
             protected QualifyingSession call() throws Exception {
@@ -484,7 +576,8 @@ public class QualifyingService {
                                     + fotograma + " de " + total);
                             return regulador.completarFotograma(fotograma, total);
                         },
-                        observadorEventos);
+                        observadorEventos,
+                        observadorPitStops);
 
                 if (!finalizarSolicitado.getAsBoolean()) {
                     updateProgress(1, 1);
@@ -746,6 +839,12 @@ public class QualifyingService {
     @FunctionalInterface
     public interface EventosEnVivo {
         void actualizar(EventOccurrence evento);
+    }
+
+    /** Cambio de fase de una parada, emitido después de reordenar la parrilla. */
+    @FunctionalInterface
+    public interface PitStopsEnVivo {
+        void actualizar(PitStopRecord parada);
     }
 
     /** Punto de extensión del reloj: permite temporizar o finalizar sin acoplar la UI. */

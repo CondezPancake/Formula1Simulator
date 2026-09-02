@@ -980,6 +980,24 @@
     -fx-background-color: derive(-fx-accent-red, -55%);
 }
 
+.pit-stop-status {
+    -fx-background-color: rgba(242,183,5,0.08);
+    -fx-border-color: rgba(242,183,5,0.35);
+    -fx-border-width: 0 0 0 2;
+    -fx-padding: 6 8;
+}
+
+.pit-stop-phase {
+    -fx-text-fill: #F2B705;
+    -fx-font-weight: bold;
+}
+
+.pit-stop-time {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-text-fill: -fx-text-muted;
+    -fx-font-size: 10px;
+}
+
 .race-session-clock {
     -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
     -fx-font-size: 14px;
@@ -1407,6 +1425,7 @@
 .feed-dot.leve     { -fx-background-color: -fx-accent-amber; }
 .feed-dot.grave    { -fx-background-color: -fx-accent-red; }
 .feed-dot.clima    { -fx-background-color: -fx-accent-blue; }
+.feed-dot.pit      { -fx-background-color: #F2B705; }
 
 .feed-text {
     -fx-font-size: 11px;

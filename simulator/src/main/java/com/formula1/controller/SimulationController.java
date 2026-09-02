@@ -9,6 +9,7 @@ import com.formula1.model.EventOccurrence;
 import com.formula1.model.FuelStrategy;
 import com.formula1.model.LapResult;
 import com.formula1.model.LapStatus;
+import com.formula1.model.PitStopRecord;
 import com.formula1.model.QualifyingSession;
 import com.formula1.model.SimulationConfig;
 import com.formula1.model.SimulationSnapshot;
@@ -125,6 +126,8 @@ public class SimulationController {
     @FXML private Label lblMejorVueltaPiloto;
     @FXML private Label lblDashboardEvento;
     @FXML private Label lblDashboardMensaje;
+    @FXML private Label lblPitStopEstado;
+    @FXML private Label lblPitStopTiempo;
     @FXML private Label lblDashboardCombustible;
     @FXML private Label lblDashboardDesgaste;
     @FXML private Label lblTempNeumaticoPanel;
@@ -247,6 +250,7 @@ public class SimulationController {
     private final Set<String> eventosEnVivoRegistrados = new HashSet<>();
     private final Deque<EventOccurrence> colaNotificaciones = new ArrayDeque<>();
     private CircuitoEnVivo circuitoEnVivo;
+    private PitStopPresenter pitStopPresenter;
     /** Código de tres letras por piloto; lo consulta cada fila de la torre. */
     private final Map<Integer, String> codigosPiloto = new HashMap<>();
     /** Mejor tiempo por sector, para los rótulos flotantes del mapa. */
@@ -278,6 +282,8 @@ public class SimulationController {
         // Antes que nada: actualizarMapaCircuito se llama al final de este
         // método y ya necesita el componente montado.
         circuitoEnVivo = new CircuitoEnVivo(contenedorMapa);
+        pitStopPresenter = new PitStopPresenter(lblPitStopEstado, lblPitStopTiempo,
+                lblDashboardEvento, lblDashboardMensaje, feedEventos);
         circuitoEnVivo.setAlSeleccionarPiloto(ExploreDriversController::abrirFicha);
         circuitoEnVivo.pilotoResaltadoProperty().addListener((o, a, b) -> torreTiempos.refresh());
 
@@ -528,6 +534,7 @@ public class SimulationController {
         btnVerEventos.setDisable(sesion.getEventos().isEmpty());
         feedEventos.getChildren().clear();
         sesion.getEventos().forEach(this::anadirAlFeed);
+        sesion.getParadasBoxes().forEach(pitStopPresenter::addToFeed);
         actualizarEtiquetasSector(sesion.getResultados());
         comparacionSectoresController.cargar(sesion.getResultados());
         mostrarPistaDeSesion(sesion);
@@ -538,8 +545,10 @@ public class SimulationController {
         lblDashboardMensaje.setText(pole == null ? "Sesión terminada sin vueltas válidas"
                 : "Pole para " + pole.getPiloto() + " con "
                         + FormatUtils.formatLapTime(pole.getTiempoSegundos()));
-        lblDashboardEvento.setText(sesion.getEventos().isEmpty()
-                ? "SIN EVENTOS" : sesion.getEventos().size() + " EVENTOS");
+        int incidencias = sesion.getEventos().size() + sesion.getParadasBoxes().size();
+        lblDashboardEvento.setText(incidencias == 0
+                ? "SIN EVENTOS" : incidencias + " EVENTOS");
+        pitStopPresenter.showLatest(sesion.getParadasBoxes());
         lblPolePiloto.setText(pole == null ? "—" : pole.getPiloto());
         lblPoleTiempo.setText(pole == null ? "—"
                 : FormatUtils.formatLapTime(pole.getTiempoSegundos()));
@@ -728,6 +737,7 @@ public class SimulationController {
                 .versionConfiguracion();
         finalizarSolicitado.set(false);
         btnFinalizar.setText("Finalizar");
+        pitStopPresenter.reset();
         iniciarContador();
 
         reiniciarEvolucion();
@@ -757,6 +767,7 @@ public class SimulationController {
                 muestra -> Platform.runLater(() -> mostrarEvolucionPista(muestra)),
                 resultados -> Platform.runLater(() -> mostrarClasificacionEnVivo(resultados)),
                 evento -> Platform.runLater(() -> registrarEventoEnVivo(evento)),
+                parada -> Platform.runLater(() -> mostrarPitStop(parada)),
                 finalizarSolicitado::get);
 
         // Enlazar en vez de asignar: el Task publica sus cambios en el hilo
@@ -924,6 +935,7 @@ public class SimulationController {
         eventosEnVivoRegistrados.clear();
         colaNotificaciones.clear();
         ocultarNotificacionEvento();
+        pitStopPresenter.reset();
         reiniciarPistaYClima();
     }
 
@@ -1344,6 +1356,15 @@ public class SimulationController {
             colaNotificaciones.add(evento);
             mostrarSiguienteNotificacion();
         }
+    }
+
+    /** Presenta un cambio de fase sin trasladar reglas de boxes a JavaFX. */
+    private void mostrarPitStop(PitStopRecord parada) {
+        String clave = "PIT:" + parada.id() + ":" + parada.fase();
+        if (!eventosEnVivoRegistrados.add(clave)) {
+            return;
+        }
+        pitStopPresenter.present(parada);
     }
 
     /**

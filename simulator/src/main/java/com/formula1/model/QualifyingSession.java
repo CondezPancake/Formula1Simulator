@@ -25,6 +25,7 @@ public class QualifyingSession {
     private List<TelemetrySnapshot> evolucionVuelta;
     private List<TrackEvolutionSnapshot> evolucionPista;
     private List<EventOccurrence> eventos;
+    private List<PitStopRecord> paradasBoxes;
     private String fecha;
 
     public QualifyingSession() {
@@ -34,6 +35,7 @@ public class QualifyingSession {
         this.evolucionVuelta = new ArrayList<>();
         this.evolucionPista = new ArrayList<>();
         this.eventos = new ArrayList<>();
+        this.paradasBoxes = new ArrayList<>();
     }
 
     public QualifyingSession(String circuito, WeatherCondition clima, SimulationConfig config) {
@@ -108,6 +110,17 @@ public class QualifyingSession {
 
     public void setEventos(List<EventOccurrence> eventos) {
         this.eventos = eventos == null ? new ArrayList<>() : new ArrayList<>(eventos);
+    }
+
+    /** Último estado persistido de cada parada solicitada durante la sesión. */
+    public List<PitStopRecord> getParadasBoxes() {
+        return paradasBoxes == null ? List.of() : List.copyOf(paradasBoxes);
+    }
+
+    public void setParadasBoxes(List<PitStopRecord> paradasBoxes) {
+        this.paradasBoxes = paradasBoxes == null
+                ? new ArrayList<>()
+                : new ArrayList<>(paradasBoxes);
     }
 
     /**
