@@ -26,6 +26,7 @@ public class SimulationConfig {
     private DrivingMode modo;
     private AerodynamicLoad aerodinamica;
     private TirePressure presion;
+    private TireCompound compuestoInicial;
     private FuelStrategy combustible;
     private int duracionSegundos;
     private String guardadoEn;
@@ -35,6 +36,7 @@ public class SimulationConfig {
         this.modo = DrivingMode.NORMAL;
         this.aerodinamica = AerodynamicLoad.MEDIA;
         this.presion = TirePressure.ESTANDAR;
+        this.compuestoInicial = TireCompound.MEDIUM;
         this.combustible = FuelStrategy.BALANCEADA;
         this.duracionSegundos = DURACION_PREDETERMINADA_SEGUNDOS;
     }
@@ -125,6 +127,15 @@ public class SimulationConfig {
         this.presion = presion;
     }
 
+    public TireCompound getCompuestoInicial() {
+        return compuestoInicial == null ? TireCompound.MEDIUM : compuestoInicial;
+    }
+
+    public void setCompuestoInicial(TireCompound compuestoInicial) {
+        this.compuestoInicial = compuestoInicial == null
+                ? TireCompound.MEDIUM : compuestoInicial;
+    }
+
     public FuelStrategy getCombustible() {
         return combustible;
     }
@@ -174,7 +185,8 @@ public class SimulationConfig {
                 ? vehiculo
                 : "Piloto #" + pilotoId + " · " + vehiculo;
         return seleccion + " · " + modo + " · Aero " + aerodinamica
-                + " · Presión " + presion + " · " + combustible
+                + " · Presión " + presion + " · Compuesto " + getCompuestoInicial()
+                + " · " + combustible
                 + " · " + getDuracionSegundos() + " s";
     }
 }

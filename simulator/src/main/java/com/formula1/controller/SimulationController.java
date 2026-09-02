@@ -14,6 +14,8 @@ import com.formula1.model.QualifyingSession;
 import com.formula1.model.SimulationConfig;
 import com.formula1.model.SimulationSnapshot;
 import com.formula1.model.TelemetrySnapshot;
+import com.formula1.model.TireChangeRecord;
+import com.formula1.model.TireCompound;
 import com.formula1.model.TirePressure;
 import com.formula1.model.TrackEvolutionSnapshot;
 import com.formula1.model.TrackFlag;
@@ -130,6 +132,7 @@ public class SimulationController {
     @FXML private Label lblPitStopTiempo;
     @FXML private Label lblDashboardCombustible;
     @FXML private Label lblDashboardDesgaste;
+    @FXML private Label lblCompuestoDashboard;
     @FXML private Label lblTempNeumaticoPanel;
     @FXML private Label lblTempMotorPanel;
     @FXML private Label lblIconoClimaPanel;
@@ -233,6 +236,7 @@ public class SimulationController {
     private DrivingMode modo = DrivingMode.NORMAL;
     private AerodynamicLoad aero = AerodynamicLoad.MEDIA;
     private TirePressure presion = TirePressure.ESTANDAR;
+    private TireCompound compuestoInicial = TireCompound.MEDIUM;
     private FuelStrategy combustible = FuelStrategy.BALANCEADA;
     private int duracionSegundos = SimulationConfig.DURACION_PREDETERMINADA_SEGUNDOS;
     private long versionConfiguracionAplicada = -1;
@@ -251,6 +255,8 @@ public class SimulationController {
     private final Deque<EventOccurrence> colaNotificaciones = new ArrayDeque<>();
     private CircuitoEnVivo circuitoEnVivo;
     private PitStopPresenter pitStopPresenter;
+    private TireChangePresenter tireChangePresenter;
+    private Integer pilotoSesionActual;
     /** Código de tres letras por piloto; lo consulta cada fila de la torre. */
     private final Map<Integer, String> codigosPiloto = new HashMap<>();
     /** Mejor tiempo por sector, para los rótulos flotantes del mapa. */
@@ -283,6 +289,8 @@ public class SimulationController {
         // método y ya necesita el componente montado.
         circuitoEnVivo = new CircuitoEnVivo(contenedorMapa);
         pitStopPresenter = new PitStopPresenter(lblPitStopEstado, lblPitStopTiempo,
+                lblDashboardEvento, lblDashboardMensaje, feedEventos);
+        tireChangePresenter = new TireChangePresenter(lblCompuestoDashboard,
                 lblDashboardEvento, lblDashboardMensaje, feedEventos);
         circuitoEnVivo.setAlSeleccionarPiloto(ExploreDriversController::abrirFicha);
         circuitoEnVivo.pilotoResaltadoProperty().addListener((o, a, b) -> torreTiempos.refresh());
@@ -473,8 +481,8 @@ public class SimulationController {
             franja.setStyle("-fx-background-color: " + TeamColors.hex(resultado.getEquipo()) + ";");
             codigo.setText(codigoPiloto(resultado));
 
-            // El mockup pedía aquí el compuesto de neumático, que el motor no
-            // simula. Se muestra el estado de la vuelta, que sí es dato real.
+            // La torre reserva este indicador al estado deportivo de la vuelta;
+            // el compuesto vigente se presenta en su lectura propia del Dashboard.
             estado.getStyleClass().removeAll("valida", "invalidada", "fuera");
             estado.getStyleClass().add(switch (resultado.getEstadoVuelta()) {
                 case VALID -> "valida";
@@ -535,6 +543,14 @@ public class SimulationController {
         feedEventos.getChildren().clear();
         sesion.getEventos().forEach(this::anadirAlFeed);
         sesion.getParadasBoxes().forEach(pitStopPresenter::addToFeed);
+        sesion.getCambiosNeumaticos().forEach(tireChangePresenter::addToFeed);
+        pilotoSesionActual = sesion.getConfig() == null
+                ? null : sesion.getConfig().getPilotoId();
+        tireChangePresenter.showSession(
+                sesion.getCambiosNeumaticos(), pilotoSesionActual,
+                sesion.getConfig() == null
+                        ? TireCompound.MEDIUM
+                        : sesion.getConfig().getCompuestoInicial());
         actualizarEtiquetasSector(sesion.getResultados());
         comparacionSectoresController.cargar(sesion.getResultados());
         mostrarPistaDeSesion(sesion);
@@ -545,7 +561,8 @@ public class SimulationController {
         lblDashboardMensaje.setText(pole == null ? "Sesión terminada sin vueltas válidas"
                 : "Pole para " + pole.getPiloto() + " con "
                         + FormatUtils.formatLapTime(pole.getTiempoSegundos()));
-        int incidencias = sesion.getEventos().size() + sesion.getParadasBoxes().size();
+        int incidencias = sesion.getEventos().size() + sesion.getParadasBoxes().size()
+                + sesion.getCambiosNeumaticos().size();
         lblDashboardEvento.setText(incidencias == 0
                 ? "SIN EVENTOS" : incidencias + " EVENTOS");
         pitStopPresenter.showLatest(sesion.getParadasBoxes());
@@ -622,6 +639,7 @@ public class SimulationController {
         modo = DrivingMode.NORMAL;
         aero = AerodynamicLoad.MEDIA;
         presion = TirePressure.ESTANDAR;
+        compuestoInicial = TireCompound.MEDIUM;
         combustible = FuelStrategy.BALANCEADA;
 
         if (ultima == null) {
@@ -636,7 +654,8 @@ public class SimulationController {
     /** Resume la puesta a punto vigente, que se ajusta en la otra pantalla. */
     private void mostrarPuestaAPunto() {
         lblPuestaAPunto.setText(modo.getEtiqueta() + " · " + aero.getEtiqueta()
-                + " · " + presion.getEtiqueta() + " · " + combustible.getEtiqueta());
+                + " · " + presion.getEtiqueta() + " · " + compuestoInicial.getCodigo()
+                + " · " + combustible.getEtiqueta());
         if (lblPaceUno != null) {
             lblPaceUno.setText(etiquetaPaceInicial());
             lblFuelModeUno.setText(etiquetaCombustible(combustible));
@@ -732,12 +751,15 @@ public class SimulationController {
                 selectorCircuito.getValue(), selectorPiloto.getValue().getId(), selectorVehiculo.getValue(),
                 modo, aero, presion, combustible);
         config.setDuracionSegundos(duracionSegundos);
+        config.setCompuestoInicial(compuestoInicial);
         com.formula1.data.DataStore.getInstance().guardarConfiguracion(config);
         versionConfiguracionAplicada = com.formula1.data.DataStore.getInstance()
                 .versionConfiguracion();
         finalizarSolicitado.set(false);
+        pilotoSesionActual = config.getPilotoId();
         btnFinalizar.setText("Finalizar");
         pitStopPresenter.reset();
+        tireChangePresenter.reset(compuestoInicial);
         iniciarContador();
 
         reiniciarEvolucion();
@@ -768,6 +790,7 @@ public class SimulationController {
                 resultados -> Platform.runLater(() -> mostrarClasificacionEnVivo(resultados)),
                 evento -> Platform.runLater(() -> registrarEventoEnVivo(evento)),
                 parada -> Platform.runLater(() -> mostrarPitStop(parada)),
+                cambio -> Platform.runLater(() -> mostrarCambioNeumaticos(cambio)),
                 finalizarSolicitado::get);
 
         // Enlazar en vez de asignar: el Task publica sus cambios en el hilo
@@ -1057,6 +1080,7 @@ public class SimulationController {
         if (config.getModo() != null) modo = config.getModo();
         if (config.getAerodinamica() != null) aero = config.getAerodinamica();
         if (config.getPresion() != null) presion = config.getPresion();
+        compuestoInicial = config.getCompuestoInicial();
         if (config.getCombustible() != null) combustible = config.getCombustible();
         seleccionarDuracion(config.getDuracionSegundos());
         if (!lblEstado.textProperty().isBound()) {
@@ -1365,6 +1389,13 @@ public class SimulationController {
             return;
         }
         pitStopPresenter.present(parada);
+    }
+
+    private void mostrarCambioNeumaticos(TireChangeRecord cambio) {
+        String clave = "TIRE:" + cambio.pitStopId();
+        if (eventosEnVivoRegistrados.add(clave)) {
+            tireChangePresenter.present(cambio, pilotoSesionActual);
+        }
     }
 
     /**
