@@ -778,13 +778,17 @@ public class SimulationController {
             boolean finalizadaManualmente = finalizarSolicitado.get();
             detenerContador(!finalizadaManualmente);
             desenlazar();
-            mostrarSesion(tarea.getValue(), finalizadaManualmente);
+            // La sesión se lee una sola vez y aquí, en el hilo de JavaFX:
+            // Task.getValue() lanza si se consulta desde otro hilo, y el
+            // guardado de abajo corre en el pool.
+            QualifyingSession resultado = tarea.getValue();
+            mostrarSesion(resultado, finalizadaManualmente);
             if (finalizadaManualmente) {
                 lblEstado.setText("Sesión finalizada manualmente · resultados guardados");
                 lblDashboardEvento.setText("FINALIZADA");
             }
             // Guardar en segundo plano: la parrilla ya está en pantalla.
-            Async.ejecutar(() -> sesiones.guardar(tarea.getValue()));
+            Async.ejecutar(() -> sesiones.guardar(resultado));
         });
 
         tarea.setOnFailed(e -> {
