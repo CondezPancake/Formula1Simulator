@@ -1464,6 +1464,17 @@
     -fx-background-radius: 4;
 }
 
+/* Fijado: manda sobre el consultado, y por eso va despues en la hoja. */
+.tower-row.fijado {
+    -fx-background-color: rgba(225,6,0,0.16);
+    -fx-border-color: transparent transparent rgba(255,255,255,0.05) -fx-brand;
+    -fx-border-width: 0 0 1 2;
+}
+
+.tower-row.fijado .tower-code {
+    -fx-text-fill: -fx-text-hero;
+}
+
 .tower-state.valida     { -fx-background-color: -fx-accent-green; }
 .tower-state.invalidada { -fx-background-color: -fx-accent-amber; }
 .tower-state.fuera      { -fx-background-color: #3A3A44; }
@@ -2827,4 +2838,103 @@
 .post-radio-muted {
     -fx-border-color: -fx-text-muted;
     -fx-text-fill: -fx-text-muted;
+}
+
+/* =============================================================
+   Radio del box (HU-49)
+
+   Dos salidas para el mismo mensaje: el hilo lateral, que guarda la
+   conversacion entera, y el rotulo sobre el trazado, que solo sale
+   para lo urgente. El color del equipo lo inyecta RadioPresenter.
+   ============================================================= */
+
+.radio-hilo {
+    -fx-background-color: transparent;
+}
+
+.radio-barra-equipo {
+    -fx-min-width: 3;
+    -fx-max-width: 3;
+    -fx-min-height: 12;
+    -fx-background-radius: 2;
+    -fx-background-color: -fx-brand;
+}
+
+.radio-cabecera-piloto {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+/* Burbuja de conversacion. El ingeniero lleva filete del color del
+   equipo; el piloto responde alineado a la derecha y sin filete. */
+.radio-burbuja {
+    -fx-background-color: rgba(255,255,255,0.04);
+    -fx-background-radius: 4;
+    -fx-padding: 6 9 7 9;
+}
+
+.radio-burbuja.ingeniero {
+    -fx-border-width: 0 0 0 2;
+    -fx-border-color: transparent transparent transparent -fx-brand;
+}
+
+.radio-burbuja.piloto {
+    -fx-background-color: rgba(255,255,255,0.07);
+    -fx-max-width: 210;
+    -fx-translate-x: 34;
+}
+
+.radio-burbuja.critica {
+    -fx-background-color: rgba(225,6,0,0.18);
+}
+
+.radio-quien {
+    -fx-font-size: 8px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-faint;
+}
+
+.radio-segmento {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 8px;
+    -fx-text-fill: -fx-text-faint;
+}
+
+.radio-texto {
+    -fx-font-size: 11px;
+    -fx-text-fill: -fx-text-1;
+}
+
+/* Tres barras que sugieren nivel de audio: el canal abierto se ve. */
+.radio-onda-barra {
+    -fx-background-color: -fx-text-muted;
+    -fx-background-radius: 1;
+}
+
+/* Rotulo sobre el trazado, al estilo de la banda inferior de television. */
+.radio-rotulo {
+    -fx-background-color: rgba(8,8,12,0.92);
+    -fx-border-color: transparent transparent transparent -fx-brand;
+    -fx-border-width: 0 0 0 3;
+    -fx-padding: 8 16 8 12;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.6), 16, 0.2, 0, 4);
+}
+
+.radio-rotulo-kicker {
+    -fx-font-size: 8px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-faint;
+}
+
+.radio-rotulo-piloto {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+
+.radio-rotulo-texto {
+    -fx-font-size: 13px;
+    -fx-text-fill: -fx-text-hero;
 }

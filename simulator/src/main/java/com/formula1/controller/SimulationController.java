@@ -23,6 +23,7 @@ import com.formula1.model.WeatherSnapshot;
 import com.formula1.service.CircuitService;
 import com.formula1.service.DriverService;
 import com.formula1.service.QualifyingService;
+import com.formula1.service.RaceRadioService;
 import com.formula1.service.VehicleService;
 import com.formula1.model.TrackSector;
 import com.formula1.service.SectorComparisonService;
@@ -49,6 +50,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressBar;
@@ -142,6 +144,15 @@ public class SimulationController {
     @FXML private ProgressBar barraLlantasUno;
     @FXML private ProgressBar barraFuelUno;
     @FXML private VBox feedEventos;
+
+    // Radio del box (HU-49): hilo lateral y rótulo sobre el trazado.
+    @FXML private VBox radioHilo;
+    @FXML private ScrollPane radioScroll;
+    @FXML private Label radioCabeceraPiloto;
+    @FXML private Region radioBarraEquipo;
+    @FXML private HBox rotuloRadio;
+    @FXML private Label rotuloRadioPiloto;
+    @FXML private Label rotuloRadioTexto;
     @FXML private Label lblPilotoUno;
     @FXML private Label lblEquipoUno;
     @FXML private Label lblVehiculoUno;
@@ -247,6 +258,9 @@ public class SimulationController {
     private PitStopPresenter pitStopPresenter;
     private TireChangePresenter tireChangePresenter;
     private TelemetryDetailPresenter telemetryDetailPresenter;
+    private RadioPresenter radioPresenter;
+    /** Genera el habla del muro de boxes a partir de lo que emite el motor. */
+    private final RaceRadioService radio = new RaceRadioService();
     private Integer pilotoSesionActual;
     /** Código de tres letras por piloto; lo consulta cada fila de la torre. */
     private final Map<Integer, String> codigosPiloto = new HashMap<>();
@@ -281,6 +295,8 @@ public class SimulationController {
         circuitoEnVivo = new CircuitoEnVivo(contenedorMapa);
         pitStopPresenter = new PitStopPresenter(lblPitStopEstado, lblPitStopTiempo,
                 lblDashboardEvento, lblDashboardMensaje, feedEventos);
+        radioPresenter = new RadioPresenter(radioHilo, radioCabeceraPiloto, radioBarraEquipo,
+                rotuloRadio, rotuloRadioPiloto, rotuloRadioTexto);
         tireChangePresenter = new TireChangePresenter(lblCompuestoDashboard,
                 lblDashboardEvento, lblDashboardMensaje, feedEventos);
         telemetryDetailPresenter = new TelemetryDetailPresenter(
@@ -290,6 +306,7 @@ public class SimulationController {
                 graficaTemperaturasDetalle, graficaDeltaDetalle);
         circuitoEnVivo.setAlSeleccionarPiloto(ExploreDriversController::abrirFicha);
         circuitoEnVivo.pilotoResaltadoProperty().addListener((o, a, b) -> torreTiempos.refresh());
+        circuitoEnVivo.setResolucionCodigo(this::codigoDe);
 
         circuitos.listar().forEach(c -> selectorCircuito.getItems().add(c.getNombre()));
         vehiculos.listar().forEach(v -> selectorVehiculo.getItems().add(v.getModelo()));
@@ -333,6 +350,36 @@ public class SimulationController {
                         .map(Driver::getCodigo)
                         .filter(codigo -> codigo != null && !codigo.isBlank())
                         .orElse(resultado.getPiloto()));
+    }
+
+    /** Código de tres letras por identificador, para el mapa y la radio. */
+    private String codigoDe(Integer pilotoId) {
+        if (pilotoId == null) {
+            return "—";
+        }
+        return codigosPiloto.computeIfAbsent(pilotoId, id ->
+                pilotos.porId(id)
+                        .map(Driver::getCodigo)
+                        .filter(codigo -> codigo != null && !codigo.isBlank())
+                        .orElse("P" + id));
+    }
+
+    /**
+     * A quién escucha la radio: al piloto fijado si lo hay y, si no, al que
+     * se configuró, que es del único del que el motor emite telemetría.
+     */
+    private int pilotoDeRadio() {
+        if (pilotoFijado != null) {
+            return pilotoFijado;
+        }
+        return pilotoSesionActual == null ? -1 : pilotoSesionActual;
+    }
+
+    /** Pone la cabecera de la radio con el código y el color del piloto seguido. */
+    private void sintonizarRadio(Integer pilotoId) {
+        String equipo = pilotoId == null ? null
+                : pilotos.porId(pilotoId).map(Driver::getEquipo).orElse(null);
+        radioPresenter.seguirA(codigoDe(pilotoId), TeamColors.hex(equipo));
     }
 
     private void actualizarMapaCircuito(String nombre) {
@@ -385,16 +432,14 @@ public class SimulationController {
 
             // La torre y el mapa son la misma información: señalar en una tiene
             // que señalar en la otra. El hover es tanteo; el clic fija.
+            // Consultar no desfija: el ratón puede curiosear a otro piloto
+            // mientras el fijado sigue marcado en el mapa y en los sectores.
             setOnMouseEntered(e -> {
-                if (getItem() != null && pilotoFijado == null) {
+                if (getItem() != null) {
                     circuitoEnVivo.resaltar(getItem().getPilotoId());
                 }
             });
-            setOnMouseExited(e -> {
-                if (pilotoFijado == null) {
-                    circuitoEnVivo.resaltar(null);
-                }
-            });
+            setOnMouseExited(e -> circuitoEnVivo.resaltar(null));
             setOnMouseClicked(e -> {
                 if (getItem() == null) {
                     return;
@@ -410,7 +455,7 @@ public class SimulationController {
         @Override
         protected void updateItem(LapResult resultado, boolean vacia) {
             super.updateItem(resultado, vacia);
-            grafo.getStyleClass().removeAll("lider", "invalida", "activo");
+            grafo.getStyleClass().removeAll("lider", "invalida", "activo", "fijado");
             if (vacia || resultado == null) {
                 setGraphic(null);
                 return;
@@ -444,6 +489,10 @@ public class SimulationController {
                     : circuitoEnVivo.pilotoResaltadoProperty().get();
             if (resaltado != null && resaltado == resultado.getPilotoId()) {
                 grafo.getStyleClass().add("activo");
+            }
+            // El fijado se marca aparte y manda sobre el consultado.
+            if (pilotoFijado != null && pilotoFijado == resultado.getPilotoId()) {
+                grafo.getStyleClass().add("fijado");
             }
             setGraphic(grafo);
         }
@@ -503,6 +552,17 @@ public class SimulationController {
                 ? "SIN EVENTOS" : incidencias + " EVENTOS");
         pitStopPresenter.showLatest(sesion.getParadasBoxes());
         resultadosFinalesController.load(sesion, pilotoFijado);
+
+        // El piloto fijado sobrevive a la sesión: se vuelve a marcar sobre la
+        // parrilla final y su rótulo se pone al día con el resultado.
+        circuitoEnVivo.fijar(pilotoFijado);
+        refrescarSeleccion(sesion.getResultados());
+        radioPresenter.encolar(radio.cierreDeSesion(
+                sesion.getResultados().stream()
+                        .filter(r -> r.getPilotoId() == pilotoDeRadio())
+                        .findFirst()
+                        .orElse(null),
+                MapaProgreso.TOTAL_SEGMENTOS));
         tabResultadosFinales.setDisable(false);
         lblPolePiloto.setText(pole == null ? "—" : pole.getPiloto());
         lblPoleTiempo.setText(pole == null ? "—"
@@ -672,6 +732,12 @@ public class SimulationController {
         btnFinalizar.setText("Finalizar");
         pitStopPresenter.reset();
         tireChangePresenter.reset(compuestoInicial);
+        // La radio arranca escuchando al piloto configurado; si luego se fija
+        // otro desde la torre, el canal cambia con él.
+        radio.reiniciar();
+        radioPresenter.reiniciar();
+        sintonizarRadio(config.getPilotoId());
+        radioPresenter.encolar(radio.saludoInicial(codigoDe(config.getPilotoId())));
         iniciarContador();
 
         reiniciarEvolucion();
@@ -815,6 +881,12 @@ public class SimulationController {
         if (resultados.isEmpty()) {
             return;
         }
+        radioPresenter.encolar(radio.desdeClasificacion(resultados, pilotoDeRadio(),
+                segmentoEnVivo));
+        // El rótulo del piloto fijado se refresca con la parrilla: si no, se
+        // quedaría con la posición y el gap del instante en que se pulsó.
+        refrescarSeleccion(resultados);
+
         LapResult lider = resultados.get(0);
         lblMejorVueltaTiempo.setText(FormatUtils.formatLapResult(lider));
         lblMejorVueltaPiloto.setText(codigoPiloto(lider) + " · " + lider.getEquipo());
@@ -974,6 +1046,9 @@ public class SimulationController {
         barraTempNeumaticos.setProgress(muestra.temperaturaNeumaticosC() / 125);
         barraTempMotor.setProgress(muestra.temperaturaMotorC() / 125);
         actualizarTelemetriaTarjetas(muestra);
+        // La telemetría es el reloj regular de la sesión (una muestra por
+        // segmento): es de donde salen los avisos de coche y bandera.
+        radioPresenter.encolar(radio.desdeTelemetria(muestra));
     }
 
     /** Precarga una configuración elegida en Historial sin iniciar ni borrar la sesión actual. */
@@ -1199,6 +1274,7 @@ public class SimulationController {
         tablaEventos.getItems().add(evento);
         btnVerEventos.setDisable(false);
         anadirAlFeed(evento);
+        radio.desdeEvento(evento, pilotoDeRadio()).ifPresent(radioPresenter::encolar);
         if (esEventoImportante(evento.categoria())) {
             colaNotificaciones.add(evento);
             mostrarSiguienteNotificacion();
@@ -1212,12 +1288,15 @@ public class SimulationController {
             return;
         }
         pitStopPresenter.present(parada);
+        radioPresenter.encolar(radio.desdeParada(parada, pilotoDeRadio()));
     }
 
     private void mostrarCambioNeumaticos(TireChangeRecord cambio) {
         String clave = "TIRE:" + cambio.pitStopId();
         if (eventosEnVivoRegistrados.add(clave)) {
             tireChangePresenter.present(cambio, pilotoSesionActual);
+            radio.desdeCambioNeumaticos(cambio, pilotoDeRadio())
+                    .ifPresent(radioPresenter::encolar);
         }
     }
 
@@ -1398,14 +1477,16 @@ public class SimulationController {
     private void seleccionarPiloto(LapResult resultado) {
         boolean mismo = pilotoFijado != null && pilotoFijado == resultado.getPilotoId();
         pilotoFijado = mismo ? null : resultado.getPilotoId();
-        circuitoEnVivo.resaltar(pilotoFijado);
+        // Fijar y consultar son estados distintos: el mapa mantiene el fijado
+        // aunque el ratón se vaya a curiosear otro coche.
+        circuitoEnVivo.fijar(pilotoFijado);
         torreTiempos.refresh();
 
-        lblSeleccion.setText(pilotoFijado == null ? "Sin piloto fijado"
-                : "SIGUIENDO · " + codigoPiloto(resultado) + " · P" + resultado.getPosicion()
-                        + " · " + (resultado.getPosicion() == 1
-                                ? FormatUtils.formatLapResult(resultado)
-                                : FormatUtils.formatGap(resultado.getGap())));
+        // La radio cambia de canal con el piloto fijado; sin fijado, vuelve al
+        // configurado, que es del único del que hay telemetría.
+        sintonizarRadio(pilotoFijado != null ? pilotoFijado : pilotoSesionActual);
+
+        refrescarSeleccion(torreTiempos.getItems());
         FadeTransition destello = new FadeTransition(Duration.millis(150), lblSeleccion);
         destello.setFromValue(0.2);
         destello.setToValue(1);
@@ -1413,6 +1494,28 @@ public class SimulationController {
         destello.play();
 
         actualizarEtiquetasSector(torreTiempos.getItems());
+    }
+
+    /**
+     * Reescribe el rótulo del piloto fijado con su posición y gap vigentes.
+     *
+     * Se llama en cada actualización de la parrilla, no solo al pulsar: de otro
+     * modo el rótulo congelaría el momento del clic y acabaría mintiendo.
+     */
+    private void refrescarSeleccion(List<LapResult> clasificacion) {
+        if (pilotoFijado == null) {
+            lblSeleccion.setText("Sin piloto fijado");
+            return;
+        }
+        clasificacion.stream()
+                .filter(r -> r.getPilotoId() == pilotoFijado)
+                .findFirst()
+                .ifPresentOrElse(actual -> lblSeleccion.setText(
+                        "SIGUIENDO · " + codigoPiloto(actual) + " · P" + actual.getPosicion()
+                                + " · " + (actual.getPosicion() == 1
+                                        ? FormatUtils.formatLapResult(actual)
+                                        : FormatUtils.formatGap(actual.getGap()))),
+                        () -> lblSeleccion.setText("SIGUIENDO · " + codigoDe(pilotoFijado)));
     }
 
     /** Retrato del HUD inferior. El render oficial existe para los veinte códigos. */
