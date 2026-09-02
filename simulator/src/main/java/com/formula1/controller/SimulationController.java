@@ -22,7 +22,6 @@ import com.formula1.service.DriverService;
 import com.formula1.service.QualifyingService;
 import com.formula1.service.VehicleService;
 import com.formula1.util.Async;
-import com.formula1.util.Imagenes;
 import com.formula1.util.TeamColors;
 import com.formula1.util.FormatUtils;
 
@@ -39,8 +38,6 @@ import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -52,6 +49,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
@@ -107,10 +105,14 @@ public class SimulationController {
     @FXML private Label lblMapaTitulo;
     @FXML private Label lblMapaPista;
     @FXML private Label lblMapaGrip;
-    /** Ancho al que simulation.fxml pinta el mapa; se decodifica a esa medida. */
-    private static final double ANCHO_MAPA_CIRCUITO = 720;
-
-    @FXML private ImageView imagenMapaCircuito;
+    @FXML private Label lblMapaVueltas;
+    @FXML private StackPane contenedorMapa;
+    @FXML private Label lblHudVuelta;
+    @FXML private Label lblHudSector;
+    @FXML private Label lblHudClima;
+    @FXML private Label lblHudClimaDetalle;
+    @FXML private Label lblMejorVueltaTiempo;
+    @FXML private Label lblMejorVueltaPiloto;
     @FXML private Label lblDashboardEvento;
     @FXML private Label lblDashboardMensaje;
     @FXML private Label lblDashboardCombustible;
@@ -226,6 +228,14 @@ public class SimulationController {
     private PauseTransition temporizadorNotificacionEvento;
     private final Set<String> eventosEnVivoRegistrados = new HashSet<>();
     private final Deque<EventOccurrence> colaNotificaciones = new ArrayDeque<>();
+    private CircuitoEnVivo circuitoEnVivo;
+    private final MapaProgreso mapaProgreso = new MapaProgreso();
+    /**
+     * Segmento en curso. El motor no lo pasa en {@code ClasificacionEnVivo}, pero
+     * la invoca exactamente una vez por segmento y en orden, así que contar sirve.
+     * Se resincroniza con la telemetría, que sí lo trae, por si acaso.
+     */
+    private int segmentoEnVivo;
 
     public SimulationController() {
         this(new QualifyingService(), new CircuitService(), new VehicleService(), new DriverService());
@@ -241,6 +251,12 @@ public class SimulationController {
 
     @FXML
     public void initialize() {
+        // Antes que nada: actualizarMapaCircuito se llama al final de este
+        // método y ya necesita el componente montado.
+        circuitoEnVivo = new CircuitoEnVivo(contenedorMapa);
+        circuitoEnVivo.setAlSeleccionarPiloto(ExploreDriversController::abrirFicha);
+        circuitoEnVivo.pilotoResaltadoProperty().addListener((o, a, b) -> tablaDashboard.refresh());
+
         circuitos.listar().forEach(c -> selectorCircuito.getItems().add(c.getNombre()));
         vehiculos.listar().forEach(v -> selectorVehiculo.getItems().add(v.getModelo()));
         configurarSelectorDuracion();
@@ -299,12 +315,20 @@ public class SimulationController {
             return fila;
         });
         tablaDashboard.setRowFactory(t -> {
-            TableRow<LapResult> fila = filaConColorDeEquipo();
+            TableRow<LapResult> fila = filaConColorDeEquipoResaltable();
             fila.setOnMouseClicked(e -> {
                 if (e.getClickCount() == 2 && !fila.isEmpty() && fila.getItem() != null) {
                     ExploreDriversController.abrirFicha(fila.getItem().getPilotoId());
                 }
             });
+            // La torre y el mapa son la misma información: señalar en una tiene
+            // que señalar en la otra.
+            fila.setOnMouseEntered(e -> {
+                if (!fila.isEmpty() && fila.getItem() != null) {
+                    circuitoEnVivo.resaltar(fila.getItem().getPilotoId());
+                }
+            });
+            fila.setOnMouseExited(e -> circuitoEnVivo.resaltar(null));
             return fila;
         });
 
@@ -356,24 +380,19 @@ public class SimulationController {
 
     private void actualizarMapaCircuito(String nombre) {
         if (nombre == null) {
-            imagenMapaCircuito.setImage(null);
+            circuitoEnVivo.mostrarCircuito(null);
             lblMapaTitulo.setText("MAPA DEL CIRCUITO");
+            lblMapaVueltas.setText("—");
             return;
         }
-        circuitos.porNombre(nombre).ifPresent(circuito -> {
-            lblMapaTitulo.setText(circuito.getNombre().toUpperCase() + " · MAPA");
-            lblMapaPista.setText("Pista: " + circuito.getLongitudKm() + " km");
-            imagenMapaCircuito.setImage(cargarImagenCircuito(circuito));
-        });
+        circuitos.porNombre(nombre).ifPresent(this::mostrarCircuitoEnMapa);
     }
 
-    private Image cargarImagenCircuito(Circuit circuito) {
-        if (circuito.getImagen() == null || circuito.getImagen().isBlank()) {
-            return null;
-        }
-        // Acotado al tamaño de pintado: antes se decodificaba a resolución
-        // nativa. Es presentación pura, no toca nada de la simulación.
-        return Imagenes.cargar(circuito.getImagen(), ANCHO_MAPA_CIRCUITO, 0);
+    private void mostrarCircuitoEnMapa(Circuit circuito) {
+        lblMapaTitulo.setText(circuito.getNombre().toUpperCase() + " · MAPA");
+        lblMapaPista.setText("Pista: " + circuito.getLongitudKm() + " km");
+        lblMapaVueltas.setText(circuito.getVueltas() + " vueltas");
+        circuitoEnVivo.mostrarCircuito(circuito);
     }
 
     /**
@@ -384,9 +403,21 @@ public class SimulationController {
      * es esa la que la trae ya terminada.
      */
     public void mostrarSesion(QualifyingSession sesion) {
+        mostrarSesion(sesion, false);
+    }
+
+    /**
+     * @param manual si la sesión se cortó desde el botón Finalizar, en cuyo caso
+     *               los coches se quedan donde estaban en vez de saltar a la meta
+     */
+    public void mostrarSesion(QualifyingSession sesion, boolean manual) {
         if (sesion == null) {
             return;
         }
+        // El historial reproduce sesiones cuyo circuito puede no ser el que
+        // marca el selector: se pintaría la parrilla correcta sobre la pista
+        // equivocada.
+        circuitos.porNombre(sesion.getCircuito()).ifPresent(this::mostrarCircuitoEnMapa);
         lblClima.setText(resumenClimatico(sesion));
         ObservableList<LapResult> resultados =
                 FXCollections.observableArrayList(sesion.getResultados());
@@ -405,6 +436,18 @@ public class SimulationController {
                         + FormatUtils.formatLapTime(pole.getTiempoSegundos()));
         lblDashboardEvento.setText(sesion.getEventos().isEmpty()
                 ? "SIN EVENTOS" : sesion.getEventos().size() + " EVENTOS");
+        if (pole != null) {
+            lblMejorVueltaTiempo.setText(FormatUtils.formatLapTime(pole.getTiempoSegundos()));
+            lblMejorVueltaPiloto.setText(codigoPiloto(pole) + " · " + pole.getEquipo());
+        }
+        // Al terminar la vuelta completa el mapa se lleva a la parrilla final,
+        // para no quedarse con la foto del penúltimo segmento. Si el usuario
+        // cortó a mano no: nadie cruzó la meta, y saltar allí lo aparentaría.
+        if (!manual) {
+            circuitoEnVivo.publicar(mapaProgreso.construir(
+                    MapaProgreso.TOTAL_SEGMENTOS, sesion.getResultados()));
+        }
+        circuitoEnVivo.finalizar(manual);
         ShellController.estadoSesion(ShellController.Estado.TERMINADA);
         panelResultados.getSelectionModel().select(tabDashboard);
     }
@@ -427,6 +470,34 @@ public class SimulationController {
                     getStyleClass().add("invalid-row");
                 } else if (resultado.getPosicion() == 1) {
                     getStyleClass().add("pole-row");
+                }
+                setStyle("-fx-border-color: transparent transparent #17171B "
+                        + TeamColors.hex(resultado.getEquipo())
+                        + "; -fx-border-width: 0 0 1 3;");
+            }
+        };
+    }
+
+    /** Igual que la anterior, más el resaltado que llega desde el mapa. */
+    private TableRow<LapResult> filaConColorDeEquipoResaltable() {
+        return new TableRow<>() {
+            @Override
+            protected void updateItem(LapResult resultado, boolean vacia) {
+                super.updateItem(resultado, vacia);
+                getStyleClass().removeAll("pole-row", "invalid-row", "marcador-activo");
+                if (vacia || resultado == null) {
+                    setStyle("");
+                    return;
+                }
+                if (!resultado.isVueltaValida()) {
+                    getStyleClass().add("invalid-row");
+                } else if (resultado.getPosicion() == 1) {
+                    getStyleClass().add("pole-row");
+                }
+                Integer resaltado = circuitoEnVivo == null ? null
+                        : circuitoEnVivo.pilotoResaltadoProperty().get();
+                if (resaltado != null && resaltado == resultado.getPilotoId()) {
+                    getStyleClass().add("marcador-activo");
                 }
                 setStyle("-fx-border-color: transparent transparent #17171B "
                         + TeamColors.hex(resultado.getEquipo())
@@ -585,6 +656,13 @@ public class SimulationController {
         comparacionSectoresController.reiniciar();
         panelResultados.getSelectionModel().select(tabDashboard);
 
+        segmentoEnVivo = 0;
+        mapaProgreso.reiniciar();
+        circuitos.porNombre(config.getCircuito()).ifPresent(this::mostrarCircuitoEnMapa);
+        circuitoEnVivo.iniciarSesion(config.getPilotoId(), duracionSegundos);
+        lblMejorVueltaTiempo.setText("—");
+        lblMejorVueltaPiloto.setText("Sesión en curso");
+
         // La cabecera de la aplicación acompaña a la sesión: evento, estado,
         // contador de segmento, clima y bandera.
         circuitos.porNombre(config.getCircuito()).ifPresent(
@@ -619,7 +697,7 @@ public class SimulationController {
             boolean finalizadaManualmente = finalizarSolicitado.get();
             detenerContador(!finalizadaManualmente);
             desenlazar();
-            mostrarSesion(tarea.getValue());
+            mostrarSesion(tarea.getValue(), finalizadaManualmente);
             if (finalizadaManualmente) {
                 lblEstado.setText("Sesión finalizada manualmente · resultados guardados");
                 lblDashboardEvento.setText("FINALIZADA");
@@ -631,6 +709,7 @@ public class SimulationController {
         tarea.setOnFailed(e -> {
             detenerContador(false);
             desenlazar();
+            circuitoEnVivo.detener();
             progreso.setProgress(0);
             lblEstado.setText("La simulación falló");
             ShellController.estadoSesion(ShellController.Estado.REPOSO);
@@ -691,17 +770,34 @@ public class SimulationController {
 
     /** Refresca las dos tablas mientras los pilotos van completando sus vueltas. */
     private void mostrarClasificacionEnVivo(List<LapResult> resultados) {
+        segmentoEnVivo = Math.min(segmentoEnVivo + 1, MapaProgreso.TOTAL_SEGMENTOS);
+
         ObservableList<LapResult> parcial = FXCollections.observableArrayList(resultados);
         tabla.setItems(parcial);
         tablaDashboard.setItems(parcial);
+
+        // El mapa se alimenta de esta misma lista: el marcador y la fila no son
+        // dos cálculos que puedan discrepar, son el mismo dato.
+        circuitoEnVivo.publicar(mapaProgreso.construir(segmentoEnVivo, resultados));
+        actualizarVueltaHud();
+
         if (resultados.isEmpty()) {
             return;
         }
         LapResult lider = resultados.get(0);
+        lblMejorVueltaTiempo.setText(FormatUtils.formatLapResult(lider));
+        lblMejorVueltaPiloto.setText(codigoPiloto(lider) + " · " + lider.getEquipo());
         lblDashboardEvento.setText("EN VIVO");
         lblDashboardMensaje.setText("Líder provisional: " + lider.getPiloto()
                 + " · " + FormatUtils.formatLapResult(lider)
                 + " · " + resultados.size() + " clasificados");
+    }
+
+    private void actualizarVueltaHud() {
+        lblHudVuelta.setText(segmentoEnVivo + " / " + MapaProgreso.TOTAL_SEGMENTOS);
+        lblHudSector.setText(com.formula1.model.TrackSector
+                .desdeSegmento(Math.max(1, segmentoEnVivo), MapaProgreso.TOTAL_SEGMENTOS)
+                .getEtiqueta().toUpperCase());
     }
 
     private void reiniciarEvolucion() {
@@ -756,6 +852,12 @@ public class SimulationController {
 
     /** Representa una lectura ya calculada; no ejecuta lógica del motor en JavaFX. */
     private void mostrarTelemetria(TelemetrySnapshot muestra) {
+        // La telemetría sí trae el número de segmento y llega en el mismo
+        // fotograma que la clasificación: se aprovecha para resincronizar el
+        // contador en vez de fiarlo todo a ir sumando uno.
+        segmentoEnVivo = muestra.segmento();
+        actualizarVueltaHud();
+
         telemetriaSesionActual.add(muestra);
         cargarVueltasTelemetria(telemetriaSesionActual);
         actualizarVelocidadMaxima(muestra.velocidadKmh());
@@ -993,6 +1095,10 @@ public class SimulationController {
                 muestra.intensidadLluviaPorcentaje(), muestra.humedadPorcentaje()));
         lblNeumaticoEvolucion.setText(muestra.neumaticoRecomendado());
         lblEstrategiaEvolucion.setText(muestra.estrategiaRecomendada());
+        // El panel de clima del deck se alimenta de la misma muestra.
+        lblHudClima.setText(String.format("%.0f °C", muestra.temperaturaC()));
+        lblHudClimaDetalle.setText(muestra.estado().getEtiqueta().toUpperCase()
+                + " · PISTA " + muestra.estadoPista().toUpperCase());
         lblMapaPista.setText("Pista: " + muestra.estadoPista());
     }
 
