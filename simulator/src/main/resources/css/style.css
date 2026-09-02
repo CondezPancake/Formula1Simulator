@@ -32,6 +32,13 @@
     -fx-accent-blue: #3671C6;
     -fx-accent-pink: #FF87BC;
 
+    /* --- vidrio (HUD del dashboard de carrera) --- */
+    -fx-glass-surface-1: rgba(20,20,26,0.55);
+    -fx-glass-surface-2: rgba(26,26,34,0.62);
+    -fx-glass-border: rgba(255,255,255,0.12);
+    -fx-glass-border-strong: rgba(255,255,255,0.20);
+    -fx-glass-shadow: rgba(0,0,0,0.55);
+
     -fx-background-color: -fx-bg-0;
     -fx-font-family: "Titillium Web", "Adwaita Sans", sans-serif;
     -fx-font-size: 13px;
@@ -993,13 +1000,92 @@
     -fx-min-width: 430;
 }
 
+/* 320 y no 260: con veinte coches repartidos por el trazado, a 260 px de alto
+   los marcadores quedan a menos de su propio diametro unos de otros. El
+   padding baja a 0 porque el lienzo ya reserva su propio margen interior. */
 .race-map-canvas {
     -fx-background-color: -fx-surface-3;
     -fx-background-radius: 5;
     -fx-border-color: -fx-border-2;
     -fx-border-radius: 5;
-    -fx-padding: 8;
-    -fx-min-height: 260;
+    -fx-padding: 0;
+    -fx-min-height: 320;
+}
+
+/* --- paneles de sesion del deck inferior --- */
+
+.race-hud-panel, .race-weather-panel,
+.race-legend-panel, .race-best-lap-panel {
+    -fx-padding: 7 10 7 10;
+}
+
+.race-hud-value {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.race-hud-sector {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-accent-amber;
+}
+
+.race-legend-row {
+    -fx-padding: 1 0 1 0;
+}
+
+.race-legend-swatch {
+    -fx-min-width: 11;
+    -fx-max-width: 11;
+    -fx-min-height: 11;
+    -fx-max-height: 11;
+    -fx-background-radius: 3;
+}
+
+.race-legend-swatch.s1 { -fx-background-color: -fx-accent-red; }
+.race-legend-swatch.s2 { -fx-background-color: -fx-accent-blue; }
+.race-legend-swatch.s3 { -fx-background-color: -fx-accent-amber; }
+.race-legend-swatch.meta { -fx-background-color: -fx-text-hero; }
+
+.race-legend-swatch.lider {
+    -fx-background-color: -fx-surface-2;
+    -fx-border-color: -fx-text-hero;
+    -fx-border-radius: 3;
+    -fx-border-width: 2;
+}
+
+.race-legend-swatch.tuyo {
+    -fx-background-color: -fx-surface-2;
+    -fx-border-color: -fx-brand;
+    -fx-border-radius: 3;
+    -fx-border-width: 2;
+}
+
+.race-legend-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: -fx-text-muted;
+}
+
+.race-best-lap-time {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-accent-amber;
+}
+
+.race-best-lap-driver {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-1;
+}
+
+/* La fila resaltada acompana al marcador senalado en el mapa, y al reves. */
+.race-compact-table .table-row-cell:hover {
+    -fx-background-color: #22222A;
+}
+
+.race-compact-table .table-row-cell.marcador-activo {
+    -fx-background-color: #26262F;
 }
 
 .race-engineer-panel {
@@ -1133,6 +1219,46 @@
 
 .race-telemetry-chart.fuel .default-color0.chart-series-line {
     -fx-stroke: -fx-accent-blue;
+}
+
+/* =====================================================================
+   Dashboard HUD glass overlay (pestaña "Dashboard" de simulation.fxml)
+   Paneles de vidrio dentro de la rejilla estructurada normal (sin
+   posicionamiento absoluto). El fondo del contenido del tab es un
+   degradado oscuro unificado, no el mapa del circuito.
+   ===================================================================== */
+
+.race-hud-stage {
+    -fx-background-color: linear-gradient(to bottom right, #0B0B0F 0%, #17171D 100%);
+}
+
+.race-hud-glass-panel {
+    -fx-background-color: -fx-glass-surface-2;
+    -fx-background-radius: 14;
+    -fx-border-color: -fx-glass-border;
+    -fx-border-width: 1;
+    -fx-border-radius: 14;
+    -fx-effect: dropshadow(gaussian, -fx-glass-shadow, 24, 0.25, 0, 8);
+}
+
+.race-hud-glass-panel:hover {
+    -fx-border-color: -fx-glass-border-strong;
+}
+
+.race-hud-table {
+    -fx-background-color: transparent;
+}
+
+.race-hud-table .column-header-background {
+    -fx-background-color: transparent;
+}
+
+.race-hud-table .table-row-cell {
+    -fx-background-color: transparent;
+}
+
+.race-hud-table .table-row-cell:odd {
+    -fx-background-color: rgba(255,255,255,0.03);
 }
 
 .evolution-panel, .telemetry-panel, .sector-comparison-panel {
