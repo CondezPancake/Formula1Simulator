@@ -5,6 +5,7 @@
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.chart.LineChart?>
 <?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.control.ProgressBar?>
@@ -63,7 +64,7 @@
                     styleClass="primary,race-start-button" onAction="#onSimular"/>
             <Button fx:id="btnFinalizar" text="Finalizar"
                     disable="true" styleClass="race-stop-button" onAction="#onFinalizar"/>
-            <ProgressBar fx:id="progreso" progress="0" prefWidth="240"/>
+            <ProgressBar fx:id="progreso" progress="0" prefWidth="240" styleClass="race-progress"/>
             <Label fx:id="lblContador" text="00:00 / 00:10" styleClass="race-session-clock"/>
             <Label fx:id="lblEstado" text=""/>
             <Region HBox.hgrow="ALWAYS"/>
@@ -136,52 +137,80 @@
 
                             <Region styleClass="hud-rule"/>
 
-                            <!-- Franja del coche: una sola línea de lecturas, sin celdas. -->
-                            <VBox styleClass="hud-group" spacing="6">
-                                <HBox spacing="8" alignment="CENTER_LEFT">
-                                    <Label fx:id="lblPilotoUno" text="Piloto seleccionado" styleClass="hud-value-sm"/>
-                                    <Label fx:id="lblEquipoUno" text="—" styleClass="hud-hint"/>
-                                    <Region HBox.hgrow="ALWAYS"/>
-                                    <Label fx:id="lblVehiculoUno" text="—" styleClass="hud-hint"/>
-                                    <Label fx:id="lblExperienciaUno" text="—" styleClass="hud-accent"/>
-                                </HBox>
-                                <HBox spacing="22" alignment="BOTTOM_LEFT">
-                                    <VBox spacing="0">
-                                        <Label text="LLANTAS" styleClass="hud-group-title"/>
-                                        <Label fx:id="lblLlantasUno" text="100 %" styleClass="hud-readout"/>
-                                        <Label fx:id="lblTempLlantasUno" text="— °C" styleClass="hud-hint"/>
-                                    </VBox>
-                                    <VBox spacing="0">
-                                        <Label text="FUEL" styleClass="hud-group-title"/>
-                                        <Label fx:id="lblFuelUno" text="100 %" styleClass="hud-readout"/>
-                                        <Label fx:id="lblTempMotorUno" text="— °C motor" styleClass="hud-hint"/>
-                                    </VBox>
-                                    <VBox spacing="0">
-                                        <Label text="MARCHA" styleClass="hud-group-title"/>
-                                        <Label fx:id="lblMarchaUno" text="N" styleClass="hud-gear"/>
-                                        <Label fx:id="lblRpmUno" text="0 RPM" styleClass="hud-hint"/>
-                                    </VBox>
-                                    <VBox spacing="0">
-                                        <Label text="PACE" styleClass="hud-group-title"/>
-                                        <Label fx:id="lblPaceUno" text="NORMAL" styleClass="hud-readout-sm"/>
-                                    </VBox>
-                                    <VBox spacing="0">
-                                        <Label text="MODO FUEL" styleClass="hud-group-title"/>
-                                        <Label fx:id="lblFuelModeUno" text="BALANCEADA" styleClass="hud-readout-sm"/>
-                                    </VBox>
-                                    <VBox spacing="2" prefWidth="96">
-                                        <HBox>
-                                            <Label text="ERS" styleClass="hud-group-title"/>
-                                            <Region HBox.hgrow="ALWAYS"/>
-                                            <Label fx:id="lblErsUno" text="100 %" styleClass="hud-readout-sm"/>
-                                        </HBox>
-                                        <ProgressBar fx:id="barraErsUno" progress="1"
-                                                     styleClass="hud-ers-bar"
-                                                     maxWidth="1.7976931348623157E308"/>
-                                    </VBox>
-                                    <Region HBox.hgrow="ALWAYS"/>
-                                </HBox>
-                            </VBox>
+                            <!-- HUD inferior del coche: una sola franja horizontal,
+                                 sin celdas ni tarjetas, como la de un videojuego. -->
+                            <HBox styleClass="hud-car-strip" spacing="16" alignment="CENTER_LEFT">
+                                <StackPane styleClass="hud-portrait">
+                                    <ImageView fx:id="fotoPilotoUno" fitWidth="56" fitHeight="56"
+                                               preserveRatio="true"/>
+                                </StackPane>
+
+                                <VBox spacing="1" minWidth="170">
+                                    <Label fx:id="lblPilotoUno" text="Piloto seleccionado" styleClass="hud-driver-name"/>
+                                    <HBox spacing="6" alignment="CENTER_LEFT">
+                                        <Label fx:id="lblEquipoUno" text="—" styleClass="hud-hint"/>
+                                        <Label text="·" styleClass="hud-hint"/>
+                                        <Label fx:id="lblVehiculoUno" text="—" styleClass="hud-hint"/>
+                                        <Label fx:id="lblExperienciaUno" text="—" styleClass="hud-accent"/>
+                                    </HBox>
+                                    <!-- Piloto fijado desde la torre. Las lecturas de al lado
+                                         siguen siendo las del coche del usuario: el motor solo
+                                         emite telemetría del piloto configurado. -->
+                                    <Label fx:id="lblSeleccion" text="Sin piloto fijado"
+                                           styleClass="hud-selection"/>
+                                </VBox>
+
+                                <Region styleClass="hud-rule-v"/>
+
+                                <VBox spacing="1" minWidth="66">
+                                    <Label text="LLANTAS" styleClass="hud-group-title"/>
+                                    <Label fx:id="lblLlantasUno" text="100 %" styleClass="hud-readout"/>
+                                    <ProgressBar fx:id="barraLlantasUno" progress="1"
+                                                 styleClass="hud-bar" maxWidth="1.7976931348623157E308"/>
+                                    <Label fx:id="lblTempLlantasUno" text="— °C" styleClass="hud-hint"/>
+                                </VBox>
+                                <VBox spacing="1" minWidth="66">
+                                    <Label text="FUEL" styleClass="hud-group-title"/>
+                                    <Label fx:id="lblFuelUno" text="100 %" styleClass="hud-readout"/>
+                                    <ProgressBar fx:id="barraFuelUno" progress="1"
+                                                 styleClass="hud-bar,fuel" maxWidth="1.7976931348623157E308"/>
+                                    <Label fx:id="lblTempMotorUno" text="— °C motor" styleClass="hud-hint"/>
+                                </VBox>
+                                <VBox spacing="0" minWidth="58">
+                                    <Label text="MARCHA" styleClass="hud-group-title"/>
+                                    <Label fx:id="lblMarchaUno" text="N" styleClass="hud-gear"/>
+                                    <Label fx:id="lblRpmUno" text="0 RPM" styleClass="hud-hint"/>
+                                </VBox>
+                                <VBox spacing="1" minWidth="78">
+                                    <Label text="PACE" styleClass="hud-group-title"/>
+                                    <Label fx:id="lblPaceUno" text="NORMAL" styleClass="hud-readout-sm"/>
+                                    <Label text="MODO" styleClass="hud-group-title"/>
+                                    <Label fx:id="lblFuelModeUno" text="BALANCEADA" styleClass="hud-readout-sm"/>
+                                </VBox>
+                                <VBox spacing="1" minWidth="76">
+                                    <HBox>
+                                        <Label text="ERS" styleClass="hud-group-title"/>
+                                        <Region HBox.hgrow="ALWAYS"/>
+                                        <Label fx:id="lblErsUno" text="100 %" styleClass="hud-readout-sm"/>
+                                    </HBox>
+                                    <ProgressBar fx:id="barraErsUno" progress="1"
+                                                 styleClass="hud-bar,ers"
+                                                 maxWidth="1.7976931348623157E308"/>
+                                </VBox>
+
+                                <Region HBox.hgrow="ALWAYS"/>
+
+                                <VBox styleClass="hud-highlight" spacing="1" minWidth="150">
+                                    <Label text="MEJOR VUELTA" styleClass="hud-group-title"/>
+                                    <Label fx:id="lblMejorVueltaTiempo" text="—" styleClass="hud-value-best"/>
+                                    <Label fx:id="lblMejorVueltaPiloto" text="Sin sesión" styleClass="hud-hint"/>
+                                </VBox>
+                                <VBox styleClass="hud-highlight" spacing="1" minWidth="140">
+                                    <Label text="POLE POSITION" styleClass="hud-group-title"/>
+                                    <Label fx:id="lblPolePiloto" text="—" styleClass="hud-value-sm"/>
+                                    <Label fx:id="lblPoleTiempo" text="—" styleClass="hud-readout-sm"/>
+                                </VBox>
+                            </HBox>
                         </VBox>
 
                         <Region styleClass="hud-rule-v"/>
@@ -192,65 +221,22 @@
                         <ScrollPane fitToWidth="true" styleClass="edge-to-edge,hud-scroll"
                                     prefWidth="272" minWidth="240" maxWidth="310">
                             <VBox styleClass="hud-column">
+                                <!-- Clima -->
                                 <VBox styleClass="hud-group" spacing="1">
                                     <Label text="CLIMA" styleClass="hud-group-title"/>
-                                    <Label fx:id="lblHudClima" text="—" styleClass="hud-value"/>
-                                    <Label fx:id="lblHudClimaDetalle" text="—" styleClass="hud-accent"/>
-                                </VBox>
-
-                                <Region styleClass="hud-rule"/>
-
-                                <VBox styleClass="hud-group" spacing="1">
-                                    <Label text="MEJOR VUELTA" styleClass="hud-group-title"/>
-                                    <Label fx:id="lblMejorVueltaTiempo" text="—" styleClass="hud-value-best"/>
-                                    <Label fx:id="lblMejorVueltaPiloto" text="Sin sesión" styleClass="hud-hint"/>
-                                </VBox>
-
-                                <Region styleClass="hud-rule"/>
-
-                                <VBox styleClass="hud-group" spacing="3">
-                                    <Label text="LEYENDA" styleClass="hud-group-title"/>
-                                    <HBox spacing="5" alignment="CENTER_LEFT" styleClass="race-legend-row">
-                                        <Region styleClass="race-legend-swatch,s1"/>
-                                        <Label text="Sector 1" styleClass="race-legend-label"/>
-                                        <Region styleClass="race-legend-swatch,s2"/>
-                                        <Label text="Sector 2" styleClass="race-legend-label"/>
-                                    </HBox>
-                                    <HBox spacing="5" alignment="CENTER_LEFT" styleClass="race-legend-row">
-                                        <Region styleClass="race-legend-swatch,s3"/>
-                                        <Label text="Sector 3" styleClass="race-legend-label"/>
-                                        <Region styleClass="race-legend-swatch,meta"/>
-                                        <Label text="Meta" styleClass="race-legend-label"/>
-                                    </HBox>
-                                    <HBox spacing="5" alignment="CENTER_LEFT" styleClass="race-legend-row">
-                                        <Region styleClass="race-legend-swatch,lider"/>
-                                        <Label text="Líder" styleClass="race-legend-label"/>
-                                        <Region styleClass="race-legend-swatch,tuyo"/>
-                                        <Label text="Tu piloto" styleClass="race-legend-label"/>
-                                    </HBox>
-                                </VBox>
-
-                                <Region styleClass="hud-rule"/>
-
-                                <VBox styleClass="hud-group" spacing="5">
-                                    <HBox spacing="8" alignment="CENTER_LEFT">
-                                        <Label text="INGENIERÍA" styleClass="hud-group-title"/>
+                                    <HBox spacing="10" alignment="CENTER_LEFT">
+                                        <Label fx:id="lblHudClima" text="—" styleClass="hud-value"/>
                                         <Region HBox.hgrow="ALWAYS"/>
-                                        <Label fx:id="lblDashboardEvento" text="SIN EVENTOS"
-                                               styleClass="event-live"/>
+                                        <Label fx:id="lblIconoClimaPanel" text="☁" styleClass="hud-weather-glyph"/>
                                     </HBox>
-                                    <Label fx:id="lblDashboardMensaje" text="Esperando el inicio de la sesión"
-                                           wrapText="true" styleClass="race-engineer-message"/>
-                                    <HBox alignment="CENTER_LEFT">
-                                        <Button fx:id="btnVerEventos" text="Ver eventos"
-                                                disable="true" onAction="#onVerEventos"
-                                                styleClass="event-details-button"/>
-                                    </HBox>
+                                    <Label fx:id="lblHudClimaDetalle" text="—" styleClass="hud-accent"/>
+                                    <Label fx:id="lblNeumaticoRecomendado" text="—" styleClass="hud-hint"/>
                                 </VBox>
 
                                 <Region styleClass="hud-rule"/>
 
-                                <VBox styleClass="hud-group" spacing="4">
+                                <!-- Telemetría del coche -->
+                                <VBox styleClass="hud-group" spacing="6">
                                     <HBox alignment="CENTER_LEFT">
                                         <Label text="TELEMETRÍA" styleClass="hud-group-title"/>
                                         <Region HBox.hgrow="ALWAYS"/>
@@ -258,43 +244,54 @@
                                                 disable="true" onAction="#onVerDetalles"
                                                 styleClass="telemetry-details-button"/>
                                     </HBox>
+                                    <StackPane styleClass="hud-car-frame">
+                                        <ImageView fx:id="siluetaCoche" fitWidth="200" fitHeight="110"
+                                                   preserveRatio="true"/>
+                                    </StackPane>
+                                    <Label text="TU COCHE" styleClass="hud-hint"/>
                                     <HBox spacing="10">
-                                        <VBox spacing="1" HBox.hgrow="ALWAYS">
-                                            <HBox>
-                                                <Label text="NEUMÁTICO" styleClass="hud-group-title"/>
-                                                <Region HBox.hgrow="ALWAYS"/>
-                                                <Label fx:id="lblDashboardDesgaste" text="100 %" styleClass="hud-readout-sm"/>
-                                            </HBox>
-                                            <LineChart fx:id="graficaDesgasteDashboard" createSymbols="false"
-                                                       animated="false" legendVisible="false"
-                                                       horizontalGridLinesVisible="false"
-                                                       verticalGridLinesVisible="false"
-                                                       prefHeight="58" minHeight="40" maxHeight="58"
-                                                       styleClass="race-telemetry-chart">
-                                                <xAxis><NumberAxis autoRanging="false" lowerBound="0" upperBound="20"
-                                                                   tickLabelsVisible="false" tickMarkVisible="false"/></xAxis>
-                                                <yAxis><NumberAxis autoRanging="false" lowerBound="0" upperBound="100"
-                                                                   tickLabelsVisible="false" tickMarkVisible="false"/></yAxis>
-                                            </LineChart>
+                                        <VBox spacing="0" HBox.hgrow="ALWAYS" styleClass="hud-tile">
+                                            <Label text="NEUMÁTICO" styleClass="hud-group-title"/>
+                                            <Label fx:id="lblDashboardDesgaste" text="100 %" styleClass="hud-tile-value"/>
                                         </VBox>
-                                        <VBox spacing="1" HBox.hgrow="ALWAYS">
-                                            <HBox>
-                                                <Label text="COMBUSTIBLE" styleClass="hud-group-title"/>
-                                                <Region HBox.hgrow="ALWAYS"/>
-                                                <Label fx:id="lblDashboardCombustible" text="100 %" styleClass="hud-readout-sm"/>
-                                            </HBox>
-                                            <LineChart fx:id="graficaCombustibleDashboard" createSymbols="false"
-                                                       animated="false" legendVisible="false"
-                                                       horizontalGridLinesVisible="false"
-                                                       verticalGridLinesVisible="false"
-                                                       prefHeight="58" minHeight="40" maxHeight="58"
-                                                       styleClass="race-telemetry-chart,fuel">
-                                                <xAxis><NumberAxis autoRanging="false" lowerBound="0" upperBound="20"
-                                                                   tickLabelsVisible="false" tickMarkVisible="false"/></xAxis>
-                                                <yAxis><NumberAxis autoRanging="false" lowerBound="0" upperBound="100"
-                                                                   tickLabelsVisible="false" tickMarkVisible="false"/></yAxis>
-                                            </LineChart>
+                                        <VBox spacing="0" HBox.hgrow="ALWAYS" styleClass="hud-tile">
+                                            <Label text="COMBUSTIBLE" styleClass="hud-group-title"/>
+                                            <Label fx:id="lblDashboardCombustible" text="100 %" styleClass="hud-tile-value"/>
                                         </VBox>
+                                    </HBox>
+                                    <HBox spacing="10">
+                                        <VBox spacing="0" HBox.hgrow="ALWAYS" styleClass="hud-tile">
+                                            <Label text="TEMP. NEUMÁTICO" styleClass="hud-group-title"/>
+                                            <Label fx:id="lblTempNeumaticoPanel" text="— °C" styleClass="hud-tile-value"/>
+                                        </VBox>
+                                        <VBox spacing="0" HBox.hgrow="ALWAYS" styleClass="hud-tile">
+                                            <Label text="MOTOR" styleClass="hud-group-title"/>
+                                            <Label fx:id="lblTempMotorPanel" text="— °C" styleClass="hud-tile-value"/>
+                                        </VBox>
+                                    </HBox>
+                                </VBox>
+
+                                <Region styleClass="hud-rule"/>
+
+                                <!-- Mensajes de ingeniería y eventos -->
+                                <VBox styleClass="hud-group" spacing="5">
+                                    <HBox spacing="8" alignment="CENTER_LEFT">
+                                        <Label text="MENSAJES" styleClass="hud-group-title"/>
+                                        <Region HBox.hgrow="ALWAYS"/>
+                                        <Label fx:id="lblDashboardEvento" text="SIN EVENTOS"
+                                               styleClass="event-live"/>
+                                    </HBox>
+                                    <Label fx:id="lblDashboardMensaje" text="Esperando el inicio de la sesión"
+                                           wrapText="true" styleClass="race-engineer-message"/>
+                                    <!-- Feed de incidencias: lo puebla registrarEventoEnVivo. -->
+                                    <ScrollPane fitToWidth="true" styleClass="edge-to-edge,hud-scroll"
+                                                prefHeight="150" minHeight="90">
+                                        <VBox fx:id="feedEventos" spacing="0" styleClass="hud-feed"/>
+                                    </ScrollPane>
+                                    <HBox alignment="CENTER_LEFT">
+                                        <Button fx:id="btnVerEventos" text="Ver eventos"
+                                                disable="true" onAction="#onVerEventos"
+                                                styleClass="event-details-button"/>
                                     </HBox>
                                 </VBox>
                             </VBox>
@@ -304,7 +301,7 @@
             </Tab>
 
             <!-- Vista original de clasificación completa, sin columnas eliminadas. -->
-            <Tab text="Clasificación completa">
+            <Tab text="Clasificación">
                 <TableView fx:id="tabla">
                     <columns>
                         <TableColumn fx:id="colPosicion" text="Pos" prefWidth="45"/>
@@ -321,7 +318,7 @@
                 </TableView>
             </Tab>
 
-            <Tab fx:id="tabTelemetria" text="Detalle de telemetría">
+            <Tab fx:id="tabTelemetria" text="Telemetría">
                 <ScrollPane fitToWidth="true" pannable="true" styleClass="telemetry-detail-scroll">
                 <VBox spacing="16" styleClass="telemetry-panel,telemetry-detail-panel">
                     <HBox spacing="12" alignment="CENTER_LEFT" styleClass="telemetry-detail-toolbar">
@@ -520,7 +517,7 @@
                 </ScrollPane>
             </Tab>
 
-            <Tab text="Comparación de sectores">
+            <Tab text="Sectores">
                 <fx:include fx:id="comparacionSectores" source="sector-comparison.fxml"/>
             </Tab>
 
