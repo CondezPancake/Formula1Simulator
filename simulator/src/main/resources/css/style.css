@@ -32,13 +32,6 @@
     -fx-accent-blue: #3671C6;
     -fx-accent-pink: #FF87BC;
 
-    /* --- vidrio (HUD del dashboard de carrera) --- */
-    -fx-glass-surface-1: rgba(20,20,26,0.55);
-    -fx-glass-surface-2: rgba(26,26,34,0.62);
-    -fx-glass-border: rgba(255,255,255,0.12);
-    -fx-glass-border-strong: rgba(255,255,255,0.20);
-    -fx-glass-shadow: rgba(0,0,0,0.55);
-
     -fx-background-color: -fx-bg-0;
     -fx-font-family: "Titillium Web", "Adwaita Sans", sans-serif;
     -fx-font-size: 13px;
@@ -969,67 +962,17 @@
     -fx-background-color: -fx-bg-0;
 }
 
-.race-console-panel {
-    -fx-background-color: -fx-surface-1;
-    -fx-background-radius: 7;
-    -fx-border-color: -fx-border-1;
-    -fx-border-radius: 7;
-    -fx-padding: 10;
-}
-
-.race-panel-title {
-    -fx-font-size: 15px;
-    -fx-font-weight: bold;
-    -fx-text-fill: -fx-text-hero;
-}
-
-.race-compact-table {
-    -fx-background-radius: 4;
-    -fx-border-radius: 4;
-}
-
-.race-compact-table .table-row-cell {
-    -fx-cell-size: 31;
-}
-
-.race-compact-table .table-cell {
-    -fx-font-size: 11px;
-}
-
-.race-map-panel {
-    -fx-min-width: 430;
-}
-
-/* 320 y no 260: con veinte coches repartidos por el trazado, a 260 px de alto
-   los marcadores quedan a menos de su propio diametro unos de otros. El
-   padding baja a 0 porque el lienzo ya reserva su propio margen interior. */
+/* El trazado ya no vive en una tarjeta: es la superficie central del
+   tablero, asi que no lleva fondo ni borde propios. El minimo baja a 150
+   porque es lo que cede antes de que el HUD se recorte por abajo en una
+   ventana de 800 px de alto; con mas sitio crece hasta llenarlo. */
 .race-map-canvas {
-    -fx-background-color: -fx-surface-3;
-    -fx-background-radius: 5;
-    -fx-border-color: -fx-border-2;
-    -fx-border-radius: 5;
+    -fx-background-color: transparent;
     -fx-padding: 0;
-    -fx-min-height: 320;
+    -fx-min-height: 150;
 }
 
-/* --- paneles de sesion del deck inferior --- */
-
-.race-hud-panel, .race-weather-panel,
-.race-legend-panel, .race-best-lap-panel {
-    -fx-padding: 7 10 7 10;
-}
-
-.race-hud-value {
-    -fx-font-size: 22px;
-    -fx-font-weight: bold;
-    -fx-text-fill: -fx-text-hero;
-}
-
-.race-hud-sector {
-    -fx-font-size: 11px;
-    -fx-font-weight: bold;
-    -fx-text-fill: -fx-accent-amber;
-}
+/* --- leyenda del mapa --- */
 
 .race-legend-row {
     -fx-padding: 1 0 1 0;
@@ -1067,38 +1010,8 @@
     -fx-text-fill: -fx-text-muted;
 }
 
-.race-best-lap-time {
-    -fx-font-size: 20px;
-    -fx-font-weight: bold;
-    -fx-text-fill: -fx-accent-amber;
-}
-
-.race-best-lap-driver {
-    -fx-font-size: 11px;
-    -fx-font-weight: bold;
-    -fx-text-fill: -fx-text-1;
-}
-
-/* La fila resaltada acompana al marcador senalado en el mapa, y al reves. */
-.race-compact-table .table-row-cell:hover {
-    -fx-background-color: #22222A;
-}
-
-.race-compact-table .table-row-cell.marcador-activo {
-    -fx-background-color: #26262F;
-}
-
-.race-engineer-panel {
-    -fx-min-height: 76;
-}
-
 .race-engineer-message {
     -fx-text-fill: -fx-text-2;
-}
-
-.race-lower-deck {
-    -fx-min-height: 190;
-    -fx-pref-height: 205;
 }
 
 .race-driver-card {
@@ -1133,8 +1046,7 @@
     -fx-text-fill: -fx-text-hero;
 }
 
-.race-car-readings,
-.race-car-modes {
+.race-car-readings {
     -fx-padding: 1 0 0 0;
 }
 
@@ -1187,21 +1099,10 @@
     -fx-background-radius: 2;
 }
 
-.race-bottom-telemetry {
-    -fx-min-height: 112;
-}
-
-.race-chart-tile {
-    -fx-background-color: -fx-surface-2;
-    -fx-background-radius: 4;
-    -fx-padding: 5 7 3 7;
-    -fx-min-width: 175;
-}
-
 .race-telemetry-chart {
     -fx-padding: 0;
-    -fx-min-height: 48;
-    -fx-max-height: 66;
+    -fx-min-height: 40;
+    -fx-max-height: 58;
 }
 
 .race-telemetry-chart .axis {
@@ -1222,43 +1123,207 @@
 }
 
 /* =====================================================================
-   Dashboard HUD glass overlay (pestaña "Dashboard" de simulation.fxml)
-   Paneles de vidrio dentro de la rejilla estructurada normal (sin
-   posicionamiento absoluto). El fondo del contenido del tab es un
-   degradado oscuro unificado, no el mapa del circuito.
+   Dashboard de Carrera: un solo tablero (pestaña "Dashboard")
+   No hay tarjetas. Toda la pestaña es una superficie continua dividida
+   por filetes de 1 px; los grupos se distinguen por tipografía, no por
+   cajas. El trazado manda al centro, como en la señal de televisión.
    ===================================================================== */
 
 .race-hud-stage {
-    -fx-background-color: linear-gradient(to bottom right, #0B0B0F 0%, #17171D 100%);
+    -fx-background-color: linear-gradient(to bottom right, #08080C 0%, #101018 100%);
 }
 
-.race-hud-glass-panel {
-    -fx-background-color: -fx-glass-surface-2;
-    -fx-background-radius: 14;
-    -fx-border-color: -fx-glass-border;
-    -fx-border-width: 1;
-    -fx-border-radius: 14;
-    -fx-effect: dropshadow(gaussian, -fx-glass-shadow, 24, 0.25, 0, 8);
+/* El padding del contenido del tab lo pone el propio stage: la regla
+   generica .tab-pane > .tab-content-area anadia 10 px que recortaban el
+   HUD por abajo. Esta gana por especificidad. */
+.tab-pane.race-tabs > .tab-content-area {
+    -fx-padding: 0;
 }
 
-.race-hud-glass-panel:hover {
-    -fx-border-color: -fx-glass-border-strong;
-}
-
-.race-hud-table {
+.hud-column {
     -fx-background-color: transparent;
 }
 
-.race-hud-table .column-header-background {
+.hud-group {
+    -fx-background-color: transparent;
+    -fx-padding: 9 12 9 12;
+}
+
+/* Filetes: lo unico que separa un grupo del siguiente. */
+.hud-rule {
+    -fx-min-height: 1;
+    -fx-max-height: 1;
+    -fx-background-color: rgba(255,255,255,0.07);
+}
+
+.hud-rule-v {
+    -fx-min-width: 1;
+    -fx-max-width: 1;
+    -fx-background-color: rgba(255,255,255,0.07);
+}
+
+.hud-group-title {
+    -fx-font-size: 9px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-faint;
+}
+
+.hud-value {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.hud-value-sm {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.hud-value-best {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 21px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-accent-amber;
+}
+
+.hud-accent {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-accent-amber;
+}
+
+.hud-hint {
+    -fx-font-size: 10px;
+    -fx-text-fill: -fx-text-muted;
+}
+
+.hud-readout {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.hud-readout-sm {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-1;
+}
+
+.hud-gear {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-accent-red;
+}
+
+.hud-ers-bar {
+    -fx-pref-height: 4;
+    -fx-min-height: 4;
+    -fx-max-height: 4;
+}
+
+.hud-ers-bar > .bar {
+    -fx-background-color: -fx-accent-amber;
+    -fx-background-insets: 0;
+    -fx-background-radius: 2;
+}
+
+.hud-scroll, .hud-scroll > .viewport {
     -fx-background-color: transparent;
 }
 
-.race-hud-table .table-row-cell {
+/* ---------------------------------------------------------------------
+   Torre de tiempos
+   Fila = posicion · franja de la escuderia · codigo de tres letras ·
+   intervalo. Sin cabeceras, sin rejilla, sin fondo: solo el filete que
+   la separa de la siguiente.
+   --------------------------------------------------------------------- */
+
+.timing-tower {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+    -fx-fixed-cell-size: 26;
+}
+
+/* El skin pinta su propio fondo en estas capas; sin esto la torre
+   aparece como un rectangulo gris sobre el tablero. */
+.timing-tower > .virtual-flow,
+.timing-tower > .virtual-flow > .clipped-container,
+.timing-tower > .virtual-flow > .clipped-container > .sheet,
+.timing-tower > .virtual-flow > .corner,
+.timing-tower:focused {
     -fx-background-color: transparent;
 }
 
-.race-hud-table .table-row-cell:odd {
-    -fx-background-color: rgba(255,255,255,0.03);
+.timing-tower .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.timing-tower .list-cell:filled:selected,
+.timing-tower .list-cell:filled:hover {
+    -fx-background-color: transparent;
+}
+
+.tower-row {
+    -fx-padding: 3 4 3 2;
+    -fx-border-color: transparent transparent rgba(255,255,255,0.05) transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.timing-tower .list-cell:filled:hover .tower-row,
+.tower-row.activo {
+    -fx-background-color: rgba(255,255,255,0.08);
+}
+
+.tower-pos {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-muted;
+    -fx-min-width: 20;
+    -fx-alignment: CENTER;
+}
+
+.tower-row.lider .tower-pos {
+    -fx-text-fill: -fx-text-hero;
+}
+
+/* El color lo inyecta el ListCell segun la escuderia. */
+.tower-team-bar {
+    -fx-min-width: 3;
+    -fx-max-width: 3;
+    -fx-min-height: 15;
+    -fx-background-radius: 2;
+}
+
+.tower-code {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-1;
+}
+
+.tower-row.lider .tower-code {
+    -fx-text-fill: -fx-text-hero;
+}
+
+.tower-gap {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 11px;
+    -fx-text-fill: -fx-text-muted;
+}
+
+.tower-row.lider .tower-gap {
+    -fx-text-fill: -fx-accent-amber;
+}
+
+.tower-row.invalida .tower-code,
+.tower-row.invalida .tower-gap {
+    -fx-text-fill: #7A5A5A;
 }
 
 .evolution-panel, .telemetry-panel, .sector-comparison-panel {
