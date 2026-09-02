@@ -37,7 +37,6 @@ import javafx.animation.KeyFrame;
 import javafx.animation.FadeTransition;
 import javafx.animation.PauseTransition;
 import javafx.animation.Timeline;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -54,9 +53,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressBar;
-import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -109,6 +106,7 @@ public class SimulationController {
     @FXML private Label lblEstrategiaEvolucion;
     @FXML private TabPane panelResultados;
     @FXML private Tab tabDashboard;
+    @FXML private Tab tabResultadosFinales;
     @FXML private Tab tabTelemetria;
     @FXML private Tab tabEventos;
     @FXML private Button btnVerDetalles;
@@ -206,17 +204,7 @@ public class SimulationController {
     @FXML private LineChart<Number, Number> graficaTemperaturasDetalle;
     @FXML private LineChart<Number, Number> graficaDeltaDetalle;
     @FXML private SectorComparisonController comparacionSectoresController;
-    @FXML private TableView<LapResult> tabla;
-    @FXML private TableColumn<LapResult, Number> colPosicion;
-    @FXML private TableColumn<LapResult, String> colPiloto;
-    @FXML private TableColumn<LapResult, String> colEquipo;
-    @FXML private TableColumn<LapResult, String> colVehiculo;
-    @FXML private TableColumn<LapResult, String> colTiempo;
-    @FXML private TableColumn<LapResult, String> colGap;
-    @FXML private TableColumn<LapResult, String> colConsumo;
-    @FXML private TableColumn<LapResult, String> colDesgaste;
-    @FXML private TableColumn<LapResult, String> colEstadoVuelta;
-    @FXML private TableColumn<LapResult, String> colEventoResultado;
+    @FXML private PostQualifyingController resultadosFinalesController;
     @FXML private TableView<EventOccurrence> tablaEventos;
     @FXML private TableColumn<EventOccurrence, String> colEventoPiloto;
     @FXML private TableColumn<EventOccurrence, String> colEventoNombre;
@@ -306,63 +294,10 @@ public class SimulationController {
             actualizarTarjetasPilotos();
         });
 
-        colPosicion.setCellValueFactory(f -> new SimpleIntegerProperty(f.getValue().getPosicion()));
-        colPiloto.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getPiloto()));
-        colEquipo.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getEquipo()));
-        colVehiculo.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getVehiculo()));
-        colTiempo.setCellValueFactory(f -> new SimpleStringProperty(
-                FormatUtils.formatLapResult(f.getValue())));
-        colGap.setCellValueFactory(f -> new SimpleStringProperty(
-                f.getValue().isVueltaValida() ? FormatUtils.formatGap(f.getValue().getGap()) : "—"));
-        colConsumo.setCellValueFactory(f -> new SimpleStringProperty(
-                String.format("%.2f", f.getValue().getConsumoEstimado())));
-        colDesgaste.setCellValueFactory(f -> new SimpleStringProperty(
-                String.format("%.2f", f.getValue().getDesgasteEstimado())));
-        colEstadoVuelta.setCellValueFactory(f -> new SimpleStringProperty(
-                f.getValue().getEstadoVuelta().getEtiqueta()));
-        colEventoResultado.setCellValueFactory(f -> new SimpleStringProperty(
-                f.getValue().getEventoResumen()));
         configurarTablaEventos();
 
-        // Torre de tiempos del Dashboard: la misma lista que la clasificación
-        // completa, pero pintada como la señal de TV en vez de como tabla.
+        // Torre de tiempos del Dashboard, pintada como la señal de TV.
         torreTiempos.setCellFactory(lista -> new FilaTorre());
-
-        // La pole se resalta con la clase .pole-row de la hoja de estilos.
-        // Cada fila lleva a la izquierda la franja del color de su escudería,
-        // igual que la tabla de tiempos del diseño.
-        tabla.setRowFactory(t -> {
-            TableRow<LapResult> fila = filaConColorDeEquipo();
-            // Doble clic sobre un piloto abre su ficha, como en cualquier
-            // tabla de resultados: la fila es el acceso natural al detalle.
-            fila.setOnMouseClicked(e -> {
-                if (e.getClickCount() == 2 && !fila.isEmpty() && fila.getItem() != null) {
-                    ExploreDriversController.abrirFicha(fila.getItem().getPilotoId());
-                }
-            });
-            return fila;
-        });
-        colPosicion.setCellFactory(c -> new TableCell<>() {
-            @Override
-            protected void updateItem(Number valor, boolean vacia) {
-                super.updateItem(valor, vacia);
-                getStyleClass().removeAll("pos-badge", "p1", "p2", "p3");
-                if (vacia || valor == null) {
-                    setText(null);
-                    return;
-                }
-                setText(String.valueOf(valor.intValue()));
-                getStyleClass().add("pos-badge");
-                switch (valor.intValue()) {
-                    case 1 -> getStyleClass().add("p1");
-                    case 2 -> getStyleClass().add("p2");
-                    case 3 -> getStyleClass().add("p3");
-                    default -> { }
-                }
-            }
-        });
-        colTiempo.getStyleClass().add("mono-col");
-        colGap.getStyleClass().add("mono-col");
 
         selectorCircuito.valueProperty().addListener((o, a, b) -> actualizarMapaCircuito(b));
         selectorPiloto.valueProperty().addListener((o, a, b) -> actualizarTarjetasPilotos());
@@ -536,7 +471,6 @@ public class SimulationController {
         lblClima.setText(resumenClimatico(sesion));
         ObservableList<LapResult> resultados =
                 FXCollections.observableArrayList(sesion.getResultados());
-        tabla.setItems(resultados);
         torreTiempos.setItems(resultados);
         tablaEventos.setItems(FXCollections.observableArrayList(sesion.getEventos()));
         btnVerEventos.setDisable(sesion.getEventos().isEmpty());
@@ -566,6 +500,8 @@ public class SimulationController {
         lblDashboardEvento.setText(incidencias == 0
                 ? "SIN EVENTOS" : incidencias + " EVENTOS");
         pitStopPresenter.showLatest(sesion.getParadasBoxes());
+        resultadosFinalesController.load(sesion, pilotoFijado);
+        tabResultadosFinales.setDisable(false);
         lblPolePiloto.setText(pole == null ? "—" : pole.getPiloto());
         lblPoleTiempo.setText(pole == null ? "—"
                 : FormatUtils.formatLapTime(pole.getTiempoSegundos()));
@@ -583,32 +519,6 @@ public class SimulationController {
         circuitoEnVivo.finalizar(manual);
         ShellController.estadoSesion(ShellController.Estado.TERMINADA);
         panelResultados.getSelectionModel().select(tabDashboard);
-    }
-
-    /**
-     * Fila con la franja del color de su escudería a la izquierda y la pole
-     * destacada, igual que la tabla de tiempos del diseño.
-     */
-    private TableRow<LapResult> filaConColorDeEquipo() {
-        return new TableRow<>() {
-            @Override
-            protected void updateItem(LapResult resultado, boolean vacia) {
-                super.updateItem(resultado, vacia);
-                getStyleClass().removeAll("pole-row", "invalid-row");
-                if (vacia || resultado == null) {
-                    setStyle("");
-                    return;
-                }
-                if (!resultado.isVueltaValida()) {
-                    getStyleClass().add("invalid-row");
-                } else if (resultado.getPosicion() == 1) {
-                    getStyleClass().add("pole-row");
-                }
-                setStyle("-fx-border-color: transparent transparent #17171B "
-                        + TeamColors.hex(resultado.getEquipo())
-                        + "; -fx-border-width: 0 0 1 3;");
-            }
-        };
     }
 
     /**
@@ -766,6 +676,7 @@ public class SimulationController {
         reiniciarTelemetria();
         comparacionSectoresController.reiniciar();
         panelResultados.getSelectionModel().select(tabDashboard);
+        tabResultadosFinales.setDisable(true);
 
         segmentoEnVivo = 0;
         mapaProgreso.reiniciar();
@@ -800,7 +711,6 @@ public class SimulationController {
         btnSimular.disableProperty().bind(tarea.runningProperty());
         btnFinalizar.disableProperty().bind(tarea.runningProperty().not());
         selectorDuracion.disableProperty().bind(tarea.runningProperty());
-        tabla.getItems().clear();
         torreTiempos.getItems().clear();
         tablaEventos.getItems().clear();
         feedEventos.getChildren().clear();
@@ -817,6 +727,7 @@ public class SimulationController {
             // guardado de abajo corre en el pool.
             QualifyingSession resultado = tarea.getValue();
             mostrarSesion(resultado, finalizadaManualmente);
+            panelResultados.getSelectionModel().select(tabResultadosFinales);
             if (finalizadaManualmente) {
                 lblEstado.setText("Sesión finalizada manualmente · resultados guardados");
                 lblDashboardEvento.setText("FINALIZADA");
@@ -887,12 +798,11 @@ public class SimulationController {
         return String.format("%02d:%02d", totalSegundos / 60, totalSegundos % 60);
     }
 
-    /** Refresca las dos tablas mientras los pilotos van completando sus vueltas. */
+    /** Refresca la torre mientras los pilotos van completando sus vueltas. */
     private void mostrarClasificacionEnVivo(List<LapResult> resultados) {
         segmentoEnVivo = Math.min(segmentoEnVivo + 1, MapaProgreso.TOTAL_SEGMENTOS);
 
         ObservableList<LapResult> parcial = FXCollections.observableArrayList(resultados);
-        tabla.setItems(parcial);
         torreTiempos.setItems(parcial);
 
         // El mapa se alimenta de esta misma lista: el marcador y la fila no son

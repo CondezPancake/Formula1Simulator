@@ -313,22 +313,8 @@
                 </VBox>
             </Tab>
 
-            <!-- Vista original de clasificación completa, sin columnas eliminadas. -->
-            <Tab text="Clasificación">
-                <TableView fx:id="tabla">
-                    <columns>
-                        <TableColumn fx:id="colPosicion" text="Pos" prefWidth="45"/>
-                        <TableColumn fx:id="colPiloto" text="Piloto" prefWidth="145"/>
-                        <TableColumn fx:id="colEquipo" text="Equipo" prefWidth="145"/>
-                        <TableColumn fx:id="colVehiculo" text="Vehículo" prefWidth="75"/>
-                        <TableColumn fx:id="colTiempo" text="Tiempo" prefWidth="90"/>
-                        <TableColumn fx:id="colGap" text="Dif." prefWidth="65"/>
-                        <TableColumn fx:id="colConsumo" text="Consumo" prefWidth="75"/>
-                        <TableColumn fx:id="colDesgaste" text="Desgaste" prefWidth="75"/>
-                        <TableColumn fx:id="colEstadoVuelta" text="Estado" prefWidth="90"/>
-                        <TableColumn fx:id="colEventoResultado" text="Evento" prefWidth="145"/>
-                    </columns>
-                </TableView>
+            <Tab fx:id="tabResultadosFinales" text="Resultados" disable="true">
+                <fx:include fx:id="resultadosFinales" source="post-qualifying.fxml"/>
             </Tab>
 
             <Tab fx:id="tabTelemetria" text="Telemetría">
