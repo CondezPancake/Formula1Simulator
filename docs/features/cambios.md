@@ -24,7 +24,7 @@ ya contenga pantallas, datos o servicios que puedan reutilizarse como punto de p
 | E09 | Telemetría visual | **Terminada** |
 | E10 | Evolución dinámica de pista | **Terminada** · integrada en Carrera |
 | E11 | Sistema de estrategia | **Terminada** |
-| E13 | Rediseño de experiencia de Carrera | **Pendiente** |
+| E13 | Rediseño de experiencia de Carrera | **Terminada** |
 | E14 | Información detallada bajo demanda | **Pendiente** |
 | E15 | Simplificación del módulo Carrera | **Pendiente** |
 | E16 | Rediseño del módulo Explorar | **Pendiente** |
@@ -50,8 +50,7 @@ ya contenga pantallas, datos o servicios que puedan reutilizarse como punto de p
 | E09 | HU-31 a HU-33 | **Terminadas** |
 | E10 | HU-34 | **Terminada** · sin pestaña independiente |
 | E11 | HU-35 | **Terminada** |
-| E13 | HU-38 a HU-40 | **Terminadas** |
-| E13 | HU-37 | **Pendiente** |
+| E13 | HU-37 a HU-40 | **Terminadas** |
 | E14 | HU-41 y HU-42 | **Terminadas** |
 | E15 | HU-43 | **Pendiente** |
 | E16 | HU-44 | **Terminada** |
@@ -67,8 +66,8 @@ ya contenga pantallas, datos o servicios que puedan reutilizarse como punto de p
 
 | Elemento | Terminadas | Pendientes | Total vigente |
 |---|---:|---:|---:|
-| Épicas | 11 | 10 | 21 |
-| Historias de usuario | 37 | 18 | 55 |
+| Épicas | 12 | 9 | 21 |
+| Historias de usuario | 38 | 17 | 55 |
 
 ## Requisitos funcionales
 
@@ -127,7 +126,7 @@ Resumen POO/calidad: **26 cumplidos de 26**.
 
 > Es la épica de mayor prioridad dentro del nuevo alcance.
 
-#### HU-37 — Rediseñar Dashboard de Carrera
+#### HU-37 — Rediseñar Dashboard de Carrera — **Terminada**
 
 - Rediseñar el Dashboard.
 - Integrar clasificación, evolución, información del vehículo, circuito y clima básico.
@@ -136,6 +135,16 @@ Resumen POO/calidad: **26 cumplidos de 26**.
 - Mostrar los pilotos mediante círculos sobre el circuito.
 - Actualizar visualmente la posición de los pilotos.
 - Identificar cada piloto y diferenciar el piloto fijado.
+
+El trazado ya no es un PNG: se dibuja con una spline Catmull-Rom centrípeta reparametrizada por
+longitud de arco, calcada de los mapas oficiales por `tools/TrazarCircuitos.java`. Los veinte
+pilotos lo recorren en vivo con el color de su escudería, y su posición se deriva del **mismo
+`List<LapResult>` que puebla la torre de tiempos**, de modo que el orden en pista no puede
+contradecir al de la tabla —hay una prueba que lo fija—. Detalle en
+[`circuito-dinamico.md`](circuito-dinamico.md).
+
+> El «piloto fijado» que menciona el último punto es HU-48. Aquí queda el gancho: el mapa ya
+> distingue al líder y al piloto del usuario, y resalta en los dos sentidos entre tabla y pista.
 
 #### HU-38 — Integrar clima básico — **Terminada**
 
@@ -331,7 +340,7 @@ Prioridad: **opcional / baja**.
 
 | Fase / Sprint | Prioridad | Descripción | Historias de usuario |
 |---|---|---|---|
-| Sprint / Fase 1 | Alta | Núcleo de la nueva experiencia | HU-37, HU-48, HU-49, HU-50, HU-51 |
+| Sprint / Fase 1 | Alta | Núcleo de la nueva experiencia | ~~HU-37~~, HU-48, HU-49, HU-50, HU-51 |
 | Sprint / Fase 2 | Alta | Integración visual pendiente | HU-43 |
 | Sprint / Fase 3 | Media | Explorar | HU-44, HU-45, HU-46, HU-47 |
 | Sprint / Fase 4 | Media | Resultado y multimedia | HU-52, HU-53, HU-54 |
@@ -354,7 +363,7 @@ de pista, y puede recuperarse desde el historial entre ejecuciones.
 | Control | Estado |
 |---|---|
 | Compilación | Código principal y pruebas compilan con Java 17. |
-| Pruebas automatizadas | **112 pruebas** ejecutadas correctamente con Maven. |
+| Pruebas automatizadas | **150 pruebas** ejecutadas correctamente con el wrapper de Maven. |
 | Integridad FXML | `ViewsLoadTest` y `ExploreViewsLoadTest` comprueban la carga de las vistas FXML. |
 | Persistencia histórica | JSON compatible con sesiones antiguas; el campo `analisis` ya retirado se ignora al leer. |
 | Inmutabilidad | Snapshots, eventos, sectores y evolución de pista son inmutables o se exponen como copias. |
