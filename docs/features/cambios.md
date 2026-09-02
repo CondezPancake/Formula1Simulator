@@ -56,7 +56,8 @@ ya contenga pantallas, datos o servicios que puedan reutilizarse como punto de p
 | E16 | HU-44 | **Terminada** |
 | E16 a HU-47 | **Pendientes** |
 | E17 | HU-48 y HU-49 | **Pendientes** |
-| E18 | HU-50 a HU-52 | **Pendientes** |
+| E18 | HU-50 | **Terminada** |
+| E18 | HU-51 y HU-52 | **Pendientes** |
 | E19 | HU-53 | **Pendiente** |
 | E20 | HU-54 | **Cancelada** |
 | E21 | HU-55 y HU-56 | **Pendientes** |
@@ -67,7 +68,7 @@ ya contenga pantallas, datos o servicios que puedan reutilizarse como punto de p
 | Elemento | Terminadas | Pendientes | Total vigente |
 |---|---:|---:|---:|
 | Épicas | 12 | 9 | 21 |
-| Historias de usuario | 38 | 17 | 55 |
+| Historias de usuario | 39 | 16 | 55 |
 
 ## Requisitos funcionales
 
@@ -253,12 +254,23 @@ Evolución de pista, Análisis y Clima dinámico.
 
 ### E18 — Estrategia y Pit Stop
 
-#### HU-50 — Implementar parada en boxes
+#### HU-50 — Implementar parada en boxes — **Terminada**
 
 - Implementar entrada, estado visual o animación, tiempo de parada y salida de boxes.
 - Actualizar la posición tras la parada.
 - Crear el evento de pit stop y su registro histórico.
 - Integrarlo con la radio.
+
+El motor evalúa automáticamente el estado de todos los pilotos y ordena la
+parada ante problemas de neumáticos, riesgo mecánico, cambios de clima o
+desgaste excesivo. No existe una acción manual de entrada a boxes. El motor
+representa entrada, detención, salida y finalización.
+La pérdida de tiempo se aplica progresivamente sobre la clasificación en vivo,
+por lo que torre, mapa y posición final usan el mismo resultado. Cada fase se
+publica como un snapshot inmutable, se refleja en el panel de mensajes y la
+última queda persistida con la sesión. El contrato no conoce compuestos ni una
+implementación de radio concreta, dejando esos puntos para HU-51 y HU-49.
+Detalle en [`pit-stop.md`](pit-stop.md).
 
 #### HU-51 — Implementar cambio de neumáticos
 
@@ -340,7 +352,7 @@ Prioridad: **opcional / baja**.
 
 | Fase / Sprint | Prioridad | Descripción | Historias de usuario |
 |---|---|---|---|
-| Sprint / Fase 1 | Alta | Núcleo de la nueva experiencia | ~~HU-37~~, HU-48, HU-49, HU-50, HU-51 |
+| Sprint / Fase 1 | Alta | Núcleo de la nueva experiencia | ~~HU-37~~, HU-48, HU-49, ~~HU-50~~, HU-51 |
 | Sprint / Fase 2 | Alta | Integración visual pendiente | HU-43 |
 | Sprint / Fase 3 | Media | Explorar | HU-44, HU-45, HU-46, HU-47 |
 | Sprint / Fase 4 | Media | Resultado y multimedia | HU-52, HU-53, HU-54 |
