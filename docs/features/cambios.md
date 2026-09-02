@@ -30,7 +30,7 @@ ya contenga pantallas, datos o servicios que puedan reutilizarse como punto de p
 | E16 | Rediseño del módulo Explorar | **Pendiente** |
 | E17 | Seguimiento dinámico del piloto | **Pendiente** |
 | E18 | Estrategia y Pit Stop | **Pendiente** |
-| E19 | Resultados de clasificación | **Pendiente** |
+| E19 | Resultados de clasificación | **Terminada** |
 | E20 | Recursos multimedia | **Cancelada** |
 | E21 | Arquitectura y patrones de diseño | **Pendiente** |
 | E22 | Animación inicial | **Terminada** · opcional |
@@ -59,7 +59,7 @@ ya contenga pantallas, datos o servicios que puedan reutilizarse como punto de p
 | E18 | HU-50 | **Terminada** |
 | E18 | HU-51 | **Terminada** |
 | E18 | HU-52 | **Pendiente** |
-| E19 | HU-53 | **Pendiente** |
+| E19 | HU-53 | **Terminada** |
 | E20 | HU-54 | **Cancelada** |
 | E21 | HU-55 y HU-56 | **Pendientes** |
 | E22 | HU-57 | **Terminada** · opcional |
@@ -68,8 +68,8 @@ ya contenga pantallas, datos o servicios que puedan reutilizarse como punto de p
 
 | Elemento | Terminadas | Pendientes | Total vigente |
 |---|---:|---:|---:|
-| Épicas | 12 | 9 | 21 |
-| Historias de usuario | 40 | 15 | 55 |
+| Épicas | 13 | 8 | 21 |
+| Historias de usuario | 41 | 14 | 55 |
 
 ## Requisitos funcionales
 
@@ -253,7 +253,7 @@ Evolución de pista, Análisis y Clima dinámico.
 - Informar entradas y salidas de boxes, cambios de neumáticos e incidentes.
 - Mostrar información de estrategia y actualizarla en vivo.
 
-### E18 — Estrategia y Pit Stop
+### E18 — Estrategia y Pit Stop **Terminada**
 
 #### HU-50 — Implementar parada en boxes — **Terminada**
 
@@ -293,6 +293,7 @@ además de registrar el cambio en el feed. Detalle en
 [`tire-change.md`](tire-change.md).
 
 #### HU-52 — Visualizar estrategia de neumáticos
+**Terminada**
 
 - Mostrar el neumático actual en el dashboard donde estan los pilotos
 - el historial de compuestos.
@@ -302,7 +303,7 @@ además de registrar el cambio en el feed. Detalle en
 
 ### E19 — Resultados de clasificación
 
-#### HU-53 — Crear sección posterior a la clasificación
+#### HU-53 — Crear sección posterior a la clasificación — **Terminada**
 
 Al terminar la simulación se mostrarán:
 
@@ -312,6 +313,15 @@ Al terminar la simulación se mostrarán:
 - Información general de la sesión.
 
 Flujo objetivo: `Configuración` → `Simulación` → `Finalización` → `Resultados`.
+
+La pestaña **Resultados** se habilita al terminar y pasa a ser la vista activa.
+Presenta la parrilla final con tiempo, gap, sectores, compuesto, paradas y
+eventos. Al seleccionar un piloto muestra su vehículo, estrategia, pérdida en
+boxes, cambios de neumáticos y los mensajes relevantes de eventos y box. La
+cabecera resume circuito, clima, fecha, pole, participantes, vueltas válidas,
+media y configuración utilizada. El componente es de solo lectura y consume la
+sesión persistida, por lo que funciona también con finalizaciones manuales y
+sesiones anteriores.
 
 ### E20 — Recursos multimedia
 
@@ -365,7 +375,7 @@ Prioridad: **opcional / baja**.
 | Sprint / Fase 1 | Alta | Núcleo de la nueva experiencia | ~~HU-37~~, HU-48, HU-49, ~~HU-50~~, ~~HU-51~~ |
 | Sprint / Fase 2 | Alta | Integración visual pendiente | HU-43 |
 | Sprint / Fase 3 | Media | Explorar | HU-44, HU-45, HU-46, HU-47 |
-| Sprint / Fase 4 | Media | Resultado y multimedia | HU-52, HU-53, HU-54 |
+| Sprint / Fase 4 | Media | Resultado y multimedia | HU-52, ~~HU-53~~, HU-54 |
 | Sprint / Fase 5 | Baja | Arquitectura | HU-55, HU-56 |
 | Opcional | Baja | Extras y flujo de interfaz | HU-57 |
 
