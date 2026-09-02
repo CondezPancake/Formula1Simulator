@@ -1,6 +1,7 @@
 package com.formula1.controller;
 
 import com.formula1.model.Driver;
+import com.formula1.model.DrivingMode;
 import com.formula1.model.LapResult;
 import com.formula1.model.LapStatus;
 import com.formula1.model.QualifyingSession;
@@ -86,6 +87,9 @@ public class TeamDetailController {
     @FXML private Button btnVolver;
 
     @FXML private HBox palmares;
+    @FXML private HBox prestaciones;
+    @FXML private VBox rendimientoModos;
+    @FXML private Label lblRendimientoNota;
     @FXML private HBox estadisticasSimulador;
     @FXML private Label lblResumenSesiones;
     @FXML private FlowPane tarjetasPilotos;
@@ -170,6 +174,7 @@ public class TeamDetailController {
 
         pintarHero(equipo, coche, pilotos);
         pintarPalmares(equipo);
+        pintarPrestaciones(coche);
         pintarEstadisticasSimulador(pilotos);
         pintarPilotos(pilotos);
         pintarResumen(equipo);
@@ -290,6 +295,60 @@ public class TeamDetailController {
                 cifra(numero(equipo.getPoles()), "POLES", false),
                 cifra(equipo.getPrimeraParticipacion() > 0
                         ? String.valueOf(equipo.getPrimeraParticipacion()) : "—", "DESDE", false));
+    }
+
+    /**
+     * Prestaciones del monoplaza: punta, aceleración y ritmo por modo.
+     *
+     * El rendimiento por modo de conducción es dato real del catálogo que hasta
+     * ahora no se veía en ninguna pantalla, y es lo que explica por qué dos
+     * coches con la misma punta no ruedan igual.
+     */
+    private void pintarPrestaciones(Optional<Vehicle> coche) {
+        prestaciones.getChildren().clear();
+        rendimientoModos.getChildren().clear();
+
+        if (coche.isEmpty()) {
+            lblRendimientoNota.setText("Sin monoplaza asignado en el catálogo.");
+            prestaciones.getChildren().addAll(
+                    cifra("—", "VELOCIDAD PUNTA", false),
+                    cifra("—", "0-100 KM/H", false));
+            return;
+        }
+
+        Vehicle vehiculo = coche.get();
+        lblRendimientoNota.setText("Velocidad media por modo de conducción");
+        prestaciones.getChildren().addAll(
+                cifra(vehiculo.getVelocidadMaximaKmh() + " km/h", "VELOCIDAD PUNTA", true),
+                cifra(String.format(java.util.Locale.ROOT, "%.1f s",
+                        vehiculo.getAceleracion0100()), "0-100 KM/H", false),
+                cifra(texto(vehiculo.getMotor()), "UNIDAD DE POTENCIA", false));
+
+        // La escala arranca en la punta del coche para que las tres barras se
+        // comparen entre sí y no contra un máximo inventado.
+        double referencia = Math.max(1, vehiculo.getVelocidadMaximaKmh());
+        for (DrivingMode modo : DrivingMode.values()) {
+            int media = vehiculo.rendimientoDe(modo).getVelocidadPromedioKmh();
+            rendimientoModos.getChildren().add(
+                    barraModo(modo.getEtiqueta().toUpperCase(Locale.ROOT), media, referencia));
+        }
+    }
+
+    private VBox barraModo(String etiqueta, int velocidadMedia, double referencia) {
+        Label lbl = new Label(etiqueta);
+        lbl.getStyleClass().add("team-profile-label");
+        Label valor = new Label(velocidadMedia + " km/h");
+        valor.getStyleClass().add("team-profile-value");
+        Region espaciador = new Region();
+        HBox.setHgrow(espaciador, javafx.scene.layout.Priority.ALWAYS);
+        HBox cabecera = new HBox(8, lbl, espaciador, valor);
+        cabecera.setAlignment(Pos.CENTER_LEFT);
+
+        ProgressBar barra = new ProgressBar(Math.min(1, velocidadMedia / referencia));
+        barra.getStyleClass().add("team-skill-bar");
+        barra.setMaxWidth(Double.MAX_VALUE);
+        barra.setStyle("-fx-accent: " + colorEquipo + ";");
+        return new VBox(2, cabecera, barra);
     }
 
     /**
