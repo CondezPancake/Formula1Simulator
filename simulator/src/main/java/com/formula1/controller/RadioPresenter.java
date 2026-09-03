@@ -2,6 +2,7 @@ package com.formula1.controller;
 
 import com.formula1.model.RadioMessage;
 import com.formula1.util.AudioManager;
+import com.formula1.util.TtsManager;
 
 import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;
@@ -29,12 +30,17 @@ import java.util.Deque;
  * <p>La cola con ritmo no es un adorno. El motor no emite las incidencias
  * goteando: las suelta en tres ráfagas, al cambiar de sector, así que sin
  * regular la salida la radio escupiría diez frases de golpe y no se leería
- * ninguna. Se sirve una cada {@link #RITMO}, que es más o menos lo que tarda
- * una frase real de muro de boxes.
+ * ninguna. Cuando hay voz (ver {@link TtsManager}), es la propia locución la
+ * que marca cuánto dura cada turno —tras ella solo hace falta un respiro
+ * corto, {@link #PAUSA_TRAS_VOZ}— y solo se cae en el ritmo fijo de
+ * {@link #RITMO} cuando la radio se queda muda, para que el texto solo siga
+ * siendo legible.
  */
 final class RadioPresenter {
 
     private static final Duration RITMO = Duration.millis(900);
+    private static final Duration PAUSA_TRAS_VOZ = Duration.millis(350);
+    private static final double VOLUMEN_VOZ = 1.0;
     private static final Duration ENTRADA = Duration.millis(200);
     private static final Duration PERMANENCIA = Duration.seconds(3.5);
     private static final Duration SALIDA = Duration.millis(250);
@@ -57,6 +63,23 @@ final class RadioPresenter {
     private PauseTransition ritmo;
     private PauseTransition permanencia;
 
+    /**
+     * Verdadero mientras se está entregando un mensaje: desde que se saca de
+     * la cola hasta que termina su turno (voz incluida, si la hay). Sustituye
+     * a comprobar el estado de {@link #ritmo} porque ahora ese temporizador
+     * no arranca hasta que {@link TtsManager} termina, y la síntesis tarda un
+     * rato en un hilo aparte.
+     */
+    private boolean ocupado;
+
+    /**
+     * Se incrementa en cada {@link #reiniciar()}. La síntesis de voz responde
+     * en otro hilo y puede tardar más que la vida de la sesión que la pidió;
+     * comparar la generación al volver evita que una voz de la sesión
+     * anterior reanude la cola de la nueva.
+     */
+    private int generacion;
+
     private String codigoPiloto = "—";
     private String colorEquipo = "#E10600";
 
@@ -72,12 +95,25 @@ final class RadioPresenter {
 
     /** Vacía la conversación y corta lo que estuviera sonando. */
     void reiniciar() {
+        generacion++;
+        ocupado = false;
         cola.clear();
         if (ritmo != null) {
             ritmo.stop();
         }
+        TtsManager.detener();
         hilo.getChildren().clear();
         ocultarRotulo();
+    }
+
+    /**
+     * Descarta lo que estuviera pendiente sin cortar la frase que suena en
+     * este instante. Al terminar la sesión, la voz ya tarda varios segundos
+     * reales por mensaje: sin esto, el rezago de avisos rutinarios seguiría
+     * hablando bastante después de que la pantalla ya mostrara el resultado.
+     */
+    void vaciarPendientes() {
+        cola.clear();
     }
 
     /** Dice a quién se está escuchando; tiñe la cabecera con su escudería. */
@@ -105,7 +141,7 @@ final class RadioPresenter {
     }
 
     private void arrancarRitmo() {
-        if (ritmo != null && ritmo.getStatus() == javafx.animation.Animation.Status.RUNNING) {
+        if (ocupado) {
             return;
         }
         soltarSiguiente();
@@ -114,16 +150,25 @@ final class RadioPresenter {
     private void soltarSiguiente() {
         RadioMessage mensaje = cola.poll();
         if (mensaje == null) {
+            ocupado = false;
             return;
         }
+        ocupado = true;
+        int generacionDeEsteMensaje = generacion;
         pintar(mensaje);
         if (mensaje.interrumpe()) {
             mostrarRotulo(mensaje);
             AudioManager.reproducirSfx(AVISO, VOLUMEN_AVISO);
         }
-        ritmo = new PauseTransition(RITMO);
-        ritmo.setOnFinished(e -> soltarSiguiente());
-        ritmo.play();
+        TtsManager.hablar(mensaje.texto(), VOLUMEN_VOZ, huboVoz -> {
+            // Una radio de una sesión ya reiniciada no debe reanudar esta cola.
+            if (generacionDeEsteMensaje != generacion) {
+                return;
+            }
+            ritmo = new PauseTransition(huboVoz ? PAUSA_TRAS_VOZ : RITMO);
+            ritmo.setOnFinished(e -> soltarSiguiente());
+            ritmo.play();
+        });
     }
 
     /** Una línea de la conversación: ingeniero a la izquierda, piloto a la derecha. */

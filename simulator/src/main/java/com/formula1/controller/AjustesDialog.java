@@ -1,6 +1,7 @@
 package com.formula1.controller;
 
 import com.formula1.util.AudioManager;
+import com.formula1.util.TtsManager;
 
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -46,13 +47,20 @@ public final class AjustesDialog {
         silenciar.setSelected(AudioManager.isMute());
         silenciar.selectedProperty().addListener((obs, viejo, nuevo) -> AudioManager.setMute(nuevo));
 
-        raiz.getChildren().addAll(titulo, lblMusica, sliderMusica, lblSfx, sliderSfx, silenciar);
+        CheckBox vozRadio = new CheckBox(TtsManager.isDisponible()
+                ? "Voz de radio (Piper)"
+                : "Voz de radio (Piper no está instalado)");
+        vozRadio.setSelected(TtsManager.isVozHabilitada());
+        vozRadio.setDisable(!TtsManager.isDisponible());
+        vozRadio.selectedProperty().addListener((obs, viejo, nuevo) -> TtsManager.setVozHabilitada(nuevo));
+
+        raiz.getChildren().addAll(titulo, lblMusica, sliderMusica, lblSfx, sliderSfx, silenciar, vozRadio);
 
         Stage dialogo = new Stage(StageStyle.UTILITY);
         dialogo.setTitle("Ajustes");
         dialogo.initModality(Modality.APPLICATION_MODAL);
 
-        Scene escena = new Scene(raiz, 320, 280);
+        Scene escena = new Scene(raiz, 320, 320);
         var estilos = AjustesDialog.class.getResource("/css/style.css");
         if (estilos != null) {
             escena.getStylesheets().add(estilos.toExternalForm());

@@ -557,6 +557,7 @@ public class SimulationController {
         // parrilla final y su rótulo se pone al día con el resultado.
         circuitoEnVivo.fijar(pilotoFijado);
         refrescarSeleccion(sesion.getResultados());
+        radioPresenter.vaciarPendientes();
         radioPresenter.encolar(radio.cierreDeSesion(
                 sesion.getResultados().stream()
                         .filter(r -> r.getPilotoId() == pilotoDeRadio())
