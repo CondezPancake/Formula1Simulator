@@ -6,6 +6,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.layout.StackPane;
+import javafx.util.Callback;
 import javafx.util.Duration;
 
 /**
@@ -26,6 +27,15 @@ public final class Navigator {
      */
     private static final String VISTA_EXPLORAR = "explorar";
 
+    /**
+     * Fábrica de controladores de la Fase 6: la instala {@code App} al
+     * arrancar para que las vistas que Navigator carga bajo demanda
+     * compartan los mismos servicios que las que carga App directamente, en
+     * vez de que cada una construya los suyos. Si nadie la instala (por
+     * ejemplo, en un test que no pasa por App), {@link FXMLLoader} cae a su
+     * fábrica por defecto —el constructor sin argumentos— como hacía antes.
+     */
+    private static Callback<Class<?>, Object> fabricaControladores;
     private static StackPane contenedor;
     private static Object ultimoControlador;
     private static Node sesion;
@@ -39,6 +49,11 @@ public final class Navigator {
     private static String vistaRetornoNombre;
 
     private Navigator() {
+    }
+
+    /** Instala la fábrica de controladores compartida (Fase 6, la llama {@code App} al arrancar). */
+    public static void usarFabrica(Callback<Class<?>, Object> fabrica) {
+        fabricaControladores = fabrica;
     }
 
     static void registrar(StackPane centro) {
@@ -84,6 +99,9 @@ public final class Navigator {
         }
         try {
             FXMLLoader cargador = new FXMLLoader(Navigator.class.getResource("/views/" + vista + ".fxml"));
+            if (fabricaControladores != null) {
+                cargador.setControllerFactory(fabricaControladores);
+            }
             Node contenido = cargador.load();
             ultimoControlador = cargador.getController();
             if (VISTA_SESION.equals(vista)) {

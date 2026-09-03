@@ -2,8 +2,8 @@ package com.formula1;
 
 import com.formula1.controller.IntroController;
 import com.formula1.controller.MainMenuController;
+import com.formula1.controller.Navigator;
 import com.formula1.controller.ShellController;
-import com.formula1.data.DataStore;
 import com.formula1.util.Async;
 
 import javafx.application.Application;
@@ -28,6 +28,9 @@ public class App extends Application {
     /** Se guarda para que suelte su reloj al volver al menú. */
     private ShellController shellActual;
 
+    /** Único punto de construcción de servicios y controladores (Fase 6). */
+    private final AppComposition composicion = new AppComposition();
+
     /**
      * Titillium Web fue la tipografia oficial de la F1 entre 2013 y 2017 y es
      * la base de la actual, que es propietaria. Se empaqueta con la app porque
@@ -43,6 +46,9 @@ public class App extends Application {
     @Override
     public void start(Stage escenario) throws IOException {
         cargarFuentes();
+        // Antes de la primera navegación, para que toda vista cargada por
+        // Navigator comparta los mismos servicios que las que carga App.
+        Navigator.usarFabrica(composicion.controllerFactory());
 
         StackPane raizEscena = new StackPane();
         raizEscena.setStyle("-fx-background-color: -fx-bg-0;");
@@ -68,7 +74,7 @@ public class App extends Application {
         Task<String> carga = new Task<>() {
             @Override
             protected String call() {
-                return DataStore.getInstance().cargar();
+                return composicion.datos().cargar();
             }
         };
         Async.ejecutar(carga);
@@ -85,6 +91,7 @@ public class App extends Application {
                 shellActual = null;
             }
             FXMLLoader cargador = new FXMLLoader(getClass().getResource(VISTA_MENU));
+            cargador.setControllerFactory(composicion.controllerFactory());
             Parent menu = cargador.load();
             MainMenuController controlador = cargador.getController();
             controlador.setAlEntrarAlShell(irA -> mostrarShell(raizEscena, irA));
@@ -98,6 +105,7 @@ public class App extends Application {
     private void mostrarShell(StackPane raizEscena, Runnable alTerminarDeCargar) {
         try {
             FXMLLoader cargador = new FXMLLoader(getClass().getResource(VISTA_SHELL));
+            cargador.setControllerFactory(composicion.controllerFactory());
             Parent shell = cargador.load();
             ShellController controlador = cargador.getController();
             shellActual = controlador;
