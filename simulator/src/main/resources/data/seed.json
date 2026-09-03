@@ -16,6 +16,9 @@
         "consistencia": 95,
         "lluvia": 96
       },
+      "fechaNacimiento": "30/09/1997",
+      "lugarNacimiento": "Hasselt, Bélgica",
+      "biografia": "Hijo del piloto Jos Verstappen, debutó en F1 con 17 años y se convirtió en el ganador más joven de un Gran Premio apenas un año después. Desde entonces ha dominado la parrilla con una combinación de agresividad al límite y una constancia que pocos igualan.",
       "imagen": "/images/drivers/max-verstappen.jpg"
     },
     {
@@ -34,6 +37,9 @@
         "consistencia": 80,
         "lluvia": 82
       },
+      "fechaNacimiento": "26/01/1990",
+      "lugarNacimiento": "Guadalajara, México",
+      "biografia": "El primer mexicano en subir al podio de la F1 moderna, escaló desde equipos modestos a base de resultados constantes hasta ganarse un asiento en el equipo de cabeza. Su fortaleza está en administrar el neumático y sacar el máximo cuando la carrera se complica.",
       "imagen": "/images/drivers/sergio-perez.png"
     },
     {
@@ -52,6 +58,9 @@
         "consistencia": 93,
         "lluvia": 97
       },
+      "fechaNacimiento": "07/01/1985",
+      "lugarNacimiento": "Stevenage, Inglaterra",
+      "biografia": "Llegó a la F1 en 2007 tras ser el primer piloto negro en la categoría, y desde entonces ha igualado el récord de siete campeonatos del mundo. Su lectura de carrera y su capacidad para rendir bajo lluvia lo han convertido en referencia de toda una generación.",
       "imagen": "/images/drivers/lewis-hamilton.jpg"
     },
     {
@@ -70,6 +79,9 @@
         "consistencia": 88,
         "lluvia": 86
       },
+      "fechaNacimiento": "15/02/1998",
+      "lugarNacimiento": "King's Lynn, Inglaterra",
+      "biografia": "Campeón de GP3 y Fórmula 2 en años consecutivos, se ganó fama de metódico y veloz antes incluso de debutar en F1. Su vuelta sustituyendo a Hamilton en Sakhir 2020, a punto de ganar con un coche que apenas conocía, confirmó lo que ya se sospechaba.",
       "imagen": "/images/drivers/george-russell.png"
     },
     {
@@ -88,6 +100,9 @@
         "consistencia": 85,
         "lluvia": 88
       },
+      "fechaNacimiento": "16/10/1997",
+      "lugarNacimiento": "Mónaco",
+      "biografia": "Ahijado de Jules Bianchi y campeón de F2 en su única temporada en la categoría, debutó en Ferrari con apenas 21 años. Corre en casa cada vez que compite en el Gran Premio de Mónaco, la carrera con la que sueña cerrar el círculo desde niño.",
       "imagen": "/images/drivers/charles-leclerc.jpg"
     },
     {
@@ -106,6 +121,9 @@
         "consistencia": 90,
         "lluvia": 85
       },
+      "fechaNacimiento": "01/09/1994",
+      "lugarNacimiento": "Madrid, España",
+      "biografia": "Hijo del bicampeón mundial de rally Carlos Sainz, se forjó una reputación de piloto sólido y sin dramas que va sumando podios equipo tras equipo. Fue el primero en cortar la racha ganadora de Red Bull en 2024, con victoria en Australia apenas semanas después de una operación de apendicitis.",
       "imagen": "/images/drivers/carlos-sainz.jpg"
     },
     {
@@ -124,6 +142,9 @@
         "consistencia": 89,
         "lluvia": 90
       },
+      "fechaNacimiento": "13/11/1999",
+      "lugarNacimiento": "Bristol, Inglaterra",
+      "biografia": "Llegó a la parrilla como uno de los pilotos más precoces del karting europeo y ha crecido junto a McLaren hasta pelear el título. Su cercanía con la afición, dentro y fuera de la pista, lo ha convertido en uno de los pilotos más populares de su generación.",
       "imagen": "/images/drivers/lando-norris.png"
     },
     {
@@ -142,6 +163,9 @@
         "consistencia": 84,
         "lluvia": 80
       },
+      "fechaNacimiento": "06/04/2001",
+      "lugarNacimiento": "Melbourne, Australia",
+      "biografia": "Campeón de F3, F2 y de la Fórmula Renault Eurocup en años sucesivos, llegó a la F1 con la etiqueta de mayor promesa junior del continente. Ganó su primer Gran Premio a los pocos meses de debutar, con una gestión de neumáticos impropia de un novato.",
       "imagen": "/images/drivers/oscar-piastri.png"
     },
     {
@@ -160,6 +184,9 @@
         "consistencia": 94,
         "lluvia": 95
       },
+      "fechaNacimiento": "29/07/1981",
+      "lugarNacimiento": "Oviedo, España",
+      "biografia": "Dos veces campeón del mundo con Renault, es el piloto en activo con más experiencia de la parrilla tras más de dos décadas compitiendo. Su instinto de carrera y su capacidad para exprimir un coche por encima de sus posibilidades siguen intactos.",
       "imagen": "/images/drivers/fernando-alonso.jpeg"
     },
     {
@@ -178,6 +205,9 @@
         "consistencia": 75,
         "lluvia": 78
       },
+      "fechaNacimiento": "29/10/1998",
+      "lugarNacimiento": "Montreal, Canadá",
+      "biografia": "Debutó en F1 con 18 años y una victoria bajo lluvia en Bakú en su segunda temporada, todavía como uno de los más jóvenes en lograrlo. Compite para el equipo de su propia familia, lo que le exige demostrar cada fin de semana que su asiento se lo ha ganado en pista.",
       "imagen": "/images/drivers/lance-stroll.jpg"
     },
     {
@@ -196,6 +226,9 @@
         "consistencia": 82,
         "lluvia": 83
       },
+      "fechaNacimiento": "17/09/1996",
+      "lugarNacimiento": "Évreux, Francia",
+      "biografia": "Formado en la academia junior de Mercedes, tuvo que abrirse paso él solo tras quedarse sin equipo un año antes de volver más fuerte. Su primera victoria llegó en una carrera caótica en Hungría, gestionando el ritmo con una calma que contrasta con su fama de competitivo hasta el límite.",
       "imagen": "/images/drivers/esteban-ocon.jpeg"
     },
     {
@@ -214,6 +247,9 @@
         "consistencia": 81,
         "lluvia": 84
       },
+      "fechaNacimiento": "07/02/1996",
+      "lugarNacimiento": "Ruan, Francia",
+      "biografia": "Pasó por un año difícil en el equipo de cabeza antes de encontrar su sitio y ganar en Monza, en una carrera marcada por el respeto a la memoria de un excompañero. Desde entonces se ha consolidado como un piloto capaz de sacar resultados de coches que no siempre acompañan.",
       "imagen": "/images/drivers/pierre-gasly.png"
     },
     {
@@ -232,6 +268,9 @@
         "consistencia": 87,
         "lluvia": 84
       },
+      "fechaNacimiento": "28/08/1989",
+      "lugarNacimiento": "Nastola, Finlandia",
+      "biografia": "Compañero de Hamilton durante cinco temporadas en el equipo de cabeza, fue una pieza clave de varios campeonatos de constructores sin perseguir jamás el protagonismo. Conocido por su temple casi imperturbable, encontró en la fotografía y el triatlón sus otras dos pasiones fuera de la pista.",
       "imagen": "/images/drivers/valtteri-bottas.jpeg"
     },
     {
@@ -250,6 +289,9 @@
         "consistencia": 76,
         "lluvia": 74
       },
+      "fechaNacimiento": "30/05/1999",
+      "lugarNacimiento": "Shanghái, China",
+      "biografia": "Primer piloto chino en llegar a la Fórmula 1, se formó en las categorías inferiores europeas antes de dar el salto. Su debut abrió la puerta a un mercado nuevo para la categoría y consolidó una carrera hecha a base de constancia más que de golpes de efecto.",
       "imagen": "/images/drivers/zhou-guanyu.png"
     },
     {
@@ -268,6 +310,9 @@
         "consistencia": 74,
         "lluvia": 79
       },
+      "fechaNacimiento": "05/10/1992",
+      "lugarNacimiento": "Roskilde, Dinamarca",
+      "biografia": "Hijo del piloto Jan Magnussen, debutó en McLaren con un podio en su primera carrera y desde entonces ha hecho carrera de la contundencia en pista. Su estilo directo, sin miedo al roce, lo convirtió en un especialista defendiendo posiciones con equipos modestos.",
       "imagen": "/images/drivers/kevin-magnussen.jpeg"
     },
     {
@@ -286,6 +331,9 @@
         "consistencia": 83,
         "lluvia": 86
       },
+      "fechaNacimiento": "19/08/1987",
+      "lugarNacimiento": "Emmerich am Rhein, Alemania",
+      "biografia": "Campeón de GP2 en su primer año en la categoría, es célebre por ostentar el récord de más grandes premios disputados sin subir jamás al podio. Piloto de referencia para probar coches y analizar datos, su experiencia lo mantiene competitivo temporada tras temporada.",
       "imagen": "/images/drivers/nico-hulkenberg.png"
     },
     {
@@ -304,6 +352,9 @@
         "consistencia": 75,
         "lluvia": 77
       },
+      "fechaNacimiento": "11/05/2000",
+      "lugarNacimiento": "Sagamihara, Japón",
+      "biografia": "Formado en la academia junior de Honda y ganador de la Fórmula 4 japonesa antes de mudarse a Europa, llegó a la F1 con apenas un año en monoplazas de ala. Su ritmo en clasificación y su temperamento explosivo lo han convertido en uno de los pilotos más queridos por la afición japonesa.",
       "imagen": "/images/drivers/yuki-tsunoda.jpeg"
     },
     {
@@ -322,6 +373,9 @@
         "consistencia": 82,
         "lluvia": 85
       },
+      "fechaNacimiento": "01/07/1989",
+      "lugarNacimiento": "Perth, Australia",
+      "biografia": "Célebre por su sonrisa y su «Shoey» tras cada victoria, construyó su reputación adelantando por fuera en las frenadas más improbables de la parrilla. Ganó siete grandes premios entre Red Bull y McLaren antes de convertirse en uno de los pilotos más queridos por el paddock.",
       "imagen": "/images/drivers/daniel-ricciardo.jpg"
     },
     {
@@ -340,6 +394,9 @@
         "consistencia": 84,
         "lluvia": 82
       },
+      "fechaNacimiento": "23/03/1996",
+      "lugarNacimiento": "Londres, Inglaterra",
+      "biografia": "De madre tailandesa y padre británico, compite bajo la bandera de Tailandia tras un ascenso meteórico desde la Fórmula 2 hasta un equipo de cabeza en apenas dos años. Una lesión de apendicitis no le impidió firmar una de las mejores clasificaciones de su carrera pocos días después de operarse.",
       "imagen": "/images/drivers/alexander-albon.png"
     },
     {
@@ -358,6 +415,9 @@
         "consistencia": 70,
         "lluvia": 68
       },
+      "fechaNacimiento": "31/12/2000",
+      "lugarNacimiento": "Fort Lauderdale, Estados Unidos",
+      "biografia": "Campeón de la Fórmula 3 estadounidense antes de mudarse a Europa, es el primer piloto de su país en la parrilla en más de una década. Su temporada de debut, sin apenas kilómetros de rodaje previos, se centró en aprender los circuitos que sus rivales ya dominaban de memoria.",
       "imagen": "/images/drivers/logan-sargeant.png"
     }
   ],
