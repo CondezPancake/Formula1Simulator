@@ -2,10 +2,10 @@ package com.formula1.controller;
 
 import com.formula1.data.DataStore;
 import com.formula1.domain.model.Driver;
-import com.formula1.service.DriverService;
-import com.formula1.service.LapTimeCalculator;
-import com.formula1.service.QualifyingService;
-import com.formula1.service.VehicleService;
+import com.formula1.application.usecase.DriverService;
+import com.formula1.domain.service.LapTimeCalculator;
+import com.formula1.application.usecase.QualifyingService;
+import com.formula1.application.usecase.VehicleService;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;

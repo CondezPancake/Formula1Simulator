@@ -9,8 +9,8 @@ import com.formula1.domain.model.QualifyingSession;
 import com.formula1.domain.model.SimulationConfig;
 import com.formula1.domain.model.TirePressure;
 import com.formula1.domain.model.WeatherCondition;
-import com.formula1.service.LapTimeCalculator;
-import com.formula1.service.QualifyingService;
+import com.formula1.domain.service.LapTimeCalculator;
+import com.formula1.application.usecase.QualifyingService;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;

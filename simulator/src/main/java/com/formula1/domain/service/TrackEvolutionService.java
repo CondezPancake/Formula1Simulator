@@ -1,4 +1,4 @@
-package com.formula1.service;
+package com.formula1.domain.service;
 
 import com.formula1.domain.model.TrackEvolutionSnapshot;
 import com.formula1.domain.model.WeatherSnapshot;
@@ -12,7 +12,7 @@ import java.util.List;
  * El servicio no conserva estado mutable, por lo que distintas simulaciones pueden
  * ejecutarlo de forma segura en paralelo.
  */
-final class TrackEvolutionService {
+public final class TrackEvolutionService {
 
     static final double MAX_GOMA_PORCENTAJE = 10;
     private static final double DEFICIT_PISTA_VERDE = 10;
@@ -21,7 +21,7 @@ final class TrackEvolutionService {
     private static final double MEJORA_TRAZADA_POR_VEHICULO = 0.08;
     private static final double MAX_MEJORA_TRAZADA = 2.0;
 
-    Evolution evolucionar(List<WeatherSnapshot> clima, double gomaInicial,
+    public Evolution evolucionar(List<WeatherSnapshot> clima, double gomaInicial,
                           int vuelta, String piloto) {
         if (clima == null || clima.isEmpty()) {
             throw new ValidationException("La evolución climática no puede estar vacía");
@@ -69,7 +69,7 @@ final class TrackEvolutionService {
     }
 
     /** Resultado inmutable que permite al orquestador decidir cuándo conservar el estado. */
-    record Evolution(
+    public record Evolution(
             List<WeatherSnapshot> clima,
             double gomaFinalPorcentaje,
             TrackEvolutionSnapshot resumen) {

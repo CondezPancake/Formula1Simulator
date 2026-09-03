@@ -1,6 +1,6 @@
 package com.formula1.util;
 
-import com.formula1.service.ValidationException;
+import com.formula1.domain.service.ValidationException;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.TextField;

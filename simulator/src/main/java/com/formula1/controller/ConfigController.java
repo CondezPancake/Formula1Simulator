@@ -11,9 +11,9 @@ import com.formula1.domain.model.TireCompound;
 import com.formula1.domain.model.TirePressure;
 import com.formula1.domain.model.Vehicle;
 import com.formula1.domain.model.WeatherCondition;
-import com.formula1.service.CircuitService;
-import com.formula1.service.LapTimeCalculator;
-import com.formula1.service.VehicleService;
+import com.formula1.application.usecase.CircuitService;
+import com.formula1.domain.service.LapTimeCalculator;
+import com.formula1.application.usecase.VehicleService;
 import com.formula1.util.FormatUtils;
 
 import javafx.fxml.FXML;
@@ -123,7 +123,7 @@ public class ConfigController {
     private void recuperarConfiguracion() {
         SimulationConfig previa = configuracionPreparada.configuracionActual();
         if (previa == null) {
-            previa = new com.formula1.service.QualifyingService().historial().stream()
+            previa = new com.formula1.application.usecase.QualifyingService().historial().stream()
                     .map(s -> s.getConfig())
                     .filter(c -> c != null)
                     .findFirst()

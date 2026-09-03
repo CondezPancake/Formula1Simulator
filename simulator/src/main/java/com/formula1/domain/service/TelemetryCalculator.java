@@ -1,4 +1,4 @@
-package com.formula1.service;
+package com.formula1.domain.service;
 
 import com.formula1.domain.model.Circuit;
 import com.formula1.domain.model.Driver;
@@ -16,9 +16,9 @@ import com.formula1.util.MathUtils;
  * Convierte el estado de una vuelta en lecturas de telemetría simulada.
  * Mantiene las fórmulas fuera del coordinador de la sesión y no conoce JavaFX.
  */
-final class TelemetryCalculator {
+public final class TelemetryCalculator {
 
-    TelemetrySnapshot calcular(Driver piloto, Vehicle vehiculo, Circuit circuito,
+    public TelemetrySnapshot calcular(Driver piloto, Vehicle vehiculo, Circuit circuito,
                                 WeatherSnapshot clima, SimulationConfig config,
                                 LapResult resultado, int segmento, int totalSegmentos,
                                 double progreso, double velocidad,

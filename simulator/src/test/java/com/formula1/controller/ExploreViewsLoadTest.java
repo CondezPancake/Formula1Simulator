@@ -1,9 +1,9 @@
 package com.formula1.controller;
 
 import com.formula1.data.DataStore;
-import com.formula1.service.CircuitService;
-import com.formula1.service.TeamService;
-import com.formula1.service.VehicleService;
+import com.formula1.application.usecase.CircuitService;
+import com.formula1.application.usecase.TeamService;
+import com.formula1.application.usecase.VehicleService;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;

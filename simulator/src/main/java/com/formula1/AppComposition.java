@@ -14,12 +14,12 @@ import com.formula1.controller.TeamDetailController;
 import com.formula1.controller.VehicleCompareController;
 import com.formula1.controller.VehicleController;
 import com.formula1.data.DataStore;
-import com.formula1.service.CircuitService;
-import com.formula1.service.DriverService;
-import com.formula1.service.LapTimeCalculator;
-import com.formula1.service.QualifyingService;
-import com.formula1.service.TeamService;
-import com.formula1.service.VehicleService;
+import com.formula1.application.usecase.CircuitService;
+import com.formula1.application.usecase.DriverService;
+import com.formula1.domain.service.LapTimeCalculator;
+import com.formula1.application.usecase.QualifyingService;
+import com.formula1.application.usecase.TeamService;
+import com.formula1.application.usecase.VehicleService;
 
 import javafx.util.Callback;
 

@@ -1,8 +1,8 @@
 package com.formula1.controller;
 
 import com.formula1.domain.model.Team;
-import com.formula1.service.TeamService;
-import com.formula1.service.ValidationException;
+import com.formula1.application.usecase.TeamService;
+import com.formula1.domain.service.ValidationException;
 import com.formula1.util.InputValidation;
 
 import javafx.beans.property.SimpleIntegerProperty;

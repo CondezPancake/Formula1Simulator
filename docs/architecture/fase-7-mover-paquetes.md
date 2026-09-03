@@ -49,6 +49,107 @@ Según la tabla del diagnóstico, quedan por mover:
 | `App`, `Main`, `AppComposition` | `bootstrap` | Baja |
 | `util/` | Revisar una por una — el propio diagnóstico dice que no todas pertenecen a la misma capa (p. ej. `Async` es infraestructura, `MathUtils`/`FormatUtils` son utilidades de dominio puras). | Media, por la revisión caso a caso, no por el movimiento en sí. |
 
-El siguiente lote razonable es **puertos** (riesgo bajo, sin lógica) seguido
-de **dividir `service/`** — es donde vive el verdadero trabajo de esta fase,
-porque hasta ahora todo lo movido eran paquetes completos.
+## Lote 2 — puertos: `data.*Port` → `application.port.out`
+
+Las 7 interfaces sin lógica (`CatalogPort`, `SessionHistoryPort`,
+`QualifyingDataPort`, `PreparedConfigPort`, `CatalogPersistencePort`,
+`SessionPersistencePort`, `PersistencePort`) se mudan de `com.formula1.data`
+a `com.formula1.application.port.out`.
+
+A diferencia del lote 1, las implementaciones de estas interfaces
+(`DataStore`, `MySqlPersistenceAdapter` y sus dos adaptadores por puerto) se
+quedan en `com.formula1.data` y las referenciaban por nombre simple, al
+compartir paquete hasta ahora. El primer `mvn clean compile` lo marcó con
+precisión quirúrgica (3 errores, "cannot find symbol") y se corrigió
+agregando el import explícito en cada implementación — siguen implementando
+los mismos puertos, ahora cruzando paquete.
+
+`mvn clean test`: 174/0/0, 4 *skipped* — cero regresiones.
+
+## Lote 3 — dividir `service/` en `domain/service` y `application/usecase`
+
+El lote de verdadero trabajo de esta fase: por primera vez no se mueve un
+paquete entero, sino que se **reparten** sus 21 clases entre dos capas según
+su naturaleza real, siguiendo el criterio que ya usaba el diagnóstico
+("Los servicios de cálculo y las políticas... están más cerca de
+responsabilidades de dominio independientes"):
+
+**→ `domain/service`** (cálculo puro y reglas, sin JavaFX, sin acceso a
+catálogo vía puerto): `ContextualPitStopPolicy`, `ContextualTireCompoundPolicy`,
+`DynamicWeatherService`, `LapTimeCalculator`, `PitStopPolicy`, `PitStopService`,
+`RaceNarratorService`, `RaceRadioService`, `SectorComparisonService`,
+`SectorTimeCalculator`, `TelemetryCalculator`, `TireCompoundPolicy`,
+`TireStrategyService`, `TrackEvolutionService`, y `ValidationException`
+(ver nota abajo).
+
+**→ `application/usecase`** (orquestación, CRUD de catálogo vía puerto):
+`CircuitService`, `DriverService`, `TeamService`, `VehicleService`,
+`QualifyingService`.
+
+**Se queda en `service`** (deliberado, para el lote de JavaFX): 
+`QualifyingSessionTaskFactory`, `SimulationPacer` — siguen envolviendo
+`QualifyingService` en un `Task`, así que van junto a los controladores en
+el próximo lote, tal como ya anticipaba la Fase 4.
+
+### Un error de diseño corregido sobre la marcha
+
+`ValidationException` se movió primero a `application/usecase` (donde vive
+la mayoría de quien la lanza) y el primer `mvn clean compile` lo rechazó:
+`LapTimeCalculator`, `DynamicWeatherService` y `TrackEvolutionService`
+—todas en `domain/service`— también la lanzan, y `domain` **no puede**
+depender de `application` en arquitectura hexagonal; es la dirección
+contraria a la permitida. Se corrigió moviéndola a `domain/service` en su
+lugar: `application/usecase` sí puede depender de `domain/service` (la capa
+de aplicación depende del dominio, nunca al revés), así que los cuatro
+servicios de catálogo y `QualifyingService` la siguen lanzando sin problema
+desde la capa de arriba. El compilador detectó la dirección de dependencia
+incorrecta en el primer intento, antes de que llegara a ningún commit.
+
+### Visibilidad ensanchada
+
+Dividir el paquete (en vez de moverlo entero, como el lote 1) sí exige
+ensanchar visibilidad, porque `QualifyingService` construía e invocaba
+varias de estas clases confiando en compartir paquete:
+
+- `DynamicWeatherService`, `SectorTimeCalculator`, `TelemetryCalculator`,
+  `TrackEvolutionService` — las 4 clases enteras eran *package-private*;
+  pasan a públicas.
+- `DynamicWeatherService(RandomGenerator)`, `DynamicWeatherService.generar(...)`,
+  `TrackEvolutionService.evolucionar(...)` y su tipo `Evolution`,
+  `SectorTimeCalculator.calcular(...)`, `TelemetryCalculator.calcular(...)`
+  — miembros concretos que eran *package-private* dentro de clases ya
+  públicas; el ensanchamiento de clase no ensancha sus miembros
+  automáticamente, así que cada uno se corrigió por separado, guiado otra
+  vez por el error exacto del compilador.
+- En `QualifyingService` (ahora en `application.usecase`), los mismos 4
+  miembros que ya se habían ensanchado en la Fase 4 para
+  `QualifyingSessionTaskFactory` (el `simular(...)` de 11 parámetros,
+  `validarSeleccion`, `ControlSimulacion`, `SEGMENTOS_EVOLUCION`) necesitaban
+  ensancharse una vez más, esta vez a `public` de verdad: `service` y
+  `application.usecase` ya no comparten paquete.
+
+### Migración de tests
+
+Los tests que probaban directamente una clase *package-private* por
+compartir paquete (`DynamicWeatherServiceTest`, `TrackEvolutionServiceTest`,
+`RaceRadioServiceTest`, `SectorComparisonServiceTest`) se movieron a
+`test/.../domain/service`; los que probaban orquestación
+(`CatalogPortDecouplingTest`, `CatalogServiceTest`, `EvolutionDataFlowTest`,
+`QualifyingServiceTest`, incluido `VehicleSpeedTest`, que llama al
+`calcularVelocidad` *package-private* de `QualifyingService`) se movieron a
+`test/.../application/usecase`. `SimulationPacerTest` se quedó en
+`test/.../service`, junto a la clase que prueba.
+
+**Verificación**: `mvn clean test`: 174/0/0, 4 *skipped* (MySQL) — misma
+cuenta que los lotes anteriores, cero regresiones, a pesar de ser el lote
+con más superficie de cambio hasta ahora (21 clases repartidas, 10 miembros
+ensanchados, 9 archivos de test reubicados).
+
+## Lo que falta
+
+El siguiente lote es **adaptadores MySQL + `DataStore`** (el de mayor
+riesgo: `DataStore` es la clase más referenciada de todo el proyecto),
+después **seeds**, después **controladores/`Navigator`/JavaFX** (el único
+que toca los 20 FXML a la vez que las clases, dejado para el final a
+propósito), y por último **`App`/`Main`/`AppComposition` → `bootstrap`** y
+la revisión caso a caso de `util/`.

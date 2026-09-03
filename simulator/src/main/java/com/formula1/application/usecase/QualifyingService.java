@@ -1,4 +1,6 @@
-package com.formula1.service;
+package com.formula1.application.usecase;
+
+import com.formula1.domain.service.ValidationException;
 
 import com.formula1.data.DataStore;
 import com.formula1.application.port.out.QualifyingDataPort;
@@ -6,6 +8,15 @@ import com.formula1.domain.event.EventContext;
 import com.formula1.domain.event.EventContextFactory;
 import com.formula1.domain.event.EventEffectService;
 import com.formula1.domain.event.EventManager;
+import com.formula1.domain.service.ContextualPitStopPolicy;
+import com.formula1.domain.service.DynamicWeatherService;
+import com.formula1.domain.service.LapTimeCalculator;
+import com.formula1.domain.service.PitStopPolicy;
+import com.formula1.domain.service.PitStopService;
+import com.formula1.domain.service.SectorTimeCalculator;
+import com.formula1.domain.service.TelemetryCalculator;
+import com.formula1.domain.service.TireStrategyService;
+import com.formula1.domain.service.TrackEvolutionService;
 import com.formula1.domain.model.Circuit;
 import com.formula1.domain.model.Driver;
 import com.formula1.domain.model.EventImpact;
@@ -43,7 +54,7 @@ import java.util.Optional;
  */
 public class QualifyingService {
 
-    static final int SEGMENTOS_EVOLUCION = 20;
+    public static final int SEGMENTOS_EVOLUCION = 20;
 
     private final QualifyingDataPort datos;
     private final DriverService pilotos;
@@ -200,7 +211,7 @@ public class QualifyingService {
                 observadorEventos, observadorPitStops, null);
     }
 
-    QualifyingSession simular(SimulationConfig config, WeatherCondition clima,
+    public QualifyingSession simular(SimulationConfig config, WeatherCondition clima,
                               Progreso progreso, Evolucion evolucion, Telemetria telemetria,
                               EvolucionPista observadorPista,
                               ClasificacionEnVivo clasificacionEnVivo,
@@ -758,7 +769,7 @@ public class QualifyingService {
      * Protege la regla de negocio de HU-08 incluso cuando la simulación se
      * inicia fuera de JavaFX: el piloto debe existir y conducir el vehículo.
      */
-    Circuit validarSeleccion(SimulationConfig config) {
+    public Circuit validarSeleccion(SimulationConfig config) {
         if (config == null) {
             throw new ValidationException("La configuración no puede ser nula");
         }
@@ -854,7 +865,7 @@ public class QualifyingService {
 
     /** Punto de extensión del reloj: permite temporizar o finalizar sin acoplar la UI. */
     @FunctionalInterface
-    interface ControlSimulacion {
+    public interface ControlSimulacion {
         default int totalFotogramas(int minimo) {
             return minimo;
         }

@@ -5,7 +5,7 @@ import com.formula1.application.port.out.PreparedConfigPort;
 import com.formula1.domain.model.LapResult;
 import com.formula1.domain.model.QualifyingSession;
 import com.formula1.domain.model.SimulationConfig;
-import com.formula1.service.QualifyingService;
+import com.formula1.application.usecase.QualifyingService;
 import com.formula1.util.FormatUtils;
 
 import javafx.beans.property.SimpleIntegerProperty;

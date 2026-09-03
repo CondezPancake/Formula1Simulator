@@ -1,5 +1,6 @@
 package com.formula1.service;
 
+import com.formula1.application.usecase.QualifyingService;
 import com.formula1.domain.model.Circuit;
 import com.formula1.domain.model.LapResult;
 import com.formula1.domain.model.QualifyingSession;

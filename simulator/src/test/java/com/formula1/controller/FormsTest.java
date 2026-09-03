@@ -1,7 +1,7 @@
 package com.formula1.controller;
 
 import com.formula1.data.DataStore;
-import com.formula1.service.DriverService;
+import com.formula1.application.usecase.DriverService;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

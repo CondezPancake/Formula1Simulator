@@ -1,4 +1,4 @@
-package com.formula1.service;
+package com.formula1.domain.service;
 
 import com.formula1.domain.model.EventOccurrence;
 import com.formula1.domain.model.SectorTimes;
@@ -10,11 +10,11 @@ import java.util.List;
 import java.util.Map;
 
 /** Calcula parciales coherentes con el clima, los eventos y el total de vuelta. */
-final class SectorTimeCalculator {
+public final class SectorTimeCalculator {
 
     private static final double MINIMUM_SECTOR_SECONDS = 0.001;
 
-    SectorTimes calcular(double baseTime, double finalTime,
+    public SectorTimes calcular(double baseTime, double finalTime,
                          List<WeatherSnapshot> weather,
                          List<EventOccurrence> events) {
         if (!Double.isFinite(baseTime) || baseTime <= 0

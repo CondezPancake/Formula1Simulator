@@ -1,6 +1,7 @@
-package com.formula1.service;
+package com.formula1.application.usecase;
 
 import com.formula1.data.DataStore;
+import com.formula1.domain.service.ValidationException;
 import com.formula1.domain.model.Circuit;
 import com.formula1.domain.model.Driver;
 import com.formula1.domain.model.DriverRole;

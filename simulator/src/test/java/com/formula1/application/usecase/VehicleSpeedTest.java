@@ -1,4 +1,4 @@
-package com.formula1.service;
+package com.formula1.application.usecase;
 
 import com.formula1.domain.model.AerodynamicLoad;
 import com.formula1.domain.model.DrivingMode;

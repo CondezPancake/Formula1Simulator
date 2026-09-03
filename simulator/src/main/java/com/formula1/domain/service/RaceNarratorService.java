@@ -1,4 +1,4 @@
-package com.formula1.service;
+package com.formula1.domain.service;
 
 import com.formula1.domain.event.RaceEvent;
 import com.formula1.domain.model.TrackSector;

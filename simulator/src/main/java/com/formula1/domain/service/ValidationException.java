@@ -1,4 +1,4 @@
-package com.formula1.service;
+package com.formula1.domain.service;
 
 /**
  * Datos de entrada que no cumplen las reglas del dominio.

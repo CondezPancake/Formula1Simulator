@@ -4,7 +4,7 @@ import com.formula1.data.DataStore;
 import com.formula1.domain.model.Circuit;
 import com.formula1.domain.model.TrackLayout;
 import com.formula1.domain.model.TrackSector;
-import com.formula1.service.CircuitService;
+import com.formula1.application.usecase.CircuitService;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 

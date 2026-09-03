@@ -1,4 +1,4 @@
-package com.formula1.service;
+package com.formula1.domain.service;
 
 import com.formula1.domain.model.EventType;
 import com.formula1.domain.model.LapResult;

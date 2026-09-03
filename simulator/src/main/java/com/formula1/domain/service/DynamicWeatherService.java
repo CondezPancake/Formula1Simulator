@@ -1,4 +1,4 @@
-package com.formula1.service;
+package com.formula1.domain.service;
 
 import com.formula1.domain.model.Circuit;
 import com.formula1.domain.model.DynamicWeatherState;
@@ -12,19 +12,19 @@ import java.util.Random;
 import java.util.random.RandomGenerator;
 
 /** Genera una transición meteorológica suave, reproducible con una semilla. */
-final class DynamicWeatherService {
+public final class DynamicWeatherService {
 
     private final RandomGenerator aleatorio;
 
-    DynamicWeatherService() {
+    public DynamicWeatherService() {
         this(new Random());
     }
 
-    DynamicWeatherService(RandomGenerator aleatorio) {
+    public DynamicWeatherService(RandomGenerator aleatorio) {
         this.aleatorio = aleatorio;
     }
 
-    List<WeatherSnapshot> generar(Circuit circuito, WeatherCondition inicial, int segmentos) {
+    public List<WeatherSnapshot> generar(Circuit circuito, WeatherCondition inicial, int segmentos) {
         if (circuito == null || inicial == null || segmentos <= 0) {
             throw new ValidationException("No se puede generar una evolución climática incompleta");
         }

@@ -2,8 +2,8 @@ package com.formula1.controller;
 
 import com.formula1.data.DataStore;
 import com.formula1.domain.model.Driver;
-import com.formula1.service.DriverService;
-import com.formula1.service.TeamService;
+import com.formula1.application.usecase.DriverService;
+import com.formula1.application.usecase.TeamService;
 import com.formula1.util.F1Assets;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;

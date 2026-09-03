@@ -4,8 +4,8 @@ import com.formula1.domain.model.Circuit;
 import com.formula1.domain.model.DrivingMode;
 import com.formula1.domain.model.Vehicle;
 import com.formula1.domain.model.WeatherCondition;
-import com.formula1.service.CircuitService;
-import com.formula1.service.VehicleService;
+import com.formula1.application.usecase.CircuitService;
+import com.formula1.application.usecase.VehicleService;
 import com.formula1.util.FormatUtils;
 
 import javafx.beans.property.SimpleStringProperty;

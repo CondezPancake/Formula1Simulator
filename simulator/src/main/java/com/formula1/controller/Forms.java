@@ -7,8 +7,8 @@ import com.formula1.domain.model.DrivingMode;
 import com.formula1.domain.model.Team;
 import com.formula1.domain.model.Vehicle;
 import com.formula1.domain.model.WeatherCondition;
-import com.formula1.service.DriverService;
-import com.formula1.service.ValidationException;
+import com.formula1.application.usecase.DriverService;
+import com.formula1.domain.service.ValidationException;
 import com.formula1.util.InputValidation;
 
 import javafx.event.ActionEvent;

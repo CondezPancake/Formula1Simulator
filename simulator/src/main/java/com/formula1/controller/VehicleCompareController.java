@@ -3,7 +3,7 @@ package com.formula1.controller;
 import com.formula1.domain.model.DrivingMode;
 import com.formula1.domain.model.Vehicle;
 import com.formula1.domain.model.WeatherCondition;
-import com.formula1.service.VehicleService;
+import com.formula1.application.usecase.VehicleService;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;

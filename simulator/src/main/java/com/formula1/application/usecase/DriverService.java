@@ -1,4 +1,6 @@
-package com.formula1.service;
+package com.formula1.application.usecase;
+
+import com.formula1.domain.service.ValidationException;
 
 import com.formula1.application.port.out.CatalogPort;
 import com.formula1.data.DataStore;
