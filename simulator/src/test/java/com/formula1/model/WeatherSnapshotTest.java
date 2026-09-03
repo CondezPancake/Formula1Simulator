@@ -28,7 +28,7 @@ class WeatherSnapshotTest {
     }
 
     @Test
-    void conservaLaMuestraAlSerializarlaParaMongo() throws Exception {
+    void conservaLaMuestraAlSerializarlaComoJson() throws Exception {
         WeatherSnapshot original = muestra(
                 DynamicWeatherState.LLUVIA_LIGERA, 25, 80, 77, 75, 24);
         ObjectMapper mapper = new ObjectMapper();

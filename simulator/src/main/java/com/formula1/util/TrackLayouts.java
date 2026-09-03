@@ -27,7 +27,7 @@ import com.formula1.model.TrackLayout;
  * donde el motor los sitúa.
  *
  * <p>Se mantienen en Java y no en {@code seed.json} a propósito: son datos de
- * presentación, no de dominio. En el seed obligarían a versionarlos en MongoDB
+ * presentación, no de dominio. En el seed obligarían a versionarlos en la base
  * —que además se carga <em>antes</em> que el seed, así que una base ya existente se
  * quedaría sin trazado—, a mantenerlos también en {@code gen_seed.py}, y no
  * resolverían el circuito que un usuario dé de alta desde el CRUD, que nunca tendrá

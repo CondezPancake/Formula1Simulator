@@ -164,6 +164,18 @@ CREATE TABLE IF NOT EXISTS equipo (
     pais_id SMALLINT UNSIGNED NOT NULL,
     fabricante_motor_id SMALLINT UNSIGNED NOT NULL,
     imagen_url VARCHAR(512) NULL,
+    nombre_completo VARCHAR(160) NULL,
+    base VARCHAR(120) NULL,
+    jefe_equipo VARCHAR(100) NULL,
+    jefe_tecnico VARCHAR(100) NULL,
+    piloto_reserva VARCHAR(100) NULL,
+    primera_participacion SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+    campeonatos SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+    gran_premios SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+    victorias SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+    podios SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+    poles SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+    descripcion TEXT NULL,
     CONSTRAINT uq_equipo_nombre UNIQUE (nombre),
     CONSTRAINT fk_equipo_pais FOREIGN KEY (pais_id) REFERENCES pais (pais_id),
     CONSTRAINT fk_equipo_motor FOREIGN KEY (fabricante_motor_id)
@@ -182,6 +194,9 @@ CREATE TABLE IF NOT EXISTS piloto (
     victorias SMALLINT UNSIGNED NOT NULL DEFAULT 0,
     campeonatos TINYINT UNSIGNED NOT NULL DEFAULT 0,
     imagen_url VARCHAR(512) NULL,
+    fecha_nacimiento VARCHAR(10) NULL,
+    lugar_nacimiento VARCHAR(120) NULL,
+    biografia TEXT NULL,
     CONSTRAINT uq_piloto_nombre UNIQUE (nombre),
     CONSTRAINT uq_piloto_numero UNIQUE (numero),
     CONSTRAINT uq_piloto_codigo_tv UNIQUE (codigo_tv),
@@ -339,7 +354,7 @@ CREATE TABLE IF NOT EXISTS perfil_probabilidad_categoria (
 ) ENGINE = InnoDB;
 
 -- ---------------------------------------------------------------------------
--- Sesiones y estructuras antes embebidas en MongoDB
+-- Sesiones y estructuras normalizadas para persistencia relacional
 -- ---------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS configuracion_simulacion (
@@ -371,7 +386,7 @@ CREATE TABLE IF NOT EXISTS configuracion_simulacion (
 ) ENGINE = InnoDB;
 
 -- Los campos *_snapshot son hechos históricos de la sesión, no copias del
--- estado maestro actual: preservan exactamente los nombres guardados por MongoDB.
+-- estado maestro actual: preservan exactamente los nombres del momento de la sesión.
 
 CREATE TABLE IF NOT EXISTS sesion_clasificacion (
     sesion_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin PRIMARY KEY,
@@ -715,4 +730,3 @@ FROM resultado_vuelta AS r
 JOIN sesion_clasificacion AS s ON s.sesion_id = r.sesion_id
 JOIN configuracion_simulacion AS cfg ON cfg.configuracion_id = s.configuracion_id
 JOIN piloto AS p ON p.piloto_id = r.piloto_id;
-

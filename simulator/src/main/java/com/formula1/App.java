@@ -4,7 +4,6 @@ import com.formula1.controller.IntroController;
 import com.formula1.controller.MainMenuController;
 import com.formula1.controller.ShellController;
 import com.formula1.data.DataStore;
-import com.formula1.data.MongoConnection;
 import com.formula1.util.Async;
 
 import javafx.application.Application;
@@ -139,10 +138,9 @@ public class App extends Application {
         }
     }
 
-    /** Libera el pool de hilos y la conexión con MongoDB al cerrar. */
+    /** Libera el pool de hilos al cerrar. Las conexiones JDBC son de corta vida. */
     @Override
     public void stop() {
         Async.cerrar();
-        MongoConnection.cerrar();
     }
 }
