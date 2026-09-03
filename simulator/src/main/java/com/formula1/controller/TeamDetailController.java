@@ -69,6 +69,8 @@ public class TeamDetailController {
     private static final double ANCHO_RENDER = 132;
     private static final double LADO_MINIATURA = 168;
     private static final double ALTO_MINIATURA = 104;
+    private static final double ANCHO_TARJETA_PILOTO = 340;
+    private static final double ALTO_TARJETA_PILOTO = 200;
 
     /** Inclinación del nombre y las cifras: Titillium Web no trae cursiva. */
     private static final double SESGO_CURSIVA = -0.16;
@@ -438,6 +440,11 @@ public class TeamDetailController {
         codigo.getStyleClass().add("team-driver-code");
         identidad.getChildren().addAll(nombre, apellido, codigo);
         identidad.setPadding(new Insets(14, 14, 0, 14));
+        // Sin este tope, el StackPane estira el VBox a los 200 px enteros de
+        // la tarjeta; como el contenido de un VBox se alinea arriba por
+        // defecto, la identidad y las habilidades -una "TOP_LEFT" y otra
+        // "BOTTOM_LEFT"- acababan dibujando en el mismo sitio.
+        identidad.setMaxHeight(Region.USE_PREF_SIZE);
         StackPane.setAlignment(identidad, Pos.TOP_LEFT);
 
         VBox habilidades = new VBox(4,
@@ -445,20 +452,26 @@ public class TeamDetailController {
                 habilidad("CONSISTENCIA", piloto.getHabilidad(Driver.HABILIDAD_CONSISTENCIA)),
                 habilidad("LLUVIA", piloto.getHabilidad(Driver.HABILIDAD_LLUVIA)));
         habilidades.setMaxWidth(128);
+        habilidades.setMaxHeight(Region.USE_PREF_SIZE);
         habilidades.setPadding(new Insets(0, 0, 12, 14));
         StackPane.setAlignment(habilidades, Pos.BOTTOM_LEFT);
 
         StackPane tarjeta = new StackPane(fondo, identidad);
         renderPiloto(piloto).ifPresent(vista -> {
+            // Los renders son mucho más altos que anchos (320x560): fijar solo
+            // el ancho los hacía sobresalir por arriba de la tarjeta -sin
+            // recortar- y taparse con el nombre. Con las dos cotas puestas,
+            // JavaFX escala por la que primero toque, así que nunca desborda.
             vista.setFitWidth(150);
+            vista.setFitHeight(ALTO_TARJETA_PILOTO);
             StackPane.setAlignment(vista, Pos.BOTTOM_RIGHT);
             tarjeta.getChildren().add(vista);
         });
         tarjeta.getChildren().addAll(dorsal, habilidades);
         tarjeta.getStyleClass().add("team-driver-card");
-        tarjeta.setMinSize(340, 200);
-        tarjeta.setPrefSize(340, 200);
-        tarjeta.setMaxSize(340, 200);
+        tarjeta.setMinSize(ANCHO_TARJETA_PILOTO, ALTO_TARJETA_PILOTO);
+        tarjeta.setPrefSize(ANCHO_TARJETA_PILOTO, ALTO_TARJETA_PILOTO);
+        tarjeta.setMaxSize(ANCHO_TARJETA_PILOTO, ALTO_TARJETA_PILOTO);
         tarjeta.setCursor(Cursor.HAND);
         tarjeta.setFocusTraversable(true);
 
