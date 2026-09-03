@@ -2963,3 +2963,215 @@
     -fx-font-size: 13px;
     -fx-text-fill: -fx-text-hero;
 }
+
+/* =============================================================
+   Gestión (Pilotos, Equipos, Vehículos, Circuitos) — tabla + ficha lateral
+
+   Namespace propio (mgmt-*) compartido por las cuatro secciones: una tabla
+   filtrable a la izquierda y una ficha de detalle/edición a la derecha. No
+   es la tarjeta ancha de Explorar (.driver-card, formula1.com/en/drivers) ni
+   la vieja rejilla de tarjetas de Gestión —esas cambian solas sin desajustar
+   esto, y viceversa.
+   ============================================================= */
+
+.mgmt-title {
+    -fx-font-size: 26px;
+    -fx-font-weight: 900;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.mgmt-count-value {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.mgmt-count-label {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-faint;
+}
+
+/* --------------------------------------------------------------- toolbar */
+
+.mgmt-toolbar {
+    -fx-background-color: -fx-surface-1;
+    -fx-background-radius: 8;
+    -fx-border-color: -fx-border-2;
+    -fx-border-radius: 8;
+    -fx-padding: 10;
+}
+
+.mgmt-new-button {
+    -fx-padding: 8 16 8 16;
+}
+
+.mgmt-empty-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-muted;
+}
+
+.mgmt-empty-subtitle {
+    -fx-font-size: 11px;
+    -fx-text-fill: -fx-text-faint;
+    -fx-text-alignment: center;
+}
+
+.mgmt-watermark {
+    -fx-font-size: 44px;
+    -fx-font-weight: 900;
+    -fx-text-fill: white;
+    -fx-opacity: 0.18;
+}
+
+/* Pastilla de rol/estado (LÍDER, ESCUDERO...) sobre la ficha. */
+.mgmt-role-chip {
+    -fx-background-color: #2A0F0E;
+    -fx-text-fill: -fx-brand-hi;
+    -fx-font-size: 9px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 3;
+    -fx-padding: 3 8 3 8;
+}
+
+.mgmt-stat-label {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-faint;
+}
+
+.mgmt-stat-value {
+    -fx-font-family: "JetBrains Mono", monospace;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-1;
+}
+
+.mgmt-stat-bar {
+    -fx-min-height: 6;
+    -fx-pref-height: 6;
+    -fx-max-height: 6;
+}
+
+.mgmt-stat-bar > .track {
+    -fx-background-color: #26262E;
+    -fx-background-radius: 3;
+}
+
+.mgmt-stat-bar > .bar {
+    -fx-background-color: -fx-brand;
+    -fx-background-radius: 3;
+    -fx-padding: 3;
+}
+
+/* -------------------------------------------------------------- detalle */
+
+.mgmt-detail {
+    -fx-background-color: -fx-surface-1;
+    -fx-background-radius: 8;
+    -fx-border-color: -fx-border-2;
+    -fx-border-radius: 8;
+}
+
+.mgmt-detail-photo {
+    -fx-background-color: linear-gradient(to bottom right, #1c1c22, #101014);
+    -fx-background-radius: 8 8 0 0;
+    -fx-min-height: 300;
+    -fx-pref-height: 300;
+}
+
+.mgmt-detail-first {
+    -fx-font-size: 15px;
+    -fx-text-fill: -fx-text-2;
+}
+
+.mgmt-detail-last {
+    -fx-font-size: 22px;
+    -fx-font-weight: 900;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.mgmt-detail-ovr {
+    -fx-font-size: 26px;
+    -fx-font-weight: 900;
+    -fx-text-fill: -fx-brand-hi;
+}
+
+.mgmt-ovr-label {
+    -fx-font-size: 9px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-faint;
+}
+
+.mgmt-detail-team {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-muted;
+    -fx-padding: 2 0 6 0;
+}
+
+.mgmt-section-label {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-faint;
+}
+
+.mgmt-attr-label {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-2;
+}
+
+.mgmt-attr-value {
+    -fx-font-family: "JetBrains Mono", monospace;
+    -fx-font-size: 11px;
+    -fx-text-fill: -fx-text-muted;
+}
+
+.mgmt-info-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: -fx-text-faint;
+}
+
+.mgmt-info-value {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-1;
+}
+
+/* Pastilla de puesto/comparación (p.ej. "#3 / 20" en Estadísticas). */
+.mgmt-rank-badge {
+    -fx-background-color: -fx-surface-3;
+    -fx-text-fill: -fx-text-1;
+    -fx-font-family: "JetBrains Mono", monospace;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 10;
+    -fx-padding: 2 9 2 9;
+}
+
+.mgmt-action-button {
+    -fx-background-color: -fx-brand;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 9 0 9 0;
+    -fx-background-radius: 5;
+}
+
+.mgmt-action-button:hover {
+    -fx-background-color: -fx-brand-hi;
+}
+
+.mgmt-delete-button {
+    -fx-background-color: transparent;
+    -fx-border-color: #7A1A1A;
+    -fx-border-radius: 5;
+    -fx-text-fill: #FF6B6B;
+    -fx-font-weight: bold;
+    -fx-padding: 8 0 8 0;
+}
+
+.mgmt-delete-button:hover {
+    -fx-background-color: #2A0F0E;
+}
