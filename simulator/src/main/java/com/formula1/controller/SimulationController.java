@@ -9,6 +9,7 @@ import com.formula1.model.EventOccurrence;
 import com.formula1.model.FuelStrategy;
 import com.formula1.model.LapResult;
 import com.formula1.model.LapStatus;
+import com.formula1.model.LiveClassificationFrame;
 import com.formula1.model.PitStopRecord;
 import com.formula1.model.QualifyingSession;
 import com.formula1.model.SimulationConfig;
@@ -269,11 +270,7 @@ public class SimulationController {
     /** Piloto fijado desde la torre; null mientras no se elige ninguno. */
     private Integer pilotoFijado;
     private final MapaProgreso mapaProgreso = new MapaProgreso();
-    /**
-     * Segmento en curso. El motor no lo pasa en {@code ClasificacionEnVivo}, pero
-     * la invoca exactamente una vez por segmento y en orden, así que contar sirve.
-     * Se resincroniza con la telemetría, que sí lo trae, por si acaso.
-     */
+    /** Segmento de dominio correspondiente al último fotograma recibido. */
     private int segmentoEnVivo;
 
     public SimulationController() {
@@ -767,7 +764,7 @@ public class SimulationController {
                     mostrarClimaResumen(muestra.clima());
                 }),
                 muestra -> Platform.runLater(() -> mostrarEvolucionPista(muestra)),
-                resultados -> Platform.runLater(() -> mostrarClasificacionEnVivo(resultados)),
+                fotograma -> Platform.runLater(() -> mostrarClasificacionEnVivo(fotograma)),
                 evento -> Platform.runLater(() -> registrarEventoEnVivo(evento)),
                 parada -> Platform.runLater(() -> mostrarPitStop(parada)),
                 cambio -> Platform.runLater(() -> mostrarCambioNeumaticos(cambio)),
@@ -868,14 +865,15 @@ public class SimulationController {
     }
 
     /** Refresca la torre mientras los pilotos van completando sus vueltas. */
-    private void mostrarClasificacionEnVivo(List<LapResult> resultados) {
-        segmentoEnVivo = Math.min(segmentoEnVivo + 1, MapaProgreso.TOTAL_SEGMENTOS);
+    private void mostrarClasificacionEnVivo(LiveClassificationFrame fotograma) {
+        List<LapResult> resultados = fotograma.classification();
+        segmentoEnVivo = fotograma.segment();
 
         clasificacionVisible.setAll(resultados);
 
         // El mapa se alimenta de esta misma lista: el marcador y la fila no son
         // dos cálculos que puedan discrepar, son el mismo dato.
-        circuitoEnVivo.publicar(mapaProgreso.construir(segmentoEnVivo, resultados));
+        circuitoEnVivo.publicar(mapaProgreso.construir(fotograma.progress(), resultados));
         actualizarVueltaHud();
         actualizarEtiquetasSector(resultados);
 
