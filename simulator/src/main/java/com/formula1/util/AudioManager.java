@@ -8,6 +8,7 @@ import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.util.Duration;
 
+import java.io.File;
 import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -86,6 +87,43 @@ public final class AudioManager {
                 return null;
             }
         });
+    }
+
+    /**
+     * Reproduce un fichero de audio fuera del classpath (por ejemplo, un WAV
+     * generado en caliente por {@link TtsManager}) y avisa al terminar.
+     *
+     * <p>Devuelve el reproductor para que quien lo pidió pueda cortarlo antes
+     * de tiempo (la radio necesita callar la voz en curso si la sesión se
+     * reinicia); si no llega a arrancar, ya se ha avisado a {@code alTerminar}
+     * y no hay nada que cortar, de ahí que pueda devolver {@code null}.
+     */
+    public static MediaPlayer reproducirArchivo(File archivo, double factorVolumen, Runnable alTerminar) {
+        if (silenciado || archivo == null || !archivo.isFile()) {
+            if (alTerminar != null) {
+                alTerminar.run();
+            }
+            return null;
+        }
+        try {
+            MediaPlayer reproductor = new MediaPlayer(new Media(archivo.toURI().toString()));
+            reproductor.setVolume(Math.max(0, Math.min(1, volumenSfx * factorVolumen)));
+            Runnable finalizar = () -> {
+                reproductor.dispose();
+                if (alTerminar != null) {
+                    alTerminar.run();
+                }
+            };
+            reproductor.setOnError(finalizar);
+            reproductor.setOnEndOfMedia(finalizar);
+            reproductor.play();
+            return reproductor;
+        } catch (RuntimeException ignorado) {
+            if (alTerminar != null) {
+                alTerminar.run();
+            }
+            return null;
+        }
     }
 
     /** Arranca música de fondo, deteniendo la anterior si la había. */
