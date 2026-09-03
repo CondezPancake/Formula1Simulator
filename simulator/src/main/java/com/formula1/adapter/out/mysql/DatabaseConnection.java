@@ -12,11 +12,11 @@ import java.sql.SQLException;
  */
 public final class DatabaseConnection {
 
-    private static final String DEFAULT_URL = "jdbc:mysql://localhost:3307/formula1_simulator"
+    private static final String DEFAULT_URL = "jdbc:mysql://localhost:3306/formula1_simulator"
             + "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
             + "&characterEncoding=UTF-8";
-    private static final String DEFAULT_USER = "root";
-    private static final String DEFAULT_PASSWORD = "root123";
+    private static final String DEFAULT_USER = "formula1";
+    private static final String DEFAULT_PASSWORD = "formula1";
 
     private DatabaseConnection() {
     }
