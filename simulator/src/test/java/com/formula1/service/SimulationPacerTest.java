@@ -31,4 +31,15 @@ class SimulationPacerTest {
         assertFalse(regulador.completarFotograma(1, 20));
         assertEquals(0, reloj.get());
     }
+
+    @Test
+    void calculaUnaCadenciaFluidaSinPerderLosMicrosectores() {
+        SimulationPacer corta = new SimulationPacer(
+                1_000_000_000L, () -> false, () -> 0, nanos -> { });
+        SimulationPacer normal = new SimulationPacer(
+                10_000_000_000L, () -> false, () -> 0, nanos -> { });
+
+        assertEquals(20, corta.totalFotogramas(20));
+        assertEquals(200, normal.totalFotogramas(20));
+    }
 }

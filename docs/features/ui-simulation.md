@@ -22,6 +22,26 @@ btnSimular.disableProperty().bind(tarea.runningProperty());
 
 Así la barra avanza, el texto va nombrando a cada piloto y el botón se deshabilita solo mientras la sesión corre, sin un solo `Platform.runLater`. Los enlaces se deshacen en `setOnSucceeded`/`setOnFailed` para poder volver a escribir en esos controles. El guardado posterior también va en segundo plano: la parrilla ya está en pantalla y no debe esperar a la base de datos.
 
+### Cadencia de simulación y renderizado
+
+La reproducción separa dos relojes que antes estaban acoplados:
+
+- El **dominio** conserva 20 microsectores por vuelta. Clima, eventos, boxes,
+  neumáticos, telemetría persistida y reglas deportivas solo avanzan al cruzar
+  uno de esos límites.
+- La **clasificación en vivo** publica 20 fotogramas por segundo, con tiempo y
+  progreso interpolados. Una sesión de 10 segundos produce 200 fotos visuales,
+  pero sigue guardando las mismas 20 muestras del dominio.
+- El **mapa JavaFX** pinta mediante `AnimationTimer` al pulso de la interfaz y
+  adapta automáticamente su interpolación al intervalo entre publicaciones.
+
+El cálculo y el reloj permanecen dentro del mismo `Task` de fondo. JavaFX solo
+recibe snapshots desprendidos del estado mutable y actualiza controles en su
+hilo; no se crean hilos por piloto ni se ejecutan reglas deportivas en el hilo
+gráfico. `LiveClassificationFrame` expone también el progreso continuo para que
+futuros consumidores, como una radio, puedan programar mensajes sin esperar al
+final de una vuelta.
+
 ## Un ajuste de realismo
 
 La primera prueba end-to-end destapó un problema de diseño: había **5,7 segundos** entre el coche del usuario y el resto de la parrilla. La causa era que el usuario elegía modo agresivo mientras los rivales corrían con la configuración neutra.

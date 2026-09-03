@@ -72,14 +72,24 @@ public final class MapaProgreso {
      */
     public Estado construir(int segmento, List<LapResult> clasificacion) {
         int seguro = Math.max(1, Math.min(segmento, TOTAL_SEGMENTOS));
-        double base = seguro / (double) TOTAL_SEGMENTOS;
-        double vueltaLider = vueltaProyectadaDelLider(clasificacion, seguro);
+        return construir(seguro / (double) TOTAL_SEGMENTOS, clasificacion);
+    }
+
+    /**
+     * Variante continua para los fotogramas visuales. El dominio conserva sus
+     * 20 microsectores, pero la posición puede avanzar entre dos de ellos.
+     */
+    public Estado construir(double progreso, List<LapResult> clasificacion) {
+        double base = Math.max(1e-9, Math.min(1, progreso));
+        int segmento = Math.min(TOTAL_SEGMENTOS,
+                Math.max(1, (int) Math.ceil(base * TOTAL_SEGMENTOS)));
+        double vueltaLider = vueltaProyectadaDelLider(clasificacion, base);
 
         List<Marcador> marcadores = new ArrayList<>(clasificacion.size());
         for (LapResult resultado : clasificacion) {
             marcadores.add(marcadorDe(resultado, base, vueltaLider));
         }
-        return new Estado(seguro, TOTAL_SEGMENTOS, marcadores);
+        return new Estado(segmento, TOTAL_SEGMENTOS, marcadores);
     }
 
     private Marcador marcadorDe(LapResult resultado, double base, double vueltaLider) {
@@ -113,7 +123,7 @@ public final class MapaProgreso {
      * acumulado en vez de usar el tiempo final porque durante la sesión el tiempo
      * final todavía no está a la vista.
      */
-    private static double vueltaProyectadaDelLider(List<LapResult> clasificacion, int segmento) {
+    private static double vueltaProyectadaDelLider(List<LapResult> clasificacion, double progreso) {
         double tiempoLider = 0;
         for (LapResult resultado : clasificacion) {
             if (resultado.isVueltaValida() && resultado.getTiempoSegundos() > 0) {
@@ -121,7 +131,7 @@ public final class MapaProgreso {
                 break;
             }
         }
-        return Math.max(0.001, tiempoLider * TOTAL_SEGMENTOS / segmento);
+        return Math.max(0.001, tiempoLider / progreso);
     }
 
     /**
