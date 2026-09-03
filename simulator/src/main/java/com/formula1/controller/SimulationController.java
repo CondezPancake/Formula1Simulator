@@ -24,6 +24,7 @@ import com.formula1.model.WeatherSnapshot;
 import com.formula1.service.CircuitService;
 import com.formula1.service.DriverService;
 import com.formula1.service.QualifyingService;
+import com.formula1.service.QualifyingSessionTaskFactory;
 import com.formula1.service.RaceRadioService;
 import com.formula1.service.VehicleService;
 import com.formula1.model.TrackSector;
@@ -226,6 +227,8 @@ public class SimulationController {
     @FXML private TableColumn<EventOccurrence, String> colEventoBandera;
 
     private final QualifyingService sesiones;
+    private final QualifyingSessionTaskFactory tareas;
+    private final com.formula1.data.PreparedConfigPort configuracionPreparada;
     private final CircuitService circuitos;
     private final VehicleService vehiculos;
     private final DriverService pilotos;
@@ -274,15 +277,19 @@ public class SimulationController {
     private int segmentoEnVivo;
 
     public SimulationController() {
-        this(new QualifyingService(), new CircuitService(), new VehicleService(), new DriverService());
+        this(new QualifyingService(), new CircuitService(), new VehicleService(), new DriverService(),
+                com.formula1.data.DataStore.getInstance());
     }
 
     public SimulationController(QualifyingService sesiones, CircuitService circuitos,
-                                VehicleService vehiculos, DriverService pilotos) {
+                                VehicleService vehiculos, DriverService pilotos,
+                                com.formula1.data.PreparedConfigPort configuracionPreparada) {
         this.sesiones = sesiones;
+        this.tareas = new QualifyingSessionTaskFactory(sesiones);
         this.circuitos = circuitos;
         this.vehiculos = vehiculos;
         this.pilotos = pilotos;
+        this.configuracionPreparada = configuracionPreparada;
     }
 
     @FXML
@@ -588,7 +595,7 @@ public class SimulationController {
     private void precargarUltimaConfiguracion() {
         // Lo que el usuario dejó preparado en la pantalla de configuración
         // manda sobre lo que se usó en la última sesión guardada.
-        SimulationConfig ultima = com.formula1.data.DataStore.getInstance().configuracionActual();
+        SimulationConfig ultima = configuracionPreparada.configuracionActual();
         if (ultima == null) {
             ultima = sesiones.historial().stream()
                     .map(QualifyingSession::getConfig)
@@ -613,11 +620,11 @@ public class SimulationController {
         combustible = FuelStrategy.BALANCEADA;
 
         if (ultima == null) {
-            versionConfiguracionAplicada = com.formula1.data.DataStore.getInstance().versionConfiguracion();
+            versionConfiguracionAplicada = configuracionPreparada.versionConfiguracion();
             return;
         }
         precargarConfiguracion(ultima);
-        versionConfiguracionAplicada = com.formula1.data.DataStore.getInstance().versionConfiguracion();
+        versionConfiguracionAplicada = configuracionPreparada.versionConfiguracion();
         lblEstado.setText("Configuración recuperada");
     }
 
@@ -722,9 +729,8 @@ public class SimulationController {
                 modo, aero, presion, combustible);
         config.setDuracionSegundos(duracionSegundos);
         config.setCompuestoInicial(compuestoInicial);
-        com.formula1.data.DataStore.getInstance().guardarConfiguracion(config);
-        versionConfiguracionAplicada = com.formula1.data.DataStore.getInstance()
-                .versionConfiguracion();
+        configuracionPreparada.guardarConfiguracion(config);
+        versionConfiguracionAplicada = configuracionPreparada.versionConfiguracion();
         finalizarSolicitado.set(false);
         pilotoSesionActual = config.getPilotoId();
         btnFinalizar.setText("Finalizar");
@@ -757,7 +763,7 @@ public class SimulationController {
                 c -> ShellController.evento(c.getNombre(), c.getPais()));
         ShellController.estadoSesion(ShellController.Estado.EN_CURSO);
         ShellController.bandera(null);
-        Task<QualifyingSession> tarea = sesiones.crearTarea(config,
+        Task<QualifyingSession> tarea = tareas.crearTarea(config,
                 muestra -> Platform.runLater(() -> mostrarEvolucion(muestra)),
                 muestra -> Platform.runLater(() -> {
                     mostrarTelemetria(muestra);
@@ -1076,12 +1082,11 @@ public class SimulationController {
 
     /** Aplica un guardado nuevo sin tocar Carrera cuando no hay cambios pendientes. */
     public void aplicarConfiguracionGuardadaPendiente() {
-        com.formula1.data.DataStore datos = com.formula1.data.DataStore.getInstance();
-        long version = datos.versionConfiguracion();
+        long version = configuracionPreparada.versionConfiguracion();
         if (version == versionConfiguracionAplicada) {
             return;
         }
-        precargarConfiguracion(datos.configuracionActual());
+        precargarConfiguracion(configuracionPreparada.configuracionActual());
         versionConfiguracionAplicada = version;
     }
 

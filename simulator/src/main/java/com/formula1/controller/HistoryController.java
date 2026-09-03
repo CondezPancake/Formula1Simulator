@@ -1,5 +1,7 @@
 package com.formula1.controller;
 
+import com.formula1.data.DataStore;
+import com.formula1.data.PreparedConfigPort;
 import com.formula1.model.LapResult;
 import com.formula1.model.QualifyingSession;
 import com.formula1.model.SimulationConfig;
@@ -66,14 +68,16 @@ public class HistoryController {
     @FXML private Button chipTiempo;
 
     private final QualifyingService sesiones;
+    private final PreparedConfigPort configuracionPreparada;
     private Comparator<QualifyingSession> orden = POR_FECHA;
 
     public HistoryController() {
-        this(new QualifyingService());
+        this(new QualifyingService(), DataStore.getInstance());
     }
 
-    public HistoryController(QualifyingService sesiones) {
+    public HistoryController(QualifyingService sesiones, PreparedConfigPort configuracionPreparada) {
         this.sesiones = sesiones;
+        this.configuracionPreparada = configuracionPreparada;
     }
 
     @FXML
@@ -249,7 +253,7 @@ public class HistoryController {
             return;
         }
         SimulationConfig config = seleccionada.getConfig();
-        com.formula1.data.DataStore.getInstance().guardarConfiguracion(config);
+        configuracionPreparada.guardarConfiguracion(config);
         ShellController.irACarrera();
     }
 

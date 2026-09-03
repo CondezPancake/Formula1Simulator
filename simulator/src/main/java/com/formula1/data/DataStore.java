@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * Se usan colecciones concurrentes porque los hilos de fondo leen mientras
  * el hilo de JavaFX escribe.
  */
-public final class DataStore implements QualifyingDataPort {
+public final class DataStore implements QualifyingDataPort, PreparedConfigPort {
 
     private static DataStore instancia;
 
@@ -256,16 +256,19 @@ public final class DataStore implements QualifyingDataPort {
      * a la espera de lanzar la sesión. Vive solo en memoria: al reiniciar, la
      * pantalla de clasificación recupera los de la última sesión guardada.
      */
+    @Override
     public SimulationConfig configuracionActual() {
         return configuracionActual;
     }
 
+    @Override
     public void guardarConfiguracion(SimulationConfig config) {
         this.configuracionActual = config;
         versionConfiguracion.incrementAndGet();
     }
 
     /** Identifica si Carrera ya aplicó el último ajuste preparado. */
+    @Override
     public long versionConfiguracion() {
         return versionConfiguracion.get();
     }

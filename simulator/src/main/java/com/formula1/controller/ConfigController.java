@@ -1,6 +1,7 @@
 package com.formula1.controller;
 
 import com.formula1.data.DataStore;
+import com.formula1.data.PreparedConfigPort;
 import com.formula1.model.AerodynamicLoad;
 import com.formula1.model.Circuit;
 import com.formula1.model.DrivingMode;
@@ -69,6 +70,7 @@ public class ConfigController {
 
     private final VehicleService vehiculos;
     private final CircuitService circuitos;
+    private final PreparedConfigPort configuracionPreparada;
     private final LapTimeCalculator calculadora = new LapTimeCalculator();
 
     private DrivingMode modo = DrivingMode.NORMAL;
@@ -79,12 +81,14 @@ public class ConfigController {
     private int duracionSegundos = SimulationConfig.DURACION_PREDETERMINADA_SEGUNDOS;
 
     public ConfigController() {
-        this(new VehicleService(), new CircuitService());
+        this(new VehicleService(), new CircuitService(), DataStore.getInstance());
     }
 
-    public ConfigController(VehicleService vehiculos, CircuitService circuitos) {
+    public ConfigController(VehicleService vehiculos, CircuitService circuitos,
+                            PreparedConfigPort configuracionPreparada) {
         this.vehiculos = vehiculos;
         this.circuitos = circuitos;
+        this.configuracionPreparada = configuracionPreparada;
     }
 
     @FXML
@@ -117,7 +121,7 @@ public class ConfigController {
 
     /** Arranca desde lo último que el usuario dejó preparado o simuló. */
     private void recuperarConfiguracion() {
-        SimulationConfig previa = DataStore.getInstance().configuracionActual();
+        SimulationConfig previa = configuracionPreparada.configuracionActual();
         if (previa == null) {
             previa = new com.formula1.service.QualifyingService().historial().stream()
                     .map(s -> s.getConfig())
@@ -252,7 +256,7 @@ public class ConfigController {
     }
 
     private SimulationConfig configuracion() {
-        SimulationConfig previa = DataStore.getInstance().configuracionActual();
+        SimulationConfig previa = configuracionPreparada.configuracionActual();
         SimulationConfig config = new SimulationConfig();
         if (previa != null) {
             config.setCircuito(previa.getCircuito());
@@ -270,7 +274,7 @@ public class ConfigController {
 
     @FXML
     private void onGuardar() {
-        DataStore.getInstance().guardarConfiguracion(configuracion());
+        configuracionPreparada.guardarConfiguracion(configuracion());
         lblContexto.setText("Configuración guardada. Carrera la aplicará al volver, sin iniciar la sesión.");
     }
 }

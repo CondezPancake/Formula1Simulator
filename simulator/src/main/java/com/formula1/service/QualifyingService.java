@@ -31,14 +31,11 @@ import com.formula1.util.MathUtils;
 import com.formula1.util.RandomUtils;
 import com.formula1.util.ValidationUtils;
 
-import javafx.concurrent.Task;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.BooleanSupplier;
 
 /**
  * Ejecuta una sesión de clasificación: genera el clima, calcula el tiempo de
@@ -594,133 +591,6 @@ public class QualifyingService {
         return copia;
     }
 
-    /**
-     * Envuelve la simulación en un {@link Task} para ejecutarla fuera del
-     * hilo de JavaFX. El {@code Task} ya publica progreso y mensajes en el
-     * hilo de interfaz, así que no hace falta {@code Platform.runLater}.
-     */
-    public Task<QualifyingSession> crearTarea(SimulationConfig config) {
-        return crearTarea(config, null);
-    }
-
-    public Task<QualifyingSession> crearTarea(SimulationConfig config, Evolucion evolucion) {
-        return crearTarea(config, evolucion, null);
-    }
-
-    public Task<QualifyingSession> crearTarea(SimulationConfig config, Evolucion evolucion,
-                                              Telemetria telemetria) {
-        return crearTarea(config, evolucion, telemetria, null);
-    }
-
-    public Task<QualifyingSession> crearTarea(SimulationConfig config, Evolucion evolucion,
-                                              Telemetria telemetria,
-                                              EvolucionPista observadorPista) {
-        return crearTarea(config, evolucion, telemetria, observadorPista, null);
-    }
-
-    public Task<QualifyingSession> crearTarea(SimulationConfig config, Evolucion evolucion,
-                                              Telemetria telemetria,
-                                              EvolucionPista observadorPista,
-                                              ClasificacionEnVivo clasificacionEnVivo) {
-        return crearTarea(config, evolucion, telemetria, observadorPista,
-                clasificacionEnVivo, () -> false);
-    }
-
-    public Task<QualifyingSession> crearTarea(SimulationConfig config, Evolucion evolucion,
-                                              Telemetria telemetria,
-                                              EvolucionPista observadorPista,
-                                              ClasificacionEnVivo clasificacionEnVivo,
-                                              BooleanSupplier finalizarSolicitado) {
-        return crearTarea(config, evolucion, telemetria, observadorPista,
-                clasificacionEnVivo, null, finalizarSolicitado);
-    }
-
-    public Task<QualifyingSession> crearTarea(SimulationConfig config, Evolucion evolucion,
-                                              Telemetria telemetria,
-                                              EvolucionPista observadorPista,
-                                              ClasificacionEnVivo clasificacionEnVivo,
-                                              EventosEnVivo observadorEventos,
-                                              BooleanSupplier finalizarSolicitado) {
-        return crearTarea(config, evolucion, telemetria, observadorPista,
-                clasificacionEnVivo, observadorEventos, null,
-                finalizarSolicitado);
-    }
-
-    public Task<QualifyingSession> crearTarea(SimulationConfig config, Evolucion evolucion,
-                                              Telemetria telemetria,
-                                              EvolucionPista observadorPista,
-                                              ClasificacionEnVivo clasificacionEnVivo,
-                                              EventosEnVivo observadorEventos,
-                                              PitStopsEnVivo observadorPitStops,
-                                              BooleanSupplier finalizarSolicitado) {
-        return crearTarea(config, evolucion, telemetria, observadorPista,
-                clasificacionEnVivo, observadorEventos, observadorPitStops,
-                null, finalizarSolicitado);
-    }
-
-    public Task<QualifyingSession> crearTarea(SimulationConfig config, Evolucion evolucion,
-                                              Telemetria telemetria,
-                                              EvolucionPista observadorPista,
-                                              ClasificacionEnVivo clasificacionEnVivo,
-                                              EventosEnVivo observadorEventos,
-                                              PitStopsEnVivo observadorPitStops,
-                                              CambiosNeumaticosEnVivo observadorCambiosNeumaticos,
-                                              BooleanSupplier finalizarSolicitado) {
-        return new Task<>() {
-            @Override
-            protected QualifyingSession call() throws Exception {
-                Circuit circuito = validarSeleccion(config);
-                SimulationPacer regulador = new SimulationPacer(
-                        config.getDuracionSegundos(), finalizarSolicitado);
-
-                WeatherCondition clima = generarClima(circuito);
-                updateMessage("Clima de la sesión: " + clima.getEtiqueta());
-
-                QualifyingSession sesion = simular(
-                        config,
-                        clima,
-                        (hecho, total, mensaje) -> {
-                            updateMessage("Preparando parrilla · " + mensaje);
-                        },
-                        evolucion,
-                        telemetria,
-                        observadorPista,
-                        clasificacionEnVivo,
-                        new ControlSimulacion() {
-                            @Override
-                            public int totalFotogramas(int minimo) {
-                                return regulador.totalFotogramas(minimo);
-                            }
-
-                            @Override
-                            public boolean completarFotograma(int fotograma, int total) {
-                                updateProgress(fotograma, total);
-                                int segmento = Math.min(SEGMENTOS_EVOLUCION,
-                                        Math.max(1, (int) Math.ceil(
-                                                fotograma * SEGMENTOS_EVOLUCION
-                                                        / (double) total)));
-                                updateMessage("Simulación en vivo · segmento "
-                                        + segmento + " de " + SEGMENTOS_EVOLUCION);
-                                return regulador.completarFotograma(fotograma, total);
-                            }
-                        },
-                        observadorEventos,
-                        observadorPitStops,
-                        observadorCambiosNeumaticos);
-
-                if (!finalizarSolicitado.getAsBoolean()) {
-                    updateProgress(1, 1);
-                }
-                LapResult pole = sesion.getPole();
-                updateMessage(finalizarSolicitado.getAsBoolean()
-                        ? "Sesión finalizada manualmente y preparada para guardar"
-                        : pole == null ? "Sesión sin resultados"
-                        : "Pole: " + pole.getPiloto() + " — " + FormatUtils.formatLapTime(pole.getTiempoSegundos()));
-                return sesion;
-            }
-        };
-    }
-
     private List<Driver> participantesConSeleccionPrimero(int pilotoSeleccionadoId) {
         List<Driver> participantes = new ArrayList<>(pilotos.listar());
         participantes.sort(Comparator
@@ -888,7 +758,7 @@ public class QualifyingService {
      * Protege la regla de negocio de HU-08 incluso cuando la simulación se
      * inicia fuera de JavaFX: el piloto debe existir y conducir el vehículo.
      */
-    private Circuit validarSeleccion(SimulationConfig config) {
+    Circuit validarSeleccion(SimulationConfig config) {
         if (config == null) {
             throw new ValidationException("La configuración no puede ser nula");
         }
