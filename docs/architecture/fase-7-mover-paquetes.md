@@ -224,8 +224,83 @@ estos tests habrían fallado en tiempo de ejecución con
 eliminados — no queda ningún paquete de la estructura original salvo
 `model`/`event` (ya movidos en el lote 1) y `data` (ya movido en el lote 4).
 
-## Lo que falta
+## Lote 6 — `App`, `Main`, `AppComposition` → `bootstrap`
 
-Solo quedan dos piezas menores: **`App`/`Main`/`AppComposition` →
-`bootstrap`** y la revisión caso a caso de `util/` (el propio diagnóstico
-advierte que no todo pertenece a la misma capa ahí).
+Las tres clases de arranque y composición se mueven de la raíz
+`com.formula1` a `com.formula1.bootstrap`. Sin sorpresas de código: el
+`import` de cada clase de `AppComposition` ya apuntaba a los paquetes
+nuevos desde los lotes anteriores.
+
+**La sorpresa estaba fuera del código fuente**, donde ningún test la puede
+ver: `simulator/pom.xml` (el plugin `javafx-maven-plugin`, usado por
+`mvn javafx:run` y `run.sh`) y `.vscode/launch.json` (el botón *Run* de VS
+Code, documentado en el propio `README.md`) tenían el nombre de clase
+completo (`com.formula1.App`, `com.formula1.Main`) escrito como texto, no
+como código Java — `mvn clean test` nunca los toca. Se corrigieron los dos
+a mano. Para verificar sin depender solo de la lectura, se corrió
+`mvn javafx:run` con límite de tiempo: si el `mainClass` hubiera quedado
+mal, Maven habría fallado en segundos con `ClassNotFoundException`; en vez
+de eso compiló, copió recursos y el proceso quedó corriendo hasta que el
+límite de tiempo lo cortó (código 143, SIGTERM) — el patrón esperado de un
+arranque que sí encontró la clase y llegó a levantar JavaFX.
+
+`mvn clean test`: 174/0/0, 4 *skipped* (MySQL) — misma cuenta.
+
+## Lote 7 — revisión de `util/`
+
+El propio diagnóstico advertía que `util/` no pertenece entero a una sola
+capa. Revisadas las 15 clases una por una:
+
+| Clase | Depende de | Veredicto |
+|---|---|---|
+| `MathUtils`, `RandomUtils`, `DateUtils`, `ValidationUtils`, `FormatUtils` | Nada fuera de `java.*` | Utilidades puras — candidatas a `domain` si se quisiera separar, pero son transversales por diseño (las usa dominio y JavaFX por igual) |
+| `Async` | `java.util.concurrent` | Infraestructura de hilos, no específica de JavaFX ni de MySQL |
+| `TeamColors`, `TrackLayouts`, `VehicleImages`, `F1Assets`, `Imagenes`, `ImageCrop` | Rutas de recursos, algunas con `javafx.scene.image.Image` | Infraestructura de presentación |
+| `AudioManager`, `TtsManager` | Audio/TTS, usadas por los presenters de `adapter.in.javafx` | Infraestructura de presentación |
+| `InputValidation` | — | Validación de formularios de UI |
+
+Comprobado por import: solo 3 de las 15 dependen de algo fuera de
+`java.*`/`util`, y las 3 apuntan a `domain` (`FormatUtils`→`domain.model.LapResult`,
+`InputValidation`→`domain.service.ValidationException`,
+`TrackLayouts`→`domain.model.TrackLayout`) — la dirección permitida, nunca
+hacia `application` ni `adapter`. Así que **ninguna crea un ciclo ni una
+dependencia invertida quedándose donde está**: son transversales
+(`MathUtils` et al.) o infraestructura de presentación (imágenes, audio,
+hilos), con como mucho una lectura hacia el dominio. Dividir `util/` en
+`domain/util` +
+`adapter/in/javafx/util` sin que ningún consumidor lo exija todavía sería
+mover archivos por mover — no hay una razón de dependencia que lo pida, a
+diferencia de los lotes anteriores, donde cada movimiento resolvía una
+violación de dirección real (dominio dependiendo de aplicación, casos de
+uso dependiendo de JavaFX). Se documenta la revisión y se deja `util/` como
+está: es una decisión, no un olvido.
+
+## Fase 7 — cierre
+
+Los 6 lotes de movimiento (dominio, puertos, división de `service/`,
+persistencia, JavaFX, arranque) están completos y verificados; el lote 7
+es una revisión que concluye sin cambios. Estructura final de paquetes:
+
+```
+com.formula1
+├── bootstrap        (App, Main, AppComposition)
+├── domain
+│   ├── model         (37 clases)
+│   ├── event          (14 clases)
+│   └── service        (15 clases: cálculo puro, políticas, ValidationException)
+├── application
+│   ├── usecase         (5 clases: QualifyingService + 4 servicios de catálogo)
+│   └── port.out          (7 interfaces)
+├── adapter
+│   ├── in.javafx        (32 clases: controladores, Navigator, presenters, tareas)
+│   └── out
+│       ├── mysql          (7 clases JDBC)
+│       ├── seed            (SeedLoader)
+│       ├── memory           (DataStore)
+│       └── DataAccessException
+└── util               (15 clases transversales, sin dividir — ver lote 7)
+```
+
+Cada lote quedó verificado con `mvn clean test` en 174/0/0 (4 *skipped* por
+falta de MySQL local) y, en el lote 5, además con la carga real de los 20
+FXML. Ningún lote dejó una regresión sin corregir antes del siguiente commit.

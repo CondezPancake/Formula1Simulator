@@ -1,4 +1,4 @@
-package com.formula1;
+package com.formula1.bootstrap;
 
 import com.formula1.adapter.in.javafx.CircuitController;
 import com.formula1.adapter.in.javafx.CircuitDetailController;

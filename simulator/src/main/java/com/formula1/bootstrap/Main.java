@@ -1,4 +1,4 @@
-package com.formula1;
+package com.formula1.bootstrap;
 
 public class Main {
 

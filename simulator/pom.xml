@@ -73,7 +73,7 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>com.formula1.App</mainClass>
+                    <mainClass>com.formula1.bootstrap.App</mainClass>
                 </configuration>
             </plugin>
 
