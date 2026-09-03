@@ -2,9 +2,8 @@
 
 Este documento separa el estado implementado del nuevo backlog de trabajo. La
 persistencia ya está terminada; las épicas E13 a E22 se incorporan como planificación
-pendiente para desarrollarlas progresivamente. La referencia histórica sigue siendo
-`docs/legacy/ProyectoFormula1.md` y el alcance operativo actual está resumido en el
-README.
+pendiente para desarrollarlas progresivamente. La especificación autoritativa es
+`f1project.md` y el alcance operativo actual está resumido en el README.
 
 Una HU permanece **pendiente** hasta completar todos sus criterios, aunque el proyecto
 ya contenga pantallas, datos o servicios que puedan reutilizarse como punto de partida.
@@ -85,7 +84,7 @@ ya contenga pantallas, datos o servicios que puedan reutilizarse como punto de p
 | RF-14 | **Cumplido** | Ordenamiento, posiciones y diferencias con la pole. |
 | RF-15 | **Cumplido** | Clasificación final visible en JavaFX. |
 | RF-16 | **Cumplido** | Clasificación, telemetría en vivo, sectores y eventos; grip y clima se resumen en Carrera. |
-| RF-18 | **Cumplido** | Persistencia duradera en MongoDB con respaldo en memoria. |
+| RF-18 | **Cumplido** | Persistencia duradera en MySQL con respaldo temporal en memoria. |
 | RF-19 | **Cumplido** | Resultados, eventos, telemetría, clima, sectores y evolución de pista se guardan con la sesión. |
 | RF-20 | **Cumplido** | Historial de sesiones y configuraciones reutilizables. |
 
@@ -97,13 +96,13 @@ Resumen RF: **19 cumplidos de 19 requisitos vigentes**.
 |---|---|---|
 | RNF-01 | **Cumplido** | Java 17 configurado en Maven. |
 | RNF-02 | **Cumplido** | Interfaz JavaFX consistente con imágenes de pilotos, vehículos, circuitos, escuderías y recursos del menú empaquetados. |
-| RNF-03 | **Cumplido** | MongoDB con Repository y modo memoria resiliente. |
+| RNF-03 | **Cumplido** | MySQL mediante un puerto de persistencia y modo memoria resiliente. |
 | RNF-05 | **Cumplido** | Separación en `model`, `data`, `service`, `event`, `controller` y `util`. |
 | RNF-06 | **Cumplido** | Packages cohesionados por responsabilidad. |
 | RNF-07 | **Cumplido** | Validación en interfaz y servicios. |
 | RNF-08 | **Cumplido** | Errores de entrada, carga multimedia y persistencia tratados sin cerrar la aplicación. |
 | RNF-09 | **Cumplido** | Carga y simulación en `Task`/pool de hilos, sin bloquear JavaFX. |
-| RNF-10 | **Cumplido** | Flujo completo desde la interfaz, sin manejo manual de MongoDB. |
+| RNF-10 | **Cumplido** | Flujo completo desde la interfaz, sin manejo manual de MySQL. |
 | RNF-11 | **Cumplido** | Dependencias declaradas en Maven. |
 | RNF-12 | **Cumplido** | Repositorio versionado y documentación de cambios. |
 
@@ -339,9 +338,9 @@ sesiones anteriores.
 
 #### HU-55 — Implementar arquitectura hexagonal
 
-- Evitar que el dominio dependa de JavaFX o MongoDB.
+- Evitar que el dominio dependa de JavaFX o JDBC.
 - Evitar que la aplicación dependa directamente de infraestructura.
-- Definir un puerto de persistencia implementado por MongoDB.
+- Definir un puerto de persistencia implementado por MySQL.
 - Hacer que JavaFX consuma casos de uso.
 - Orientar las dependencias hacia el dominio.
 
@@ -383,7 +382,7 @@ Prioridad: **opcional / baja**.
 
 La persistencia está **terminada**. `DataStore` mantiene mapas concurrentes como fuente
 de verdad durante la ejecución y realiza escrituras *write-through* mediante
-`MongoRepository`. Al arrancar intenta recuperar MongoDB; si no está disponible, carga
+`MySqlPersistenceAdapter`. Al arrancar intenta recuperar MySQL; si no está disponible, carga
 el seed y conserva un modo memoria operativo.
 
 Se persisten pilotos, equipos, vehículos, circuitos y sesiones. Cada sesión incluye la
@@ -395,7 +394,7 @@ de pista, y puede recuperarse desde el historial entre ejecuciones.
 | Control | Estado |
 |---|---|
 | Compilación | Código principal y pruebas compilan con Java 17. |
-| Pruebas automatizadas | **150 pruebas** ejecutadas correctamente con el wrapper de Maven. |
+| Pruebas automatizadas | **171 pruebas** ejecutadas correctamente con Maven, incluidas 4 de integración MySQL. |
 | Integridad FXML | `ViewsLoadTest` y `ExploreViewsLoadTest` comprueban la carga de las vistas FXML. |
 | Persistencia histórica | JSON compatible con sesiones antiguas; el campo `analisis` ya retirado se ignora al leer. |
 | Inmutabilidad | Snapshots, eventos, sectores y evolución de pista son inmutables o se exponen como copias. |

@@ -6,7 +6,7 @@
 
 - Java 17 mediante `maven-compiler-plugin` y `<release>17</release>`.
 - JavaFX 17.0.10 con `javafx-controls` y `javafx-fxml`.
-- MongoDB driver sync 5.1.1.
+- MySQL Connector/J 9.5.0.
 - Jackson Databind 2.17.2 para serializar sesiones y datos.
 - JUnit Jupiter 5.10.3 con Surefire 3.2.5.
 - `javafx-maven-plugin` para ejecutar `com.formula1.App`.

@@ -2,12 +2,12 @@
 
 ## Por qué
 
-Apareció `f1project.md`, que es **la rúbrica real** del proyecto y pide algo mucho más simple que `ProyectoFormula1.md` (el documento que se siguió en la primera iteración). Esta rama recorta todo lo que se construyó de más y que la rúbrica no pide, dejando el proyecto compilando en cada paso.
+Apareció `f1project.md`, que es **la rúbrica real** del proyecto. Esta rama recorta todo lo que se construyó de más y que la rúbrica no pide, dejando el proyecto compilando en cada paso.
 
 ## Cambios en documentación
 
 - `f1project.md` pasa a estar versionado y es **la especificación autoritativa**.
-- `ProyectoFormula1.md` se mueve a `docs/legacy/` — se conserva como referencia histórica, pero ya no es la referencia de trabajo.
+- Se retira la especificación histórica para mantener una sola fuente de verdad.
 
 ## Qué se eliminó (20 archivos `.java`)
 
@@ -27,12 +27,12 @@ Apareció `f1project.md`, que es **la rúbrica real** del proyecto y pide algo m
 
 ## Otros cambios
 
-- `pom.xml`: se quita `jackson-datatype-jsr310` (no hay fechas serializadas a JSON). **`jackson-databind` se conserva** porque lo necesitan el seed de datos y el mapeo entidad↔`Document`.
+- `pom.xml`: se quita `jackson-datatype-jsr310` (no hay fechas serializadas a JSON). **`jackson-databind` se conserva** porque lo necesita el seed de datos.
 - `SimulationController`: se reduce a un enlace mínimo con la vista, ya que las clases de las que dependía desaparecieron. Su implementación real llega en `feature/ui-simulation`.
 
 ## Patrones de diseño
 
-De **4 a 2**: mueren **Adapter** (con `api/`) y **Facade** (con `SimulationFacade`). Sobreviven **Repository** y **Singleton**, ambos consecuencia directa de mantener MongoDB.
+De **4 a 2**: mueren **Adapter** (con `api/`) y **Facade** (con `SimulationFacade`). En la arquitectura actual la infraestructura SQL queda detrás de un puerto y `DataStore` conserva el estado compartido.
 
 ## Resultado
 

@@ -42,7 +42,7 @@ por piloto. Un accidente o una vuelta ya invalidada no genera una parada.
 - `SimulationController`: recibe los cambios de fase y coordina su presentación.
 - `PitStopPresenter`: representa fases, radio y feed sin contaminar el
   controlador con formato visual.
-- `QualifyingSession`: conserva el último estado de cada parada para MongoDB y
+- `QualifyingSession`: conserva el último estado de cada parada para MySQL y
   modo memoria.
 
 `PitStopService` recibe su generador aleatorio por constructor y

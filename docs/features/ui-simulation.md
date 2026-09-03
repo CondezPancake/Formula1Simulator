@@ -78,4 +78,4 @@ modelo visual y perder estado de selección en cada fotograma.
 ## Verificación
 
 - `mvn clean test` → **40 tests, 0 fallos**, incluida la carga real de `simulation.fxml` e `history.fxml`.
-- Prueba end-to-end ejecutada contra MongoDB: se simula una sesión completa, se ordenan los 20 pilotos, se persiste y el historial pasa de 1 a 2 entradas con su configuración guardada.
+- Prueba end-to-end ejecutada contra MySQL: se simula una sesión completa, se ordenan los 20 pilotos, se persiste y se recuperan todas sus relaciones.
