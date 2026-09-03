@@ -68,6 +68,15 @@ public final class CircuitoEnVivo {
     private final AtomicReference<MapaProgreso.Estado> objetivo = new AtomicReference<>();
     private final ReadOnlyObjectWrapper<Integer> pilotoResaltado =
             new ReadOnlyObjectWrapper<>(null);
+    /**
+     * Piloto fijado desde la torre. Es un estado distinto del resaltado: el
+     * resaltado es tanteo del ratón y se va con él, el fijado se queda hasta
+     * que el usuario lo cambie, incluso al terminar la sesión.
+     */
+    private final ReadOnlyObjectWrapper<Integer> pilotoFijado =
+            new ReadOnlyObjectWrapper<>(null);
+    /** Traduce identificador a código de tres letras; lo inyecta la pantalla. */
+    private java.util.function.IntFunction<String> resolucionCodigo = id -> "P" + id;
 
     private TrackLayout trazado;
     private String nombreCircuito = "";
@@ -218,6 +227,27 @@ public final class CircuitoEnVivo {
 
     public ReadOnlyObjectProperty<Integer> pilotoResaltadoProperty() {
         return pilotoResaltado.getReadOnlyProperty();
+    }
+
+    /** Fija un piloto en el mapa; {@code null} lo suelta. */
+    public void fijar(Integer pilotoId) {
+        if (!java.util.Objects.equals(pilotoFijado.get(), pilotoId)) {
+            pilotoFijado.set(pilotoId);
+            pintarCoches(System.nanoTime());
+        }
+    }
+
+    public ReadOnlyObjectProperty<Integer> pilotoFijadoProperty() {
+        return pilotoFijado.getReadOnlyProperty();
+    }
+
+    /**
+     * Cómo se rotula cada coche. Sin esto el mapa solo sabe decir "P3"; con la
+     * tabla de códigos puede etiquetar al fijado con su trigrama, que es lo que
+     * hace legible el seguimiento.
+     */
+    public void setResolucionCodigo(java.util.function.IntFunction<String> resolucion) {
+        this.resolucionCodigo = resolucion == null ? id -> "P" + id : resolucion;
     }
 
     public void setAlSeleccionarPiloto(Consumer<Integer> accion) {
@@ -487,12 +517,19 @@ public final class CircuitoEnVivo {
 
     private int prioridad(MapaProgreso.Marcador m) {
         if (esDelUsuario(m)) {
+            return 4;
+        }
+        if (esFijado(m)) {
             return 3;
         }
         if (java.util.Objects.equals(pilotoResaltado.get(), m.pilotoId())) {
             return 2;
         }
         return m.posicion() == 1 ? 1 : 0;
+    }
+
+    private boolean esFijado(MapaProgreso.Marcador m) {
+        return java.util.Objects.equals(pilotoFijado.get(), m.pilotoId());
     }
 
     private boolean esDelUsuario(MapaProgreso.Marcador m) {
@@ -506,7 +543,8 @@ public final class CircuitoEnVivo {
         double x = encaje.x(p.x());
         double y = encaje.y(p.y());
         boolean resaltado = java.util.Objects.equals(pilotoResaltado.get(), m.pilotoId());
-        double r = resaltado ? radio + 2 : radio;
+        boolean fijado = esFijado(m);
+        double r = resaltado || fijado ? radio + 2 : radio;
 
         if (!m.valida()) {
             // Coche parado: aro hueco y apagado, sin etiqueta.
@@ -533,21 +571,34 @@ public final class CircuitoEnVivo {
         g.setFill(color);
         g.fillOval(x - r, y - r, r * 2, r * 2);
 
-        boolean destacado = esDelUsuario(m) || resaltado;
+        boolean destacado = esDelUsuario(m) || resaltado || fijado;
         g.setStroke(esDelUsuario(m) ? MARCA : resaltado ? Color.WHITE
                 : m.posicion() == 1 ? Color.WHITE : Color.web("#0A0A0A"));
         g.setLineWidth(destacado ? 2.2 : 1.3);
         g.strokeOval(x - r, y - r, r * 2, r * 2);
 
+        // El fijado lleva un segundo anillo: se distingue del que solo estás
+        // consultando con el ratón, que se queda en el aro blanco.
+        if (fijado) {
+            g.setStroke(MARCA);
+            g.setLineWidth(1.6);
+            g.strokeOval(x - r - 4, y - r - 4, (r + 4) * 2, (r + 4) * 2);
+        }
+
         // Etiqueta solo para los que importan: veinte etiquetas serían barro.
-        if (resaltado || esDelUsuario(m) || m.posicion() == 1 || m.posicion() == ultimaPosicion) {
-            etiqueta(g, m, x, y, r, anchoPista, p.angulo());
+        if (resaltado || fijado || esDelUsuario(m) || m.posicion() == 1
+                || m.posicion() == ultimaPosicion) {
+            etiqueta(g, m, x, y, r, anchoPista, p.angulo(), fijado);
         }
     }
 
     private void etiqueta(GraphicsContext g, MapaProgreso.Marcador m, double x, double y,
-                          double radio, double anchoPista, double angulo) {
-        String texto = "P" + m.posicion();
+                          double radio, double anchoPista, double angulo, boolean fijado) {
+        // Al fijado se le pone nombre: seguir "VER" es más legible que "P3"
+        // cuando el objetivo es no perderlo de vista.
+        String texto = fijado
+                ? resolucionCodigo.apply(m.pilotoId()) + " P" + m.posicion()
+                : "P" + m.posicion();
         // Se desplaza por la normal para no tapar la pista.
         double nx = -Math.sin(angulo);
         double ny = Math.cos(angulo);

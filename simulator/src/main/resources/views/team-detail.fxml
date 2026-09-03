@@ -8,49 +8,136 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.TilePane?>
 <?import javafx.scene.layout.VBox?>
 
 <!--
-  Ficha de escudería, con el reparto de formula1.com/en/teams/<equipo>:
-  cabecera con el logo y el nombre sobre el color del equipo, el monoplaza a
-  lo grande, sus datos y la pareja de pilotos.
+  Ficha de escudería con el reparto de formula1.com/en/teams/<equipo>:
+  hero con el monoplaza y los dos pilotos, palmarés, tarjetas de piloto,
+  Team Summary + Team Profile y una galería de seis fotos.
 
-  Mismo esqueleto que driver-detail para que las dos fichas se sientan de la
-  misma familia.
+  El color del equipo entra inline desde el controlador (TeamColors), que es
+  como se resuelve en todas las tarjetas del proyecto: aquí solo va lo que es
+  igual para las diez escuderías.
+
+  El visor de la galería se monta sobre el StackPane raíz, por encima del
+  scroll, para que ocupe la vista entera sin desplazar nada.
 -->
-<ScrollPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.formula1.controller.TeamDetailController"
-            styleClass="circuit-detail" fitToWidth="true">
+<StackPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+           fx:controller="com.formula1.controller.TeamDetailController"
+           styleClass="team-hub">
 
-    <VBox spacing="18" styleClass="circuit-detail-body">
-        <padding><Insets top="26" right="26" bottom="26" left="26"/></padding>
+    <ScrollPane fx:id="scroll" styleClass="team-hub-scroll" fitToWidth="true">
+        <VBox styleClass="team-hub-body">
 
-        <!-- cabecera -->
-        <HBox spacing="16" alignment="CENTER_LEFT">
-            <StackPane fx:id="marcoLogo" styleClass="team-detail-logo"/>
-            <VBox spacing="2">
-                <Label fx:id="lblNombre" styleClass="view-title"/>
-                <Label fx:id="lblMeta" styleClass="hint"/>
+            <!-- ============================ HERO ============================ -->
+            <StackPane fx:id="hero" styleClass="team-hero">
+                <!-- Capas de fondo (base, textura y velo) las inyecta el
+                     controlador porque dependen del color del equipo. -->
+                <StackPane fx:id="marcoCoche" styleClass="team-hero-car"/>
+
+                <HBox styleClass="team-hero-content" spacing="18" alignment="BOTTOM_LEFT">
+                    <VBox spacing="6" alignment="BOTTOM_LEFT" HBox.hgrow="ALWAYS">
+                        <StackPane fx:id="marcoLogo" styleClass="team-hero-logo"/>
+                        <Label fx:id="lblNombre" styleClass="team-hero-name"/>
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Label fx:id="lblMeta" styleClass="team-hero-meta"/>
+                            <Label fx:id="lblChasis" styleClass="team-hero-chip"/>
+                        </HBox>
+                    </VBox>
+                    <HBox fx:id="retratosHero" spacing="-26" alignment="BOTTOM_RIGHT"/>
+                </HBox>
+
+                <Button fx:id="btnVolver" text="← VOLVER" styleClass="icon-button"
+                        onAction="#onVolver" StackPane.alignment="TOP_RIGHT">
+                    <StackPane.margin><Insets top="16" right="16"/></StackPane.margin>
+                </Button>
+            </StackPane>
+
+            <!-- ========================= PALMARÉS =========================== -->
+            <VBox styleClass="team-section" spacing="10">
+                <Label text="PALMARÉS" styleClass="team-section-title"/>
+                <HBox fx:id="palmares" spacing="10"/>
             </VBox>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Button fx:id="btnVolver" text="← VOLVER" styleClass="icon-button" onAction="#onVolver"/>
-        </HBox>
 
-        <!-- monoplaza + datos -->
-        <HBox spacing="18">
-            <StackPane fx:id="marcoCoche" styleClass="team-detail-car"/>
-            <VBox spacing="10" HBox.hgrow="ALWAYS">
-                <Label fx:id="lblModelo" styleClass="detail-kicker"/>
-                <Label fx:id="lblMotorCoche" styleClass="detail-help"/>
-                <HBox fx:id="fichaCoche" spacing="10"/>
+            <Region styleClass="team-rule"/>
+
+            <!-- ========================= MONOPLAZA ========================== -->
+            <VBox styleClass="team-section" spacing="10">
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Label text="MONOPLAZA" styleClass="team-section-title"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Label fx:id="lblRendimientoNota" styleClass="hint"/>
+                </HBox>
+                <HBox fx:id="prestaciones" spacing="10"/>
+                <VBox fx:id="rendimientoModos" spacing="6"/>
             </VBox>
-        </HBox>
 
-        <!-- pilotos -->
-        <VBox spacing="12" styleClass="detail-panel">
-            <Label text="PILOTOS" styleClass="detail-kicker"/>
-            <Label text="Pulsa sobre un piloto para abrir su ficha." styleClass="detail-help"/>
-            <FlowPane fx:id="tarjetasPilotos" hgap="14" vgap="14"/>
+            <Region styleClass="team-rule"/>
+
+            <!-- ==================== EN ESTE SIMULADOR ======================= -->
+            <VBox styleClass="team-section" spacing="10">
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Label text="EN ESTE SIMULADOR" styleClass="team-section-title"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Label fx:id="lblResumenSesiones" styleClass="hint"/>
+                </HBox>
+                <HBox fx:id="estadisticasSimulador" spacing="10"/>
+            </VBox>
+
+            <Region styleClass="team-rule"/>
+
+            <!-- ========================== PILOTOS =========================== -->
+            <VBox styleClass="team-section" spacing="10">
+                <Label text="PILOTOS" styleClass="team-section-title"/>
+                <FlowPane fx:id="tarjetasPilotos" hgap="14" vgap="14"/>
+            </VBox>
+
+            <Region styleClass="team-rule"/>
+
+            <!-- ================= SUMMARY + PROFILE ========================== -->
+            <HBox styleClass="team-section" spacing="14">
+                <VBox styleClass="team-glass" spacing="10" HBox.hgrow="ALWAYS">
+                    <Label text="TEAM SUMMARY" styleClass="team-section-title"/>
+                    <Label fx:id="lblDescripcion" wrapText="true" styleClass="team-prose"/>
+                    <HBox fx:id="resumenCifras" spacing="22"/>
+                </VBox>
+
+                <VBox fx:id="perfil" styleClass="team-glass" spacing="6"
+                      minWidth="300" maxWidth="360">
+                    <Label text="TEAM PROFILE" styleClass="team-section-title"/>
+                </VBox>
+            </HBox>
+
+            <Region styleClass="team-rule"/>
+
+            <!-- ========================== GALERÍA =========================== -->
+            <VBox styleClass="team-section" spacing="10">
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Label text="GALERÍA" styleClass="team-section-title"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Label text="Pulsa una imagen para ampliarla" styleClass="hint"/>
+                </HBox>
+                <TilePane fx:id="galeria" hgap="12" vgap="12" prefColumns="3"/>
+            </VBox>
         </VBox>
-    </VBox>
-</ScrollPane>
+    </ScrollPane>
+
+    <!-- Visor a pantalla completa; el controlador lo enciende al pulsar una
+         miniatura. Fuera del scroll para que no se desplace con él. -->
+    <StackPane fx:id="visor" styleClass="gallery-root" visible="false" managed="false">
+        <VBox alignment="CENTER" spacing="0">
+            <HBox styleClass="gallery-header" spacing="12" alignment="CENTER_LEFT">
+                <padding><Insets top="12" right="16" bottom="12" left="16"/></padding>
+                <Label fx:id="lblVisorTitulo" styleClass="gallery-title"/>
+                <Label fx:id="lblVisorEquipo" styleClass="gallery-team"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button fx:id="btnVisorAnterior" text="‹" styleClass="icon-button" onAction="#onAnterior"/>
+                <Label fx:id="lblVisorContador" styleClass="gallery-counter"/>
+                <Button fx:id="btnVisorSiguiente" text="›" styleClass="icon-button" onAction="#onSiguiente"/>
+                <Button text="✕" styleClass="icon-button" onAction="#onCerrarVisor"/>
+            </HBox>
+            <StackPane fx:id="escenarioVisor" styleClass="gallery-stage" VBox.vgrow="ALWAYS"/>
+        </VBox>
+    </StackPane>
+</StackPane>

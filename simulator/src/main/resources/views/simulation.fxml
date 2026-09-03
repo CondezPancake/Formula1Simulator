@@ -132,8 +132,25 @@
                         <VBox styleClass="hud-column" minWidth="340" HBox.hgrow="ALWAYS">
                             <!-- El trazado no es un PNG: lo dibuja CircuitoEnVivo
                                  sobre dos lienzos creados en el controlador. -->
-                            <StackPane fx:id="contenedorMapa" styleClass="race-map-canvas"
-                                       VBox.vgrow="ALWAYS"/>
+                            <StackPane VBox.vgrow="ALWAYS">
+                                <StackPane fx:id="contenedorMapa" styleClass="race-map-canvas"/>
+
+                                <!-- Rótulo de radio sobre el trazado, como la banda
+                                     inferior de la retransmisión. Solo lo enciende
+                                     RadioPresenter para lo que interrumpe. -->
+                                <HBox fx:id="rotuloRadio" styleClass="radio-rotulo"
+                                      spacing="10" alignment="CENTER_LEFT"
+                                      visible="false" managed="false" mouseTransparent="true"
+                                      maxWidth="-Infinity" maxHeight="-Infinity"
+                                      StackPane.alignment="BOTTOM_CENTER">
+                                    <StackPane.margin><Insets bottom="18"/></StackPane.margin>
+                                    <Label text="TEAM RADIO" styleClass="radio-rotulo-kicker"/>
+                                    <Label fx:id="rotuloRadioPiloto" text="—"
+                                           styleClass="radio-rotulo-piloto"/>
+                                    <Label fx:id="rotuloRadioTexto" text=""
+                                           styleClass="radio-rotulo-texto"/>
+                                </HBox>
+                            </StackPane>
 
                             <Region styleClass="hud-rule"/>
 
@@ -306,6 +323,26 @@
                                                 disable="true" onAction="#onVerEventos"
                                                 styleClass="event-details-button"/>
                                     </HBox>
+                                </VBox>
+
+                                <Region styleClass="hud-rule"/>
+
+                                <!-- Radio del box (HU-49). El hilo guarda la conversación
+                                     entera; lo urgente sale además sobre el trazado. -->
+                                <VBox styleClass="hud-group" spacing="6">
+                                    <HBox spacing="8" alignment="CENTER_LEFT">
+                                        <Region fx:id="radioBarraEquipo" styleClass="radio-barra-equipo"/>
+                                        <Label text="TEAM RADIO" styleClass="hud-group-title"/>
+                                        <Label fx:id="radioCabeceraPiloto" text="—"
+                                               styleClass="radio-cabecera-piloto"/>
+                                        <Region HBox.hgrow="ALWAYS"/>
+                                        <Label text="EN VIVO" styleClass="hud-hint"/>
+                                    </HBox>
+                                    <ScrollPane fx:id="radioScroll" fitToWidth="true"
+                                                styleClass="edge-to-edge,hud-scroll"
+                                                prefHeight="190" minHeight="110">
+                                        <VBox fx:id="radioHilo" spacing="6" styleClass="radio-hilo"/>
+                                    </ScrollPane>
                                 </VBox>
                             </VBox>
                         </ScrollPane>

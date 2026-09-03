@@ -22,3 +22,8 @@ docs/assets/F1_Recursos_Multimedia/img-circuitos/
 # -el fondo es un slideshow de fotos, ver docs/features/ui-menu.md- pero se
 # deja ignorado por si el fichero sigue en disco.
 media-src/
+
+# Binario de Piper (~40 MB) y modelo de voz (~60 MB): son la misma clase de
+# recurso pesado y regenerable que docs/assets de arriba. tools/setup_piper.ps1
+# los descarga; no tiene sentido llevarlos en el repo.
+tools/piper/

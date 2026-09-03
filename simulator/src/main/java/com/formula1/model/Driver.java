@@ -34,6 +34,9 @@ public class Driver {
     private String nacionalidad;
     private int victorias;
     private int campeonatos;
+    private String fechaNacimiento;
+    private String lugarNacimiento;
+    private String biografia;
 
     public Driver() {
         this.habilidades = new LinkedHashMap<>();
@@ -153,6 +156,30 @@ public class Driver {
 
     public void setCampeonatos(int campeonatos) {
         this.campeonatos = campeonatos;
+    }
+
+    public String getFechaNacimiento() {
+        return fechaNacimiento;
+    }
+
+    public void setFechaNacimiento(String fechaNacimiento) {
+        this.fechaNacimiento = fechaNacimiento;
+    }
+
+    public String getLugarNacimiento() {
+        return lugarNacimiento;
+    }
+
+    public void setLugarNacimiento(String lugarNacimiento) {
+        this.lugarNacimiento = lugarNacimiento;
+    }
+
+    public String getBiografia() {
+        return biografia;
+    }
+
+    public void setBiografia(String biografia) {
+        this.biografia = biografia;
     }
 
     @Override
