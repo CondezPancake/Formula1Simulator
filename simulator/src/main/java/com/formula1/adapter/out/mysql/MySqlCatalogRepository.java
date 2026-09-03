@@ -16,9 +16,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /** Mapea los catálogos normalizados de MySQL al modelo de dominio. */
 final class MySqlCatalogRepository {
@@ -295,15 +297,8 @@ final class MySqlCatalogRepository {
             ps.setString(6, vehicle.getImagen()); ps.executeUpdate();
         }
         int vehicleId = existingId(c, "vehiculo", "vehiculo_id", "modelo", vehicle.getModelo());
-        deleteChildren(c, vehicleId, "vehiculo_piloto", "vehiculo_id");
         deleteChildren(c, vehicleId, "vehiculo_rendimiento", "vehiculo_id");
-        try (PreparedStatement ps = c.prepareStatement(
-                "INSERT INTO vehiculo_piloto(vehiculo_id,piloto_id) VALUES(?,?)")) {
-            for (Integer driverId : vehicle.getPilotos()) {
-                ps.setInt(1, vehicleId); ps.setInt(2, driverId); ps.addBatch();
-            }
-            ps.executeBatch();
-        }
+        sincronizarPilotosVehiculo(c, vehicleId, vehicle.getPilotos());
         try (PreparedStatement base = c.prepareStatement(
                      "INSERT INTO vehiculo_rendimiento(vehiculo_id,modo_codigo,velocidad_promedio_kmh) VALUES(?,?,?)");
              PreparedStatement weather = c.prepareStatement("""
@@ -400,6 +395,52 @@ final class MySqlCatalogRepository {
             }
         }
         throw new DataAccessException("No existe " + table + " para " + value);
+    }
+
+    /**
+     * Actualiza vehiculo_piloto por diferencia en vez de borrar y reinsertar:
+     * {@code resultado_vuelta} mantiene una clave foránea compuesta contra
+     * {@code (vehiculo_id, piloto_id)}, así que borrar una pareja que ya
+     * corrió una sesión —aunque sea para reinsertarla igual a continuación—
+     * viola la integridad referencial. Solo se tocan las parejas que
+     * realmente cambian.
+     */
+    private void sincronizarPilotosVehiculo(Connection c, int vehicleId, List<Integer> pilotoIds) throws SQLException {
+        Set<Integer> actuales = new HashSet<>();
+        try (PreparedStatement ps = c.prepareStatement(
+                "SELECT piloto_id FROM vehiculo_piloto WHERE vehiculo_id=?")) {
+            ps.setInt(1, vehicleId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    actuales.add(rs.getInt(1));
+                }
+            }
+        }
+        Set<Integer> deseados = new HashSet<>(pilotoIds);
+
+        Set<Integer> aQuitar = new HashSet<>(actuales);
+        aQuitar.removeAll(deseados);
+        if (!aQuitar.isEmpty()) {
+            try (PreparedStatement ps = c.prepareStatement(
+                    "DELETE FROM vehiculo_piloto WHERE vehiculo_id=? AND piloto_id=?")) {
+                for (Integer pilotoId : aQuitar) {
+                    ps.setInt(1, vehicleId); ps.setInt(2, pilotoId); ps.addBatch();
+                }
+                ps.executeBatch();
+            }
+        }
+
+        Set<Integer> aAgregar = new HashSet<>(deseados);
+        aAgregar.removeAll(actuales);
+        if (!aAgregar.isEmpty()) {
+            try (PreparedStatement ps = c.prepareStatement(
+                    "INSERT INTO vehiculo_piloto(vehiculo_id,piloto_id) VALUES(?,?)")) {
+                for (Integer pilotoId : aAgregar) {
+                    ps.setInt(1, vehicleId); ps.setInt(2, pilotoId); ps.addBatch();
+                }
+                ps.executeBatch();
+            }
+        }
     }
 
     private void deleteChildren(Connection c, int id, String table, String column) throws SQLException {
