@@ -177,4 +177,14 @@ class MapaProgresoTest {
             anterior = lider;
         }
     }
+
+    @Test
+    void aceptaProgresoContinuoEntreDosMicrosectores() {
+        MapaProgreso mapa = new MapaProgreso();
+
+        MapaProgreso.Estado estado = mapa.construir(0.075, parrilla(2, gapsRealistas()));
+
+        assertEquals(2, estado.segmento());
+        assertEquals(0.075, estado.marcadores().get(0).fraccion(), 1e-9);
+    }
 }

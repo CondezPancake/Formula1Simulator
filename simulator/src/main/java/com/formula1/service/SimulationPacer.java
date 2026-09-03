@@ -12,6 +12,7 @@ import java.util.concurrent.locks.LockSupport;
 final class SimulationPacer {
 
     private static final long MAXIMA_ESPERA_NANOS = 50_000_000L;
+    static final int FOTOGRAMAS_POR_SEGUNDO = 20;
 
     private final long duracionNanos;
     private final BooleanSupplier finalizarSolicitado;
@@ -22,6 +23,16 @@ final class SimulationPacer {
     SimulationPacer(int duracionSegundos, BooleanSupplier finalizarSolicitado) {
         this(duracionSegundos * 1_000_000_000L, finalizarSolicitado,
                 System::nanoTime, LockSupport::parkNanos);
+    }
+
+    /**
+     * Cantidad de fotos que publicará la reproducción. Mantiene al menos una
+     * por microsector incluso en sesiones configuradas con solo un segundo.
+     */
+    int totalFotogramas(int minimo) {
+        long porCadencia = Math.max(1,
+                (duracionNanos * FOTOGRAMAS_POR_SEGUNDO + 999_999_999L) / 1_000_000_000L);
+        return (int) Math.min(Integer.MAX_VALUE, Math.max(minimo, porCadencia));
     }
 
     SimulationPacer(long duracionNanos, BooleanSupplier finalizarSolicitado,
