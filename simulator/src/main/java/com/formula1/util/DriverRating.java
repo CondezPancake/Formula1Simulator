@@ -1,6 +1,6 @@
 package com.formula1.util;
 
-import com.formula1.model.Driver;
+import com.formula1.domain.model.Driver;
 
 /**
  * Valoración general (OVR) del piloto, al estilo de los videojuegos de manager.
