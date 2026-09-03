@@ -1,5 +1,6 @@
 package com.formula1.service;
 
+import com.formula1.data.CatalogPort;
 import com.formula1.data.DataStore;
 import com.formula1.model.Circuit;
 import com.formula1.model.Driver;
@@ -18,13 +19,13 @@ import java.util.stream.Collectors;
 /** Alta, consulta, búsqueda y estadísticas de circuitos. */
 public class CircuitService {
 
-    private final DataStore datos;
+    private final CatalogPort datos;
 
     public CircuitService() {
         this(DataStore.getInstance());
     }
 
-    public CircuitService(DataStore datos) {
+    public CircuitService(CatalogPort datos) {
         this.datos = datos;
     }
 

@@ -1,5 +1,6 @@
 package com.formula1.service;
 
+import com.formula1.data.CatalogPort;
 import com.formula1.data.DataStore;
 import com.formula1.model.Driver;
 import com.formula1.model.Team;
@@ -13,13 +14,13 @@ import java.util.stream.Collectors;
 /** Alta, consulta, búsqueda, edición y baja de escuderías. */
 public class TeamService {
 
-    private final DataStore datos;
+    private final CatalogPort datos;
 
     public TeamService() {
         this(DataStore.getInstance());
     }
 
-    public TeamService(DataStore datos) {
+    public TeamService(CatalogPort datos) {
         this.datos = datos;
     }
 

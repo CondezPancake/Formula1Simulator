@@ -1,6 +1,7 @@
 package com.formula1.service;
 
 import com.formula1.data.DataStore;
+import com.formula1.data.QualifyingDataPort;
 import com.formula1.event.EventContext;
 import com.formula1.event.EventContextFactory;
 import com.formula1.event.EventEffectService;
@@ -47,7 +48,7 @@ public class QualifyingService {
 
     static final int SEGMENTOS_EVOLUCION = 20;
 
-    private final DataStore datos;
+    private final QualifyingDataPort datos;
     private final DriverService pilotos;
     private final VehicleService vehiculos;
     private final CircuitService circuitos;
@@ -73,35 +74,35 @@ public class QualifyingService {
                 new DynamicWeatherService(), new EventManager(eventSeed));
     }
 
-    public QualifyingService(DataStore datos, LapTimeCalculator calculadora) {
+    public QualifyingService(QualifyingDataPort datos, LapTimeCalculator calculadora) {
         this(datos, calculadora, new DynamicWeatherService());
     }
 
-    QualifyingService(DataStore datos, LapTimeCalculator calculadora,
+    QualifyingService(QualifyingDataPort datos, LapTimeCalculator calculadora,
                       DynamicWeatherService climaDinamico) {
         this(datos, calculadora, climaDinamico, new EventManager());
     }
 
-    QualifyingService(DataStore datos, LapTimeCalculator calculadora,
+    QualifyingService(QualifyingDataPort datos, LapTimeCalculator calculadora,
                       DynamicWeatherService climaDinamico, EventManager eventos) {
         this(datos, calculadora, climaDinamico, eventos, new PitStopService());
     }
 
-    QualifyingService(DataStore datos, LapTimeCalculator calculadora,
+    QualifyingService(QualifyingDataPort datos, LapTimeCalculator calculadora,
                       DynamicWeatherService climaDinamico, EventManager eventos,
                       PitStopService paradasBoxes) {
         this(datos, calculadora, climaDinamico, eventos, paradasBoxes,
                 new ContextualPitStopPolicy());
     }
 
-    QualifyingService(DataStore datos, LapTimeCalculator calculadora,
+    QualifyingService(QualifyingDataPort datos, LapTimeCalculator calculadora,
                       DynamicWeatherService climaDinamico, EventManager eventos,
                       PitStopService paradasBoxes, PitStopPolicy politicaPitStop) {
         this(datos, calculadora, climaDinamico, eventos, paradasBoxes,
                 politicaPitStop, new TireStrategyService());
     }
 
-    QualifyingService(DataStore datos, LapTimeCalculator calculadora,
+    QualifyingService(QualifyingDataPort datos, LapTimeCalculator calculadora,
                       DynamicWeatherService climaDinamico, EventManager eventos,
                       PitStopService paradasBoxes, PitStopPolicy politicaPitStop,
                       TireStrategyService estrategiaNeumaticos) {

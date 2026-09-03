@@ -21,8 +21,8 @@ import java.util.Map;
 /** Mapea los catálogos normalizados de MySQL al modelo de dominio. */
 final class MySqlCatalogRepository {
 
-    PersistencePort.CatalogData load(Connection connection) throws SQLException {
-        return new PersistencePort.CatalogData(
+    CatalogPersistencePort.CatalogData load(Connection connection) throws SQLException {
+        return new CatalogPersistencePort.CatalogData(
                 loadDrivers(connection), loadTeams(connection),
                 loadVehicles(connection), loadCircuits(connection));
     }

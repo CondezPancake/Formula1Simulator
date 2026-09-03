@@ -1,41 +1,15 @@
 package com.formula1.data;
 
-import com.formula1.model.Circuit;
-import com.formula1.model.Driver;
-import com.formula1.model.QualifyingSession;
-import com.formula1.model.Team;
-import com.formula1.model.Vehicle;
-
-import java.util.List;
-
-/** Puerto que mantiene JDBC fuera del almacén de aplicación y del dominio. */
-public interface PersistencePort {
-
-    CatalogData loadCatalogs();
-
-    List<QualifyingSession> loadSessions();
-
-    void saveDriver(Driver driver);
-
-    void deleteDriver(int id);
-
-    void saveTeam(Team team);
-
-    void deleteTeam(String name);
-
-    void saveVehicle(Vehicle vehicle);
-
-    void deleteVehicle(String model);
-
-    void saveCircuit(Circuit circuit);
-
-    void deleteCircuit(String name);
-
-    void saveSession(QualifyingSession session);
-
-    void deleteSession(String id);
-
-    record CatalogData(List<Driver> drivers, List<Team> teams,
-                       List<Vehicle> vehicles, List<Circuit> circuits) {
-    }
+/**
+ * Puerto que mantiene JDBC fuera del almacén de aplicación y del dominio.
+ *
+ * Fase 2 de la migración a hexagonal: el contrato se dividió por capacidad en
+ * {@link CatalogPersistencePort} y {@link SessionPersistencePort}. Esta
+ * interfaz queda como fachada de compatibilidad —la sigue implementando
+ * {@link MySqlPersistenceAdapter} y la sigue consumiendo {@link DataStore}
+ * como un único adaptador— para no tocar todavía la composición ni el
+ * paquete. Un nuevo adaptador que solo necesite una de las dos capacidades
+ * puede implementar el puerto correspondiente sin arrastrar el otro.
+ */
+public interface PersistencePort extends CatalogPersistencePort, SessionPersistencePort {
 }

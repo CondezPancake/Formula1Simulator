@@ -1,5 +1,6 @@
 package com.formula1.service;
 
+import com.formula1.data.CatalogPort;
 import com.formula1.data.DataStore;
 import com.formula1.model.Driver;
 import com.formula1.model.Vehicle;
@@ -14,13 +15,13 @@ import java.util.stream.Collectors;
 /** Alta, consulta, búsqueda, comparación y asignación de pilotos a vehículos. */
 public class VehicleService {
 
-    private final DataStore datos;
+    private final CatalogPort datos;
 
     public VehicleService() {
         this(DataStore.getInstance());
     }
 
-    public VehicleService(DataStore datos) {
+    public VehicleService(CatalogPort datos) {
         this.datos = datos;
     }
 

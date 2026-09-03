@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * Se usan colecciones concurrentes porque los hilos de fondo leen mientras
  * el hilo de JavaFX escribe.
  */
-public final class DataStore {
+public final class DataStore implements QualifyingDataPort {
 
     private static DataStore instancia;
 
@@ -142,16 +142,19 @@ public final class DataStore {
 
     // --- pilotos ---------------------------------------------------------
 
+    @Override
     public Map<Integer, Driver> pilotos() {
         return pilotos;
     }
 
+    @Override
     public void guardarPiloto(Driver piloto) {
         pilotos.put(piloto.getId(), piloto);
         sincronizarPilotosDeEquipos();
         persistir(() -> persistence.saveDriver(piloto));
     }
 
+    @Override
     public void eliminarPiloto(int id) {
         pilotos.remove(id);
         sincronizarPilotosDeEquipos();
@@ -178,15 +181,18 @@ public final class DataStore {
 
     // --- equipos ---------------------------------------------------------
 
+    @Override
     public Map<String, Team> equipos() {
         return equipos;
     }
 
+    @Override
     public void guardarEquipo(Team equipo) {
         equipos.put(equipo.getNombre(), equipo);
         persistir(() -> persistence.saveTeam(equipo));
     }
 
+    @Override
     public void eliminarEquipo(String nombre) {
         equipos.remove(nombre);
         persistir(() -> persistence.deleteTeam(nombre));
@@ -194,15 +200,18 @@ public final class DataStore {
 
     // --- vehículos -------------------------------------------------------
 
+    @Override
     public Map<String, Vehicle> vehiculos() {
         return vehiculos;
     }
 
+    @Override
     public void guardarVehiculo(Vehicle vehiculo) {
         vehiculos.put(vehiculo.getModelo(), vehiculo);
         persistir(() -> persistence.saveVehicle(vehiculo));
     }
 
+    @Override
     public void eliminarVehiculo(String modelo) {
         vehiculos.remove(modelo);
         persistir(() -> persistence.deleteVehicle(modelo));
@@ -210,15 +219,18 @@ public final class DataStore {
 
     // --- circuitos -------------------------------------------------------
 
+    @Override
     public Map<String, Circuit> circuitos() {
         return circuitos;
     }
 
+    @Override
     public void guardarCircuito(Circuit circuito) {
         circuitos.put(circuito.getNombre(), circuito);
         persistir(() -> persistence.saveCircuit(circuito));
     }
 
+    @Override
     public void eliminarCircuito(String nombre) {
         circuitos.remove(nombre);
         persistir(() -> persistence.deleteCircuit(nombre));
@@ -226,10 +238,12 @@ public final class DataStore {
 
     // --- sesiones --------------------------------------------------------
 
+    @Override
     public List<QualifyingSession> sesiones() {
         return sesiones;
     }
 
+    @Override
     public void guardarSesion(QualifyingSession sesion) {
         sesiones.add(sesion);
         persistir(() -> persistence.saveSession(sesion));
