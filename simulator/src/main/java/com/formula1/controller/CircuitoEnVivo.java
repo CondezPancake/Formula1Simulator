@@ -77,6 +77,7 @@ public final class CircuitoEnVivo {
     private MapaProgreso.Estado anterior;
     private long inicioEaseNanos;
     private long duracionEaseNanos = EASE_MINIMO_NS;
+    private long ultimaPublicacionNanos;
     private boolean sesionViva;
     private Integer pilotoUsuario;
     private double anchoHorneado;
@@ -159,6 +160,7 @@ public final class CircuitoEnVivo {
         this.duracionEaseNanos = Math.max(EASE_MINIMO_NS, Math.min(EASE_MAXIMO_NS,
                 duracionSegundos * 1_000_000_000L / MapaProgreso.TOTAL_SEGMENTOS));
         this.inicioEaseNanos = System.nanoTime();
+        this.ultimaPublicacionNanos = 0;
         temporizador.start();
     }
 
@@ -167,11 +169,18 @@ public final class CircuitoEnVivo {
      * mismo objeto que acaba de poblar la torre de tiempos.
      */
     public void publicar(MapaProgreso.Estado estado) {
+        long ahora = System.nanoTime();
         // Se parte de donde están los coches ahora, no del objetivo anterior:
         // así un segmento que llega tarde o repetido no da tirón ni rebote.
         this.anterior = instantanea();
         this.objetivo.set(estado);
-        this.inicioEaseNanos = System.nanoTime();
+        if (ultimaPublicacionNanos > 0) {
+            long intervalo = ahora - ultimaPublicacionNanos;
+            this.duracionEaseNanos = Math.max(EASE_MINIMO_NS,
+                    Math.min(EASE_MAXIMO_NS, intervalo));
+        }
+        this.ultimaPublicacionNanos = ahora;
+        this.inicioEaseNanos = ahora;
         if (sesionViva) {
             temporizador.start();
         }

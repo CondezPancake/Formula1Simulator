@@ -11,6 +11,7 @@ import com.formula1.model.EventImpact;
 import com.formula1.model.EventOccurrence;
 import com.formula1.model.LapResult;
 import com.formula1.model.LapStatus;
+import com.formula1.model.LiveClassificationFrame;
 import com.formula1.model.PitStopRecord;
 import com.formula1.model.QualifyingSession;
 import com.formula1.model.SectorTimes;
@@ -321,9 +322,10 @@ public class QualifyingService {
     }
 
     /**
-     * Reproduce una vuelta común para toda la parrilla. Cada fotograma usa el
-     * tiempo acumulado de los sectores de cada piloto, por lo que la torre se
-     * reordena en cuanto uno gana o pierde la posición en pista.
+     * Reproduce una vuelta común para toda la parrilla. Los fotogramas visuales
+     * son más frecuentes que los microsectores del dominio: la torre se mueve
+     * con fluidez, mientras eventos, telemetría y estrategia avanzan una sola
+     * vez al cruzar cada microsector.
      */
     private EstadoReproduccion reproducirVueltaEnVivo(
                                         List<LapResult> resultados,
@@ -338,58 +340,73 @@ public class QualifyingService {
                                         CambiosNeumaticosEnVivo observadorCambiosNeumaticos) {
         List<LapResult> ultimaClasificacion = List.of();
         int segmentosGenerados = 0;
-        for (int indice = 0; indice < SEGMENTOS_EVOLUCION; indice++) {
-            int segmento = indice + 1;
-            TrackSector sector = TrackSector.desdeSegmento(segmento, SEGMENTOS_EVOLUCION);
-            TrackSector sectorAnterior = segmento == 1 ? TrackSector.NONE
-                    : TrackSector.desdeSegmento(segmento - 1, SEGMENTOS_EVOLUCION);
-            if (observadorEventos != null && sector != sectorAnterior) {
-                eventosSesion.stream()
-                        .filter(EventOccurrence::ocurrio)
-                        .filter(evento -> evento.sector() == sector)
-                        .forEach(observadorEventos::actualizar);
+        int totalFotogramas = controlSimulacion == null
+                ? SEGMENTOS_EVOLUCION
+                : controlSimulacion.totalFotogramas(SEGMENTOS_EVOLUCION);
+        for (int fotograma = 1; fotograma <= totalFotogramas; fotograma++) {
+            double progreso = fotograma / (double) totalFotogramas;
+            double progresoEnSegmentos = progreso * SEGMENTOS_EVOLUCION;
+            int segmento = Math.min(SEGMENTOS_EVOLUCION,
+                    Math.max(1, (int) Math.ceil(progresoEnSegmentos)));
+            boolean nuevoSegmento = segmento > segmentosGenerados;
+
+            if (nuevoSegmento) {
+                TrackSector sector = TrackSector.desdeSegmento(segmento, SEGMENTOS_EVOLUCION);
+                TrackSector sectorAnterior = segmento == 1 ? TrackSector.NONE
+                        : TrackSector.desdeSegmento(segmento - 1, SEGMENTOS_EVOLUCION);
+                if (observadorEventos != null && sector != sectorAnterior) {
+                    eventosSesion.stream()
+                            .filter(EventOccurrence::ocurrio)
+                            .filter(evento -> evento.sector() == sector)
+                            .forEach(observadorEventos::actualizar);
+                }
+                List<LapResult> clasificacionAntesDeBoxes =
+                        clasificacionEnSegmento(resultados, segmento);
+                clasificacionAntesDeBoxes.stream()
+                        .filter(resultado -> !paradasBoxes.hasStop(resultado.getPilotoId()))
+                        .map(resultado -> politicaPitStop.evaluate(
+                                resultado, segmento, SEGMENTOS_EVOLUCION))
+                        .flatMap(Optional::stream)
+                        .forEach(decision -> paradasBoxes.start(
+                                decision, clasificacionAntesDeBoxes,
+                                segmento, SEGMENTOS_EVOLUCION));
+                paradasBoxes.advance(segmento);
+                ultimaClasificacion = clasificacionEnSegmento(resultados, segmento);
+                List<PitStopRecord> actualizacionesBoxes =
+                        paradasBoxes.collectUpdates(ultimaClasificacion);
+                if (observadorPitStops != null) {
+                    actualizacionesBoxes.forEach(observadorPitStops::actualizar);
+                }
+                List<LapResult> clasificacionActual = ultimaClasificacion;
+                List<TireChangeRecord> cambios = actualizacionesBoxes.stream()
+                        .flatMap(parada -> clasificacionActual.stream()
+                                .filter(resultado -> resultado.getPilotoId() == parada.pilotoId())
+                                .findFirst()
+                                .flatMap(resultado -> estrategiaNeumaticos.changeDuring(
+                                        parada, resultado))
+                                .stream())
+                        .toList();
+                if (observadorCambiosNeumaticos != null) {
+                    cambios.forEach(observadorCambiosNeumaticos::actualizar);
+                }
+                if (evolucion != null && segmento <= evolucionSeleccionada.size()) {
+                    evolucion.actualizar(evolucionSeleccionada.get(segmento - 1));
+                }
+                if (telemetria != null && segmento <= telemetriaSeleccionada.size()) {
+                    telemetria.actualizar(telemetriaSeleccionada.get(segmento - 1));
+                }
+                segmentosGenerados = segmento;
             }
-            List<LapResult> clasificacionAntesDeBoxes =
-                    clasificacionEnSegmento(resultados, segmento);
-            clasificacionAntesDeBoxes.stream()
-                    .filter(resultado -> !paradasBoxes.hasStop(resultado.getPilotoId()))
-                    .map(resultado -> politicaPitStop.evaluate(
-                            resultado, segmento, SEGMENTOS_EVOLUCION))
-                    .flatMap(Optional::stream)
-                    .forEach(decision -> paradasBoxes.start(
-                            decision, clasificacionAntesDeBoxes,
-                            segmento, SEGMENTOS_EVOLUCION));
-            paradasBoxes.advance(segmento);
-            ultimaClasificacion = clasificacionEnSegmento(resultados, segmento);
-            List<PitStopRecord> actualizacionesBoxes =
-                    paradasBoxes.collectUpdates(ultimaClasificacion);
-            if (observadorPitStops != null) {
-                actualizacionesBoxes.forEach(observadorPitStops::actualizar);
-            }
-            List<LapResult> clasificacionActual = ultimaClasificacion;
-            List<TireChangeRecord> cambios = actualizacionesBoxes.stream()
-                    .flatMap(parada -> clasificacionActual.stream()
-                            .filter(resultado -> resultado.getPilotoId() == parada.pilotoId())
-                            .findFirst()
-                            .flatMap(resultado -> estrategiaNeumaticos.changeDuring(
-                                    parada, resultado))
-                            .stream())
-                    .toList();
-            if (observadorCambiosNeumaticos != null) {
-                cambios.forEach(observadorCambiosNeumaticos::actualizar);
-            }
+
+            ultimaClasificacion = clasificacionEnProgreso(
+                    resultados, progresoEnSegmentos, segmento);
             if (clasificacionEnVivo != null) {
-                clasificacionEnVivo.actualizar(ultimaClasificacion);
+                clasificacionEnVivo.actualizar(new LiveClassificationFrame(
+                        fotograma, totalFotogramas, segmento, SEGMENTOS_EVOLUCION,
+                        progreso, ultimaClasificacion));
             }
-            if (evolucion != null && indice < evolucionSeleccionada.size()) {
-                evolucion.actualizar(evolucionSeleccionada.get(indice));
-            }
-            if (telemetria != null && indice < telemetriaSeleccionada.size()) {
-                telemetria.actualizar(telemetriaSeleccionada.get(indice));
-            }
-            segmentosGenerados = segmento;
             if (controlSimulacion != null
-                    && !controlSimulacion.completarFotograma(segmento, SEGMENTOS_EVOLUCION)) {
+                    && !controlSimulacion.completarFotograma(fotograma, totalFotogramas)) {
                 break;
             }
         }
@@ -415,35 +432,44 @@ public class QualifyingService {
 
     private List<LapResult> clasificacionEnSegmento(List<LapResult> resultados,
                                                      int segmento) {
+        return clasificacionEnProgreso(resultados, segmento, segmento);
+    }
+
+    private List<LapResult> clasificacionEnProgreso(List<LapResult> resultados,
+                                                     double progresoEnSegmentos,
+                                                     int segmentoActual) {
         List<LapResult> parcial = resultados.stream()
-                .map(resultado -> resultadoEnSegmento(resultado, segmento))
+                .map(resultado -> resultadoEnProgreso(
+                        resultado, progresoEnSegmentos, segmentoActual))
                 .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
         ordenarParrilla(parcial);
         return List.copyOf(parcial);
     }
 
-    private LapResult resultadoEnSegmento(LapResult resultado, int segmento) {
+    private LapResult resultadoEnProgreso(LapResult resultado,
+                                          double progresoEnSegmentos,
+                                          int segmentoActual) {
         LapResult parcial = copiarResultado(resultado);
-        parcial.setTiempoSegundos(tiempoAcumulado(resultado, segmento));
+        parcial.setTiempoSegundos(tiempoAcumulado(resultado, progresoEnSegmentos));
         parcial.setTiempoSegundos(parcial.getTiempoSegundos()
                 + paradasBoxes.timeLossFor(resultado.getPilotoId())
                 + estrategiaNeumaticos.timeAdjustmentFor(
                         resultado.getPilotoId(), resultado.getTiempoSegundos(),
-                        segmento, SEGMENTOS_EVOLUCION));
+                        segmentoActual, SEGMENTOS_EVOLUCION));
         parcial.setDesgasteEstimado(estrategiaNeumaticos.wearFor(
                 resultado.getPilotoId(), resultado.getDesgasteEstimado(),
-                segmento, SEGMENTOS_EVOLUCION));
+                segmentoActual, SEGMENTOS_EVOLUCION));
 
         boolean incidenteAlcanzado = !resultado.isVueltaValida()
                 && (resultado.getSectorIncidente() == TrackSector.NONE
-                    || resultado.getSectorIncidente().contiene(segmento, SEGMENTOS_EVOLUCION)
-                    || TrackSector.desdeSegmento(segmento, SEGMENTOS_EVOLUCION).ordinal()
+                    || resultado.getSectorIncidente().contiene(segmentoActual, SEGMENTOS_EVOLUCION)
+                    || TrackSector.desdeSegmento(segmentoActual, SEGMENTOS_EVOLUCION).ordinal()
                         > resultado.getSectorIncidente().ordinal());
         parcial.setEstadoVuelta(incidenteAlcanzado
                 ? resultado.getEstadoVuelta() : LapStatus.VALID);
         parcial.setSectorIncidente(incidenteAlcanzado
                 ? resultado.getSectorIncidente() : TrackSector.NONE);
-        parcial.setEventos(eventosHasta(resultado.getEventos(), segmento));
+        parcial.setEventos(eventosHasta(resultado.getEventos(), segmentoActual));
         return parcial;
     }
 
@@ -501,26 +527,27 @@ public class QualifyingService {
                 .conAjusteTiempo(TrackSector.SECTOR_3, hastaMeta - hastaS2);
     }
 
-    private double tiempoAcumulado(LapResult resultado, int segmento) {
+    private double tiempoAcumulado(LapResult resultado, double progresoEnSegmentos) {
         double tiempoBase;
         if (!resultado.hasSectorTimes()) {
-            tiempoBase = resultado.getTiempoSegundos() * segmento / SEGMENTOS_EVOLUCION;
+            tiempoBase = resultado.getTiempoSegundos()
+                    * progresoEnSegmentos / SEGMENTOS_EVOLUCION;
         } else {
             var sectores = resultado.getSectorTimes();
-            if (segmento <= 7) {
-                tiempoBase = sectores.sector1Seconds() * segmento / 7.0;
-            } else if (segmento <= 14) {
+            if (progresoEnSegmentos <= 7) {
+                tiempoBase = sectores.sector1Seconds() * progresoEnSegmentos / 7.0;
+            } else if (progresoEnSegmentos <= 14) {
                 tiempoBase = sectores.sector1Seconds()
-                        + sectores.sector2Seconds() * (segmento - 7) / 7.0;
+                        + sectores.sector2Seconds() * (progresoEnSegmentos - 7) / 7.0;
             } else {
                 tiempoBase = sectores.sector1Seconds() + sectores.sector2Seconds()
-                        + sectores.sector3Seconds() * (segmento - 14) / 6.0;
+                        + sectores.sector3Seconds() * (progresoEnSegmentos - 14) / 6.0;
             }
         }
 
         // Tráfico, frenada y tracción cambian el orden en microsectores. La
         // envolvente vale cero en meta, preservando exactamente el resultado final.
-        double progreso = segmento / (double) SEGMENTOS_EVOLUCION;
+        double progreso = progresoEnSegmentos / SEGMENTOS_EVOLUCION;
         double variacionMicrosector = 1.25 * Math.sin(Math.PI * progreso)
                 * Math.sin(resultado.getPilotoId() * 1.37 + 4 * Math.PI * progreso);
         return Math.max(0.001, tiempoBase + variacionMicrosector);
@@ -658,11 +685,23 @@ public class QualifyingService {
                         telemetria,
                         observadorPista,
                         clasificacionEnVivo,
-                        (fotograma, total) -> {
-                            updateProgress(fotograma, total);
-                            updateMessage("Simulación en vivo · segmento "
-                                    + fotograma + " de " + total);
-                            return regulador.completarFotograma(fotograma, total);
+                        new ControlSimulacion() {
+                            @Override
+                            public int totalFotogramas(int minimo) {
+                                return regulador.totalFotogramas(minimo);
+                            }
+
+                            @Override
+                            public boolean completarFotograma(int fotograma, int total) {
+                                updateProgress(fotograma, total);
+                                int segmento = Math.min(SEGMENTOS_EVOLUCION,
+                                        Math.max(1, (int) Math.ceil(
+                                                fotograma * SEGMENTOS_EVOLUCION
+                                                        / (double) total)));
+                                updateMessage("Simulación en vivo · segmento "
+                                        + segmento + " de " + SEGMENTOS_EVOLUCION);
+                                return regulador.completarFotograma(fotograma, total);
+                            }
                         },
                         observadorEventos,
                         observadorPitStops,
@@ -918,10 +957,10 @@ public class QualifyingService {
         void actualizar(TrackEvolutionSnapshot muestra);
     }
 
-    /** Clasificación provisional, ya ordenada, tras completar cada vuelta. */
+    /** Clasificación provisional y progreso continuo de la reproducción. */
     @FunctionalInterface
     public interface ClasificacionEnVivo {
-        void actualizar(List<LapResult> resultados);
+        void actualizar(LiveClassificationFrame fotograma);
     }
 
     /** Evento de cualquier piloto, emitido al comenzar el sector afectado. */
@@ -945,6 +984,10 @@ public class QualifyingService {
     /** Punto de extensión del reloj: permite temporizar o finalizar sin acoplar la UI. */
     @FunctionalInterface
     interface ControlSimulacion {
+        default int totalFotogramas(int minimo) {
+            return minimo;
+        }
+
         boolean completarFotograma(int fotograma, int totalFotogramas);
     }
 }

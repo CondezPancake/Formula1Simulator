@@ -268,6 +268,16 @@
     -fx-border-width: 0 0 2 0;
 }
 
+/* Modena añade un halo azul fuera del botón cuando recibe foco. El texto y
+   la pestaña activa ya comunican el estado sin alterar el ancho visual. */
+.top-nav-item:focused {
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-border-color: transparent;
+}
+
 .top-nav-item:hover {
     -fx-text-fill: -fx-text-1;
     -fx-background-color: #131318;
@@ -310,6 +320,23 @@
     -fx-min-height: 44;
     -fx-border-color: transparent;
     -fx-border-width: 0 0 2 0;
+}
+
+/* Conserva el foco de teclado, pero elimina los filetes azules laterales que
+   el skin predeterminado dibuja alrededor de una pestaña enfocada. */
+.subnav > .tab-header-area > .headers-region > .tab:focused {
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-border-color: transparent;
+}
+
+/* El skin Modena dibuja el foco real en un hijo de la pestaña seleccionada,
+   no sobre `.tab`: eran los dos filetes verticales visibles a sus lados. */
+.subnav:focused > .tab-header-area > .headers-region > .tab:selected .focus-indicator {
+    -fx-border-color: transparent;
+    -fx-background-color: transparent;
 }
 
 .subnav > .tab-header-area > .headers-region > .tab .tab-label {
@@ -2576,13 +2603,11 @@
 .post-results-table .post-pit-count {
     -fx-text-fill: -fx-accent-amber;
     -fx-font-weight: bold;
-    -fx-alignment: CENTER;
 }
 
 .post-results-table .post-event-count {
     -fx-text-fill: #FF625D;
     -fx-font-weight: bold;
-    -fx-alignment: CENTER;
 }
 
 .post-detail {
