@@ -1,4 +1,6 @@
-package com.formula1.data;
+package com.formula1.adapter.out.mysql;
+
+import com.formula1.adapter.out.DataAccessException;
 
 import java.sql.Connection;
 import java.sql.SQLException;

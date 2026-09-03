@@ -1,6 +1,6 @@
 package com.formula1.controller;
 
-import com.formula1.data.DataStore;
+import com.formula1.adapter.out.memory.DataStore;
 import com.formula1.application.usecase.CircuitService;
 import com.formula1.application.usecase.TeamService;
 import com.formula1.application.usecase.VehicleService;

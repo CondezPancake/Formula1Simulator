@@ -145,11 +145,48 @@ cuenta que los lotes anteriores, cero regresiones, a pesar de ser el lote
 con más superficie de cambio hasta ahora (21 clases repartidas, 10 miembros
 ensanchados, 9 archivos de test reubicados).
 
+## Lote 4 — adaptadores MySQL, seed y `DataStore`
+
+`com.formula1.data` (10 clases) se reparte en tres destinos, resolviendo la
+decisión que el diagnóstico original dejaba abierta sobre dónde va
+`DataStore`:
+
+- **`adapter/out/mysql`**: `MySqlPersistenceAdapter`,
+  `MySqlCatalogPersistenceAdapter`, `MySqlSessionPersistenceAdapter`,
+  `MySqlCatalogRepository`, `MySqlSessionRepository`, `DatabaseConnection`,
+  `JdbcTransactionSupport` — el JDBC puro, tal como pedía la tabla del
+  diagnóstico.
+- **`adapter/out/seed`**: `SeedLoader`.
+- **`adapter/out/memory`**: `DataStore`. El diagnóstico no lo ubicaba —era,
+  literalmente, "el punto crítico" sin destino asignado. Se decide aquí:
+  `DataStore` es un adaptador de salida como los otros dos (implementa
+  `CatalogPort`, `SessionHistoryPort`, `QualifyingDataPort`,
+  `PreparedConfigPort`), solo que en memoria y con `MySqlPersistenceAdapter`
+  detrás como persistencia duradera — de ahí que viva junto a `mysql/` y
+  `seed/` bajo `adapter/out`, en su propio subpaquete porque es una
+  responsabilidad distinta (caché + orquestación de fallback), no
+  intercambiable con los otros dos.
+- **`adapter/out/DataAccessException`**: se queda en la raíz de `adapter.out`
+  porque la lanzan los tres grupos (`mysql`, `seed`, y `DataStore` mismo)
+  — es la excepción compartida de toda la capa de adaptadores de salida, no
+  de uno solo.
+
+Mecánica idéntica a los lotes anteriores: mover, corregir `package`,
+sustituir referencias completas, y siete importaciones nuevas para
+referencias que compartían paquete con nombre simple (`DataStore` usaba
+`SeedLoader`, `DatabaseConnection`, `MySqlPersistenceAdapter` y
+`DataAccessException` así; los cuatro adaptadores/repos JDBC y `SeedLoader`
+usaban `DataAccessException` así). Un solo test
+(`MySqlPersistenceAdapterTest`, movido a `test/.../adapter/out/mysql`)
+necesitó un import adicional para `DataStore.enMemoria()`.
+
+`mvn clean test`: 174/0/0, 4 *skipped* (MySQL) — misma cuenta, cero
+regresiones. `com.formula1.data` queda vacío y eliminado.
+
 ## Lo que falta
 
-El siguiente lote es **adaptadores MySQL + `DataStore`** (el de mayor
-riesgo: `DataStore` es la clase más referenciada de todo el proyecto),
-después **seeds**, después **controladores/`Navigator`/JavaFX** (el único
-que toca los 20 FXML a la vez que las clases, dejado para el final a
-propósito), y por último **`App`/`Main`/`AppComposition` → `bootstrap`** y
-la revisión caso a caso de `util/`.
+El siguiente lote es **controladores/`Navigator`/`QualifyingSessionTaskFactory`/
+`SimulationPacer` → `adapter/in/javafx`** (el único que toca los 20 FXML a
+la vez que las clases, dejado para el final a propósito), y por último
+**`App`/`Main`/`AppComposition` → `bootstrap`** y la revisión caso a caso de
+`util/`.

@@ -1,5 +1,6 @@
-package com.formula1.data;
+package com.formula1.adapter.out.mysql;
 
+import com.formula1.adapter.out.DataAccessException;
 import com.formula1.domain.model.AerodynamicLoad;
 import com.formula1.domain.model.DynamicWeatherState;
 import com.formula1.domain.model.EventImpact;

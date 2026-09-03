@@ -1,6 +1,6 @@
 package com.formula1.controller;
 
-import com.formula1.data.DataStore;
+import com.formula1.adapter.out.memory.DataStore;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;

@@ -1,6 +1,6 @@
 package com.formula1.application.usecase;
 
-import com.formula1.data.DataStore;
+import com.formula1.adapter.out.memory.DataStore;
 import com.formula1.domain.service.DynamicWeatherService;
 import com.formula1.domain.service.LapTimeCalculator;
 import com.formula1.domain.service.ValidationException;

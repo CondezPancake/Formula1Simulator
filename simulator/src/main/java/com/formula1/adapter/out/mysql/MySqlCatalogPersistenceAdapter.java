@@ -1,4 +1,4 @@
-package com.formula1.data;
+package com.formula1.adapter.out.mysql;
 
 import com.formula1.application.port.out.CatalogPersistencePort;
 import com.formula1.domain.model.Circuit;

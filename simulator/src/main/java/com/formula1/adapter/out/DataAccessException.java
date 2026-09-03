@@ -1,4 +1,4 @@
-package com.formula1.data;
+package com.formula1.adapter.out;
 
 /** Fallo al leer o escribir en el almacén persistente. */
 public class DataAccessException extends RuntimeException {

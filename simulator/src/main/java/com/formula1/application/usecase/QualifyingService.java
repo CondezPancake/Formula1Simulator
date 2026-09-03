@@ -2,7 +2,7 @@ package com.formula1.application.usecase;
 
 import com.formula1.domain.service.ValidationException;
 
-import com.formula1.data.DataStore;
+import com.formula1.adapter.out.memory.DataStore;
 import com.formula1.application.port.out.QualifyingDataPort;
 import com.formula1.domain.event.EventContext;
 import com.formula1.domain.event.EventContextFactory;

@@ -1,6 +1,6 @@
 package com.formula1.util;
 
-import com.formula1.data.SeedLoader;
+import com.formula1.adapter.out.seed.SeedLoader;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

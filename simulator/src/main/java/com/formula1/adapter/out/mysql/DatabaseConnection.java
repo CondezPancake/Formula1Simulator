@@ -1,4 +1,4 @@
-package com.formula1.data;
+package com.formula1.adapter.out.mysql;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

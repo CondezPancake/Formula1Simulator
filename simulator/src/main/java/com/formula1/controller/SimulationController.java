@@ -278,7 +278,7 @@ public class SimulationController {
 
     public SimulationController() {
         this(new QualifyingService(), new CircuitService(), new VehicleService(), new DriverService(),
-                com.formula1.data.DataStore.getInstance());
+                com.formula1.adapter.out.memory.DataStore.getInstance());
     }
 
     public SimulationController(QualifyingService sesiones, CircuitService circuitos,

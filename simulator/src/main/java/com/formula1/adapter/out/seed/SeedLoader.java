@@ -1,7 +1,8 @@
-package com.formula1.data;
+package com.formula1.adapter.out.seed;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.formula1.adapter.out.DataAccessException;
 import com.formula1.domain.model.Circuit;
 import com.formula1.domain.model.Driver;
 import com.formula1.domain.model.Team;

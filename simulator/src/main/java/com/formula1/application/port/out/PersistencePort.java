@@ -1,7 +1,7 @@
 package com.formula1.application.port.out;
 
-import com.formula1.data.DataStore;
-import com.formula1.data.MySqlPersistenceAdapter;
+import com.formula1.adapter.out.memory.DataStore;
+import com.formula1.adapter.out.mysql.MySqlPersistenceAdapter;
 
 /**
  * Puerto que mantiene JDBC fuera del almacén de aplicación y del dominio.

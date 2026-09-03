@@ -1,6 +1,6 @@
 package com.formula1.controller;
 
-import com.formula1.data.DataStore;
+import com.formula1.adapter.out.memory.DataStore;
 import com.formula1.domain.model.Driver;
 import com.formula1.application.usecase.DriverService;
 import com.formula1.domain.service.LapTimeCalculator;
