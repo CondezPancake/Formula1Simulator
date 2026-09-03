@@ -12,6 +12,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import com.formula1.controller.MenuBackground?>
 
 <!--
   Menú principal al estilo del de F1 23 (docs/assets/f1-23-menu-referencia.jpg).
@@ -20,12 +21,18 @@
   lleva la lista de opciones, la derecha el escenario con el título de la
   sección. Las filas de la lista las construye MainMenuController, porque el
   texto, la descripción y el destino de cada una viven juntos allí.
+
+  Capa de fondo animado: partículas F1, brasas moviéndose, parallax sutil.
 -->
 <GridPane xmlns="http://javafx.com/javafx"
           xmlns:fx="http://javafx.com/fxml"
           fx:controller="com.formula1.controller.MainMenuController"
           fx:id="raiz" styleClass="menu-root"
           prefWidth="1600" prefHeight="940">
+
+    <!-- Capa de fondo animado (atrás de todo) -->
+    <MenuBackground fx:id="menuBackground" GridPane.columnIndex="0" GridPane.rowIndex="0"
+                    GridPane.columnSpan="2" GridPane.rowSpan="1"/>
 
     <columnConstraints>
         <!-- 47/53: la proporción de la referencia. -->

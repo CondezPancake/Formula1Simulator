@@ -6,6 +6,8 @@ import com.formula1.util.ImageCrop;
 import com.formula1.util.Imagenes;
 
 import javafx.application.Platform;
+import javafx.animation.FadeTransition;
+import javafx.animation.ScaleTransition;
 import javafx.beans.InvalidationListener;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -17,6 +19,8 @@ import javafx.scene.Group;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Labeled;
+import javafx.scene.effect.DropShadow;
+import javafx.scene.effect.Glow;
 import javafx.scene.effect.PerspectiveTransform;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -29,6 +33,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.shape.SVGPath;
 import javafx.scene.text.Text;
 import javafx.scene.transform.Scale;
+import javafx.util.Duration;
 
 import java.io.InputStream;
 import java.util.function.Consumer;
@@ -95,7 +100,7 @@ public class MainMenuController {
         new Opcion("CLASIFICACIÓN",
                 "Monta una sesión de clasificación: elige circuito, monoplaza y piloto, "
                         + "y pelea por la pole contra el resto de la parrilla.",
-                "/images/menu-clasificacion.png",
+                "/images/prueba-img.jpg",
                 () -> entrarAlShell(ShellController::irACarrera)),
         new Opcion("GESTIÓN DE EQUIPOS",
                 "Administra la parrilla: da de alta y edita escuderías, pilotos, "
@@ -149,8 +154,14 @@ public class MainMenuController {
     private final HBox[] galones = new HBox[5];
     private final Scale[] escalasGalon = new Scale[5];
 
+    private final FadeTransition[] transicionesFade = new FadeTransition[5];
+    private final ScaleTransition[] transicionesScale = new ScaleTransition[5];
+
     private int seleccionada = 0;
     private long ultimoSfxMoverMs = 0;
+
+    /** Capa de fondo animado con partículas F1, inyectada desde el FXML. */
+    @FXML private MenuBackground menuBackground;
 
     /** Se guarda la referencia para poder retirar el filtro de la escena. */
     private final EventHandler<KeyEvent> filtroTeclado = this::alPulsarTecla;
@@ -196,6 +207,19 @@ public class MainMenuController {
             // menú de consola donde el foco y la confirmación son distintos.
             fila.setOnMouseEntered(e -> seleccionar(indice));
             fila.setOnMouseClicked(e -> activar(indice));
+
+            // Transiciones suaves para esta fila
+            FadeTransition ft = new FadeTransition(Duration.millis(200), fila);
+            ft.setFromValue(0.0);
+            ft.setToValue(1.0);
+            transicionesFade[indice] = ft;
+
+            ScaleTransition st = new ScaleTransition(Duration.millis(150), fila);
+            st.setFromX(0.95);
+            st.setToX(1.0);
+            st.setFromY(0.95);
+            st.setToY(1.0);
+            transicionesScale[indice] = st;
 
             filas[i] = fila;
             marcos[i] = marco;
@@ -313,6 +337,18 @@ public class MainMenuController {
             // Los galones solo acompañan a la fila activa.
             galones[i].setVisible(activa);
             galones[i].setManaged(activa);
+            // Clase activo para efecto visual en el galón
+            if (activa) {
+                galones[i].getStyleClass().add("activo");
+            } else {
+                galones[i].getStyleClass().remove("activo");
+            }
+
+            // Transiciones suaves en lugar de cambio instantáneo
+            if (activa) {
+                transicionesFade[i].playFromStart();
+                transicionesScale[i].playFromStart();
+            }
         }
         Opcion opcion = opciones[indice];
         lblDescripcion.setText(opcion.descripcion());
