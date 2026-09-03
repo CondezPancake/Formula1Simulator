@@ -21,7 +21,7 @@
   el color de aquí es siempre el del equipo del piloto, no uno propio.
 -->
 <StackPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-           fx:controller="com.formula1.controller.DriverDetailController"
+           fx:controller="com.formula1.adapter.in.javafx.DriverDetailController"
            styleClass="team-hub">
 
     <ScrollPane fx:id="scroll" styleClass="team-hub-scroll" fitToWidth="true">

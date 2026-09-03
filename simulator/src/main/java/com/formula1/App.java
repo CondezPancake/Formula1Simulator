@@ -1,9 +1,9 @@
 package com.formula1;
 
-import com.formula1.controller.IntroController;
-import com.formula1.controller.MainMenuController;
-import com.formula1.controller.Navigator;
-import com.formula1.controller.ShellController;
+import com.formula1.adapter.in.javafx.IntroController;
+import com.formula1.adapter.in.javafx.MainMenuController;
+import com.formula1.adapter.in.javafx.Navigator;
+import com.formula1.adapter.in.javafx.ShellController;
 import com.formula1.util.Async;
 
 import javafx.application.Application;

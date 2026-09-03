@@ -11,7 +11,7 @@
 <?import javafx.scene.layout.VBox?>
 
 <VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-      fx:controller="com.formula1.controller.PostQualifyingController"
+      fx:controller="com.formula1.adapter.in.javafx.PostQualifyingController"
       spacing="12" styleClass="post-qualifying">
     <padding><Insets top="16" right="18" bottom="16" left="18"/></padding>
 

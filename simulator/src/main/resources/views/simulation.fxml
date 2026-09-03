@@ -26,7 +26,7 @@
 <?import javafx.scene.control.ScrollPane?>
 
 <StackPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-           fx:controller="com.formula1.controller.SimulationController"
+           fx:controller="com.formula1.adapter.in.javafx.SimulationController"
            styleClass="race-dashboard">
 <VBox spacing="0">
 

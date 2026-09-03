@@ -11,7 +11,7 @@
 <?import javafx.scene.layout.VBox?>
 
 <HBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-      fx:controller="com.formula1.controller.ConfigController" spacing="20">
+      fx:controller="com.formula1.adapter.in.javafx.ConfigController" spacing="20">
     <padding><Insets top="24" right="28" bottom="24" left="28"/></padding>
 
     <!-- ================= columna principal ================= -->

@@ -4,7 +4,7 @@
 <?import javafx.scene.control.TabPane?>
 
 <TabPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-         fx:id="secciones" fx:controller="com.formula1.controller.ConfigHistorialController"
+         fx:id="secciones" fx:controller="com.formula1.adapter.in.javafx.ConfigHistorialController"
          styleClass="subnav" tabClosingPolicy="UNAVAILABLE">
     <tabs>
         <Tab fx:id="tabConfiguracion" text="CONFIGURACIÓN">

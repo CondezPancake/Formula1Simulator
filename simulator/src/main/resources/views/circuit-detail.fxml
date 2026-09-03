@@ -14,7 +14,7 @@
 <?import javafx.scene.layout.VBox?>
 
 <ScrollPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.formula1.controller.CircuitDetailController"
+            fx:controller="com.formula1.adapter.in.javafx.CircuitDetailController"
             fitToWidth="true" styleClass="circuit-detail">
     <VBox spacing="18" styleClass="circuit-detail-body">
         <padding><Insets top="26" right="26" bottom="26" left="26"/></padding>

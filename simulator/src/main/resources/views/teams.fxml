@@ -12,7 +12,7 @@
 <?import javafx.scene.layout.VBox?>
 
 <VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-      fx:controller="com.formula1.controller.TeamController" spacing="14">
+      fx:controller="com.formula1.adapter.in.javafx.TeamController" spacing="14">
     <padding><Insets top="26" right="26" bottom="26" left="26"/></padding>
 
     <Label text="Gestión" styleClass="view-title"/>

@@ -1,19 +1,19 @@
 package com.formula1;
 
-import com.formula1.controller.CircuitController;
-import com.formula1.controller.CircuitDetailController;
-import com.formula1.controller.ConfigController;
-import com.formula1.controller.DriverController;
-import com.formula1.controller.DriverDetailController;
-import com.formula1.controller.ExploreDriversController;
-import com.formula1.controller.ExploreTeamsController;
-import com.formula1.controller.HistoryController;
-import com.formula1.controller.ManagementController;
-import com.formula1.controller.SimulationController;
-import com.formula1.controller.TeamController;
-import com.formula1.controller.TeamDetailController;
-import com.formula1.controller.VehicleCompareController;
-import com.formula1.controller.VehicleController;
+import com.formula1.adapter.in.javafx.CircuitController;
+import com.formula1.adapter.in.javafx.CircuitDetailController;
+import com.formula1.adapter.in.javafx.ConfigController;
+import com.formula1.adapter.in.javafx.DriverController;
+import com.formula1.adapter.in.javafx.DriverDetailController;
+import com.formula1.adapter.in.javafx.ExploreDriversController;
+import com.formula1.adapter.in.javafx.ExploreTeamsController;
+import com.formula1.adapter.in.javafx.HistoryController;
+import com.formula1.adapter.in.javafx.ManagementController;
+import com.formula1.adapter.in.javafx.SimulationController;
+import com.formula1.adapter.in.javafx.TeamController;
+import com.formula1.adapter.in.javafx.TeamDetailController;
+import com.formula1.adapter.in.javafx.VehicleCompareController;
+import com.formula1.adapter.in.javafx.VehicleController;
 import org.junit.jupiter.api.Test;
 
 import javafx.util.Callback;

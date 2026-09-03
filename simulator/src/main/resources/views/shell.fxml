@@ -13,7 +13,7 @@
 
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.formula1.controller.ShellController"
+            fx:controller="com.formula1.adapter.in.javafx.ShellController"
             prefWidth="1600" prefHeight="940">
 
     <top>

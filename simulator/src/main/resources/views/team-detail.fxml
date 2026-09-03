@@ -24,7 +24,7 @@
   scroll, para que ocupe la vista entera sin desplazar nada.
 -->
 <StackPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-           fx:controller="com.formula1.controller.TeamDetailController"
+           fx:controller="com.formula1.adapter.in.javafx.TeamDetailController"
            styleClass="team-hub">
 
     <ScrollPane fx:id="scroll" styleClass="team-hub-scroll" fitToWidth="true">

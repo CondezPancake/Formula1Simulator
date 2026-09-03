@@ -183,10 +183,49 @@ necesitó un import adicional para `DataStore.enMemoria()`.
 `mvn clean test`: 174/0/0, 4 *skipped* (MySQL) — misma cuenta, cero
 regresiones. `com.formula1.data` queda vacío y eliminado.
 
+## Lote 5 — controladores, `Navigator` y las tareas JavaFX → `adapter/in/javafx`
+
+El lote que el diagnóstico pedía dejar para el final ("mover JavaFX al
+final"), y con razón: es el único que toca los 20 FXML a la vez que las
+clases. Se movieron juntas, como un solo paquete completo (sin dividir,
+igual que el lote 1):
+
+- Las 30 clases de `com.formula1.controller` (controladores por pantalla,
+  `Navigator`, `ShellController`, los presenters de telemetría/radio/paradas/
+  neumáticos, y los componentes visuales `CircuitoEnVivo`, `MapaProgreso`,
+  `Forms`, `AjustesDialog`, `ExploreCardVisuals`).
+- `QualifyingSessionTaskFactory` y `SimulationPacer`, que se habían quedado
+  deliberadamente en `service/` desde la Fase 4 esperando este momento —
+  ahora sí les toca vivir junto al resto de la infraestructura JavaFX, tal
+  como anticipaba su propio comentario de entonces.
+
+Los 20 archivos FXML se actualizaron en el mismo paso: los 18
+`fx:controller="com.formula1.controller.X"` pasan a
+`fx:controller="com.formula1.adapter.in.javafx.X"`. Ningún FXML usa
+`<?import com.formula1.controller...?>` para componentes personalizados, así
+que no hubo un segundo tipo de referencia que corregir ahí.
+
+**Resultado**: `mvn clean compile` en verde a la primera pasada — sin un
+solo error de "cannot find symbol". A diferencia del lote 3 (dividir
+`service/`), aquí no hizo falta ensanchar ninguna visibilidad: al moverse el
+paquete completo (controladores + `Navigator` + presenters + las dos clases
+que ya esperaban desde la Fase 4), todas las relaciones internas que
+dependían de compartir paquete siguen compartiéndolo en el destino nuevo.
+
+**Verificación**: `mvn clean test`: 174/0/0, 4 *skipped* (MySQL) — misma
+cuenta. Es la comprobación más fuerte de toda la Fase 7 hasta ahora, porque
+`ViewsLoadTest` (9 tests) carga los 20 FXML de verdad con `FXMLLoader.load(...)`
+y `MenuNavegacionTest` (3 tests) ejercita `Navigator.ir(...)` en vivo: si el
+`fx:controller` de algún FXML se hubiera quedado apuntando al paquete viejo,
+estos tests habrían fallado en tiempo de ejecución con
+`ClassNotFoundException`, no en compilación. Pasaron limpio.
+
+`com.formula1.controller` y `com.formula1.service` quedan vacíos y
+eliminados — no queda ningún paquete de la estructura original salvo
+`model`/`event` (ya movidos en el lote 1) y `data` (ya movido en el lote 4).
+
 ## Lo que falta
 
-El siguiente lote es **controladores/`Navigator`/`QualifyingSessionTaskFactory`/
-`SimulationPacer` → `adapter/in/javafx`** (el único que toca los 20 FXML a
-la vez que las clases, dejado para el final a propósito), y por último
-**`App`/`Main`/`AppComposition` → `bootstrap`** y la revisión caso a caso de
-`util/`.
+Solo quedan dos piezas menores: **`App`/`Main`/`AppComposition` →
+`bootstrap`** y la revisión caso a caso de `util/` (el propio diagnóstico
+advierte que no todo pertenece a la misma capa ahí).

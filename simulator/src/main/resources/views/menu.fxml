@@ -23,7 +23,7 @@
 -->
 <GridPane xmlns="http://javafx.com/javafx"
           xmlns:fx="http://javafx.com/fxml"
-          fx:controller="com.formula1.controller.MainMenuController"
+          fx:controller="com.formula1.adapter.in.javafx.MainMenuController"
           fx:id="raiz" styleClass="menu-root"
           prefWidth="1600" prefHeight="940">
 
