@@ -1,17 +1,17 @@
 package com.formula1.service;
 
 import com.formula1.data.DataStore;
-import com.formula1.event.EventManager;
-import com.formula1.model.AerodynamicLoad;
-import com.formula1.model.Driver;
-import com.formula1.model.DrivingMode;
-import com.formula1.model.FuelStrategy;
-import com.formula1.model.SimulationConfig;
-import com.formula1.model.TelemetrySnapshot;
-import com.formula1.model.TirePressure;
-import com.formula1.model.TrackEvolutionSnapshot;
-import com.formula1.model.Vehicle;
-import com.formula1.model.WeatherCondition;
+import com.formula1.domain.event.EventManager;
+import com.formula1.domain.model.AerodynamicLoad;
+import com.formula1.domain.model.Driver;
+import com.formula1.domain.model.DrivingMode;
+import com.formula1.domain.model.FuelStrategy;
+import com.formula1.domain.model.SimulationConfig;
+import com.formula1.domain.model.TelemetrySnapshot;
+import com.formula1.domain.model.TirePressure;
+import com.formula1.domain.model.TrackEvolutionSnapshot;
+import com.formula1.domain.model.Vehicle;
+import com.formula1.domain.model.WeatherCondition;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;

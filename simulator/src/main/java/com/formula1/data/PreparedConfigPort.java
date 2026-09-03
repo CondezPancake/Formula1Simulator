@@ -1,6 +1,6 @@
 package com.formula1.data;
 
-import com.formula1.model.SimulationConfig;
+import com.formula1.domain.model.SimulationConfig;
 
 /**
  * Puerto de salida para la puesta a punto que el usuario deja preparada en

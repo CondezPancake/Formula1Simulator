@@ -1,13 +1,13 @@
 package com.formula1.service;
 
-import com.formula1.model.AerodynamicLoad;
-import com.formula1.model.DrivingMode;
-import com.formula1.model.DynamicWeatherState;
-import com.formula1.model.FuelStrategy;
-import com.formula1.model.SimulationConfig;
-import com.formula1.model.TirePressure;
-import com.formula1.model.Vehicle;
-import com.formula1.model.WeatherSnapshot;
+import com.formula1.domain.model.AerodynamicLoad;
+import com.formula1.domain.model.DrivingMode;
+import com.formula1.domain.model.DynamicWeatherState;
+import com.formula1.domain.model.FuelStrategy;
+import com.formula1.domain.model.SimulationConfig;
+import com.formula1.domain.model.TirePressure;
+import com.formula1.domain.model.Vehicle;
+import com.formula1.domain.model.WeatherSnapshot;
 import org.junit.jupiter.api.Test;
 
 import java.util.EnumMap;

@@ -1,9 +1,9 @@
 package com.formula1.service;
 
-import com.formula1.model.EventType;
-import com.formula1.model.LapResult;
-import com.formula1.model.PitStopDecision;
-import com.formula1.model.PitStopReason;
+import com.formula1.domain.model.EventType;
+import com.formula1.domain.model.LapResult;
+import com.formula1.domain.model.PitStopDecision;
+import com.formula1.domain.model.PitStopReason;
 
 import java.util.EnumSet;
 import java.util.Optional;

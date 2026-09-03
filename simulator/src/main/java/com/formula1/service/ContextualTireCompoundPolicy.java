@@ -1,9 +1,9 @@
 package com.formula1.service;
 
-import com.formula1.model.EventType;
-import com.formula1.model.LapResult;
-import com.formula1.model.PitStopRecord;
-import com.formula1.model.TireCompound;
+import com.formula1.domain.model.EventType;
+import com.formula1.domain.model.LapResult;
+import com.formula1.domain.model.PitStopRecord;
+import com.formula1.domain.model.TireCompound;
 
 /** Elige entre S, M y H según el motivo y el evento que originó la parada. */
 public final class ContextualTireCompoundPolicy implements TireCompoundPolicy {

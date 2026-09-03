@@ -3,7 +3,7 @@ package com.formula1.util;
 import java.util.Map;
 import java.util.Set;
 
-import com.formula1.model.TrackLayout;
+import com.formula1.domain.model.TrackLayout;
 
 /**
  * Trazados de los siete circuitos del catálogo.

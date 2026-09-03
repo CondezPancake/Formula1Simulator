@@ -1,11 +1,11 @@
 package com.formula1.service;
 
 import com.formula1.data.CatalogPort;
-import com.formula1.model.Circuit;
-import com.formula1.model.Driver;
-import com.formula1.model.DriverRole;
-import com.formula1.model.Team;
-import com.formula1.model.Vehicle;
+import com.formula1.domain.model.Circuit;
+import com.formula1.domain.model.Driver;
+import com.formula1.domain.model.DriverRole;
+import com.formula1.domain.model.Team;
+import com.formula1.domain.model.Vehicle;
 import org.junit.jupiter.api.Test;
 
 import java.util.LinkedHashMap;

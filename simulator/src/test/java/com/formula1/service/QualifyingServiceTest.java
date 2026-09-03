@@ -1,27 +1,27 @@
 package com.formula1.service;
 
 import com.formula1.data.DataStore;
-import com.formula1.event.EventManager;
-import com.formula1.event.EventCatalog;
-import com.formula1.event.SimulationEvent;
-import com.formula1.model.AerodynamicLoad;
-import com.formula1.model.Circuit;
-import com.formula1.model.Driver;
-import com.formula1.model.DrivingMode;
-import com.formula1.model.FuelStrategy;
-import com.formula1.model.EventProbabilityConfig;
-import com.formula1.model.EventType;
-import com.formula1.model.LapResult;
-import com.formula1.model.LapStatus;
-import com.formula1.model.LiveClassificationFrame;
-import com.formula1.model.QualifyingSession;
-import com.formula1.model.SimulationConfig;
-import com.formula1.model.SimulationSnapshot;
-import com.formula1.model.TirePressure;
-import com.formula1.model.TelemetrySnapshot;
-import com.formula1.model.Vehicle;
-import com.formula1.model.WeatherCondition;
-import com.formula1.model.WeatherSnapshot;
+import com.formula1.domain.event.EventManager;
+import com.formula1.domain.event.EventCatalog;
+import com.formula1.domain.event.SimulationEvent;
+import com.formula1.domain.model.AerodynamicLoad;
+import com.formula1.domain.model.Circuit;
+import com.formula1.domain.model.Driver;
+import com.formula1.domain.model.DrivingMode;
+import com.formula1.domain.model.FuelStrategy;
+import com.formula1.domain.model.EventProbabilityConfig;
+import com.formula1.domain.model.EventType;
+import com.formula1.domain.model.LapResult;
+import com.formula1.domain.model.LapStatus;
+import com.formula1.domain.model.LiveClassificationFrame;
+import com.formula1.domain.model.QualifyingSession;
+import com.formula1.domain.model.SimulationConfig;
+import com.formula1.domain.model.SimulationSnapshot;
+import com.formula1.domain.model.TirePressure;
+import com.formula1.domain.model.TelemetrySnapshot;
+import com.formula1.domain.model.Vehicle;
+import com.formula1.domain.model.WeatherCondition;
+import com.formula1.domain.model.WeatherSnapshot;
 import com.formula1.util.FormatUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -439,10 +439,10 @@ class QualifyingServiceTest {
     @Test
     void laLluviaIntensaProduceUnaVueltaMasLentaQueUnaPistaSeca() {
         WeatherSnapshot seco = new WeatherSnapshot(1, 1,
-                com.formula1.model.DynamicWeatherState.SECO,
+                com.formula1.domain.model.DynamicWeatherState.SECO,
                 25, 45, 10, 0, 37, 95, 95, 94);
         WeatherSnapshot lluvia = new WeatherSnapshot(1, 1,
-                com.formula1.model.DynamicWeatherState.LLUVIA_INTENSA,
+                com.formula1.domain.model.DynamicWeatherState.LLUVIA_INTENSA,
                 17, 95, 100, 90, 16, 50, 45, 42);
 
         double tiempoSeco = new LapTimeCalculator(new Random(4)).calcularTiempo(
@@ -478,7 +478,7 @@ class QualifyingServiceTest {
         assertTrue(session.getResultados().stream().allMatch(result -> result.getTiempoSegundos() == 0));
         assertTrue(session.getResultados().stream().noneMatch(LapResult::hasSectorTimes));
         assertTrue(session.getResultados().stream().allMatch(result -> result.getSectorIncidente()
-                != com.formula1.model.TrackSector.NONE));
+                != com.formula1.domain.model.TrackSector.NONE));
         assertNull(session.getPole());
 
         assertEquals(QualifyingService.SEGMENTOS_EVOLUCION, telemetry.size());

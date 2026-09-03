@@ -1,7 +1,7 @@
 package com.formula1.controller;
 
-import com.formula1.model.Circuit;
-import com.formula1.model.Vehicle;
+import com.formula1.domain.model.Circuit;
+import com.formula1.domain.model.Vehicle;
 import com.formula1.util.ImageCrop;
 import javafx.scene.Group;
 import javafx.scene.image.Image;

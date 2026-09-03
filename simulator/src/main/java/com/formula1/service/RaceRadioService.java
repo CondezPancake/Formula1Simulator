@@ -1,16 +1,16 @@
 package com.formula1.service;
 
-import com.formula1.event.RaceEvent;
-import com.formula1.model.EventOccurrence;
-import com.formula1.model.EventType;
-import com.formula1.model.LapResult;
-import com.formula1.model.PitStopRecord;
-import com.formula1.model.RadioMessage;
-import com.formula1.model.RadioMessage.Prioridad;
-import com.formula1.model.TelemetrySnapshot;
-import com.formula1.model.TireChangeRecord;
-import com.formula1.model.TrackFlag;
-import com.formula1.model.TrackSector;
+import com.formula1.domain.event.RaceEvent;
+import com.formula1.domain.model.EventOccurrence;
+import com.formula1.domain.model.EventType;
+import com.formula1.domain.model.LapResult;
+import com.formula1.domain.model.PitStopRecord;
+import com.formula1.domain.model.RadioMessage;
+import com.formula1.domain.model.RadioMessage.Prioridad;
+import com.formula1.domain.model.TelemetrySnapshot;
+import com.formula1.domain.model.TireChangeRecord;
+import com.formula1.domain.model.TrackFlag;
+import com.formula1.domain.model.TrackSector;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -198,7 +198,7 @@ public final class RaceRadioService {
             return Optional.empty();
         }
         boolean propio = evento.pilotoId() == pilotoSeguido;
-        boolean global = evento.alcance() == com.formula1.model.EventScope.GLOBAL;
+        boolean global = evento.alcance() == com.formula1.domain.model.EventScope.GLOBAL;
         if (!propio && !global) {
             return Optional.empty();
         }

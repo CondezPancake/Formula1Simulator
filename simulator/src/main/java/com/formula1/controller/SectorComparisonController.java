@@ -1,7 +1,7 @@
 package com.formula1.controller;
 
-import com.formula1.model.LapResult;
-import com.formula1.model.TrackSector;
+import com.formula1.domain.model.LapResult;
+import com.formula1.domain.model.TrackSector;
 import com.formula1.service.SectorComparisonService;
 import com.formula1.util.FormatUtils;
 import javafx.beans.property.SimpleIntegerProperty;

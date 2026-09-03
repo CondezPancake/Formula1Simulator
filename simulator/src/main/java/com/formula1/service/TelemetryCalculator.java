@@ -1,15 +1,15 @@
 package com.formula1.service;
 
-import com.formula1.model.Circuit;
-import com.formula1.model.Driver;
-import com.formula1.model.EventImpact;
-import com.formula1.model.EventOccurrence;
-import com.formula1.model.LapResult;
-import com.formula1.model.LapStatus;
-import com.formula1.model.SimulationConfig;
-import com.formula1.model.TelemetrySnapshot;
-import com.formula1.model.Vehicle;
-import com.formula1.model.WeatherSnapshot;
+import com.formula1.domain.model.Circuit;
+import com.formula1.domain.model.Driver;
+import com.formula1.domain.model.EventImpact;
+import com.formula1.domain.model.EventOccurrence;
+import com.formula1.domain.model.LapResult;
+import com.formula1.domain.model.LapStatus;
+import com.formula1.domain.model.SimulationConfig;
+import com.formula1.domain.model.TelemetrySnapshot;
+import com.formula1.domain.model.Vehicle;
+import com.formula1.domain.model.WeatherSnapshot;
 import com.formula1.util.MathUtils;
 
 /**

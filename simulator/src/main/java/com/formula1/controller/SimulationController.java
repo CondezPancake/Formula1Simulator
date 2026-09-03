@@ -1,33 +1,33 @@
 package com.formula1.controller;
 
-import com.formula1.model.AerodynamicLoad;
-import com.formula1.model.Circuit;
-import com.formula1.model.Driver;
-import com.formula1.model.DrivingMode;
-import com.formula1.model.EventCategory;
-import com.formula1.model.EventOccurrence;
-import com.formula1.model.FuelStrategy;
-import com.formula1.model.LapResult;
-import com.formula1.model.LapStatus;
-import com.formula1.model.LiveClassificationFrame;
-import com.formula1.model.PitStopRecord;
-import com.formula1.model.QualifyingSession;
-import com.formula1.model.SimulationConfig;
-import com.formula1.model.SimulationSnapshot;
-import com.formula1.model.TelemetrySnapshot;
-import com.formula1.model.TireChangeRecord;
-import com.formula1.model.TireCompound;
-import com.formula1.model.TirePressure;
-import com.formula1.model.TrackEvolutionSnapshot;
-import com.formula1.model.TrackFlag;
-import com.formula1.model.WeatherSnapshot;
+import com.formula1.domain.model.AerodynamicLoad;
+import com.formula1.domain.model.Circuit;
+import com.formula1.domain.model.Driver;
+import com.formula1.domain.model.DrivingMode;
+import com.formula1.domain.model.EventCategory;
+import com.formula1.domain.model.EventOccurrence;
+import com.formula1.domain.model.FuelStrategy;
+import com.formula1.domain.model.LapResult;
+import com.formula1.domain.model.LapStatus;
+import com.formula1.domain.model.LiveClassificationFrame;
+import com.formula1.domain.model.PitStopRecord;
+import com.formula1.domain.model.QualifyingSession;
+import com.formula1.domain.model.SimulationConfig;
+import com.formula1.domain.model.SimulationSnapshot;
+import com.formula1.domain.model.TelemetrySnapshot;
+import com.formula1.domain.model.TireChangeRecord;
+import com.formula1.domain.model.TireCompound;
+import com.formula1.domain.model.TirePressure;
+import com.formula1.domain.model.TrackEvolutionSnapshot;
+import com.formula1.domain.model.TrackFlag;
+import com.formula1.domain.model.WeatherSnapshot;
 import com.formula1.service.CircuitService;
 import com.formula1.service.DriverService;
 import com.formula1.service.QualifyingService;
 import com.formula1.service.QualifyingSessionTaskFactory;
 import com.formula1.service.RaceRadioService;
 import com.formula1.service.VehicleService;
-import com.formula1.model.TrackSector;
+import com.formula1.domain.model.TrackSector;
 import com.formula1.service.SectorComparisonService;
 import com.formula1.util.Async;
 import com.formula1.util.F1Assets;
@@ -932,7 +932,7 @@ public class SimulationController {
 
     private void actualizarVueltaHud() {
         lblHudVuelta.setText(segmentoEnVivo + " / " + MapaProgreso.TOTAL_SEGMENTOS);
-        lblHudSector.setText(com.formula1.model.TrackSector
+        lblHudSector.setText(com.formula1.domain.model.TrackSector
                 .desdeSegmento(Math.max(1, segmentoEnVivo), MapaProgreso.TOTAL_SEGMENTOS)
                 .getEtiqueta().toUpperCase());
     }

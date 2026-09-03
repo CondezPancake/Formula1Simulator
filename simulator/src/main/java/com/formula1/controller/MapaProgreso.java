@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.formula1.model.LapResult;
+import com.formula1.domain.model.LapResult;
 
 /**
  * Convierte la clasificación en vivo en la posición de cada coche sobre el
@@ -115,7 +115,7 @@ public final class MapaProgreso {
     }
 
     private static boolean estaFuera(LapResult resultado) {
-        return resultado.getEstadoVuelta() == com.formula1.model.LapStatus.OUT;
+        return resultado.getEstadoVuelta() == com.formula1.domain.model.LapStatus.OUT;
     }
 
     /**

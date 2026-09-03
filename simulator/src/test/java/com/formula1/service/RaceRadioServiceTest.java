@@ -1,19 +1,19 @@
 package com.formula1.service;
 
-import com.formula1.model.EventImpact;
-import com.formula1.model.EventOccurrence;
-import com.formula1.model.EventType;
-import com.formula1.model.LapResult;
-import com.formula1.model.LapStatus;
-import com.formula1.model.PitStopPhase;
-import com.formula1.model.PitStopReason;
-import com.formula1.model.PitStopRecord;
-import com.formula1.model.RadioMessage;
-import com.formula1.model.RadioMessage.Emisor;
-import com.formula1.model.RadioMessage.Prioridad;
-import com.formula1.model.TireChangeRecord;
-import com.formula1.model.TireCompound;
-import com.formula1.model.TrackSector;
+import com.formula1.domain.model.EventImpact;
+import com.formula1.domain.model.EventOccurrence;
+import com.formula1.domain.model.EventType;
+import com.formula1.domain.model.LapResult;
+import com.formula1.domain.model.LapStatus;
+import com.formula1.domain.model.PitStopPhase;
+import com.formula1.domain.model.PitStopReason;
+import com.formula1.domain.model.PitStopRecord;
+import com.formula1.domain.model.RadioMessage;
+import com.formula1.domain.model.RadioMessage.Emisor;
+import com.formula1.domain.model.RadioMessage.Prioridad;
+import com.formula1.domain.model.TireChangeRecord;
+import com.formula1.domain.model.TireCompound;
+import com.formula1.domain.model.TrackSector;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -160,13 +160,13 @@ class RaceRadioServiceTest {
         return resultado;
     }
 
-    private com.formula1.model.TelemetrySnapshot telemetria(double desgaste,
+    private com.formula1.domain.model.TelemetrySnapshot telemetria(double desgaste,
                                                             double combustible,
                                                             double motor) {
-        com.formula1.model.WeatherSnapshot clima = new com.formula1.model.WeatherSnapshot(
-                5, 20, com.formula1.model.DynamicWeatherState.SECO,
+        com.formula1.domain.model.WeatherSnapshot clima = new com.formula1.domain.model.WeatherSnapshot(
+                5, 20, com.formula1.domain.model.DynamicWeatherState.SECO,
                 26, 45, 5, 0, 38, 92, 90, 91);
-        return new com.formula1.model.TelemetrySnapshot("Piloto", "Coche", 5, 20,
+        return new com.formula1.domain.model.TelemetrySnapshot("Piloto", "Coche", 5, 20,
                 280, 340, 11000, combustible, desgaste, 95, motor, 2, 78.5, 0.1,
                 clima, LapStatus.VALID,
                 new EventOccurrence(EventType.NO_EVENT, PILOTO, "Piloto", 1,

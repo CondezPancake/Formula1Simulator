@@ -1,13 +1,13 @@
 package com.formula1.controller;
 
-import com.formula1.model.EventOccurrence;
-import com.formula1.model.LapResult;
-import com.formula1.model.PitStopRecord;
-import com.formula1.model.QualifyingSession;
-import com.formula1.model.SimulationConfig;
-import com.formula1.model.TireChangeRecord;
-import com.formula1.model.TireCompound;
-import com.formula1.model.TrackSector;
+import com.formula1.domain.model.EventOccurrence;
+import com.formula1.domain.model.LapResult;
+import com.formula1.domain.model.PitStopRecord;
+import com.formula1.domain.model.QualifyingSession;
+import com.formula1.domain.model.SimulationConfig;
+import com.formula1.domain.model.TireChangeRecord;
+import com.formula1.domain.model.TireCompound;
+import com.formula1.domain.model.TrackSector;
 import com.formula1.util.FormatUtils;
 import com.formula1.util.TeamColors;
 

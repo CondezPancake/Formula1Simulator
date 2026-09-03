@@ -1,13 +1,13 @@
 package com.formula1.data;
 
-import com.formula1.model.AerodynamicLoad;
-import com.formula1.model.DrivingMode;
-import com.formula1.model.FuelStrategy;
-import com.formula1.model.LapResult;
-import com.formula1.model.QualifyingSession;
-import com.formula1.model.SimulationConfig;
-import com.formula1.model.TirePressure;
-import com.formula1.model.WeatherCondition;
+import com.formula1.domain.model.AerodynamicLoad;
+import com.formula1.domain.model.DrivingMode;
+import com.formula1.domain.model.FuelStrategy;
+import com.formula1.domain.model.LapResult;
+import com.formula1.domain.model.QualifyingSession;
+import com.formula1.domain.model.SimulationConfig;
+import com.formula1.domain.model.TirePressure;
+import com.formula1.domain.model.WeatherCondition;
 import com.formula1.service.LapTimeCalculator;
 import com.formula1.service.QualifyingService;
 import org.junit.jupiter.api.Test;

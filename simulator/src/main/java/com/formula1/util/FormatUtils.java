@@ -1,6 +1,6 @@
 package com.formula1.util;
 
-import com.formula1.model.LapResult;
+import com.formula1.domain.model.LapResult;
 
 import java.util.Locale;
 

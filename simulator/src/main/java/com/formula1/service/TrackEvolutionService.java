@@ -1,7 +1,7 @@
 package com.formula1.service;
 
-import com.formula1.model.TrackEvolutionSnapshot;
-import com.formula1.model.WeatherSnapshot;
+import com.formula1.domain.model.TrackEvolutionSnapshot;
+import com.formula1.domain.model.WeatherSnapshot;
 import com.formula1.util.MathUtils;
 
 import java.util.ArrayList;

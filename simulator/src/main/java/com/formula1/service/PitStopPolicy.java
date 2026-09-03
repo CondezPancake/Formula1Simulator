@@ -1,7 +1,7 @@
 package com.formula1.service;
 
-import com.formula1.model.LapResult;
-import com.formula1.model.PitStopDecision;
+import com.formula1.domain.model.LapResult;
+import com.formula1.domain.model.PitStopDecision;
 
 import java.util.Optional;
 

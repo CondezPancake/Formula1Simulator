@@ -1,9 +1,9 @@
 package com.formula1.data;
 
-import com.formula1.model.Circuit;
-import com.formula1.model.Driver;
-import com.formula1.model.Team;
-import com.formula1.model.Vehicle;
+import com.formula1.domain.model.Circuit;
+import com.formula1.domain.model.Driver;
+import com.formula1.domain.model.Team;
+import com.formula1.domain.model.Vehicle;
 
 /** Adaptador JDBC que implementa únicamente el puerto de catálogo. */
 final class MySqlCatalogPersistenceAdapter implements CatalogPersistencePort {

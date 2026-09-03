@@ -1,7 +1,7 @@
 package com.formula1.controller;
 
-import com.formula1.model.TireChangeRecord;
-import com.formula1.model.TireCompound;
+import com.formula1.domain.model.TireChangeRecord;
+import com.formula1.domain.model.TireCompound;
 
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;

@@ -1,7 +1,7 @@
 package com.formula1.service;
 
-import com.formula1.event.RaceEvent;
-import com.formula1.model.TrackSector;
+import com.formula1.domain.event.RaceEvent;
+import com.formula1.domain.model.TrackSector;
 import com.formula1.util.FormatUtils;
 
 import java.util.Locale;

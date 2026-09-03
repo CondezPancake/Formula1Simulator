@@ -1,10 +1,10 @@
 package com.formula1.service;
 
-import com.formula1.model.Circuit;
-import com.formula1.model.LapResult;
-import com.formula1.model.QualifyingSession;
-import com.formula1.model.SimulationConfig;
-import com.formula1.model.WeatherCondition;
+import com.formula1.domain.model.Circuit;
+import com.formula1.domain.model.LapResult;
+import com.formula1.domain.model.QualifyingSession;
+import com.formula1.domain.model.SimulationConfig;
+import com.formula1.domain.model.WeatherCondition;
 import com.formula1.util.FormatUtils;
 
 import javafx.concurrent.Task;

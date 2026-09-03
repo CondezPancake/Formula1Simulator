@@ -1,10 +1,10 @@
 package com.formula1.service;
 
 import com.formula1.data.DataStore;
-import com.formula1.model.Circuit;
-import com.formula1.model.Driver;
-import com.formula1.model.DriverRole;
-import com.formula1.model.Vehicle;
+import com.formula1.domain.model.Circuit;
+import com.formula1.domain.model.Driver;
+import com.formula1.domain.model.DriverRole;
+import com.formula1.domain.model.Vehicle;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

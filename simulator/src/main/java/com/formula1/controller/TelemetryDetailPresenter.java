@@ -1,6 +1,6 @@
 package com.formula1.controller;
 
-import com.formula1.model.TelemetrySnapshot;
+import com.formula1.domain.model.TelemetrySnapshot;
 
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;

@@ -2,8 +2,8 @@ package com.formula1.service;
 
 import com.formula1.data.CatalogPort;
 import com.formula1.data.DataStore;
-import com.formula1.model.Driver;
-import com.formula1.model.Vehicle;
+import com.formula1.domain.model.Driver;
+import com.formula1.domain.model.Vehicle;
 import com.formula1.util.ValidationUtils;
 
 import java.util.Comparator;

@@ -1,6 +1,6 @@
 package com.formula1.data;
 
-import com.formula1.model.QualifyingSession;
+import com.formula1.domain.model.QualifyingSession;
 
 import java.util.List;
 

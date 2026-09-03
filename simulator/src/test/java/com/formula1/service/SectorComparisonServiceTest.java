@@ -1,9 +1,9 @@
 package com.formula1.service;
 
-import com.formula1.model.LapResult;
-import com.formula1.model.LapStatus;
-import com.formula1.model.SectorTimes;
-import com.formula1.model.TrackSector;
+import com.formula1.domain.model.LapResult;
+import com.formula1.domain.model.LapStatus;
+import com.formula1.domain.model.SectorTimes;
+import com.formula1.domain.model.TrackSector;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

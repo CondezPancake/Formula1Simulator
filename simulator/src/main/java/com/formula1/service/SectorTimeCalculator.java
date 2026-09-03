@@ -1,9 +1,9 @@
 package com.formula1.service;
 
-import com.formula1.model.EventOccurrence;
-import com.formula1.model.SectorTimes;
-import com.formula1.model.TrackSector;
-import com.formula1.model.WeatherSnapshot;
+import com.formula1.domain.model.EventOccurrence;
+import com.formula1.domain.model.SectorTimes;
+import com.formula1.domain.model.TrackSector;
+import com.formula1.domain.model.WeatherSnapshot;
 
 import java.util.EnumMap;
 import java.util.List;

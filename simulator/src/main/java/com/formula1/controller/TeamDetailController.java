@@ -1,12 +1,12 @@
 package com.formula1.controller;
 
-import com.formula1.model.Driver;
-import com.formula1.model.DrivingMode;
-import com.formula1.model.LapResult;
-import com.formula1.model.LapStatus;
-import com.formula1.model.QualifyingSession;
-import com.formula1.model.Team;
-import com.formula1.model.Vehicle;
+import com.formula1.domain.model.Driver;
+import com.formula1.domain.model.DrivingMode;
+import com.formula1.domain.model.LapResult;
+import com.formula1.domain.model.LapStatus;
+import com.formula1.domain.model.QualifyingSession;
+import com.formula1.domain.model.Team;
+import com.formula1.domain.model.Vehicle;
 import com.formula1.service.QualifyingService;
 import com.formula1.service.TeamService;
 import com.formula1.service.VehicleService;

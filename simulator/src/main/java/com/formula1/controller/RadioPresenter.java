@@ -1,6 +1,6 @@
 package com.formula1.controller;
 
-import com.formula1.model.RadioMessage;
+import com.formula1.domain.model.RadioMessage;
 import com.formula1.util.AudioManager;
 import com.formula1.util.TtsManager;
 

@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.concurrent.atomic.AtomicReference;
 
-import com.formula1.model.Circuit;
-import com.formula1.model.TrackLayout;
+import com.formula1.domain.model.Circuit;
+import com.formula1.domain.model.TrackLayout;
 import com.formula1.util.TrackLayouts;
 import com.formula1.util.TeamColors;
 

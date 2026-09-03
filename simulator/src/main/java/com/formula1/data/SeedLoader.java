@@ -2,10 +2,10 @@ package com.formula1.data;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.formula1.model.Circuit;
-import com.formula1.model.Driver;
-import com.formula1.model.Team;
-import com.formula1.model.Vehicle;
+import com.formula1.domain.model.Circuit;
+import com.formula1.domain.model.Driver;
+import com.formula1.domain.model.Team;
+import com.formula1.domain.model.Vehicle;
 
 import java.io.InputStream;
 import java.util.ArrayList;

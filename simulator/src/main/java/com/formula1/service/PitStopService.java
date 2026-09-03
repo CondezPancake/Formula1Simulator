@@ -1,10 +1,10 @@
 package com.formula1.service;
 
-import com.formula1.model.LapResult;
-import com.formula1.model.PitStopDecision;
-import com.formula1.model.PitStopPhase;
-import com.formula1.model.PitStopRecord;
-import com.formula1.model.PitStopReason;
+import com.formula1.domain.model.LapResult;
+import com.formula1.domain.model.PitStopDecision;
+import com.formula1.domain.model.PitStopPhase;
+import com.formula1.domain.model.PitStopRecord;
+import com.formula1.domain.model.PitStopReason;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

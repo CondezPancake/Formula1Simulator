@@ -1,7 +1,7 @@
 package com.formula1.service;
 
-import com.formula1.model.LapResult;
-import com.formula1.model.TrackSector;
+import com.formula1.domain.model.LapResult;
+import com.formula1.domain.model.TrackSector;
 
 import java.util.Comparator;
 import java.util.List;

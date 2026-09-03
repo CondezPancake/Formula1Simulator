@@ -1,9 +1,9 @@
 package com.formula1.service;
 
 import com.formula1.data.DataStore;
-import com.formula1.model.Circuit;
-import com.formula1.model.WeatherCondition;
-import com.formula1.model.WeatherSnapshot;
+import com.formula1.domain.model.Circuit;
+import com.formula1.domain.model.WeatherCondition;
+import com.formula1.domain.model.WeatherSnapshot;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

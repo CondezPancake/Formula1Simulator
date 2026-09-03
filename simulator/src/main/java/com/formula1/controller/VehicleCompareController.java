@@ -1,8 +1,8 @@
 package com.formula1.controller;
 
-import com.formula1.model.DrivingMode;
-import com.formula1.model.Vehicle;
-import com.formula1.model.WeatherCondition;
+import com.formula1.domain.model.DrivingMode;
+import com.formula1.domain.model.Vehicle;
+import com.formula1.domain.model.WeatherCondition;
 import com.formula1.service.VehicleService;
 
 import javafx.beans.property.SimpleStringProperty;

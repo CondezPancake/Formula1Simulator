@@ -2,9 +2,9 @@ package com.formula1.controller;
 
 import com.formula1.data.DataStore;
 import com.formula1.data.PreparedConfigPort;
-import com.formula1.model.LapResult;
-import com.formula1.model.QualifyingSession;
-import com.formula1.model.SimulationConfig;
+import com.formula1.domain.model.LapResult;
+import com.formula1.domain.model.QualifyingSession;
+import com.formula1.domain.model.SimulationConfig;
 import com.formula1.service.QualifyingService;
 import com.formula1.util.FormatUtils;
 

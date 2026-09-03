@@ -3,8 +3,8 @@ package com.formula1.controller;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.formula1.model.LapResult;
-import com.formula1.model.LapStatus;
+import com.formula1.domain.model.LapResult;
+import com.formula1.domain.model.LapStatus;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

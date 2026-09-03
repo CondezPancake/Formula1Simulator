@@ -1,8 +1,8 @@
 package com.formula1.controller;
 
 import com.formula1.data.DataStore;
-import com.formula1.model.TrackFlag;
-import com.formula1.model.WeatherSnapshot;
+import com.formula1.domain.model.TrackFlag;
+import com.formula1.domain.model.WeatherSnapshot;
 import com.formula1.util.Async;
 import com.formula1.util.Imagenes;
 

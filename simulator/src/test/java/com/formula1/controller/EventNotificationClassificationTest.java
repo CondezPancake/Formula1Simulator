@@ -1,6 +1,6 @@
 package com.formula1.controller;
 
-import com.formula1.model.EventCategory;
+import com.formula1.domain.model.EventCategory;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;

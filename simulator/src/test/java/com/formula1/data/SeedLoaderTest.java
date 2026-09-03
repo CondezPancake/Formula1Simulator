@@ -1,10 +1,10 @@
 package com.formula1.data;
 
-import com.formula1.model.Circuit;
-import com.formula1.model.DriverRole;
-import com.formula1.model.DrivingMode;
-import com.formula1.model.Vehicle;
-import com.formula1.model.WeatherCondition;
+import com.formula1.domain.model.Circuit;
+import com.formula1.domain.model.DriverRole;
+import com.formula1.domain.model.DrivingMode;
+import com.formula1.domain.model.Vehicle;
+import com.formula1.domain.model.WeatherCondition;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -69,7 +69,7 @@ class SeedLoaderTest {
         assertEquals("Max Verstappen", verstappen.getNombre());
         assertEquals("Red Bull Racing", verstappen.getEquipo());
         assertEquals(DriverRole.LIDER, verstappen.getRol());
-        assertTrue(verstappen.getHabilidad(com.formula1.model.Driver.HABILIDAD_VELOCIDAD) > 90);
+        assertTrue(verstappen.getHabilidad(com.formula1.domain.model.Driver.HABILIDAD_VELOCIDAD) > 90);
     }
 
     @Test

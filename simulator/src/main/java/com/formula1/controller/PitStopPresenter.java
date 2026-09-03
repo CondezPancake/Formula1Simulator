@@ -1,7 +1,7 @@
 package com.formula1.controller;
 
-import com.formula1.model.PitStopPhase;
-import com.formula1.model.PitStopRecord;
+import com.formula1.domain.model.PitStopPhase;
+import com.formula1.domain.model.PitStopRecord;
 
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
