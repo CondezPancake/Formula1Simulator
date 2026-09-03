@@ -1,4 +1,7 @@
-package com.formula1.data;
+package com.formula1.application.port.out;
+
+import com.formula1.data.DataStore;
+import com.formula1.data.MySqlPersistenceAdapter;
 
 /**
  * Puerto que mantiene JDBC fuera del almacén de aplicación y del dominio.
@@ -7,9 +10,9 @@ package com.formula1.data;
  * {@link CatalogPersistencePort} y {@link SessionPersistencePort}. Esta
  * interfaz queda como fachada de compatibilidad —la sigue implementando
  * {@link MySqlPersistenceAdapter} y la sigue consumiendo {@link DataStore}
- * como un único adaptador— para no tocar todavía la composición ni el
- * paquete. Un nuevo adaptador que solo necesite una de las dos capacidades
- * puede implementar el puerto correspondiente sin arrastrar el otro.
+ * como un único adaptador—. Un nuevo adaptador que solo necesite una de las
+ * dos capacidades puede implementar el puerto correspondiente sin arrastrar
+ * el otro.
  */
 public interface PersistencePort extends CatalogPersistencePort, SessionPersistencePort {
 }

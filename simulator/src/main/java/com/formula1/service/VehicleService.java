@@ -1,6 +1,6 @@
 package com.formula1.service;
 
-import com.formula1.data.CatalogPort;
+import com.formula1.application.port.out.CatalogPort;
 import com.formula1.data.DataStore;
 import com.formula1.domain.model.Driver;
 import com.formula1.domain.model.Vehicle;

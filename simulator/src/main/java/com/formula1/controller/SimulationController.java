@@ -228,7 +228,7 @@ public class SimulationController {
 
     private final QualifyingService sesiones;
     private final QualifyingSessionTaskFactory tareas;
-    private final com.formula1.data.PreparedConfigPort configuracionPreparada;
+    private final com.formula1.application.port.out.PreparedConfigPort configuracionPreparada;
     private final CircuitService circuitos;
     private final VehicleService vehiculos;
     private final DriverService pilotos;
@@ -283,7 +283,7 @@ public class SimulationController {
 
     public SimulationController(QualifyingService sesiones, CircuitService circuitos,
                                 VehicleService vehiculos, DriverService pilotos,
-                                com.formula1.data.PreparedConfigPort configuracionPreparada) {
+                                com.formula1.application.port.out.PreparedConfigPort configuracionPreparada) {
         this.sesiones = sesiones;
         this.tareas = new QualifyingSessionTaskFactory(sesiones);
         this.circuitos = circuitos;

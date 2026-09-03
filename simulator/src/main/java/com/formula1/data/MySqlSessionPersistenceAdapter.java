@@ -1,5 +1,6 @@
 package com.formula1.data;
 
+import com.formula1.application.port.out.SessionPersistencePort;
 import com.formula1.domain.model.QualifyingSession;
 
 import java.util.List;

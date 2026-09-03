@@ -1,5 +1,8 @@
 package com.formula1.data;
 
+import com.formula1.application.port.out.PersistencePort;
+import com.formula1.application.port.out.PreparedConfigPort;
+import com.formula1.application.port.out.QualifyingDataPort;
 import com.formula1.domain.model.Circuit;
 import com.formula1.domain.model.Driver;
 import com.formula1.domain.model.QualifyingSession;

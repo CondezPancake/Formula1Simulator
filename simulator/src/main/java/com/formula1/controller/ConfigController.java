@@ -1,7 +1,7 @@
 package com.formula1.controller;
 
 import com.formula1.data.DataStore;
-import com.formula1.data.PreparedConfigPort;
+import com.formula1.application.port.out.PreparedConfigPort;
 import com.formula1.domain.model.AerodynamicLoad;
 import com.formula1.domain.model.Circuit;
 import com.formula1.domain.model.DrivingMode;

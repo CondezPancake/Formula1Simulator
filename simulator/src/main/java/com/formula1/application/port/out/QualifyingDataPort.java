@@ -1,4 +1,6 @@
-package com.formula1.data;
+package com.formula1.application.port.out;
+
+import com.formula1.data.DataStore;
 
 /**
  * Puerto compuesto para {@code QualifyingService}: el motor de clasificación

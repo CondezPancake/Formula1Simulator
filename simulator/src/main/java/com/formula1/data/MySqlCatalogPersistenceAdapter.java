@@ -1,5 +1,6 @@
 package com.formula1.data;
 
+import com.formula1.application.port.out.CatalogPersistencePort;
 import com.formula1.domain.model.Circuit;
 import com.formula1.domain.model.Driver;
 import com.formula1.domain.model.Team;

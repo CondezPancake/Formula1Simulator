@@ -1,7 +1,7 @@
 package com.formula1.service;
 
 import com.formula1.data.DataStore;
-import com.formula1.data.QualifyingDataPort;
+import com.formula1.application.port.out.QualifyingDataPort;
 import com.formula1.domain.event.EventContext;
 import com.formula1.domain.event.EventContextFactory;
 import com.formula1.domain.event.EventEffectService;
