@@ -1,5 +1,6 @@
 package com.formula1.service;
 
+import com.formula1.event.RaceEvent;
 import com.formula1.model.EventOccurrence;
 import com.formula1.model.EventType;
 import com.formula1.model.LapResult;
@@ -10,7 +11,6 @@ import com.formula1.model.TelemetrySnapshot;
 import com.formula1.model.TireChangeRecord;
 import com.formula1.model.TrackFlag;
 import com.formula1.model.TrackSector;
-import com.formula1.util.FormatUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +27,10 @@ import java.util.Optional;
  *
  * <p>No inventa datos: cada frase nace de una señal que el motor ya produce
  * —posición, gap, sector, desgaste, combustible, temperaturas, clima, bandera,
- * evento, parada o cambio de neumático— y se limita a ponerle palabras.
+ * evento, parada o cambio de neumático—; esta clase decide cuándo hablar y
+ * con qué urgencia, y le pasa esa decisión ya empaquetada en un
+ * {@link RaceEvent} a {@link RaceNarratorService}, que es quien pone las
+ * palabras.
  *
  * <p>Sin dependencias de JavaFX a propósito: es lógica pura y se prueba sin
  * levantar el toolkit, igual que el resto del paquete {@code service}.
@@ -42,6 +45,8 @@ public final class RaceRadioService {
     private static final double MOTOR_AVISO = 105;
     private static final double MOTOR_CRITICO = 120;
 
+    private final RaceNarratorService narratorService;
+
     /** Estado del piloto seguido, para no repetir el mismo aviso cada segmento. */
     private int ultimaPosicion;
     private boolean avisadoDesgaste;
@@ -49,6 +54,14 @@ public final class RaceRadioService {
     private boolean avisadoMotor;
     private TrackFlag ultimaBandera = TrackFlag.GREEN;
     private boolean saludoHecho;
+
+    public RaceRadioService() {
+        this(new RaceNarratorService());
+    }
+
+    public RaceRadioService(RaceNarratorService narratorService) {
+        this.narratorService = narratorService;
+    }
 
     /** Olvida lo dicho. Se llama al arrancar cada sesión. */
     public void reiniciar() {
@@ -66,9 +79,9 @@ public final class RaceRadioService {
             return List.of();
         }
         saludoHecho = true;
+        String texto = narratorService.generate(RaceEvent.radioCheck(codigoPiloto));
         return List.of(
-                RadioMessage.ingeniero("Radio check, " + codigoPiloto + ". ¿Me copias?",
-                        1, TrackSector.SECTOR_1, Prioridad.RUTINA),
+                RadioMessage.ingeniero(texto, 1, TrackSector.SECTOR_1, Prioridad.RUTINA),
                 RadioMessage.piloto("Alto y claro.", 1, TrackSector.SECTOR_1));
     }
 
@@ -91,44 +104,34 @@ public final class RaceRadioService {
         double desgaste = muestra.desgasteNeumaticosPorcentaje();
         if (!avisadoDesgaste && desgaste >= DESGASTE_CRITICO) {
             avisadoDesgaste = true;
-            mensajes.add(RadioMessage.ingeniero(
-                    "Neumáticos al límite. Gestiona la salida de curva.",
-                    segmento, sector, Prioridad.IMPORTANTE));
+            mensajes.add(hablar(RaceEvent.tireWear("CRITICO", segmento, sector, Prioridad.IMPORTANTE)));
             mensajes.add(RadioMessage.piloto("Recibido, no tengo agarre atrás.",
                     segmento, sector));
         } else if (!avisadoDesgaste && desgaste >= DESGASTE_AVISO) {
             avisadoDesgaste = true;
-            mensajes.add(RadioMessage.ingeniero(
-                    "Los neumáticos están cayendo. Cuida la tracción.",
-                    segmento, sector, Prioridad.RUTINA));
+            mensajes.add(hablar(RaceEvent.tireWear("AVISO", segmento, sector, Prioridad.RUTINA)));
         }
 
         double combustible = muestra.combustibleRestantePorcentaje();
         if (!avisadoCombustible && combustible <= COMBUSTIBLE_CRITICO) {
             avisadoCombustible = true;
-            mensajes.add(RadioMessage.ingeniero(
-                    "Vamos justos de combustible. Levanta y arrastra en la recta.",
-                    segmento, sector, Prioridad.IMPORTANTE));
+            mensajes.add(hablar(RaceEvent.fuel("CRITICO", combustible, segmento, sector,
+                    Prioridad.IMPORTANTE)));
         } else if (!avisadoCombustible && combustible <= COMBUSTIBLE_AVISO) {
             avisadoCombustible = true;
-            mensajes.add(RadioMessage.ingeniero(
-                    String.format(Locale.ROOT, "Combustible al %.0f %%. Modo ahorro.",
-                            combustible),
-                    segmento, sector, Prioridad.RUTINA));
+            mensajes.add(hablar(RaceEvent.fuel("AVISO", combustible, segmento, sector,
+                    Prioridad.RUTINA)));
         }
 
         double motor = muestra.temperaturaMotorC();
         if (!avisadoMotor && motor >= MOTOR_CRITICO) {
             avisadoMotor = true;
-            mensajes.add(RadioMessage.ingeniero(
-                    String.format(Locale.ROOT, "Temperatura de motor %.0f grados. Baja el modo.",
-                            motor),
-                    segmento, sector, Prioridad.CRITICA));
+            mensajes.add(hablar(RaceEvent.engineTemp("CRITICO", motor, segmento, sector,
+                    Prioridad.CRITICA)));
         } else if (!avisadoMotor && motor >= MOTOR_AVISO) {
             avisadoMotor = true;
-            mensajes.add(RadioMessage.ingeniero(
-                    "Temperatura de motor alta. Vigílala.",
-                    segmento, sector, Prioridad.RUTINA));
+            mensajes.add(hablar(RaceEvent.engineTemp("AVISO", motor, segmento, sector,
+                    Prioridad.RUTINA)));
         }
 
         TrackFlag bandera = muestra.evento().impacto().bandera();
@@ -141,19 +144,12 @@ public final class RaceRadioService {
 
     private Optional<RadioMessage> banderaEnRadio(TrackFlag bandera, int segmento,
                                                   TrackSector sector) {
-        return switch (bandera) {
-            case GREEN -> Optional.of(RadioMessage.ingeniero(
-                    "Pista libre. Verde, verde.", segmento, sector, Prioridad.RUTINA));
-            case LOCAL_YELLOW -> Optional.of(RadioMessage.ingeniero(
-                    "Amarilla local en " + etiquetaSector(sector) + ". Atento.",
-                    segmento, sector, Prioridad.IMPORTANTE));
-            case YELLOW -> Optional.of(RadioMessage.ingeniero(
-                    "Bandera amarilla en " + etiquetaSector(sector) + ". Levanta el pie.",
-                    segmento, sector, Prioridad.IMPORTANTE));
-            case RED -> Optional.of(RadioMessage.ingeniero(
-                    "Bandera roja. Bandera roja. Entra a boxes.",
-                    segmento, sector, Prioridad.CRITICA));
+        Prioridad prioridad = switch (bandera) {
+            case GREEN -> Prioridad.RUTINA;
+            case LOCAL_YELLOW, YELLOW -> Prioridad.IMPORTANTE;
+            case RED -> Prioridad.CRITICA;
         };
+        return Optional.of(hablar(RaceEvent.flag(bandera.name(), segmento, sector, prioridad)));
     }
 
     /**
@@ -183,26 +179,11 @@ public final class RaceRadioService {
         ultimaPosicion = posicion;
 
         TrackSector sector = TrackSector.desdeSegmento(Math.max(1, segmento), 20);
-        String gap = posicion == 1 ? "" : " Diferencia con la pole "
-                + FormatUtils.formatGap(resultado.getGap()) + ".";
+        String movimiento = posicion == 1 ? "POLE" : mejora ? "GANADA" : empeora ? "PERDIDA" : "IGUAL";
+        Prioridad prioridad = posicion == 1 || empeora ? Prioridad.IMPORTANTE : Prioridad.RUTINA;
 
-        if (posicion == 1) {
-            return List.of(RadioMessage.ingeniero(
-                    "P1. Estás en la pole provisional." + gap,
-                    segmento, sector, Prioridad.IMPORTANTE));
-        }
-        if (mejora) {
-            return List.of(RadioMessage.ingeniero(
-                    "Buen trabajo, subes a P" + posicion + "." + gap,
-                    segmento, sector, Prioridad.RUTINA));
-        }
-        if (empeora) {
-            return List.of(RadioMessage.ingeniero(
-                    "Te han pasado. Ahora P" + posicion + "." + gap,
-                    segmento, sector, Prioridad.IMPORTANTE));
-        }
-        return List.of(RadioMessage.ingeniero(
-                "Vas P" + posicion + "." + gap, segmento, sector, Prioridad.RUTINA));
+        return List.of(hablar(RaceEvent.position(movimiento, posicion, resultado.getGap(),
+                segmento, sector, prioridad)));
     }
 
     /**
@@ -284,30 +265,29 @@ public final class RaceRadioService {
 
         if (!propio) {
             return switch (parada.fase()) {
-                case ENTERING -> List.of(RadioMessage.ingeniero(
-                        parada.piloto() + " entra a boxes.", segmento, sector, Prioridad.RUTINA));
-                case EXITING -> List.of(RadioMessage.ingeniero(
-                        parada.piloto() + " sale de boxes en P" + parada.posicionActual() + ".",
-                        segmento, sector, Prioridad.RUTINA));
+                case ENTERING -> List.of(hablar(RaceEvent.pitStop("ENTERING", parada.piloto(),
+                        false, parada.posicionActual(), 0, null, segmento, sector,
+                        Prioridad.RUTINA)));
+                case EXITING -> List.of(hablar(RaceEvent.pitStop("EXITING", parada.piloto(),
+                        false, parada.posicionActual(), 0, null, segmento, sector,
+                        Prioridad.RUTINA)));
                 default -> List.of();
             };
         }
 
         return switch (parada.fase()) {
             case ENTERING -> List.of(
-                    RadioMessage.ingeniero("Box, box, box. Confirma.",
-                            segmento, sector, Prioridad.CRITICA),
+                    hablar(RaceEvent.pitStop("ENTERING", parada.piloto(), true,
+                            parada.posicionActual(), 0, null, segmento, sector, Prioridad.CRITICA)),
                     RadioMessage.piloto("Box confirmado.", segmento, sector));
-            case STOPPED -> List.of(RadioMessage.ingeniero(
-                    "Estamos contigo. " + parada.motivo().getEtiqueta().toLowerCase(Locale.ROOT) + ".",
-                    segmento, sector, Prioridad.IMPORTANTE));
-            case EXITING -> List.of(RadioMessage.ingeniero(
-                    "Fuera. P" + parada.posicionActual() + ", empuja ahora.",
-                    segmento, sector, Prioridad.IMPORTANTE));
-            case COMPLETED -> List.of(RadioMessage.ingeniero(
-                    String.format(Locale.ROOT, "Parada de %.1f s. %s",
-                            parada.tiempoDetenidoSegundos(), balanceDeParada(parada)),
-                    segmento, sector, Prioridad.RUTINA));
+            case STOPPED -> List.of(hablar(RaceEvent.pitStop("STOPPED", parada.piloto(), true,
+                    parada.posicionActual(), 0, parada.motivo().getEtiqueta().toLowerCase(Locale.ROOT),
+                    segmento, sector, Prioridad.IMPORTANTE)));
+            case EXITING -> List.of(hablar(RaceEvent.pitStop("EXITING", parada.piloto(), true,
+                    parada.posicionActual(), 0, null, segmento, sector, Prioridad.IMPORTANTE)));
+            case COMPLETED -> List.of(hablar(RaceEvent.pitStop("COMPLETED", parada.piloto(), true,
+                    parada.posicionActual(), parada.tiempoDetenidoSegundos(),
+                    balanceDeParada(parada), segmento, sector, Prioridad.RUTINA)));
         };
     }
 
@@ -327,42 +307,48 @@ public final class RaceRadioService {
             return Optional.empty();
         }
         TrackSector sector = TrackSector.desdeSegmento(Math.max(1, cambio.segmento()), 20);
+        String compuestoEtiqueta = cambio.nuevo().getEtiqueta().toLowerCase(Locale.ROOT);
         if (cambio.pilotoId() != pilotoSeguido) {
-            return Optional.of(RadioMessage.ingeniero(
-                    cambio.piloto() + " monta " + cambio.nuevo().getEtiqueta().toLowerCase(Locale.ROOT)
-                            + ".", cambio.segmento(), sector, Prioridad.RUTINA));
+            return Optional.of(hablar(RaceEvent.tireChange(cambio.piloto(), false,
+                    compuestoEtiqueta, null, cambio.segmento(), sector, Prioridad.RUTINA)));
         }
         String lectura = switch (cambio.nuevo()) {
             case SOFT -> "Máximo agarre, pero dura poco. Ve a por la vuelta ya.";
             case MEDIUM -> "Compromiso. Puedes empujar sin castigarlos.";
             case HARD -> "Tardan en entrar en temperatura. Dales una vuelta.";
         };
-        return Optional.of(RadioMessage.ingeniero(
-                "Montamos " + cambio.nuevo().getEtiqueta().toLowerCase(Locale.ROOT) + ". " + lectura,
-                cambio.segmento(), sector, Prioridad.IMPORTANTE));
+        return Optional.of(hablar(RaceEvent.tireChange(cambio.piloto(), true, compuestoEtiqueta,
+                lectura, cambio.segmento(), sector, Prioridad.IMPORTANTE)));
     }
 
-    /** Cierre de sesión: lo primero que se oye al cruzar la meta. */
+    /**
+     * Cierre de sesión: lo primero que se oye al cruzar la meta.
+     *
+     * <p>La primera línea no es radio de equipo, es la voz del narrador
+     * cantando el resultado como en una retransmisión; el piloto responde
+     * después, ya en su propio canal.
+     */
     public List<RadioMessage> cierreDeSesion(LapResult resultado, int totalSegmentos) {
         if (resultado == null) {
             return List.of(RadioMessage.ingeniero(
-                    "Sesión terminada. Vuelve al garaje.",
+                    "Bandera a cuadros. La sesión termina sin una vuelta válida que contar.",
                     totalSegmentos, TrackSector.SECTOR_3, Prioridad.RUTINA));
         }
         int posicion = resultado.getPosicion();
-        String texto = posicion == 1
-                ? "¡Eso es la pole! Vuelta espectacular, tío."
-                : posicion <= 3
-                        ? "P" + posicion + ". Muy buena vuelta, estamos ahí."
-                        : "P" + posicion + ". Buen trabajo, lo miramos dentro.";
         List<RadioMessage> cierre = new ArrayList<>();
-        cierre.add(RadioMessage.ingeniero(texto, totalSegmentos, TrackSector.SECTOR_3,
-                Prioridad.IMPORTANTE));
+        cierre.add(hablar(RaceEvent.sessionEnd(posicion, resultado.getPiloto(), resultado.getEquipo(),
+                totalSegmentos)));
         cierre.add(RadioMessage.piloto(posicion == 1
                         ? "¡Vamos! Gran trabajo todos."
                         : "Recibido. Gracias, chicos.",
                 totalSegmentos, TrackSector.SECTOR_3));
         return cierre;
+    }
+
+    private RadioMessage hablar(RaceEvent evento) {
+        String texto = narratorService.generate(evento);
+        return RadioMessage.ingeniero(texto, evento.getLap(), evento.getSector(),
+                evento.getPriority());
     }
 
     private String etiquetaSector(TrackSector sector) {
