@@ -2,6 +2,7 @@ package com.formula1.controller;
 
 import com.formula1.data.DataStore;
 import com.formula1.service.CircuitService;
+import com.formula1.service.TeamService;
 import com.formula1.service.VehicleService;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -14,6 +15,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -33,14 +35,24 @@ class ExploreViewsLoadTest {
     }
 
     @Test
-    void cargaGarajeCircuitosYDetalleConSusDatos() throws InterruptedException {
+    void cargaTeamsYLosDetallesConSusDatos() throws InterruptedException {
         CountDownLatch hecho = new CountDownLatch(1);
         AtomicReference<Throwable> fallo = new AtomicReference<>();
         Platform.runLater(() -> {
             try {
                 DataStore datos = DataStore.enMemoria();
-                cargar("explore-vehicles", new ExploreVehiclesController(new VehicleService(datos)));
-                cargar("explore-circuits", new ExploreCircuitsController(new CircuitService(datos)));
+                Parent teams = cargar("explore-teams", new ExploreTeamsController(
+                        new TeamService(datos), new VehicleService(datos)));
+                // Una tarjeta por escudería del seed.
+                assertEquals(new TeamService(datos).listar().size(),
+                        teams.lookupAll(".team-card").size(),
+                        "la rejilla debe mostrar una tarjeta por equipo");
+
+                Parent fichaEquipo = cargar("team-detail", new TeamDetailController(
+                        new TeamService(datos), new VehicleService(datos)));
+                assertNotNull(fichaEquipo.lookup("#marcoCoche"));
+                assertNotNull(fichaEquipo.lookup("#tarjetasPilotos"));
+
                 Parent detalle = cargar("circuit-detail", new CircuitDetailController(
                         new CircuitService(datos), new VehicleService(datos)));
                 assertNotNull(detalle.lookup("#tablaImpacto"));

@@ -1,5 +1,8 @@
 package com.formula1.controller;
 
+import com.formula1.util.AudioManager;
+import com.formula1.util.Imagenes;
+
 import javafx.animation.AnimationTimer;
 import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;
@@ -37,6 +40,12 @@ public final class IntroController {
 
     private static final int PARTICULAS = 90;
 
+    /** Ancho al que se pinta el logo; se decodifica al doble por nitidez. */
+    private static final double ANCHO_LOGO = 420;
+
+    /** Sonido de apertura. Si el fichero falta, la intro va en silencio. */
+    private static final String SONIDO_INTRO = "/audio/intro-sound.mp3";
+
     private IntroController() {
     }
 
@@ -55,7 +64,7 @@ public final class IntroController {
             logo.setImage(imagen);
         }
         logo.setPreserveRatio(true);
-        logo.setFitWidth(420);
+        logo.setFitWidth(ANCHO_LOGO);
         logo.setOpacity(0);
         logo.setScaleX(0.85);
         logo.setScaleY(0.85);
@@ -74,9 +83,18 @@ public final class IntroController {
         Runnable terminarUnaVez = () -> {
             if (terminado.compareAndSet(false, true)) {
                 particulas.stop();
+                AudioManager.detenerMusica();
                 alTerminar.run();
             }
         };
+
+        // Arranca con la animación y se corta en terminarUnaVez, que es el
+        // embudo por el que pasan tanto el final natural como el salto.
+        //
+        // Va como música y no como efecto porque un AudioClip no se puede
+        // parar a media reproducción: si el usuario salta la intro, el sonido
+        // seguiría sonando ya dentro del menú.
+        AudioManager.reproducirMusica(SONIDO_INTRO, false);
 
         ParallelTransition entradaLogo = new ParallelTransition(
                 fade(logo, 0, 1, ENTRADA),
@@ -197,11 +215,10 @@ public final class IntroController {
     }
 
     private static Image cargarLogo() {
-        var recurso = IntroController.class.getResourceAsStream("/images/LogoF1.png");
-        if (recurso == null) {
-            return null;
-        }
-        return new Image(recurso);
+        // LogoF1.png son 920x800 y aquí se pinta a 420 de ancho. Pasa por
+        // Imagenes para decodificarlo a medida y compartirlo con el menú, que
+        // hasta ahora lo abría por segunda vez a resolución nativa.
+        return Imagenes.cargar("/images/LogoF1.png", ANCHO_LOGO * 2, 0);
     }
 
     private static FadeTransition fade(Node nodo, double desde, double hasta, Duration duracion) {

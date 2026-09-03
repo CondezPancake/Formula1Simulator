@@ -2,11 +2,11 @@ package com.formula1;
 
 import com.formula1.controller.IntroController;
 import com.formula1.controller.MainMenuController;
+import com.formula1.controller.ShellController;
 import com.formula1.data.DataStore;
 import com.formula1.data.MongoConnection;
 import com.formula1.util.Async;
 
-import javafx.animation.FadeTransition;
 import javafx.application.Application;
 import javafx.concurrent.Task;
 import javafx.fxml.FXMLLoader;
@@ -16,7 +16,6 @@ import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 
 import java.io.IOException;
 import java.net.URL;
@@ -26,10 +25,9 @@ public class App extends Application {
     private static final String VISTA_MENU = "/views/menu.fxml";
     private static final String VISTA_SHELL = "/views/shell.fxml";
     private static final String HOJA_ESTILOS = "/css/style.css";
-    private static final Duration CRUCE = Duration.millis(400);
 
-    /** Se guarda para poder soltar su vídeo al entrar al shell. */
-    private MainMenuController menuActual;
+    /** Se guarda para que suelte su reloj al volver al menú. */
+    private ShellController shellActual;
 
     /**
      * Titillium Web fue la tipografia oficial de la F1 entre 2013 y 2017 y es
@@ -80,44 +78,48 @@ public class App extends Application {
         raizEscena.getChildren().setAll(intro);
     }
 
-    /** Carga el menú principal y hace un cruce de opacidad con lo que hubiera antes. */
+    /** Carga el menú principal y lo pone en pantalla. */
     private void mostrarMenu(StackPane raizEscena) {
         try {
+            if (shellActual != null) {
+                shellActual.liberar();
+                shellActual = null;
+            }
             FXMLLoader cargador = new FXMLLoader(getClass().getResource(VISTA_MENU));
             Parent menu = cargador.load();
             MainMenuController controlador = cargador.getController();
-            menuActual = controlador;
             controlador.setAlEntrarAlShell(irA -> mostrarShell(raizEscena, irA));
-            cruzar(raizEscena, menu);
+            mostrar(raizEscena, menu);
         } catch (IOException e) {
             throw new IllegalStateException("No se pudo cargar el menú principal", e);
         }
     }
 
-    /** Carga el shell (ya con su sección inicial resuelta) y hace el mismo cruce. */
+    /** Carga el shell ya con su sección inicial resuelta. */
     private void mostrarShell(StackPane raizEscena, Runnable alTerminarDeCargar) {
         try {
-            // Sin esto el vídeo del menú seguiría decodificando durante la sesión.
-            if (menuActual != null) {
-                menuActual.liberar();
-                menuActual = null;
-            }
-            Parent shell = FXMLLoader.load(getClass().getResource(VISTA_SHELL));
-            cruzar(raizEscena, shell);
-            alTerminarDeCargar.run();
+            FXMLLoader cargador = new FXMLLoader(getClass().getResource(VISTA_SHELL));
+            Parent shell = cargador.load();
+            ShellController controlador = cargador.getController();
+            shellActual = controlador;
+            controlador.setAlVolverAlMenu(() -> mostrarMenu(raizEscena));
+            // Antes de mostrarlo, para que aparezca ya en la sección elegida
+            // en vez de asomar en Carrera y saltar acto seguido.
+            controlador.arrancar(alTerminarDeCargar);
+            mostrar(raizEscena, shell);
         } catch (IOException e) {
             throw new IllegalStateException("No se pudo cargar la aplicación", e);
         }
     }
 
-    /** Añade {@code entrante} con fade-in mientras desvanece lo que hubiera en la raíz. */
-    private void cruzar(StackPane raizEscena, Node entrante) {
-        entrante.setOpacity(0);
-        raizEscena.getChildren().add(entrante);
-        FadeTransition entrada = new FadeTransition(CRUCE, entrante);
-        entrada.setToValue(1);
-        entrada.setOnFinished(e -> raizEscena.getChildren().remove(0));
-        entrada.play();
+    /**
+     * Cambio de pantalla, sin transición.
+     *
+     * Es un relevo seco a propósito: la intro se desvanece ella sola antes de
+     * llamar a su callback, así que el corte no llega a verse.
+     */
+    private void mostrar(StackPane raizEscena, Node pantalla) {
+        raizEscena.getChildren().setAll(pantalla);
     }
 
     /**

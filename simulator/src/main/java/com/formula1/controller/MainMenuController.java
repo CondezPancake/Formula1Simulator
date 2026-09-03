@@ -2,80 +2,70 @@ package com.formula1.controller;
 
 import com.formula1.data.DataStore;
 import com.formula1.util.AudioManager;
+import com.formula1.util.ImageCrop;
+import com.formula1.util.Imagenes;
 
-import javafx.animation.Animation;
-import javafx.animation.Interpolator;
-import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
-import javafx.animation.PauseTransition;
-import javafx.animation.ScaleTransition;
-import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
-import javafx.beans.binding.Bindings;
-import javafx.beans.binding.DoubleBinding;
-import javafx.beans.property.DoubleProperty;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
-import javafx.scene.Node;
+import javafx.scene.CacheHint;
+import javafx.scene.Group;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Labeled;
+import javafx.scene.effect.PerspectiveTransform;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.BorderPane;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.media.Media;
-import javafx.scene.media.MediaPlayer;
-import javafx.scene.media.MediaView;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Polygon;
-import javafx.scene.shape.Rectangle;
-import javafx.scene.shape.StrokeType;
+import javafx.scene.shape.SVGPath;
 import javafx.scene.text.Text;
 import javafx.scene.transform.Scale;
-import javafx.scene.transform.Translate;
-import javafx.util.Duration;
 
 import java.io.InputStream;
-import java.net.URL;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 /**
- * Menú principal: hub estilo videojuego que se muestra tras la intro.
+ * Menú principal, reproduciendo el del videojuego F1 23.
  *
- * La geometría se aplica aquí y no en el FXML porque el mockup
- * (docs/assets/menu_mockup.png, 1672x941) no es una rejilla regular: las
- * cinco tarjetas tienen anchos, alturas y bordes superiores distintos, y
- * todo —incluidos los cuerpos de letra— escala con la ventana.
+ * Referencia: {@code docs/assets/f1-23-menu-referencia.jpg}. Pantalla partida:
+ * a la izquierda la lista de opciones —la activa dentro de un marco y con
+ * galones a su derecha— con su descripción debajo; a la derecha el escenario
+ * con el título de la sección.
+ *
+ * Es un menú <b>estático</b>: cambiar de opción repinta al instante, sin
+ * transiciones. Lo único que se mueve en toda la pantalla es el cursor.
  */
 public class MainMenuController {
 
-    private static final Duration HOVER = Duration.millis(160);
+    /** Alto de referencia del que salen todas las proporciones tipográficas. */
+    private static final double REF_ALTO = 940;
 
-    /** Alto y ancho del mockup del que salen todas las proporciones. */
-    private static final double REF_ALTO = 941;
-    private static final double REF_ANCHO = 1672;
+    /**
+     * Cota superior de cordura para cualquier medida de layout. En algunos
+     * compositores (visto en Hyprland/Wayland) {@code Stage.setMaximized}
+     * hace que, durante un único pulso, la ventana informe un alto
+     * disparatado (miles de millones de px) antes de que llegue el real. Sin
+     * este tope ese valor se propaga a los cuerpos de letra y revienta el
+     * cálculo interno de ajuste de texto de JavaFX de forma permanente.
+     */
+    private static final double LADO_MAXIMO_RAZONABLE = 8000;
 
-    /** Corte a 45 grados de la esquina superior derecha, constante en px. */
-    private static final double CHAFLAN = 20;
-
-    private static final double VIDEO_ANCHO = 1280;
-    private static final double VIDEO_ALTO = 720;
-    private static final double FONDO_ANCHO = 1920;
-    private static final double FONDO_ALTO = 1080;
-
-    /** Confirmación: entrar a una sección principal. */
-    private static final String SFX_PRINCIPAL = "/audio/sound1.mp3";
-    /** Acción secundaria: ajustes, salir. */
-    private static final String SFX_SECUNDARIO = "/audio/sound2.mp3";
+    /** Confirmación: entrar a una sección. */
+    private static final String SFX_CONFIRMAR = "/audio/sound1.mp3";
+    /** Acompañamiento al recorrer la lista, por debajo del de confirmación. */
+    private static final String SFX_MOVER = "/audio/sound2.mp3";
+    private static final double VOLUMEN_MOVER = 0.35;
+    /** Los clips duran ~1,5 s: sin esto, recorrer la lista los apilaría. */
+    private static final long ESPERA_SFX_MOVER_MS = 350;
 
     /**
      * El wordmark ocupa solo la banda central de LogoF1.png (920x800): sin
@@ -83,327 +73,428 @@ public class MainMenuController {
      */
     private static final Rectangle2D RECORTE_LOGO = new Rectangle2D(85, 295, 750, 190);
 
-    /** x, y, ancho y alto de cada tarjeta como fracción del lienzo. */
-    private record Caja(double x, double y, double w, double h) { }
+    /** Galón de la fila activa, en caja 0 0 12 24. */
+    private static final String RUTA_GALON = "M2 3 L10 12 L2 21";
 
-    private static final Caja CAJA_CLASIFICACION = new Caja(0.02273, 0.42295, 0.23923, 0.43783);
-    private static final Caja CAJA_GESTION       = new Caja(0.27452, 0.45483, 0.20155, 0.38789);
-    private static final Caja CAJA_EXPLORAR      = new Caja(0.48565, 0.45483, 0.17943, 0.38789);
-    private static final Caja CAJA_HISTORIAL     = new Caja(0.67464, 0.45483, 0.16507, 0.38789);
-    private static final Caja CAJA_AJUSTES       = new Caja(0.84809, 0.45377, 0.12560, 0.23379);
+    /** Se decodifica el arte por encima del tamaño de pintado, por nitidez. */
+    private static final double FACTOR_NITIDEZ_ARTE = 1.25;
+    /** Recorte sesgado hacia arriba: menu-explorar.png es vertical. */
+    private static final double SESGO_ARTE = 0.18;
+    /** Cuánto se recoge el lado izquierdo del arte, como fracción del alto. */
+    private static final double RETRANQUEO_ARTE = 0.035;
 
-    @FXML private StackPane raiz;
-    @FXML private StackPane capaFondo;
-    @FXML private BorderPane capaContenido;
-    @FXML private Pane capaTarjetas;
+    /**
+     * Una entrada del menú: lo que se lee, lo que explica y a dónde lleva.
+     *
+     * El orden del array es el orden en pantalla, y se conserva del menú
+     * anterior a propósito.
+     */
+    private record Opcion(String titulo, String descripcion, String arte, Runnable destino) { }
 
+    private final Opcion[] opciones = {
+        new Opcion("CLASIFICACIÓN",
+                "Monta una sesión de clasificación: elige circuito, monoplaza y piloto, "
+                        + "y pelea por la pole contra el resto de la parrilla.",
+                "/images/menu-clasificacion.png",
+                () -> entrarAlShell(ShellController::irACarrera)),
+        new Opcion("GESTIÓN DE EQUIPOS",
+                "Administra la parrilla: da de alta y edita escuderías, pilotos, "
+                        + "vehículos y circuitos, y compara monoplazas entre sí.",
+                "/images/menu-gestionequipo.png",
+                () -> entrarAlShell(ShellController::irAGestion)),
+        new Opcion("EXPLORAR",
+                "Consulta las fichas de los pilotos, el garaje de monoplazas y "
+                        + "los trazados disponibles para la sesión.",
+                "/images/menu-explorar.png",
+                () -> entrarAlShell(ShellController::irAExplorar)),
+        new Opcion("HISTORIAL",
+                "Revisa las sesiones ya disputadas, con sus victorias, podios "
+                        + "y tiempos por sector.",
+                "/images/menu-historial.jpg",
+                () -> entrarAlShell(ShellController::irAHistorial)),
+        new Opcion("AJUSTES",
+                "Ajusta el volumen de la música y de los efectos, o silencia "
+                        + "el simulador por completo.",
+                "/images/menu-ajustes.jpg",
+                AjustesDialog::mostrar),
+    };
+
+    @FXML private GridPane raiz;
+    @FXML private VBox panelIzquierdo;
+    @FXML private HBox cajaMarca;
     @FXML private ImageView logoF1;
-    @FXML private Label lblAnio;
     @FXML private HBox cajaTemporada;
-    @FXML private HBox cajaStats;
-    @FXML private HBox cajaSalir;
-    @FXML private Region fileteSalir;
+    @FXML private VBox listaOpciones;
+    @FXML private Label lblDescripcion;
+    @FXML private VBox cajaPie;
+    @FXML private Button btnSalir;
+    @FXML private Label lblPistas;
 
-    @FXML private StackPane envolturaClasificacion;
-    @FXML private StackPane envolturaGestion;
-    @FXML private StackPane envolturaExplorar;
-    @FXML private StackPane envolturaHistorial;
-    @FXML private StackPane envolturaAjustes;
-
-    @FXML private Button tileClasificacion;
-    @FXML private Button tileGestion;
-    @FXML private Button tileExplorar;
-    @FXML private Button tileHistorial;
-    @FXML private Button tileAjustes;
-
-    @FXML private VBox cuerpoClasificacion;
-    @FXML private VBox cuerpoGestion;
-    @FXML private VBox cuerpoExplorar;
-    @FXML private VBox cuerpoHistorial;
-    @FXML private VBox cuerpoAjustes;
-
-    @FXML private Label tituloClasificacion;
-    @FXML private Label tituloGestion;
-    @FXML private Label tituloExplorar;
-    @FXML private Label tituloHistorial;
-    @FXML private Label tituloAjustes;
-
-    @FXML private Label subtituloClasificacion;
-    @FXML private Label subtituloGestion;
-    @FXML private Label subtituloExplorar;
-    @FXML private Label subtituloHistorial;
-
-    @FXML private Region fileteClasificacion;
-
-    @FXML private Scale escalaIconoClasificacion;
-    @FXML private Scale escalaIconoGestion;
-    @FXML private Scale escalaIconoExplorar;
-    @FXML private Scale escalaIconoHistorial;
-    @FXML private Scale escalaIconoAjustes;
+    @FXML private StackPane escenario;
+    @FXML private Group capaArte;
+    @FXML private Region veloArte;
+    @FXML private HBox cajaHud;
+    @FXML private VBox cajaTitulo;
+    @FXML private Region fileteTitulo;
+    @FXML private Label lblTituloSeccion;
+    @FXML private Label lblPieSeccion;
 
     /** App inyecta aquí cómo pasar de este menú al shell, para no depender de él. */
     private Consumer<Runnable> alEntrarAlShell = irA -> { };
 
-    private final AtomicBoolean respaldoActivo = new AtomicBoolean(false);
-    private MediaPlayer reproductorFondo;
-    private Timeline kenBurns;
-    private Timeline sondeoDatos;
+    /** Una fila por opción, en el mismo orden que {@link #opciones}. */
+    private final HBox[] filas = new HBox[5];
+    private final StackPane[] marcos = new StackPane[5];
+    private final Label[] etiquetas = new Label[5];
+    private final HBox[] galones = new HBox[5];
+    private final Scale[] escalasGalon = new Scale[5];
+
+    private int seleccionada = 0;
+    private long ultimoSfxMoverMs = 0;
+
+    /** Se guarda la referencia para poder retirar el filtro de la escena. */
+    private final EventHandler<KeyEvent> filtroTeclado = this::alPulsarTecla;
 
     @FXML
     public void initialize() {
-        montarFondo();
-        montarCapaDeTarjetas();
-        montarChaflanes();
+        cargarLogo();
+        construirFilas();
+        rellenarHud();
+        montarTeclado();
         montarEscalado();
-        actualizarStats();
-        aplicarHover(envolturaClasificacion);
-        aplicarHover(envolturaGestion);
-        aplicarHover(envolturaExplorar);
-        aplicarHover(envolturaHistorial);
-        aplicarHover(envolturaAjustes);
+        seleccionar(0);
     }
 
     public void setAlEntrarAlShell(Consumer<Runnable> callback) {
         this.alEntrarAlShell = callback;
     }
 
-    // --- geometría --------------------------------------------------------
+    // --- construcción -----------------------------------------------------
+
+    private void construirFilas() {
+        for (int i = 0; i < opciones.length; i++) {
+            Label texto = new Label(opciones[i].titulo());
+            texto.getStyleClass().add("menu-opcion-texto");
+
+            // El marco ciñe al texto, no ocupa la columna entera: en la
+            // referencia el recuadro termina justo después de la palabra.
+            StackPane marco = new StackPane(texto);
+            marco.getStyleClass().add("menu-opcion-marco");
+            marco.setAlignment(Pos.CENTER_LEFT);
+            marco.setMaxWidth(Region.USE_PREF_SIZE);
+
+            HBox galon = construirGalones(i);
+
+            // La fila sí ocupa todo el ancho, para que el ratón la coja
+            // entera y no solo encima de la palabra.
+            HBox fila = new HBox(marco, galon);
+            fila.getStyleClass().add("menu-opcion");
+            fila.setAlignment(Pos.CENTER_LEFT);
+
+            final int indice = i;
+            // El ratón solo mueve el resaltado; entrar exige clic, como en un
+            // menú de consola donde el foco y la confirmación son distintos.
+            fila.setOnMouseEntered(e -> seleccionar(indice));
+            fila.setOnMouseClicked(e -> activar(indice));
+
+            filas[i] = fila;
+            marcos[i] = marco;
+            etiquetas[i] = texto;
+            galones[i] = galon;
+            listaOpciones.getChildren().add(fila);
+        }
+    }
+
+    /** Tres galones de opacidad decreciente, el rasgo del menú de F1 23. */
+    private HBox construirGalones(int indice) {
+        HBox caja = new HBox();
+        caja.setAlignment(Pos.CENTER_LEFT);
+        Scale escala = new Scale(1, 1);
+        escalasGalon[indice] = escala;
+
+        double[] opacidades = {0.85, 0.5, 0.25};
+        for (double opacidad : opacidades) {
+            SVGPath galon = new SVGPath();
+            galon.setContent(RUTA_GALON);
+            galon.getStyleClass().add("menu-galon");
+            galon.setOpacity(opacidad);
+            Group envoltura = new Group(galon);
+            envoltura.getTransforms().add(escala);
+            caja.getChildren().add(envoltura);
+        }
+        return caja;
+    }
+
+    /** Contadores reales de la parrilla, como la tira de estado de la referencia. */
+    private void rellenarHud() {
+        DataStore datos = DataStore.getInstance();
+        // Se pinta una sola vez: la carga arrancó en paralelo a la intro, que
+        // dura ~6 s, así que a esta altura ya terminó. Si no, quedan guiones
+        // en vez de montar un temporizador para un dato decorativo.
+        boolean listo = datos.estaCargado();
+        String[] valores = {
+            (listo ? String.valueOf(datos.pilotos().size()) : "—") + " PILOTOS",
+            (listo ? String.valueOf(datos.equipos().size()) : "—") + " EQUIPOS",
+            (listo ? String.valueOf(datos.circuitos().size()) : "—") + " CIRCUITOS",
+            "TEMPORADA 2025",
+        };
+        cajaHud.getChildren().clear();
+        for (int i = 0; i < valores.length; i++) {
+            if (i > 0) {
+                Text separador = new Text("  ·  ");
+                separador.getStyleClass().add("menu-hud-separador");
+                cajaHud.getChildren().add(separador);
+            }
+            Text glifo = new Text(valores[i]);
+            glifo.getStyleClass().add("menu-hud-glifo");
+            cajaHud.getChildren().add(glifo);
+        }
+    }
 
     /**
-     * Coloca las tarjetas por fracciones del lienzo.
+     * El teclado se engancha a la escena, no a la raíz.
      *
-     * Los hijos van sin gestionar: si estuvieran gestionados, el propio
-     * {@code Pane} los recolocaría en cada pasada de layout y pisaría estas
-     * posiciones.
+     * Un manejador en la raíz solo dispara si el foco está justamente ahí, y
+     * basta que lo tenga el botón SALIR para que las flechas dejen de
+     * responder. Un filtro en la escena recoge la tecla venga de donde venga,
+     * que es como se comporta un menú de consola.
+     *
+     * Como la aplicación reutiliza una única {@code Scene} para todas las
+     * pantallas, el filtro <b>hay que quitarlo</b> al salir del menú: si no,
+     * seguiría interceptando las flechas dentro del shell.
      */
-    private void montarCapaDeTarjetas() {
-        Map<Region, Caja> cajas = new LinkedHashMap<>();
-        cajas.put(envolturaClasificacion, CAJA_CLASIFICACION);
-        cajas.put(envolturaGestion, CAJA_GESTION);
-        cajas.put(envolturaExplorar, CAJA_EXPLORAR);
-        cajas.put(envolturaHistorial, CAJA_HISTORIAL);
-        cajas.put(envolturaAjustes, CAJA_AJUSTES);
-
-        cajas.keySet().forEach(nodo -> nodo.setManaged(false));
-
-        InvalidationListener recolocar = observable -> {
-            double w = capaTarjetas.getWidth();
-            double h = capaTarjetas.getHeight();
-            if (w <= 0 || h <= 0) {
-                return;
+    private void montarTeclado() {
+        raiz.setFocusTraversable(true);
+        raiz.sceneProperty().addListener((obs, antigua, nueva) -> {
+            if (antigua != null) {
+                antigua.removeEventFilter(KeyEvent.KEY_PRESSED, filtroTeclado);
             }
-            cajas.forEach((nodo, caja) ->
-                    nodo.resizeRelocate(caja.x() * w, caja.y() * h, caja.w() * w, caja.h() * h));
-            // Los títulos se miden contra el ancho ya asignado a cada tarjeta.
-            aplicarTipografiaTarjetas();
-        };
-        capaTarjetas.widthProperty().addListener(recolocar);
-        capaTarjetas.heightProperty().addListener(recolocar);
-        recolocar.invalidated(null);
+            if (nueva != null) {
+                nueva.addEventFilter(KeyEvent.KEY_PRESSED, filtroTeclado);
+                // El foco no se puede pedir hasta estar en una escena.
+                Platform.runLater(raiz::requestFocus);
+            }
+        });
     }
 
-    private void montarChaflanes() {
-        for (Button tile : new Button[]{tileClasificacion, tileGestion, tileExplorar,
-                                        tileHistorial, tileAjustes}) {
-            tile.setClip(chaflanDe(tile));
+    private void alPulsarTecla(KeyEvent e) {
+        switch (e.getCode()) {
+            case UP, W -> { mover(-1); e.consume(); }
+            case DOWN, S -> { mover(1); e.consume(); }
+            case ENTER, SPACE -> { activar(seleccionada); e.consume(); }
+            case ESCAPE -> { onSalir(); e.consume(); }
+            default -> { }
         }
-        // El borde de AJUSTES no puede ser CSS: el clip lo recortaría sin
-        // seguir el chaflán. Va como contorno hermano con los mismos puntos.
-        Polygon contorno = chaflanDe(tileAjustes);
-        contorno.setFill(null);
-        contorno.setStroke(Color.web("#6B6A69", 0.85));
-        contorno.setStrokeWidth(1.4);
-        contorno.setStrokeType(StrokeType.INSIDE);
-        contorno.setMouseTransparent(true);
-        contorno.setManaged(false);
-        StackPane.setAlignment(contorno, Pos.TOP_LEFT);
-        envolturaAjustes.getChildren().add(contorno);
     }
 
-    /** Rectángulo con la esquina superior derecha cortada a 45 grados. */
-    private static Polygon chaflanDe(Region region) {
-        Polygon poligono = new Polygon();
-        Runnable rehacer = () -> {
-            double w = region.getWidth();
-            double h = region.getHeight();
-            if (w <= 0 || h <= 0) {
-                return;
+    // --- selección --------------------------------------------------------
+
+    /** Envolvente: bajar desde la última lleva a la primera y al revés. */
+    private void mover(int delta) {
+        int destino = Math.floorMod(seleccionada + delta, opciones.length);
+        if (destino != seleccionada) {
+            reproducirSfxMover();
+        }
+        seleccionar(destino);
+    }
+
+    /**
+     * Única fuente de verdad del estado del menú: repinta las cinco filas, la
+     * descripción y el escenario a partir del índice activo.
+     */
+    private void seleccionar(int indice) {
+        seleccionada = indice;
+        for (int i = 0; i < filas.length; i++) {
+            boolean activa = i == indice;
+            marcos[i].getStyleClass().remove("menu-opcion-activa");
+            if (activa) {
+                marcos[i].getStyleClass().add("menu-opcion-activa");
             }
-            double c = Math.min(CHAFLAN, Math.min(w, h) / 2);
-            poligono.getPoints().setAll(
-                    0.0,   0.0,
-                    w - c, 0.0,
-                    w,     c,
-                    w,     h,
-                    0.0,   h);
-        };
-        region.widthProperty().addListener((o, a, b) -> rehacer.run());
-        region.heightProperty().addListener((o, a, b) -> rehacer.run());
-        rehacer.run();
-        return poligono;
+            // Los galones solo acompañan a la fila activa.
+            galones[i].setVisible(activa);
+            galones[i].setManaged(activa);
+        }
+        Opcion opcion = opciones[indice];
+        lblDescripcion.setText(opcion.descripcion());
+        lblTituloSeccion.setText(opcion.titulo());
+        lblPieSeccion.setText("SIMULADOR DE FÓRMULA 1");
+        pintarArte(opcion);
+        aplicarEscalado();
     }
 
-    // --- tipografía y escalado -------------------------------------------
+    // --- arte del panel derecho -------------------------------------------
 
-    /** Todo lo que depende del tamaño de la ventana se recalcula aquí. */
+    /**
+     * Coloca la imagen de la opción activa en el panel derecho.
+     *
+     * El encaje es «cover»: se recorta a la proporción del panel en vez de
+     * deformarse. El sesgo del recorte va hacia arriba porque
+     * {@code menu-explorar.png} es vertical y centrarlo dejaría fuera lo que
+     * interesa.
+     */
+    private void pintarArte(Opcion opcion) {
+        double w = escenario.getWidth();
+        double h = escenario.getHeight();
+        if (!medidaValida(w) || !medidaValida(h)) {
+            return;   // aún sin tamaño; el listener del panel repetirá
+        }
+
+        Image imagen = Imagenes.cargar(opcion.arte(), w * FACTOR_NITIDEZ_ARTE, 0);
+        if (imagen == null) {
+            capaArte.getChildren().clear();
+            return;
+        }
+
+        ImageView vista = ImageCrop.encajar(imagen, w, h, SESGO_ARTE);
+        // El Group no lo coloca el StackPane (va sin gestionar), así que la
+        // vista se ancla a mano en el origen del panel.
+        vista.setLayoutX(0);
+        vista.setLayoutY(0);
+        vista.setEffect(relieve(w, h));
+        // El arte no cambia salvo al elegir otra opción: se rasteriza una vez
+        // en vez de recalcular la perspectiva en cada fotograma.
+        vista.setCache(true);
+        vista.setCacheHint(CacheHint.SPEED);
+        capaArte.getChildren().setAll(vista);
+    }
+
+    /**
+     * Da volumen a la imagen para que no parezca una lámina pegada.
+     *
+     * Es un {@link PerspectiveTransform} con las dos esquinas del lado
+     * izquierdo recogidas hacia dentro: ese lado queda «más lejos» y el plano
+     * se lee inclinado, hundiéndose hacia la mitad negra del menú. Sus
+     * coordenadas son absolutas en píxeles, así que hay que rehacerlo cada vez
+     * que cambia el tamaño del panel.
+     *
+     * No lleva animación a propósito: el menú es estático.
+     */
+    private static PerspectiveTransform relieve(double w, double h) {
+        double retranqueo = h * RETRANQUEO_ARTE;
+        PerspectiveTransform perspectiva = new PerspectiveTransform();
+        perspectiva.setUlx(0);      perspectiva.setUly(retranqueo);
+        perspectiva.setUrx(w);      perspectiva.setUry(0);
+        perspectiva.setLrx(w);      perspectiva.setLry(h);
+        perspectiva.setLlx(0);      perspectiva.setLly(h - retranqueo);
+        return perspectiva;
+    }
+
+    private void activar(int indice) {
+        seleccionar(indice);
+        AudioManager.reproducirSfx(SFX_CONFIRMAR);
+        opciones[indice].destino().run();
+    }
+
+    private void entrarAlShell(Runnable destinoEnShell) {
+        alEntrarAlShell.accept(destinoEnShell);
+    }
+
+    private void reproducirSfxMover() {
+        long ahora = System.currentTimeMillis();
+        if (ahora - ultimoSfxMoverMs < ESPERA_SFX_MOVER_MS) {
+            return;
+        }
+        ultimoSfxMoverMs = ahora;
+        AudioManager.reproducirSfx(SFX_MOVER, VOLUMEN_MOVER);
+    }
+
+    @FXML
+    private void onSalir() {
+        AudioManager.reproducirSfx(SFX_MOVER, VOLUMEN_MOVER);
+        if (Navigator.confirmar("¿Quieres salir del simulador?")) {
+            Platform.exit();
+        }
+    }
+
+    // --- escalado ---------------------------------------------------------
+
+    /** El menú escala con la ventana, así que la tipografía se recalcula. */
     private void montarEscalado() {
         InvalidationListener escalar = observable -> aplicarEscalado();
         raiz.widthProperty().addListener(escalar);
         raiz.heightProperty().addListener(escalar);
 
-        // El Button no recibe su tamaño hasta la pasada de layout siguiente a
-        // la de la envoltura, asi que la tipografia de cada tarjeta se
-        // recalcula cuando el propio Button cambia de tamaño.
-        InvalidationListener porTarjeta = observable -> aplicarTipografiaTarjetas();
-        for (Button tile : new Button[]{tileClasificacion, tileGestion, tileExplorar,
-                                        tileHistorial, tileAjustes}) {
-            tile.widthProperty().addListener(porTarjeta);
-            tile.heightProperty().addListener(porTarjeta);
-        }
-
-        aplicarEscalado();
+        // El arte necesita el tamaño del panel derecho, no el de la raíz, y
+        // el GridPane reparte el ancho a sus columnas en una pasada posterior:
+        // cuando la raíz ya mide, `escenario` todavía está a cero. Sin este
+        // listener el panel se quedaba vacío hasta que algo volvía a disparar
+        // el escalado —pasar el ratón por la lista—, así que recién arrancado
+        // no se veía ninguna imagen.
+        InvalidationListener repintarArte = observable -> pintarArte(opciones[seleccionada]);
+        escenario.widthProperty().addListener(repintarArte);
+        escenario.heightProperty().addListener(repintarArte);
     }
 
     private void aplicarEscalado() {
         double h = raiz.getHeight();
-        double w = raiz.getWidth();
-        if (h <= 0 || w <= 0) {
+        if (!medidaValida(h)) {
             return;
         }
 
-        logoF1.setFitHeight(px(35, h));
-        estiloFuente(lblAnio, px(48, h));
+        double margen = px(64, h);
+        panelIzquierdo.setPadding(new Insets(px(58, h), margen, px(44, h), margen));
+        panelIzquierdo.setSpacing(px(30, h));
+        // El margen va en el contenido, no en el panel: si lo lleva el panel,
+        // el arte y su velo se quedan dentro del hueco y aparece un marco del
+        // fondo alrededor en vez de llegar a los bordes.
+        StackPane.setMargin(cajaHud, new Insets(px(26, h), px(34, h), 0, 0));
+        StackPane.setMargin(cajaTitulo, new Insets(0, 0, px(46, h), px(46, h)));
 
-        rellenarTracking(cajaTemporada, "TEMPORADA 2025", "menu-temporada-glifo", px(11, h), w);
-        rellenarTracking(cajaSalir, "SALIR", "menu-salir-glifo", px(13, h), w);
-        aplicarStats(DataStore.getInstance());
+        logoF1.setFitHeight(px(38, h));
+        rellenarTracking(cajaTemporada, "TEMPORADA 2025", px(11, h));
 
-        fileteSalir.setPrefSize(w * 33 / REF_ANCHO, Math.max(1, px(2, h)));
-        fileteSalir.setMaxSize(w * 33 / REF_ANCHO, Math.max(1, px(2, h)));
-        fileteClasificacion.setPrefSize(w * 58 / REF_ANCHO, Math.max(2, px(4, h)));
-        fileteClasificacion.setMaxSize(w * 58 / REF_ANCHO, Math.max(2, px(4, h)));
-
-        escalaIcono(escalaIconoClasificacion, px(98, h));
-        escalaIcono(escalaIconoGestion, px(77, h));
-        escalaIcono(escalaIconoExplorar, px(77, h));
-        escalaIcono(escalaIconoHistorial, px(77, h));
-        escalaIcono(escalaIconoAjustes, px(31, h));
-
-        estiloFuente(subtituloClasificacion, px(15, h));
-        estiloFuente(subtituloGestion, px(14, h));
-        estiloFuente(subtituloExplorar, px(14, h));
-        estiloFuente(subtituloHistorial, px(14, h));
-
-        aplicarTipografiaTarjetas();
-    }
-
-    /**
-     * Cuerpo y título de cada tarjeta. Va aparte porque depende del ancho ya
-     * asignado a la tarjeta, que se resuelve en la pasada de layout de
-     * {@code capaTarjetas}, no cuando cambia el tamaño de la ventana.
-     */
-    private void aplicarTipografiaTarjetas() {
-        double h = raiz.getHeight();
-        if (h <= 0) {
-            return;
+        listaOpciones.setSpacing(px(6, h));
+        for (int i = 0; i < etiquetas.length; i++) {
+            estiloFuente(etiquetas[i], px(i == seleccionada ? 31 : 25, h));
+            filas[i].setSpacing(px(22, h));
+            galones[i].setSpacing(px(3, h));
+            double factor = px(26, h) / 24.0;   // las rutas viven en caja 0 0 12 24
+            escalasGalon[i].setX(factor);
+            escalasGalon[i].setY(factor);
         }
-        ajustarCuerpo(cuerpoClasificacion, tileClasificacion);
-        ajustarCuerpo(cuerpoGestion, tileGestion);
-        ajustarCuerpo(cuerpoExplorar, tileExplorar);
-        ajustarCuerpo(cuerpoHistorial, tileHistorial);
-        ajustarCuerpo(cuerpoAjustes, tileAjustes);
 
-        ajustarTitulo(tituloClasificacion, tileClasificacion, px(97, h), 0.62);
-        ajustarTitulo(tituloGestion, tileGestion, px(69, h), 0.72);
-        ajustarTitulo(tituloExplorar, tileExplorar, px(69, h), 0.72);
-        ajustarTitulo(tituloHistorial, tileHistorial, px(69, h), 0.72);
-        // AJUSTES es la tarjeta secundaria: en el mockup su titulo es
-        // claramente menor que el de las demas (cap 30 frente a 48).
-        ajustarTitulo(tituloAjustes, tileAjustes, px(34, h), 0.88);
+        estiloFuente(lblDescripcion, px(14, h));
+        lblDescripcion.setMaxWidth(Region.USE_PREF_SIZE);
+        lblDescripcion.setPrefWidth(px(430, h));
+
+        estiloFuente(btnSalir, px(14, h));
+        estiloFuente(lblPistas, px(11, h));
+        cajaPie.setSpacing(px(10, h));
+
+        for (var nodo : cajaHud.getChildren()) {
+            if (nodo instanceof Text glifo) {
+                glifo.setStyle("-fx-font-size: " + redondear(px(11, h)) + "px;");
+            }
+        }
+
+        pintarArte(opciones[seleccionada]);
+
+        fileteTitulo.setPrefSize(px(74, h), Math.max(2, px(5, h)));
+        fileteTitulo.setMaxSize(px(74, h), Math.max(2, px(5, h)));
+        VBox.setMargin(lblTituloSeccion, new Insets(px(16, h), 0, 0, 0));
+        estiloFuente(lblTituloSeccion, px(66, h));
+        estiloFuente(lblPieSeccion, px(13, h));
     }
 
-    /** Convierte una medida del mockup a píxeles reales de la ventana. */
-    private static double px(double medidaEnMockup, double altoActual) {
-        return medidaEnMockup * altoActual / REF_ALTO;
+    /** Convierte una medida de la referencia a píxeles reales de la ventana. */
+    private static double px(double medida, double altoActual) {
+        return medida * altoActual / REF_ALTO;
     }
 
-    private static void estiloFuente(Label etiqueta, double tamano) {
+    private static void estiloFuente(Labeled etiqueta, double tamano) {
         etiqueta.setStyle("-fx-font-size: " + redondear(tamano) + "px;");
-    }
-
-    private static void escalaIcono(Scale escala, double ladoEnPx) {
-        double factor = ladoEnPx / 24.0;   // las rutas viven en una caja 0 0 24 24
-        escala.setX(factor);
-        escala.setY(factor);
-    }
-
-    /** El graphic del Button debe ocupar todo el área útil, no su tamaño preferido. */
-    private static void ajustarCuerpo(VBox cuerpo, Button tile) {
-        double w = tile.getWidth() - tile.getInsets().getLeft() - tile.getInsets().getRight();
-        double h = tile.getHeight() - tile.getInsets().getTop() - tile.getInsets().getBottom();
-        if (w <= 0 || h <= 0) {
-            return;
-        }
-        cuerpo.setPrefSize(w, h);
-        cuerpo.setMinSize(w, h);
-    }
-
-    /**
-     * El mockup usa una condensada que Titillium no es. Reproducir su métrica
-     * exacta exigiría comprimir al 54 % y deformaría la letra, así que se
-     * reproduce el efecto —título de sangrado a sangrado— con una compresión
-     * suave acotada por {@code sxMinimo}.
-     */
-    private void ajustarTitulo(Label titulo, Button tile, double cuerpo, double sxMinimo) {
-        double util = tile.getWidth() - tile.getInsets().getLeft() - tile.getInsets().getRight();
-        if (util <= 0) {
-            return;
-        }
-        titulo.setWrapText(false);
-        // Sin esto el Label se recorta con puntos suspensivos: la Scale
-        // comprime lo que se ve, pero no reduce los limites de layout.
-        titulo.setMinWidth(Region.USE_PREF_SIZE);
-        titulo.setMaxWidth(Double.MAX_VALUE);
-
-        estiloFuente(titulo, cuerpo);
-        titulo.applyCss();
-        double natural = anchoNatural(titulo);
-        if (natural <= 0) {
-            return;
-        }
-
-        double sx = util / natural;
-        if (sx >= 1) {
-            sx = 1;
-        } else if (sx < sxMinimo) {
-            // Ni comprimiendo al maximo cabe, asi que se baja el cuerpo lo
-            // justo para que entre sin deformar mas la letra.
-            estiloFuente(titulo, cuerpo * (sx / sxMinimo));
-            titulo.applyCss();
-            sx = sxMinimo;
-        }
-        // Pivote en el borde izquierdo: setScaleX comprimiría desde el centro
-        // y despegaría el título del sangrado.
-        titulo.getTransforms().setAll(new Scale(sx, 1, 0, 0));
-    }
-
-    private static double anchoNatural(Label etiqueta) {
-        Text sonda = new Text(etiqueta.getText());
-        sonda.setFont(etiqueta.getFont());
-        return sonda.getLayoutBounds().getWidth();
     }
 
     /**
      * Compone el tracking carácter a carácter: JavaFX 17 no tiene
      * {@code -fx-letter-spacing}, solo {@code -fx-line-spacing}.
      */
-    private static void rellenarTracking(HBox destino, String texto, String claseCss,
-                                         double tamano, double anchoActual) {
-        destino.setSpacing(anchoActual * 4 / REF_ANCHO);
+    private static void rellenarTracking(HBox destino, String texto, double tamano) {
+        destino.setSpacing(Math.max(1, tamano * 0.34));
         destino.getChildren().clear();
         for (char c : texto.toCharArray()) {
-            Text glifo = new Text(c == ' ' ? " " : String.valueOf(c));
-            glifo.getStyleClass().add(claseCss);
+            Text glifo = new Text(c == ' ' ? " " : String.valueOf(c));
+            glifo.getStyleClass().add("menu-marca");
             glifo.setStyle("-fx-font-size: " + redondear(tamano) + "px;");
             destino.getChildren().add(glifo);
         }
@@ -413,253 +504,17 @@ public class MainMenuController {
         return Math.max(1, Math.round(valor));
     }
 
-    // --- datos ------------------------------------------------------------
-
-    private void actualizarStats() {
-        DataStore datos = DataStore.getInstance();
-        if (datos.estaCargado()) {
-            aplicarStats(datos);
-            return;
-        }
-        // La carga arrancó en paralelo a la intro; si aún no terminó, se
-        // sondea brevemente en vez de dejar los contadores en blanco.
-        sondeoDatos = new Timeline(new KeyFrame(Duration.millis(250), e -> {
-            if (datos.estaCargado()) {
-                aplicarStats(datos);
-                sondeoDatos.stop();
-            }
-        }));
-        sondeoDatos.setCycleCount(20);
-        sondeoDatos.play();
-    }
-
-    private void aplicarStats(DataStore datos) {
-        double h = raiz.getHeight();
-        double w = raiz.getWidth();
-        if (h <= 0 || w <= 0) {
-            return;
-        }
-        String linea = datos.estaCargado()
-                ? datos.pilotos().size() + " PILOTOS · "
-                        + datos.equipos().size() + " EQUIPOS · "
-                        + datos.circuitos().size() + " CIRCUITOS"
-                : "— PILOTOS · — EQUIPOS · — CIRCUITOS";
-        rellenarTracking(cajaStats, linea, "menu-stat-glifo", px(15, h), w);
-    }
-
-    // --- fondo de vídeo ---------------------------------------------------
-
-    private void montarFondo() {
-        cargarLogo();
-        capaFondo.setClip(recorteDe(capaFondo));
-
-        URL recurso = getClass().getResource("/videos/menu-loop.mp4");
-        if (recurso == null) {
-            activarRespaldo();
-            return;
-        }
-        try {
-            Media media = new Media(recurso.toExternalForm());
-            if (media.getError() != null) {
-                activarRespaldo();
-                return;
-            }
-            media.setOnError(this::activarRespaldo);
-
-            MediaPlayer reproductor = new MediaPlayer(media);
-            if (reproductor.getError() != null) {
-                activarRespaldo();
-                return;
-            }
-            reproductor.setOnError(this::activarRespaldo);
-            reproductor.setOnHalted(this::activarRespaldo);
-            reproductor.statusProperty().addListener((o, previo, estado) -> {
-                if (estado == MediaPlayer.Status.HALTED) {
-                    activarRespaldo();
-                }
-            });
-            reproductor.setCycleCount(MediaPlayer.INDEFINITE);
-            reproductor.setMute(true);
-            reproductor.setAutoPlay(true);
-
-            MediaView vista = new MediaView(reproductor);
-            vista.setPreserveRatio(false);
-            vista.setSmooth(true);
-            cubrir(vista.fitWidthProperty(), vista.fitHeightProperty(), VIDEO_ANCHO, VIDEO_ALTO);
-            capaFondo.getChildren().setAll(vista);
-            reproductorFondo = reproductor;
-
-            // Red de seguridad: en esta máquina los libavplugin de JavaFX 17
-            // piden libavcodec.so.54-59 y solo existe la .63, así que el H.264
-            // puede no arrancar nunca sin emitir un error explícito.
-            PauseTransition vigilante = new PauseTransition(Duration.seconds(2.5));
-            vigilante.setOnFinished(e -> {
-                if (reproductor.getStatus() != MediaPlayer.Status.PLAYING) {
-                    activarRespaldo();
-                }
-            });
-            vigilante.play();
-        } catch (RuntimeException | Error sinCodec) {
-            // Incluye Error a propósito: si faltan los .so nativos, lo que
-            // salta es UnsatisfiedLinkError, no una RuntimeException.
-            activarRespaldo();
-        }
-    }
-
-    /** Idempotente y siempre en el hilo de FX: los avisos de Media pueden no serlo. */
-    private void activarRespaldo() {
-        if (!respaldoActivo.compareAndSet(false, true)) {
-            return;
-        }
-        Platform.runLater(() -> {
-            if (reproductorFondo != null) {
-                try {
-                    reproductorFondo.stop();
-                    reproductorFondo.dispose();
-                } catch (RuntimeException ignorado) {
-                    // Un reproductor que ya falló no tiene por qué cerrar limpio.
-                }
-                reproductorFondo = null;
-            }
-            capaFondo.getChildren().setAll(construirRespaldo());
-        });
-    }
-
-    /** Fotograma fijo con paneo y zoom lentos, para que el fondo no quede muerto. */
-    private Node construirRespaldo() {
-        InputStream flujo = getClass().getResourceAsStream("/images/menu-fondo.jpg");
-        if (flujo == null) {
-            return new Region();      // el scrim ya deja el fondo en negro
-        }
-        ImageView foto = new ImageView(new Image(flujo, FONDO_ANCHO, 0, true, true));
-        foto.setPreserveRatio(false);
-        foto.setSmooth(true);
-        cubrir(foto.fitWidthProperty(), foto.fitHeightProperty(), FONDO_ANCHO, FONDO_ALTO);
-
-        Scale zoom = new Scale(1, 1, 0, 0);
-        Translate paneo = new Translate();
-        foto.getTransforms().addAll(zoom, paneo);
-
-        kenBurns = new Timeline(
-                new KeyFrame(Duration.ZERO,
-                        new KeyValue(zoom.xProperty(), 1.00),
-                        new KeyValue(zoom.yProperty(), 1.00),
-                        new KeyValue(paneo.xProperty(), 0.0),
-                        new KeyValue(paneo.yProperty(), 0.0)),
-                new KeyFrame(Duration.seconds(17),
-                        new KeyValue(zoom.xProperty(), 1.075, Interpolator.EASE_BOTH),
-                        new KeyValue(zoom.yProperty(), 1.075, Interpolator.EASE_BOTH),
-                        new KeyValue(paneo.xProperty(), -46.0, Interpolator.EASE_BOTH),
-                        new KeyValue(paneo.yProperty(), -22.0, Interpolator.EASE_BOTH)));
-        kenBurns.setAutoReverse(true);
-        kenBurns.setCycleCount(Animation.INDEFINITE);
-        kenBurns.play();
-        return foto;
-    }
-
-    /**
-     * Comportamiento «cover»: escala por el lado que se queda corto para que
-     * el nodo desborde y el clip recorte. Con ambas dimensiones fijadas y
-     * preserveRatio, JavaFX haría «contain» y dejaría bandas negras.
-     */
-    private void cubrir(DoubleProperty anchoDestino, DoubleProperty altoDestino,
-                        double nativoAncho, double nativoAlto) {
-        DoubleBinding factor = Bindings.createDoubleBinding(
-                () -> Math.max(capaFondo.getWidth() / nativoAncho,
-                               capaFondo.getHeight() / nativoAlto),
-                capaFondo.widthProperty(), capaFondo.heightProperty());
-        anchoDestino.bind(factor.multiply(nativoAncho));
-        altoDestino.bind(factor.multiply(nativoAlto));
-    }
-
-    private static Rectangle recorteDe(Region region) {
-        Rectangle recorte = new Rectangle();
-        recorte.widthProperty().bind(region.widthProperty());
-        recorte.heightProperty().bind(region.heightProperty());
-        return recorte;
+    /** Descarta tanto un tamaño nulo/negativo como uno disparatadamente grande. */
+    private static boolean medidaValida(double v) {
+        return v > 0 && v <= LADO_MAXIMO_RAZONABLE;
     }
 
     private void cargarLogo() {
-        InputStream flujo = getClass().getResourceAsStream("/images/LogoF1.png");
-        if (flujo == null) {
+        Image logo = Imagenes.cargar("/images/LogoF1.png", 840, 0);
+        if (logo == null) {
             return;
         }
-        logoF1.setImage(new Image(flujo));
+        logoF1.setImage(logo);
         logoF1.setViewport(RECORTE_LOGO);
-    }
-
-    /** Suelta el vídeo y las animaciones al abandonar el menú. */
-    public void liberar() {
-        if (reproductorFondo != null) {
-            try {
-                reproductorFondo.stop();
-                reproductorFondo.dispose();
-            } catch (RuntimeException ignorado) {
-                // Cerrar el menú nunca debe fallar por el reproductor.
-            }
-            reproductorFondo = null;
-        }
-        if (kenBurns != null) {
-            kenBurns.stop();
-            kenBurns = null;
-        }
-        if (sondeoDatos != null) {
-            sondeoDatos.stop();
-            sondeoDatos = null;
-        }
-    }
-
-    // --- interacción ------------------------------------------------------
-
-    private void aplicarHover(StackPane envoltura) {
-        envoltura.setOnMouseEntered(e -> escalar(envoltura, 1.025));
-        envoltura.setOnMouseExited(e -> escalar(envoltura, 1.0));
-    }
-
-    private void escalar(StackPane envoltura, double destino) {
-        ScaleTransition zoom = new ScaleTransition(HOVER, envoltura);
-        zoom.setToX(destino);
-        zoom.setToY(destino);
-        zoom.setInterpolator(Interpolator.EASE_BOTH);
-        zoom.play();
-    }
-
-    @FXML
-    private void onClasificacion() {
-        irAlShell(ShellController::irACarrera);
-    }
-
-    @FXML
-    private void onGestionEquipos() {
-        irAlShell(ShellController::irAGestion);
-    }
-
-    @FXML
-    private void onExplorar() {
-        irAlShell(ShellController::irAExplorar);
-    }
-
-    @FXML
-    private void onHistorial() {
-        irAlShell(ShellController::irAHistorial);
-    }
-
-    @FXML
-    private void onAjustes() {
-        AudioManager.reproducirSfx(SFX_SECUNDARIO);
-        AjustesDialog.mostrar();
-    }
-
-    @FXML
-    private void onSalir() {
-        AudioManager.reproducirSfx(SFX_SECUNDARIO);
-        if (Navigator.confirmar("¿Quieres salir del simulador?")) {
-            Platform.exit();
-        }
-    }
-
-    private void irAlShell(Runnable destinoEnShell) {
-        AudioManager.reproducirSfx(SFX_PRINCIPAL);
-        alEntrarAlShell.accept(destinoEnShell);
     }
 }

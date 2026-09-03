@@ -13,6 +13,7 @@ import com.formula1.model.EventProbabilityConfig;
 import com.formula1.model.EventType;
 import com.formula1.model.LapResult;
 import com.formula1.model.LapStatus;
+import com.formula1.model.LiveClassificationFrame;
 import com.formula1.model.QualifyingSession;
 import com.formula1.model.SimulationConfig;
 import com.formula1.model.SimulationSnapshot;
@@ -286,14 +287,15 @@ class QualifyingServiceTest {
 
     @Test
     void publicaLaClasificacionOrdenadaMientrasAvanzaLaSesion() {
-        List<List<LapResult>> parciales = new ArrayList<>();
+        List<LiveClassificationFrame> fotogramas = new ArrayList<>();
 
         QualifyingSession sesion = sesiones.simular(
                 config(DrivingMode.NORMAL), WeatherCondition.SECO, null,
-                null, null, null, parciales::add);
+                null, null, null, fotogramas::add);
 
-        assertEquals(QualifyingService.SEGMENTOS_EVOLUCION, parciales.size());
-        for (List<LapResult> parcial : parciales) {
+        assertEquals(QualifyingService.SEGMENTOS_EVOLUCION, fotogramas.size());
+        for (LiveClassificationFrame fotograma : fotogramas) {
+            List<LapResult> parcial = fotograma.classification();
             assertEquals(sesion.getResultados().size(), parcial.size());
             for (int posicion = 0; posicion < parcial.size(); posicion++) {
                 assertEquals(posicion + 1, parcial.get(posicion).getPosicion());
@@ -304,17 +306,17 @@ class QualifyingServiceTest {
             }
         }
 
-        List<LapResult> ultima = parciales.get(parciales.size() - 1);
+        List<LapResult> ultima = fotogramas.get(fotogramas.size() - 1).classification();
         assertEquals(sesion.getResultados().stream().map(LapResult::getPiloto).toList(),
                 ultima.stream().map(LapResult::getPiloto).toList());
 
-        List<LapResult> primera = parciales.get(0);
+        List<LapResult> primera = fotogramas.get(0).classification();
         boolean huboCambioDePosicion = sesion.getResultados().stream().anyMatch(resultado -> {
             int posicionInicial = primera.stream()
                     .filter(fila -> fila.getPilotoId() == resultado.getPilotoId())
                     .findFirst().orElseThrow().getPosicion();
-            return parciales.stream().skip(1).anyMatch(fotograma ->
-                    fotograma.stream()
+            return fotogramas.stream().skip(1).anyMatch(fotograma ->
+                    fotograma.classification().stream()
                             .filter(fila -> fila.getPilotoId() == resultado.getPilotoId())
                             .findFirst().orElseThrow().getPosicion() != posicionInicial);
         });
@@ -323,8 +325,41 @@ class QualifyingServiceTest {
     }
 
     @Test
+    void desacoplaLosFotogramasVisualesDeLosMicrosectoresPersistidos() {
+        List<LiveClassificationFrame> fotogramas = new ArrayList<>();
+        List<TelemetrySnapshot> telemetria = new ArrayList<>();
+        QualifyingService.ControlSimulacion cadenciaVisual =
+                new QualifyingService.ControlSimulacion() {
+                    @Override
+                    public int totalFotogramas(int minimo) {
+                        return 200;
+                    }
+
+                    @Override
+                    public boolean completarFotograma(int fotograma, int totalFotogramas) {
+                        return true;
+                    }
+                };
+
+        QualifyingSession sesion = sesiones.simular(
+                config(DrivingMode.NORMAL), WeatherCondition.SECO, null,
+                null, telemetria::add, null, fotogramas::add,
+                cadenciaVisual, null, null, null);
+
+        assertEquals(200, fotogramas.size());
+        assertEquals(QualifyingService.SEGMENTOS_EVOLUCION, telemetria.size());
+        assertEquals(QualifyingService.SEGMENTOS_EVOLUCION,
+                sesion.getEvolucionVuelta().size());
+        assertEquals(1.0, fotogramas.get(fotogramas.size() - 1).progress(), 0);
+        for (int i = 1; i < fotogramas.size(); i++) {
+            assertTrue(fotogramas.get(i).progress() > fotogramas.get(i - 1).progress());
+            assertTrue(fotogramas.get(i).segment() >= fotogramas.get(i - 1).segment());
+        }
+    }
+
+    @Test
     void finalizacionManualConservaElUltimoEstadoGenerado() {
-        List<List<LapResult>> fotogramas = new ArrayList<>();
+        List<LiveClassificationFrame> fotogramas = new ArrayList<>();
 
         QualifyingSession sesion = sesiones.simular(
                 config(DrivingMode.NORMAL), WeatherCondition.SECO, null,
@@ -334,7 +369,8 @@ class QualifyingServiceTest {
         assertEquals(3, fotogramas.size());
         assertEquals(3, sesion.getEvolucionVuelta().size());
         assertEquals(3, sesion.getEvolucionClimatica().size());
-        assertEquals(fotogramas.get(2).stream().map(LapResult::getTiempoSegundos).toList(),
+        assertEquals(fotogramas.get(2).classification().stream()
+                        .map(LapResult::getTiempoSegundos).toList(),
                 sesion.getResultados().stream().map(LapResult::getTiempoSegundos).toList());
     }
 

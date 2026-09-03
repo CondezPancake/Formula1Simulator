@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!--
+      POM agregador. El proyecto de verdad vive en simulator/; este solo existe
+      para que Maven encuentre algo al ejecutarse desde la raíz del repositorio.
+
+      Sin él, "mvn clean test" desde la carpeta del proyecto falla con
+      "there is no POM in this directory", que es justo con lo que uno se
+      tropieza al clonar y probar el comando obvio.
+    -->
+    <groupId>com.formula1</groupId>
+    <artifactId>formula1-simulator-parent</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>Formula1Simulator</name>
+
+    <modules>
+        <module>simulator</module>
+    </modules>
+
+    <build>
+        <plugins>
+            <!--
+              "mvn javafx:run" desde la raíz ejecuta el goal sobre TODOS los
+              proyectos del reactor, y este agregador no tiene aplicación que
+              lanzar: al terminar el módulo, intentaría lanzarse a sí mismo y
+              la orden acabaría en "No plugin found for prefix 'javafx'".
+
+              Declararlo aquí con skip resuelve las dos cosas: el prefijo se
+              resuelve y el padre se salta su turno, así que solo arranca la
+              aplicación de simulator/.
+            -->
+            <plugin>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-maven-plugin</artifactId>
+                <version>0.0.8</version>
+                <configuration>
+                    <skip>true</skip>
+                    <!--
+                      mainClass es obligatorio y Maven lo valida ANTES de mirar
+                      skip, así que sin este valor la orden falla con "The
+                      parameters 'mainClass' ... are missing or invalid" aunque
+                      la ejecución vaya a saltarse. Nunca llega a usarse.
+                    -->
+                    <mainClass>com.formula1.App</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

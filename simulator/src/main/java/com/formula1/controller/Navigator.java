@@ -1,9 +1,12 @@
 package com.formula1.controller;
 
+import javafx.animation.FadeTransition;
+import javafx.animation.Interpolator;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.layout.StackPane;
+import javafx.util.Duration;
 
 /**
  * Cambia la vista central del shell.
@@ -16,6 +19,12 @@ public final class Navigator {
 
     private static final String VISTA_SESION = "simulation";
     private static final String VISTA_GESTION = "gestion";
+    /**
+     * Explorar es, con diferencia, la vista mas cara de construir: monta las
+     * rejillas de tarjetas con sus imagenes. Se cachea como las otras dos, o
+     * cada visita la reconstruye entera.
+     */
+    private static final String VISTA_EXPLORAR = "explorar";
 
     private static StackPane contenedor;
     private static Object ultimoControlador;
@@ -23,6 +32,8 @@ public final class Navigator {
     private static Object controladorSesion;
     private static Node gestion;
     private static Object controladorGestion;
+    private static Node explorar;
+    private static Object controladorExplorar;
     private static Node vistaRetorno;
     private static Object controladorRetorno;
     private static String vistaRetornoNombre;
@@ -38,6 +49,8 @@ public final class Navigator {
             controladorSesion = null;
             gestion = null;
             controladorGestion = null;
+            explorar = null;
+            controladorExplorar = null;
             vistaRetorno = null;
             controladorRetorno = null;
             vistaRetornoNombre = null;
@@ -52,14 +65,20 @@ public final class Navigator {
         }
         if (VISTA_SESION.equals(vista) && sesion != null) {
             ultimoControlador = controladorSesion;
-            contenedor.getChildren().setAll(sesion);
+            mostrarVista(sesion);
             prepararSesionPendiente();
             ShellController.sincronizarVista(vista);
             return;
         }
         if (VISTA_GESTION.equals(vista) && gestion != null) {
             ultimoControlador = controladorGestion;
-            contenedor.getChildren().setAll(gestion);
+            mostrarVista(gestion);
+            ShellController.sincronizarVista(vista);
+            return;
+        }
+        if (VISTA_EXPLORAR.equals(vista) && explorar != null) {
+            ultimoControlador = controladorExplorar;
+            mostrarVista(explorar);
             ShellController.sincronizarVista(vista);
             return;
         }
@@ -76,8 +95,11 @@ public final class Navigator {
             } else if (VISTA_GESTION.equals(vista)) {
                 gestion = contenido;
                 controladorGestion = ultimoControlador;
+            } else if (VISTA_EXPLORAR.equals(vista)) {
+                explorar = contenido;
+                controladorExplorar = ultimoControlador;
             }
-            contenedor.getChildren().setAll(contenido);
+            mostrarVista(contenido);
             if (VISTA_SESION.equals(vista)) {
                 prepararSesionPendiente();
             }
@@ -110,10 +132,27 @@ public final class Navigator {
         vistaRetorno = null;
         controladorRetorno = null;
         vistaRetornoNombre = null;
-        contenedor.getChildren().setAll(anterior);
+        mostrarVista(anterior);
         ultimoControlador = controladorAnterior;
         ShellController.sincronizarVista(seccionAnterior);
         return true;
+    }
+
+    /**
+     * Coloca la vista en el centro del shell con una entrada corta.
+     *
+     * El fade va sobre el nodo entrante y no encadenado con una salida: las
+     * vistas cacheadas se reutilizan, y animar también la saliente dejaría su
+     * opacidad a medias la próxima vez que se muestre.
+     */
+    private static void mostrarVista(Node contenido) {
+        contenedor.getChildren().setAll(contenido);
+        FadeTransition entrada = new FadeTransition(Duration.millis(200), contenido);
+        entrada.setFromValue(0);
+        entrada.setToValue(1);
+        entrada.setInterpolator(Interpolator.EASE_BOTH);
+        entrada.setOnFinished(e -> contenido.setOpacity(1));
+        entrada.play();
     }
 
     private static void prepararSesionPendiente() {

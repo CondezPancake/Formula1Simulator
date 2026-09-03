@@ -32,6 +32,10 @@
     -fx-accent-blue: #3671C6;
     -fx-accent-pink: #FF87BC;
 
+    /* --- HUD del dashboard de carrera --- */
+    -fx-bg-panel: #0D0D12;
+    -fx-border-hud: #1E1E26;
+
     -fx-background-color: -fx-bg-0;
     -fx-font-family: "Titillium Web", "Adwaita Sans", sans-serif;
     -fx-font-size: 13px;
@@ -86,8 +90,42 @@
     -fx-background-color: -fx-bg-header;
     -fx-border-color: transparent transparent -fx-border-2 transparent;
     -fx-border-width: 0 0 1 0;
-    -fx-min-height: 54;
-    -fx-pref-height: 54;
+    -fx-min-height: 48;
+    -fx-pref-height: 48;
+}
+
+/* Glifo de clima: bloques Unicode, no emoji (JavaFX no dibuja Noto Color). */
+.header-weather-glyph {
+    -fx-font-size: 18px;
+    -fx-text-fill: -fx-text-2;
+}
+
+/* Engranaje y apagado de la derecha de la cabecera. */
+.header-icon-button {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 6;
+    -fx-cursor: hand;
+}
+
+.header-icon-button:hover {
+    -fx-background-color: #17171E;
+}
+
+.header-icon {
+    -fx-fill: transparent;
+    -fx-stroke: -fx-text-muted;
+    -fx-stroke-width: 1.6;
+    -fx-stroke-line-cap: round;
+    -fx-stroke-line-join: round;
+}
+
+.header-icon-button:hover .header-icon {
+    -fx-stroke: -fx-text-hero;
+}
+
+.header-icon-button.peligro:hover .header-icon {
+    -fx-stroke: #FF8A80;
 }
 
 .header-divider {
@@ -103,6 +141,18 @@
     -fx-font-size: 26px;
     -fx-font-weight: bold;
     -fx-text-fill: -fx-brand;
+}
+
+/* El F1 de la cabecera es un boton que vuelve al menu: sin fondo/borde de boton. */
+.brand-mark-boton {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+}
+
+.brand-mark-boton:hover {
+    -fx-opacity: 0.8;
 }
 
 .header-title {
@@ -208,7 +258,7 @@
 .top-nav-item {
     -fx-background-color: transparent;
     -fx-background-radius: 0;
-    -fx-text-fill: -fx-text-faint;
+    -fx-text-fill: -fx-text-muted;
     -fx-font-size: 11px;
     -fx-font-weight: bold;
     -fx-padding: 0 26 0 26;
@@ -218,8 +268,18 @@
     -fx-border-width: 0 0 2 0;
 }
 
+/* Modena añade un halo azul fuera del botón cuando recibe foco. El texto y
+   la pestaña activa ya comunican el estado sin alterar el ancho visual. */
+.top-nav-item:focused {
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-border-color: transparent;
+}
+
 .top-nav-item:hover {
-    -fx-text-fill: -fx-text-2;
+    -fx-text-fill: -fx-text-1;
     -fx-background-color: #131318;
 }
 
@@ -260,6 +320,23 @@
     -fx-min-height: 44;
     -fx-border-color: transparent;
     -fx-border-width: 0 0 2 0;
+}
+
+/* Conserva el foco de teclado, pero elimina los filetes azules laterales que
+   el skin predeterminado dibuja alrededor de una pestaña enfocada. */
+.subnav > .tab-header-area > .headers-region > .tab:focused {
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-border-color: transparent;
+}
+
+/* El skin Modena dibuja el foco real en un hijo de la pestaña seleccionada,
+   no sobre `.tab`: eran los dos filetes verticales visibles a sus lados. */
+.subnav:focused > .tab-header-area > .headers-region > .tab:selected .focus-indicator {
+    -fx-border-color: transparent;
+    -fx-background-color: transparent;
 }
 
 .subnav > .tab-header-area > .headers-region > .tab .tab-label {
@@ -930,11 +1007,45 @@
     -fx-background-color: derive(-fx-accent-red, -55%);
 }
 
+.pit-stop-status {
+    -fx-background-color: rgba(242,183,5,0.08);
+    -fx-border-color: rgba(242,183,5,0.35);
+    -fx-border-width: 0 0 0 2;
+    -fx-padding: 6 8;
+}
+
+.pit-stop-phase {
+    -fx-text-fill: #F2B705;
+    -fx-font-weight: bold;
+}
+
+.pit-stop-time {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-text-fill: -fx-text-muted;
+    -fx-font-size: 10px;
+}
+
 .race-session-clock {
-    -fx-font-family: "Monospaced";
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
     -fx-font-size: 14px;
     -fx-font-weight: bold;
     -fx-text-fill: -fx-text-hero;
+}
+
+/* La barra de la franja hereda -fx-padding: 4 de .progress-bar y queda gorda. */
+.race-progress {
+    -fx-pref-height: 4;
+    -fx-min-height: 4;
+    -fx-max-height: 4;
+}
+
+.race-progress > .bar {
+    -fx-padding: 0;
+    -fx-background-radius: 2;
+}
+
+.race-progress > .track {
+    -fx-background-radius: 2;
 }
 
 .race-dashboard-separator {
@@ -950,57 +1061,56 @@
     -fx-background-color: -fx-bg-0;
 }
 
-.race-console-panel {
-    -fx-background-color: -fx-surface-1;
-    -fx-background-radius: 7;
-    -fx-border-color: -fx-border-1;
-    -fx-border-radius: 7;
-    -fx-padding: 10;
-}
-
-.race-panel-title {
-    -fx-font-size: 15px;
-    -fx-font-weight: bold;
-    -fx-text-fill: -fx-text-hero;
-}
-
-.race-compact-table {
-    -fx-background-radius: 4;
-    -fx-border-radius: 4;
-}
-
-.race-compact-table .table-row-cell {
-    -fx-cell-size: 31;
-}
-
-.race-compact-table .table-cell {
-    -fx-font-size: 11px;
-}
-
-.race-map-panel {
-    -fx-min-width: 430;
-}
-
+/* El trazado ya no vive en una tarjeta: es la superficie central del
+   tablero, asi que no lleva fondo ni borde propios. El minimo baja a 150
+   porque es lo que cede antes de que el HUD se recorte por abajo en una
+   ventana de 800 px de alto; con mas sitio crece hasta llenarlo. */
 .race-map-canvas {
-    -fx-background-color: -fx-surface-3;
-    -fx-background-radius: 5;
-    -fx-border-color: -fx-border-2;
-    -fx-border-radius: 5;
-    -fx-padding: 8;
-    -fx-min-height: 260;
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+    -fx-min-height: 150;
 }
 
-.race-engineer-panel {
-    -fx-min-height: 76;
+/* --- leyenda del mapa --- */
+
+.race-legend-row {
+    -fx-padding: 1 0 1 0;
+}
+
+.race-legend-swatch {
+    -fx-min-width: 11;
+    -fx-max-width: 11;
+    -fx-min-height: 11;
+    -fx-max-height: 11;
+    -fx-background-radius: 3;
+}
+
+.race-legend-swatch.s1 { -fx-background-color: -fx-accent-red; }
+.race-legend-swatch.s2 { -fx-background-color: -fx-accent-blue; }
+.race-legend-swatch.s3 { -fx-background-color: -fx-accent-amber; }
+.race-legend-swatch.meta { -fx-background-color: -fx-text-hero; }
+
+.race-legend-swatch.lider {
+    -fx-background-color: -fx-surface-2;
+    -fx-border-color: -fx-text-hero;
+    -fx-border-radius: 3;
+    -fx-border-width: 2;
+}
+
+.race-legend-swatch.tuyo {
+    -fx-background-color: -fx-surface-2;
+    -fx-border-color: -fx-brand;
+    -fx-border-radius: 3;
+    -fx-border-width: 2;
+}
+
+.race-legend-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: -fx-text-muted;
 }
 
 .race-engineer-message {
     -fx-text-fill: -fx-text-2;
-}
-
-.race-lower-deck {
-    -fx-min-height: 190;
-    -fx-pref-height: 205;
 }
 
 .race-driver-card {
@@ -1035,8 +1145,7 @@
     -fx-text-fill: -fx-text-hero;
 }
 
-.race-car-readings,
-.race-car-modes {
+.race-car-readings {
     -fx-padding: 1 0 0 0;
 }
 
@@ -1089,21 +1198,10 @@
     -fx-background-radius: 2;
 }
 
-.race-bottom-telemetry {
-    -fx-min-height: 112;
-}
-
-.race-chart-tile {
-    -fx-background-color: -fx-surface-2;
-    -fx-background-radius: 4;
-    -fx-padding: 5 7 3 7;
-    -fx-min-width: 175;
-}
-
 .race-telemetry-chart {
     -fx-padding: 0;
-    -fx-min-height: 48;
-    -fx-max-height: 66;
+    -fx-min-height: 40;
+    -fx-max-height: 58;
 }
 
 .race-telemetry-chart .axis {
@@ -1121,6 +1219,382 @@
 
 .race-telemetry-chart.fuel .default-color0.chart-series-line {
     -fx-stroke: -fx-accent-blue;
+}
+
+/* =====================================================================
+   Dashboard de Carrera: un solo tablero (pestaña "Dashboard")
+   No hay tarjetas. Toda la pestaña es una superficie continua dividida
+   por filetes de 1 px; los grupos se distinguen por tipografía, no por
+   cajas. El trazado manda al centro, como en la señal de televisión.
+   ===================================================================== */
+
+.race-hud-stage {
+    -fx-background-color: linear-gradient(to bottom right, #08080C 0%, #101018 100%);
+}
+
+/* El padding del contenido del tab lo pone el propio stage: la regla
+   generica .tab-pane > .tab-content-area anadia 10 px que recortaban el
+   HUD por abajo. Esta gana por especificidad. */
+.tab-pane.race-tabs > .tab-content-area {
+    -fx-padding: 0;
+}
+
+.hud-column {
+    -fx-background-color: transparent;
+}
+
+.hud-group {
+    -fx-background-color: transparent;
+    -fx-padding: 9 12 9 12;
+}
+
+/* Filetes: lo unico que separa un grupo del siguiente. */
+.hud-rule {
+    -fx-min-height: 1;
+    -fx-max-height: 1;
+    -fx-background-color: rgba(255,255,255,0.07);
+}
+
+.hud-rule-v {
+    -fx-min-width: 1;
+    -fx-max-width: 1;
+    -fx-background-color: rgba(255,255,255,0.07);
+}
+
+.hud-group-title {
+    -fx-font-size: 9px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-faint;
+}
+
+.hud-value {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.hud-value-sm {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.hud-value-best {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 21px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-accent-amber;
+}
+
+.hud-accent {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-accent-amber;
+}
+
+.hud-hint {
+    -fx-font-size: 10px;
+    -fx-text-fill: -fx-text-muted;
+}
+
+.hud-readout {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.hud-readout-sm {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-1;
+}
+
+.hud-gear {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-accent-red;
+}
+
+.hud-ers-bar {
+    -fx-pref-height: 4;
+    -fx-min-height: 4;
+    -fx-max-height: 4;
+}
+
+.hud-ers-bar > .bar {
+    -fx-background-color: -fx-accent-amber;
+    -fx-background-insets: 0;
+    -fx-background-radius: 2;
+}
+
+.hud-scroll, .hud-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+/* --- HUD inferior del coche --- */
+
+.hud-car-strip {
+    -fx-padding: 8 12 8 12;
+}
+
+.hud-portrait {
+    -fx-background-color: #101018;
+    -fx-border-color: -fx-border-hud;
+    -fx-border-width: 1;
+    -fx-min-width: 58;
+    -fx-min-height: 58;
+    -fx-max-width: 58;
+    -fx-max-height: 58;
+}
+
+.hud-driver-name {
+    -fx-font-size: 17px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.hud-selection {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-accent-blue;
+}
+
+.hud-highlight {
+    -fx-background-color: -fx-bg-panel;
+    -fx-border-color: -fx-border-hud;
+    -fx-border-width: 1;
+    -fx-padding: 6 12 6 12;
+}
+
+.hud-bar {
+    -fx-pref-height: 4;
+    -fx-min-height: 4;
+    -fx-max-height: 4;
+}
+
+.hud-bar > .bar {
+    -fx-padding: 0;
+    -fx-background-radius: 2;
+    -fx-background-color: -fx-accent-green;
+}
+
+.hud-bar > .track {
+    -fx-background-color: #1C1C24;
+    -fx-background-radius: 2;
+}
+
+.hud-bar.fuel > .bar {
+    -fx-background-color: -fx-accent-blue;
+}
+
+.hud-bar.ers > .bar {
+    -fx-background-color: -fx-accent-amber;
+}
+
+/* --- Panel derecho --- */
+
+.hud-weather-glyph {
+    -fx-font-size: 26px;
+    -fx-text-fill: -fx-text-2;
+}
+
+.hud-car-frame {
+    -fx-background-color: #06060B;
+    -fx-border-color: -fx-border-hud;
+    -fx-border-width: 1;
+    -fx-padding: 4;
+}
+
+.hud-tile {
+    -fx-background-color: -fx-bg-panel;
+    -fx-border-color: -fx-border-hud;
+    -fx-border-width: 1;
+    -fx-padding: 5 8 5 8;
+}
+
+.hud-tile-value {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 17px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+/* Semáforo de las baldosas: lo pone estadoBaldosa() según el umbral. */
+.hud-tile-value.ok { -fx-text-fill: -fx-accent-green; }
+.hud-tile-value.warn { -fx-text-fill: -fx-accent-amber; }
+.hud-tile-value.crit { -fx-text-fill: -fx-accent-red; }
+
+.compound-badge {
+    -fx-font-size: 20px;
+    -fx-font-weight: 900;
+}
+
+.compound-soft   { -fx-text-fill: #E10600; }
+.compound-medium { -fx-text-fill: #F2B705; }
+.compound-hard   { -fx-text-fill: #F4F4F6; }
+
+/* --- Feed de mensajes --- */
+
+.hud-feed {
+    -fx-background-color: transparent;
+}
+
+.feed-row {
+    -fx-padding: 5 2 5 2;
+    -fx-border-color: transparent transparent rgba(255,255,255,0.05) transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.feed-dot {
+    -fx-min-width: 7;
+    -fx-max-width: 7;
+    -fx-min-height: 7;
+    -fx-max-height: 7;
+    -fx-background-radius: 4;
+    -fx-background-color: -fx-text-faint;
+}
+
+.feed-dot.positivo { -fx-background-color: -fx-accent-green; }
+.feed-dot.leve     { -fx-background-color: -fx-accent-amber; }
+.feed-dot.grave    { -fx-background-color: -fx-accent-red; }
+.feed-dot.clima    { -fx-background-color: -fx-accent-blue; }
+.feed-dot.pit      { -fx-background-color: #F2B705; }
+.feed-dot.tire     { -fx-background-color: #F4F4F6; }
+
+.feed-text {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-1;
+}
+
+.feed-driver {
+    -fx-font-size: 10px;
+    -fx-text-fill: -fx-text-muted;
+}
+
+.feed-time {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 10px;
+    -fx-text-fill: -fx-text-faint;
+}
+
+/* --- Indicador de estado de vuelta en la torre --- */
+
+.tower-state {
+    -fx-min-width: 7;
+    -fx-max-width: 7;
+    -fx-min-height: 7;
+    -fx-max-height: 7;
+    -fx-background-radius: 4;
+}
+
+/* Fijado: manda sobre el consultado, y por eso va despues en la hoja. */
+.tower-row.fijado {
+    -fx-background-color: rgba(225,6,0,0.16);
+    -fx-border-color: transparent transparent rgba(255,255,255,0.05) -fx-brand;
+    -fx-border-width: 0 0 1 2;
+}
+
+.tower-row.fijado .tower-code {
+    -fx-text-fill: -fx-text-hero;
+}
+
+.tower-state.valida     { -fx-background-color: -fx-accent-green; }
+.tower-state.invalidada { -fx-background-color: -fx-accent-amber; }
+.tower-state.fuera      { -fx-background-color: #3A3A44; }
+
+/* ---------------------------------------------------------------------
+   Torre de tiempos
+   Fila = posicion · franja de la escuderia · codigo de tres letras ·
+   intervalo. Sin cabeceras, sin rejilla, sin fondo: solo el filete que
+   la separa de la siguiente.
+   --------------------------------------------------------------------- */
+
+.timing-tower {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+    -fx-fixed-cell-size: 26;
+}
+
+/* El skin pinta su propio fondo en estas capas; sin esto la torre
+   aparece como un rectangulo gris sobre el tablero. */
+.timing-tower > .virtual-flow,
+.timing-tower > .virtual-flow > .clipped-container,
+.timing-tower > .virtual-flow > .clipped-container > .sheet,
+.timing-tower > .virtual-flow > .corner,
+.timing-tower:focused {
+    -fx-background-color: transparent;
+}
+
+.timing-tower .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.timing-tower .list-cell:filled:selected,
+.timing-tower .list-cell:filled:hover {
+    -fx-background-color: transparent;
+}
+
+.tower-row {
+    -fx-padding: 3 4 3 2;
+    -fx-border-color: transparent transparent rgba(255,255,255,0.05) transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.timing-tower .list-cell:filled:hover .tower-row,
+.tower-row.activo {
+    -fx-background-color: rgba(255,255,255,0.08);
+}
+
+.tower-pos {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-muted;
+    -fx-min-width: 20;
+    -fx-alignment: CENTER;
+}
+
+.tower-row.lider .tower-pos {
+    -fx-text-fill: -fx-text-hero;
+}
+
+/* El color lo inyecta el ListCell segun la escuderia. */
+.tower-team-bar {
+    -fx-min-width: 3;
+    -fx-max-width: 3;
+    -fx-min-height: 15;
+    -fx-background-radius: 2;
+}
+
+.tower-code {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-1;
+}
+
+.tower-row.lider .tower-code {
+    -fx-text-fill: -fx-text-hero;
+}
+
+.tower-gap {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 11px;
+    -fx-text-fill: -fx-text-muted;
+}
+
+.tower-row.lider .tower-gap {
+    -fx-text-fill: -fx-accent-amber;
+}
+
+.tower-row.invalida .tower-code,
+.tower-row.invalida .tower-gap {
+    -fx-text-fill: #7A5A5A;
 }
 
 .evolution-panel, .telemetry-panel, .sector-comparison-panel {
@@ -1155,6 +1629,169 @@
     -fx-text-fill: -fx-text-hero;
 }
 
+.telemetry-details-button {
+    -fx-font-size: 10px;
+    -fx-padding: 4 10 4 10;
+    -fx-background-color: rgba(54,113,198,0.16);
+    -fx-border-color: rgba(54,113,198,0.65);
+    -fx-text-fill: #8EB9F4;
+}
+
+.telemetry-details-button:hover {
+    -fx-background-color: rgba(54,113,198,0.28);
+    -fx-border-color: -fx-accent-blue;
+}
+
+.telemetry-detail-scroll,
+.telemetry-detail-scroll > .viewport {
+    -fx-background-color: -fx-bg-0;
+}
+
+.telemetry-detail-panel {
+    -fx-background-radius: 0;
+    -fx-border-width: 0;
+    -fx-padding: 20 22 28 22;
+}
+
+.telemetry-detail-toolbar {
+    -fx-background-color: -fx-surface-3;
+    -fx-background-radius: 7;
+    -fx-border-color: -fx-border-1;
+    -fx-border-radius: 7;
+    -fx-padding: 9 12 9 12;
+}
+
+.telemetry-back-button {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 5 8 5 4;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+.telemetry-back-button:hover {
+    -fx-background-color: rgba(255,255,255,0.06);
+}
+
+.telemetry-lap-selector {
+    -fx-background-color: -fx-surface-2;
+    -fx-border-color: #3A3A44;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+}
+
+.telemetry-detail-heading {
+    -fx-padding: 4 2 2 2;
+}
+
+.telemetry-detail-heading .telemetry-title {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+}
+
+.telemetry-subtitle {
+    -fx-font-size: 11px;
+    -fx-text-fill: -fx-text-muted;
+}
+
+.telemetry-driver {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 12px;
+    -fx-text-fill: #B8CFF0;
+}
+
+.telemetry-detail-panel .telemetry-card {
+    -fx-padding: 12 15 12 15;
+    -fx-background-color: linear-gradient(to bottom right, #232329, #1C1C21);
+    -fx-border-width: 0 0 0 3;
+}
+
+.telemetry-detail-panel .telemetry-summary {
+    -fx-padding: 11 14 11 14;
+    -fx-background-color: #18181D;
+}
+
+.telemetry-speed-card { -fx-border-color: -fx-accent-blue; }
+.telemetry-rpm-card { -fx-border-color: -fx-accent-red; }
+.telemetry-fuel-card { -fx-border-color: -fx-accent-green; }
+.telemetry-wear-card { -fx-border-color: -fx-accent-amber; }
+.telemetry-tire-temp-card { -fx-border-color: -fx-accent-pink; }
+.telemetry-engine-card { -fx-border-color: #FF7B3E; }
+
+.telemetry-detail-panel .telemetry-value {
+    -fx-font-size: 19px;
+}
+
+.telemetry-chart-heading {
+    -fx-padding: 8 2 0 2;
+    -fx-border-color: -fx-border-2 transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+}
+
+.telemetry-detail-chart {
+    -fx-pref-width: 480;
+    -fx-pref-height: 255;
+    -fx-min-width: 0;
+    -fx-background-color: linear-gradient(to bottom, #202025, #19191E);
+    -fx-background-radius: 8;
+    -fx-border-color: -fx-border-1;
+    -fx-border-radius: 8;
+    -fx-padding: 8 10 6 4;
+}
+
+.telemetry-detail-chart .chart-plot-background {
+    -fx-background-color: #121216;
+    -fx-background-radius: 4;
+}
+
+.telemetry-detail-chart .chart-title {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-2;
+}
+
+.telemetry-detail-chart .axis-label,
+.telemetry-detail-chart .axis .tick-label {
+    -fx-font-size: 9px;
+    -fx-text-fill: -fx-text-muted;
+}
+
+.telemetry-detail-chart .axis {
+    -fx-tick-label-fill: -fx-text-muted;
+}
+
+.telemetry-detail-chart .chart-horizontal-grid-lines,
+.telemetry-detail-chart .chart-vertical-grid-lines {
+    -fx-stroke: rgba(255,255,255,0.07);
+}
+
+.telemetry-detail-chart .chart-legend {
+    -fx-background-color: transparent;
+    -fx-padding: 3 0 0 0;
+}
+
+.telemetry-detail-chart .chart-legend-item {
+    -fx-text-fill: -fx-text-muted;
+    -fx-font-size: 9px;
+}
+
+.telemetry-detail-chart .default-color0.chart-series-line {
+    -fx-stroke: -fx-accent-blue;
+    -fx-stroke-width: 2;
+}
+
+.telemetry-detail-chart .default-color1.chart-series-line {
+    -fx-stroke: -fx-accent-amber;
+    -fx-stroke-width: 2;
+}
+
+#graficaRpmDetalle .default-color0.chart-series-line { -fx-stroke: -fx-accent-red; }
+#graficaCombustibleDetalle .default-color0.chart-series-line { -fx-stroke: -fx-accent-green; }
+#graficaDesgasteDetalle .default-color0.chart-series-line { -fx-stroke: -fx-accent-amber; }
+#graficaTemperaturasDetalle .default-color0.chart-series-line { -fx-stroke: -fx-accent-pink; }
+#graficaTemperaturasDetalle .default-color1.chart-series-line { -fx-stroke: #FF7B3E; }
+#graficaDeltaDetalle .default-color0.chart-series-line { -fx-stroke: #A78BFA; }
+
 .track-state {
     -fx-background-color: #14261A;
     -fx-background-radius: 3;
@@ -1171,6 +1808,124 @@
     -fx-text-fill: -fx-accent-amber;
     -fx-font-size: 10px;
     -fx-font-weight: bold;
+}
+
+.event-details-button {
+    -fx-background-color: transparent;
+    -fx-border-color: -fx-border-1;
+    -fx-padding: 3 8 3 8;
+    -fx-font-size: 9px;
+    -fx-text-fill: -fx-text-muted;
+}
+
+.event-details-button:hover {
+    -fx-background-color: rgba(255,201,6,0.08);
+    -fx-border-color: rgba(255,201,6,0.55);
+    -fx-text-fill: -fx-accent-amber;
+}
+
+.event-toast {
+    -fx-background-color: linear-gradient(to bottom right, #25252B, #17171C);
+    -fx-background-radius: 8;
+    -fx-border-color: transparent transparent transparent -fx-accent-amber;
+    -fx-border-width: 0 0 0 4;
+    -fx-border-radius: 8;
+    -fx-padding: 8 10 9 11;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.52), 12, 0.15, 0, 4);
+}
+
+.event-toast-kicker {
+    -fx-font-size: 9px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-accent-amber;
+}
+
+.event-toast-category {
+    -fx-background-color: rgba(255,201,6,0.12);
+    -fx-background-radius: 3;
+    -fx-padding: 2 6 2 6;
+    -fx-font-size: 8px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-accent-amber;
+}
+
+.event-toast-weather {
+    -fx-border-color: transparent transparent transparent -fx-accent-blue;
+}
+
+.event-toast-weather .event-toast-kicker,
+.event-toast-weather .event-toast-category {
+    -fx-text-fill: #8EB9F4;
+}
+
+.event-toast-weather .event-toast-category {
+    -fx-background-color: rgba(54,113,198,0.18);
+}
+
+.event-toast-exceptional {
+    -fx-border-color: transparent transparent transparent -fx-brand-hi;
+}
+
+.event-toast-exceptional .event-toast-kicker,
+.event-toast-exceptional .event-toast-category {
+    -fx-text-fill: #FF7772;
+}
+
+.event-toast-exceptional .event-toast-category {
+    -fx-background-color: rgba(225,6,0,0.18);
+}
+
+.event-toast-sector {
+    -fx-background-color: rgba(255,255,255,0.07);
+    -fx-background-radius: 3;
+    -fx-padding: 2 7 2 7;
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 9px;
+    -fx-text-fill: -fx-text-muted;
+}
+
+.event-toast-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.event-toast-driver {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #DADAE2;
+}
+
+.event-toast-impact {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 10px;
+    -fx-text-fill: -fx-text-muted;
+}
+
+.event-toast-close {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-background-radius: 50%;
+    -fx-padding: 0 4 1 4;
+    -fx-font-family: "Adwaita Sans", sans-serif;
+    -fx-font-size: 16px;
+    -fx-text-fill: -fx-text-muted;
+}
+
+.event-toast-close:hover {
+    -fx-background-color: rgba(255,255,255,0.09);
+    -fx-text-fill: -fx-text-hero;
+}
+
+.event-detail-panel {
+    -fx-background-color: -fx-surface-1;
+    -fx-padding: 18;
+}
+
+.event-detail-panel .table-view {
+    -fx-background-radius: 7;
+    -fx-border-color: -fx-border-1;
+    -fx-border-radius: 7;
 }
 
 .delta-faster, .sector-winner, .best-sector {
@@ -1568,147 +2323,643 @@
 }
 
 /* =============================================================
-   Menú principal (hub previo al shell)
+   Menú principal — reproducción del menú de F1 23
 
-   Geometria y color muestreados de docs/assets/menu_mockup.png
-   (espacio de referencia 1672x941). Los cuerpos de letra NO van aqui:
-   los calcula MainMenuController desde la altura de escena, porque el
-   mockup escala la tipografia con la ventana.
+   Referencia: docs/assets/f1-23-menu-referencia.jpg. Pantalla partida:
+   columna izquierda oscura con la lista de opciones (la activa dentro de
+   un marco y con galones), columna derecha con el título de la sección.
+
+   Los cuerpos de letra NO van aqui: los calcula MainMenuController desde
+   la altura de la escena, porque el menu escala con la ventana.
    ============================================================= */
 
-.menu-root      { -fx-background-color: -fx-bg-0; }
-.menu-bg-layer  { -fx-background-color: -fx-bg-0; }
+.menu-root { -fx-background-color: #08080A; }
 
-/* Viñeta del mockup: calido y visible arriba, negro absoluto por debajo
-   de la mitad para que las tarjetas recorten con nitidez. */
-.menu-scrim {
-    -fx-background-color:
-        radial-gradient(center 50% 40%, radius 82%,
-            transparent 34%, rgba(0,0,0,0.30) 68%, rgba(0,0,0,0.78) 100%),
-        linear-gradient(to bottom,
-            rgba(6,6,8,0.70)  0%,
-            rgba(6,6,8,0.26) 26%,
-            rgba(6,6,8,0.52) 46%,
-            rgba(4,4,6,0.92) 66%,
-            #030304          88%,
-            #000000         100%);
+/* --- columna izquierda ------------------------------------------- */
+
+.menu-panel {
+    -fx-background-color: #0B0B0D;
 }
 
-/* --- cabecera --------------------------------------------------- */
+.menu-marca {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-fill: #8A8A8D;
+}
 
-.menu-year {
+/* La fila coge todo el ancho (zona de raton); el marco cine al texto. */
+.menu-opcion {
+    -fx-background-color: transparent;
+    -fx-cursor: hand;
+}
+
+.menu-opcion-marco {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-border-width: 1;
+    -fx-padding: 7 22 9 18;
+}
+
+.menu-opcion-activa {
+    -fx-background-color: rgba(255,255,255,0.07);
+    -fx-border-color: rgba(255,255,255,0.55);
+}
+
+.menu-opcion-texto {
     -fx-font-family: "Titillium Web Black", "Titillium Web", "Adwaita Sans", sans-serif;
     -fx-font-weight: 900;
-    -fx-text-fill: #E6E6E8;
+    -fx-text-fill: rgba(255,255,255,0.74);
 }
 
-/* Los glifos del tracking son nodos Text: se colorean con -fx-fill. */
-.menu-temporada-glifo,
-.menu-stat-glifo,
-.menu-salir-glifo {
-    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+.menu-opcion-activa .menu-opcion-texto {
+    -fx-text-fill: #FFFFFF;
 }
 
-.menu-temporada-glifo { -fx-fill: #888586; }
-.menu-stat-glifo      { -fx-fill: #9A9A9A; }
-.menu-salir-glifo     { -fx-fill: #7D7C7B; }
-
-.menu-exit-rule { -fx-background-color: #565554; }
-
-/* --- envolturas: llevan el efecto, el clip va en el Button interior --
-   El clip se aplica DESPUES del effect, asi que un dropshadow puesto en
-   el mismo nodo recortado desaparece. */
-
-.menu-tile-wrap { -fx-background-color: transparent; }
-
-.menu-tile-wrap-primary {
-    -fx-effect: dropshadow(gaussian, rgba(225,6,0,0.55), 38, 0.12, 0, 10);
+/* Galones a la derecha de la fila activa: el rasgo mas reconocible
+   del menu de F1 23. Van como SVGPath para que el trazo escale. */
+.menu-galon {
+    -fx-fill: transparent;
+    -fx-stroke: rgba(255,255,255,0.5);
+    -fx-stroke-width: 2;
+    -fx-stroke-line-cap: round;
+    -fx-stroke-line-join: round;
 }
 
-/* --- tarjetas ---------------------------------------------------- */
+.menu-descripcion {
+    -fx-text-fill: #8F8F93;
+}
 
-.menu-tile {
-    -fx-background-radius: 0;
+.menu-salir {
+    -fx-font-family: "Titillium Web", "Adwaita Sans", sans-serif;
+    -fx-font-weight: bold;
+    -fx-text-fill: #B9B9BD;
+    -fx-background-color: transparent;
     -fx-border-color: transparent;
+    -fx-padding: 4 0 4 0;
     -fx-cursor: hand;
-    -fx-content-display: graphic-only;
-    -fx-graphic-text-gap: 0;
-    -fx-alignment: TOP_LEFT;
 }
 
-.menu-tile:focused { -fx-background-insets: 0; }
+.menu-salir:hover { -fx-text-fill: -fx-brand; }
 
-.menu-tile-primary {
-    -fx-background-color: linear-gradient(to bottom, #CB0101 0%, #A30100 52%, #710103 100%);
-    -fx-padding: 50 30 46 35;
+.menu-pistas {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-text-fill: #5E5E62;
 }
 
-.menu-tile-primary:hover {
-    -fx-background-color: linear-gradient(to bottom, #E10600 0%, #B60100 52%, #820103 100%);
-}
+/* --- columna derecha ---------------------------------------------
+   Sin fotografia: el bloque se sostiene con el degradado, las franjas
+   diagonales y el titulo. Las franjas usan el ciclo `repeat`, que es
+   como JavaFX expresa un patron repetido en un gradiente lineal. */
 
-/* La franja roja izquierda va como capa de fondo, no como borde: un
-   -fx-border-color no admite degradado vertical y el clip lo deformaria
-   en el chaflan. */
-.menu-tile-secondary {
+.menu-escenario {
+    /* OJO con el orden: en JavaFX el primer fondo de la lista se pinta
+       ABAJO y los siguientes encima, al reves que en CSS de web. La base
+       opaca va primero; las franjas, al final, o taparian todo. */
     -fx-background-color:
-        linear-gradient(to bottom, #E10600 0%, #6A0200 100%),
-        linear-gradient(to bottom, rgba(19,18,20,0.985) 0%, rgba(7,7,9,0.985) 100%);
-    -fx-background-insets: 0, 0 0 0 12;
-    -fx-padding: 48 24 48 42;
+        linear-gradient(to bottom right, #24242C 0%, #16161C 45%, #0B0B0F 100%),
+        radial-gradient(center 64% 34%, radius 82%,
+            rgba(225,6,0,0.30) 0%, rgba(225,6,0,0.07) 45%, transparent 74%),
+        linear-gradient(from 0px 0px to 13px 13px, repeat,
+            rgba(255,255,255,0.055) 0%, rgba(255,255,255,0.055) 46%,
+            transparent 46%, transparent 100%);
+    /* El orden de los lados es arriba, derecha, abajo, izquierda. */
+    -fx-border-color: transparent transparent transparent rgba(255,255,255,0.10);
+    -fx-border-width: 0 0 0 1;
 }
 
-.menu-tile-secondary:hover {
-    -fx-background-color:
-        linear-gradient(to bottom, #FF1E0F 0%, #8A0200 100%),
-        linear-gradient(to bottom, rgba(30,29,33,0.95) 0%, rgba(13,13,17,0.95) 100%);
+/* Velos sobre el arte. El degradado horizontal lo funde con la mitad negra
+   del panel —sin esto la foto se ve pegada, con un borde recto— y el
+   vertical oscurece la parte baja para que el titulo se lea encima.
+   Recordatorio: en JavaFX el primer fondo de la lista se pinta ABAJO. */
+/* =============================================================
+   Tarjetas de escuderia (Explorar > TEAMS)
+
+   Casi todo el color va inline desde ExploreTeamsController, porque
+   depende del equipo; aqui solo lo que es comun a todas.
+   ============================================================= */
+
+.team-card {
+    -fx-background-color: transparent;
+    -fx-background-radius: 12;
+    -fx-padding: 0;
 }
 
-/* AJUSTES: sin franja roja. Su contorno gris es un Polygon hermano,
-   porque un borde CSS no seguiria el chaflan del clip. */
-.menu-tile-quiet {
-    -fx-background-color: linear-gradient(to bottom, rgba(19,18,20,0.97) 0%, rgba(6,7,8,0.97) 100%);
-    -fx-padding: 23 20 25 24;
+.team-card-name {
+    -fx-font-family: "Titillium Web", "Adwaita Sans", sans-serif;
+    -fx-font-size: 19px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
 }
 
-.menu-tile-quiet:hover {
-    -fx-background-color: linear-gradient(to bottom, rgba(32,31,36,0.94) 0%, rgba(12,12,16,0.94) 100%);
+.team-card-meta {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 10px;
+    -fx-text-fill: rgba(255,255,255,0.72);
 }
 
-/* --- contenido de las tarjetas ----------------------------------- */
+/* =============================================================
+   Ficha de escuderia (Explorar > TEAMS > detalle)
 
-.menu-tile-title {
-    -fx-font-family: "Titillium Web Black", "Titillium Web", "Adwaita Sans", sans-serif;
+   Reparto de formula1.com/en/teams/<equipo> con acabado de HUD: el
+   color de cada equipo entra inline desde TeamDetailController, aqui
+   solo lo comun. Radios pequenos a proposito: la referencia de
+   videojuego es angulosa, no redondeada.
+   ============================================================= */
+
+.team-hub, .team-hub-scroll, .team-hub-scroll > .viewport, .team-hub-body {
+    -fx-background-color: -fx-bg-0;
+}
+
+.team-hub-scroll > .corner,
+.team-hub-scroll .scroll-bar,
+.team-hub-scroll .scroll-bar .track {
+    -fx-background-color: -fx-bg-0;
+}
+
+.team-hub-scroll .scroll-bar .thumb {
+    -fx-background-color: -fx-border-1;
+    -fx-background-radius: 5;
+}
+
+/* --- hero --- */
+
+.team-hero {
+    -fx-background-color: #08080A;
+}
+
+.team-hero-content {
+    -fx-padding: 22 26 22 26;
+}
+
+.team-hero-logo {
+    -fx-min-height: 58;
+    -fx-max-height: 58;
+}
+
+/* El nombre lo inclina un Shear desde el controlador: la Titillium Web
+   empaquetada no trae cara italica y JavaFX no la sintetiza. */
+.team-hero-name {
+    -fx-font-size: 46px;
     -fx-font-weight: 900;
     -fx-text-fill: -fx-text-hero;
 }
 
-.menu-tile-subtitle {
+.team-hero-meta {
     -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
-    -fx-text-fill: #9A9A9A;
+    -fx-font-size: 11px;
+    -fx-text-fill: rgba(255,255,255,0.75);
 }
 
-.menu-tile-primary .menu-tile-subtitle { -fx-text-fill: rgba(255,255,255,0.88); }
-
-/* Filete blanco corto entre titulo y subtitulo: solo en la roja. */
-.menu-tile-rule { -fx-background-color: rgba(255,255,255,0.92); }
-
-/* --- iconos SVGPath ---------------------------------------------- */
-
-.menu-icon-solid {
-    -fx-fill: white;
-    -fx-stroke: null;
+/* Chip del chasis; el fondo lo pone el color del equipo. */
+.team-hero-chip {
+    -fx-background-radius: 3;
+    -fx-padding: 3 9 3 9;
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
 }
 
-.menu-icon-line {
-    -fx-fill: transparent;
-    -fx-stroke: white;
-    -fx-stroke-width: 1.8;
-    -fx-stroke-line-cap: round;
-    -fx-stroke-line-join: round;
+/* --- secciones y cifras --- */
+
+.team-section {
+    -fx-padding: 18 26 18 26;
+}
+
+.team-section-title {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-faint;
+}
+
+.team-rule {
+    -fx-min-height: 1;
+    -fx-max-height: 1;
+    -fx-background-color: rgba(255,255,255,0.06);
+}
+
+.team-stat {
+    -fx-background-color: -fx-bg-panel;
+    -fx-border-color: -fx-border-hud;
+    -fx-border-width: 1;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+    -fx-padding: 12 16 12 16;
+}
+
+.team-stat-value {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.team-stat-label {
+    -fx-font-size: 9px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-faint;
+}
+
+/* --- tarjeta de piloto --- */
+
+.team-driver-card {
+    -fx-background-color: transparent;
+    -fx-background-radius: 6;
+    -fx-padding: 0;
+}
+
+.team-driver-first {
+    -fx-font-size: 17px;
+    -fx-text-fill: rgba(255,255,255,0.88);
+}
+
+.team-driver-last {
+    -fx-font-size: 27px;
+    -fx-font-weight: 900;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.team-driver-code {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 10px;
+    -fx-text-fill: rgba(255,255,255,0.7);
+}
+
+/* Dorsal fantasma, como en la tarjeta del catalogo. */
+.team-driver-number {
+    -fx-font-size: 44px;
+    -fx-font-weight: 900;
+    -fx-text-fill: white;
+    -fx-opacity: 0.25;
+}
+
+.team-skill-label {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 8px;
+    -fx-font-weight: bold;
+    -fx-text-fill: rgba(255,255,255,0.72);
+}
+
+.team-skill-bar {
+    -fx-pref-height: 3;
+    -fx-min-height: 3;
+    -fx-max-height: 3;
+}
+
+.team-skill-bar > .bar {
+    -fx-padding: 0;
+    -fx-background-radius: 2;
+}
+
+.team-skill-bar > .track {
+    -fx-background-color: rgba(0,0,0,0.45);
+    -fx-background-radius: 2;
+}
+
+/* --- summary y profile --- */
+
+.team-glass {
+    -fx-background-color: rgba(255,255,255,0.03);
+    -fx-border-color: rgba(255,255,255,0.10);
+    -fx-border-width: 1;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-padding: 16 18 16 18;
+}
+
+.team-prose {
+    -fx-font-size: 12px;
+    -fx-line-spacing: 3px;
+    -fx-text-fill: -fx-text-2;
+}
+
+.team-summary-value {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 19px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.team-profile-row {
+    -fx-padding: 5 0 5 0;
+    -fx-border-color: transparent transparent rgba(255,255,255,0.05) transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.team-profile-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: -fx-text-muted;
+}
+
+.team-profile-value {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-1;
+}
+
+/* --- galeria --- */
+
+.team-gallery-item {
+    -fx-background-color: #08080A;
+    -fx-border-color: -fx-border-hud;
+    -fx-border-width: 1;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+}
+
+.menu-arte-velo {
+    -fx-background-color:
+        linear-gradient(to right,
+            #08080A 0%, rgba(8,8,10,0.86) 9%, rgba(8,8,10,0.35) 20%,
+            transparent 34%, transparent 100%),
+        linear-gradient(to bottom,
+            rgba(8,8,10,0.55) 0%, transparent 26%,
+            transparent 52%, rgba(8,8,10,0.78) 88%, #08080A 100%),
+        radial-gradient(center 62% 42%, radius 76%,
+            transparent 38%, rgba(8,8,10,0.42) 100%);
+}
+
+.menu-hud {
+    -fx-background-color: rgba(0,0,0,0.42);
+    -fx-border-color: rgba(255,255,255,0.10);
+    -fx-border-width: 1;
+    -fx-padding: 7 14 7 14;
+}
+
+.menu-hud-glifo {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-fill: #A9A9AD;
+}
+
+.menu-hud-separador { -fx-fill: #4A4A4E; }
+
+.menu-escenario-titulo {
+    -fx-font-family: "Titillium Web Black", "Titillium Web", "Adwaita Sans", sans-serif;
+    -fx-font-weight: 900;
+    -fx-text-fill: #FFFFFF;
+}
+
+.menu-escenario-filete { -fx-background-color: -fx-brand; }
+
+.menu-escenario-pie {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-text-fill: #7E7E82;
 }
 
 .intro-skip {
     -fx-fill: -fx-text-muted;
     -fx-cursor: hand;
+}
+
+/* --- Informe posterior a la clasificación (HU-53) --- */
+
+.post-qualifying {
+    -fx-background-color: -fx-surface-1;
+}
+
+.post-header {
+    -fx-padding: 4 4 12 4;
+    -fx-border-color: transparent transparent rgba(255,255,255,0.10) transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.post-title {
+    -fx-font-family: "Titillium Web Black", "Titillium Web", sans-serif;
+    -fx-font-size: 25px;
+    -fx-font-weight: 900;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.post-pole {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-accent-pink;
+}
+
+.post-config-summary {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 9px;
+    -fx-text-fill: -fx-text-muted;
+}
+
+.post-results-table {
+    -fx-background-color: transparent;
+    -fx-border-color: #2B2B31;
+    -fx-border-width: 1;
+    -fx-border-radius: 2;
+    -fx-background-radius: 2;
+}
+
+.post-results-table .column-header-background {
+    -fx-background-color: linear-gradient(to right, #151518, #202024);
+    -fx-background-radius: 2 2 0 0;
+    -fx-border-color: transparent transparent -fx-brand transparent;
+    -fx-border-width: 0 0 2 0;
+}
+
+.post-results-table .column-header .label {
+    -fx-text-fill: #D8D8DE;
+    -fx-font-size: 9px;
+    -fx-font-weight: 900;
+}
+
+.post-results-table .table-row-cell {
+    -fx-cell-size: 45;
+}
+
+.post-results-table .table-row-cell:hover {
+    -fx-background-color: #24242A;
+}
+
+.post-results-table .table-row-cell:selected {
+    -fx-background-color: linear-gradient(to right, rgba(225,6,0,0.28), #25252C);
+}
+
+.post-results-table .configured-driver-row {
+    -fx-background-color: rgba(54,113,198,0.12);
+}
+
+.post-results-table .configured-driver-row:selected {
+    -fx-background-color: linear-gradient(to right, rgba(54,113,198,0.34), #25252C);
+}
+
+.post-results-table .result-compound {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 14px;
+    -fx-font-weight: 900;
+    -fx-alignment: CENTER;
+}
+
+.post-results-table .result-compound.compound-soft {
+    -fx-text-fill: #FF312B;
+}
+
+.post-results-table .result-compound.compound-medium {
+    -fx-text-fill: #FFC906;
+}
+
+.post-results-table .result-compound.compound-hard {
+    -fx-text-fill: #F4F4F6;
+}
+
+.post-results-table .post-pit-count {
+    -fx-text-fill: -fx-accent-amber;
+    -fx-font-weight: bold;
+}
+
+.post-results-table .post-event-count {
+    -fx-text-fill: #FF625D;
+    -fx-font-weight: bold;
+}
+
+.post-detail {
+    -fx-padding: 0 5 0 10;
+}
+
+.post-section {
+    -fx-padding: 10;
+    -fx-background-color: rgba(255,255,255,0.035);
+    -fx-border-color: rgba(255,255,255,0.08);
+    -fx-border-width: 1;
+}
+
+.post-detail .post-section:hover {
+    -fx-background-color: rgba(255,255,255,0.055);
+    -fx-border-color: rgba(225,6,0,0.55);
+}
+
+.post-driver {
+    -fx-font-family: "Titillium Web", "Adwaita Sans", sans-serif;
+    -fx-font-size: 21px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.post-value {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+.post-value-sm,
+.post-mono {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 10px;
+    -fx-text-fill: -fx-text-1;
+}
+
+.post-radio-line {
+    -fx-padding: 7 8 7 8;
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 9px;
+    -fx-background-color: rgba(255,255,255,0.035);
+    -fx-border-width: 0 0 0 2;
+}
+
+.post-radio-event { -fx-border-color: -fx-accent-red; }
+.post-radio-pit   { -fx-border-color: -fx-accent-amber; }
+.post-radio-tire  { -fx-border-color: #F4F4F6; }
+.post-radio-muted {
+    -fx-border-color: -fx-text-muted;
+    -fx-text-fill: -fx-text-muted;
+}
+
+/* =============================================================
+   Radio del box (HU-49)
+
+   Dos salidas para el mismo mensaje: el hilo lateral, que guarda la
+   conversacion entera, y el rotulo sobre el trazado, que solo sale
+   para lo urgente. El color del equipo lo inyecta RadioPresenter.
+   ============================================================= */
+
+.radio-hilo {
+    -fx-background-color: transparent;
+}
+
+.radio-barra-equipo {
+    -fx-min-width: 3;
+    -fx-max-width: 3;
+    -fx-min-height: 12;
+    -fx-background-radius: 2;
+    -fx-background-color: -fx-brand;
+}
+
+.radio-cabecera-piloto {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-hero;
+}
+
+/* Burbuja de conversacion. El ingeniero lleva filete del color del
+   equipo; el piloto responde alineado a la derecha y sin filete. */
+.radio-burbuja {
+    -fx-background-color: rgba(255,255,255,0.04);
+    -fx-background-radius: 4;
+    -fx-padding: 6 9 7 9;
+}
+
+.radio-burbuja.ingeniero {
+    -fx-border-width: 0 0 0 2;
+    -fx-border-color: transparent transparent transparent -fx-brand;
+}
+
+.radio-burbuja.piloto {
+    -fx-background-color: rgba(255,255,255,0.07);
+    -fx-max-width: 210;
+    -fx-translate-x: 34;
+}
+
+.radio-burbuja.critica {
+    -fx-background-color: rgba(225,6,0,0.18);
+}
+
+.radio-quien {
+    -fx-font-size: 8px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-faint;
+}
+
+.radio-segmento {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 8px;
+    -fx-text-fill: -fx-text-faint;
+}
+
+.radio-texto {
+    -fx-font-size: 11px;
+    -fx-text-fill: -fx-text-1;
+}
+
+/* Tres barras que sugieren nivel de audio: el canal abierto se ve. */
+.radio-onda-barra {
+    -fx-background-color: -fx-text-muted;
+    -fx-background-radius: 1;
+}
+
+/* Rotulo sobre el trazado, al estilo de la banda inferior de television. */
+.radio-rotulo {
+    -fx-background-color: rgba(8,8,12,0.92);
+    -fx-border-color: transparent transparent transparent -fx-brand;
+    -fx-border-width: 0 0 0 3;
+    -fx-padding: 8 16 8 12;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.6), 16, 0.2, 0, 4);
+}
+
+.radio-rotulo-kicker {
+    -fx-font-size: 8px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-faint;
+}
+
+.radio-rotulo-piloto {
+    -fx-font-family: "JetBrains Mono", "Liberation Mono", monospace;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+
+.radio-rotulo-texto {
+    -fx-font-size: 13px;
+    -fx-text-fill: -fx-text-hero;
 }

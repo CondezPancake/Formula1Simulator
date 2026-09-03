@@ -109,9 +109,9 @@ class ViewsLoadTest {
     @Test
     void cargaExplorar() {
         cargar("explore-drivers");
-        cargar("explore-vehicles");
-        cargar("explore-circuits");
+        cargar("explore-teams");
         cargar("driver-detail");
+        cargar("team-detail");
     }
 
     @Test

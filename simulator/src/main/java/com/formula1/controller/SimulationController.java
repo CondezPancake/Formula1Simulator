@@ -4,14 +4,19 @@ import com.formula1.model.AerodynamicLoad;
 import com.formula1.model.Circuit;
 import com.formula1.model.Driver;
 import com.formula1.model.DrivingMode;
+import com.formula1.model.EventCategory;
 import com.formula1.model.EventOccurrence;
 import com.formula1.model.FuelStrategy;
 import com.formula1.model.LapResult;
 import com.formula1.model.LapStatus;
+import com.formula1.model.LiveClassificationFrame;
+import com.formula1.model.PitStopRecord;
 import com.formula1.model.QualifyingSession;
 import com.formula1.model.SimulationConfig;
 import com.formula1.model.SimulationSnapshot;
 import com.formula1.model.TelemetrySnapshot;
+import com.formula1.model.TireChangeRecord;
+import com.formula1.model.TireCompound;
 import com.formula1.model.TirePressure;
 import com.formula1.model.TrackEvolutionSnapshot;
 import com.formula1.model.TrackFlag;
@@ -19,40 +24,58 @@ import com.formula1.model.WeatherSnapshot;
 import com.formula1.service.CircuitService;
 import com.formula1.service.DriverService;
 import com.formula1.service.QualifyingService;
+import com.formula1.service.RaceRadioService;
 import com.formula1.service.VehicleService;
+import com.formula1.model.TrackSector;
+import com.formula1.service.SectorComparisonService;
 import com.formula1.util.Async;
+import com.formula1.util.F1Assets;
+import com.formula1.util.Imagenes;
 import com.formula1.util.TeamColors;
 import com.formula1.util.FormatUtils;
 
 import javafx.application.Platform;
 import javafx.animation.KeyFrame;
+import javafx.animation.FadeTransition;
+import javafx.animation.PauseTransition;
 import javafx.animation.Timeline;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.chart.LineChart;
-import javafx.scene.chart.XYChart;
-import javafx.scene.image.Image;
+import javafx.animation.Interpolator;
+import javafx.geometry.Pos;
 import javafx.scene.image.ImageView;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressBar;
-import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
 import java.util.ArrayList;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -85,22 +108,52 @@ public class SimulationController {
     @FXML private Label lblEstrategiaEvolucion;
     @FXML private TabPane panelResultados;
     @FXML private Tab tabDashboard;
+    @FXML private Tab tabResultadosFinales;
     @FXML private Tab tabTelemetria;
-    @FXML private TableView<LapResult> tablaDashboard;
-    @FXML private TableColumn<LapResult, Number> colDashboardPosicion;
-    @FXML private TableColumn<LapResult, String> colDashboardPiloto;
-    @FXML private TableColumn<LapResult, String> colDashboardGap;
-    @FXML private TableColumn<LapResult, String> colDashboardTiempo;
+    @FXML private Tab tabEventos;
+    @FXML private Button btnVerDetalles;
+    @FXML private Button btnVerEventos;
+    @FXML private ComboBox<Integer> selectorVueltaTelemetria;
+    @FXML private ListView<LapResult> torreTiempos;
     @FXML private Label lblMapaTitulo;
     @FXML private Label lblMapaPista;
     @FXML private Label lblMapaGrip;
-    @FXML private ImageView imagenMapaCircuito;
+    @FXML private Label lblMapaVueltas;
+    @FXML private StackPane contenedorMapa;
+    @FXML private Label lblHudVuelta;
+    @FXML private Label lblHudSector;
+    @FXML private Label lblHudClima;
+    @FXML private Label lblHudClimaDetalle;
+    @FXML private Label lblMejorVueltaTiempo;
+    @FXML private Label lblMejorVueltaPiloto;
     @FXML private Label lblDashboardEvento;
     @FXML private Label lblDashboardMensaje;
+    @FXML private Label lblPitStopEstado;
+    @FXML private Label lblPitStopTiempo;
     @FXML private Label lblDashboardCombustible;
     @FXML private Label lblDashboardDesgaste;
-    @FXML private LineChart<Number, Number> graficaDesgasteDashboard;
-    @FXML private LineChart<Number, Number> graficaCombustibleDashboard;
+    @FXML private Label lblCompuestoDashboard;
+    @FXML private Label lblTempNeumaticoPanel;
+    @FXML private Label lblTempMotorPanel;
+    @FXML private Label lblIconoClimaPanel;
+    @FXML private Label lblNeumaticoRecomendado;
+    @FXML private Label lblPolePiloto;
+    @FXML private Label lblPoleTiempo;
+    @FXML private Label lblSeleccion;
+    @FXML private ImageView fotoPilotoUno;
+    @FXML private ImageView siluetaCoche;
+    @FXML private ProgressBar barraLlantasUno;
+    @FXML private ProgressBar barraFuelUno;
+    @FXML private VBox feedEventos;
+
+    // Radio del box (HU-49): hilo lateral y rótulo sobre el trazado.
+    @FXML private VBox radioHilo;
+    @FXML private ScrollPane radioScroll;
+    @FXML private Label radioCabeceraPiloto;
+    @FXML private Region radioBarraEquipo;
+    @FXML private HBox rotuloRadio;
+    @FXML private Label rotuloRadioPiloto;
+    @FXML private Label rotuloRadioTexto;
     @FXML private Label lblPilotoUno;
     @FXML private Label lblEquipoUno;
     @FXML private Label lblVehiculoUno;
@@ -149,18 +202,20 @@ public class SimulationController {
     @FXML private ProgressBar barraTempMotor;
     @FXML private Label lblEventoTelemetria;
     @FXML private Label lblEstadoPiloto;
+    @FXML private VBox notificacionEvento;
+    @FXML private Label lblNotificacionTipo;
+    @FXML private Label lblNotificacionCategoria;
+    @FXML private Label lblNotificacionPiloto;
+    @FXML private Label lblNotificacionSector;
+    @FXML private Label lblNotificacionImpacto;
+    @FXML private LineChart<Number, Number> graficaVelocidadDetalle;
+    @FXML private LineChart<Number, Number> graficaRpmDetalle;
+    @FXML private LineChart<Number, Number> graficaCombustibleDetalle;
+    @FXML private LineChart<Number, Number> graficaDesgasteDetalle;
+    @FXML private LineChart<Number, Number> graficaTemperaturasDetalle;
+    @FXML private LineChart<Number, Number> graficaDeltaDetalle;
     @FXML private SectorComparisonController comparacionSectoresController;
-    @FXML private TableView<LapResult> tabla;
-    @FXML private TableColumn<LapResult, Number> colPosicion;
-    @FXML private TableColumn<LapResult, String> colPiloto;
-    @FXML private TableColumn<LapResult, String> colEquipo;
-    @FXML private TableColumn<LapResult, String> colVehiculo;
-    @FXML private TableColumn<LapResult, String> colTiempo;
-    @FXML private TableColumn<LapResult, String> colGap;
-    @FXML private TableColumn<LapResult, String> colConsumo;
-    @FXML private TableColumn<LapResult, String> colDesgaste;
-    @FXML private TableColumn<LapResult, String> colEstadoVuelta;
-    @FXML private TableColumn<LapResult, String> colEventoResultado;
+    @FXML private PostQualifyingController resultadosFinalesController;
     @FXML private TableView<EventOccurrence> tablaEventos;
     @FXML private TableColumn<EventOccurrence, String> colEventoPiloto;
     @FXML private TableColumn<EventOccurrence, String> colEventoNombre;
@@ -180,6 +235,7 @@ public class SimulationController {
     private DrivingMode modo = DrivingMode.NORMAL;
     private AerodynamicLoad aero = AerodynamicLoad.MEDIA;
     private TirePressure presion = TirePressure.ESTANDAR;
+    private TireCompound compuestoInicial = TireCompound.MEDIUM;
     private FuelStrategy combustible = FuelStrategy.BALANCEADA;
     private int duracionSegundos = SimulationConfig.DURACION_PREDETERMINADA_SEGUNDOS;
     private long versionConfiguracionAplicada = -1;
@@ -191,8 +247,31 @@ public class SimulationController {
     private Timeline relojInterfaz;
     private long inicioInterfazNanos;
     private boolean actualizandoSelectorDuracion;
-    private final XYChart.Series<Number, Number> serieDesgasteDashboard = new XYChart.Series<>();
-    private final XYChart.Series<Number, Number> serieCombustibleDashboard = new XYChart.Series<>();
+    private final List<TelemetrySnapshot> telemetriaSesionActual = new ArrayList<>();
+    private final ObservableList<LapResult> clasificacionVisible =
+            FXCollections.observableArrayList();
+    private final ObservableList<EventOccurrence> eventosVisibles =
+            FXCollections.observableArrayList();
+    private PauseTransition temporizadorNotificacionEvento;
+    private final Set<String> eventosEnVivoRegistrados = new HashSet<>();
+    private final Deque<EventOccurrence> colaNotificaciones = new ArrayDeque<>();
+    private CircuitoEnVivo circuitoEnVivo;
+    private PitStopPresenter pitStopPresenter;
+    private TireChangePresenter tireChangePresenter;
+    private TelemetryDetailPresenter telemetryDetailPresenter;
+    private RadioPresenter radioPresenter;
+    /** Genera el habla del muro de boxes a partir de lo que emite el motor. */
+    private final RaceRadioService radio = new RaceRadioService();
+    private Integer pilotoSesionActual;
+    /** Código de tres letras por piloto; lo consulta cada fila de la torre. */
+    private final Map<Integer, String> codigosPiloto = new HashMap<>();
+    /** Mejor tiempo por sector, para los rótulos flotantes del mapa. */
+    private final SectorComparisonService comparadorSectores = new SectorComparisonService();
+    /** Piloto fijado desde la torre; null mientras no se elige ninguno. */
+    private Integer pilotoFijado;
+    private final MapaProgreso mapaProgreso = new MapaProgreso();
+    /** Segmento de dominio correspondiente al último fotograma recibido. */
+    private int segmentoEnVivo;
 
     public SimulationController() {
         this(new QualifyingService(), new CircuitService(), new VehicleService(), new DriverService());
@@ -208,6 +287,24 @@ public class SimulationController {
 
     @FXML
     public void initialize() {
+        // Antes que nada: actualizarMapaCircuito se llama al final de este
+        // método y ya necesita el componente montado.
+        circuitoEnVivo = new CircuitoEnVivo(contenedorMapa);
+        pitStopPresenter = new PitStopPresenter(lblPitStopEstado, lblPitStopTiempo,
+                lblDashboardEvento, lblDashboardMensaje, feedEventos);
+        radioPresenter = new RadioPresenter(radioHilo, radioCabeceraPiloto, radioBarraEquipo,
+                rotuloRadio, rotuloRadioPiloto, rotuloRadioTexto);
+        tireChangePresenter = new TireChangePresenter(lblCompuestoDashboard,
+                lblDashboardEvento, lblDashboardMensaje, feedEventos);
+        telemetryDetailPresenter = new TelemetryDetailPresenter(
+                selectorVueltaTelemetria, btnVerDetalles, lblTelemetriaPiloto,
+                graficaVelocidadDetalle, graficaRpmDetalle,
+                graficaCombustibleDetalle, graficaDesgasteDetalle,
+                graficaTemperaturasDetalle, graficaDeltaDetalle);
+        circuitoEnVivo.setAlSeleccionarPiloto(ExploreDriversController::abrirFicha);
+        circuitoEnVivo.pilotoResaltadoProperty().addListener((o, a, b) -> torreTiempos.refresh());
+        circuitoEnVivo.setResolucionCodigo(this::codigoDe);
+
         circuitos.listar().forEach(c -> selectorCircuito.getItems().add(c.getNombre()));
         vehiculos.listar().forEach(v -> selectorVehiculo.getItems().add(v.getModelo()));
         configurarSelectorDuracion();
@@ -219,121 +316,183 @@ public class SimulationController {
             actualizarTarjetasPilotos();
         });
 
-        colPosicion.setCellValueFactory(f -> new SimpleIntegerProperty(f.getValue().getPosicion()));
-        colPiloto.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getPiloto()));
-        colEquipo.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getEquipo()));
-        colVehiculo.setCellValueFactory(f -> new SimpleStringProperty(f.getValue().getVehiculo()));
-        colTiempo.setCellValueFactory(f -> new SimpleStringProperty(
-                FormatUtils.formatLapResult(f.getValue())));
-        colGap.setCellValueFactory(f -> new SimpleStringProperty(
-                f.getValue().isVueltaValida() ? FormatUtils.formatGap(f.getValue().getGap()) : "—"));
-        colConsumo.setCellValueFactory(f -> new SimpleStringProperty(
-                String.format("%.2f", f.getValue().getConsumoEstimado())));
-        colDesgaste.setCellValueFactory(f -> new SimpleStringProperty(
-                String.format("%.2f", f.getValue().getDesgasteEstimado())));
-        colEstadoVuelta.setCellValueFactory(f -> new SimpleStringProperty(
-                f.getValue().getEstadoVuelta().getEtiqueta()));
-        colEventoResultado.setCellValueFactory(f -> new SimpleStringProperty(
-                f.getValue().getEventoResumen()));
         configurarTablaEventos();
 
-        // Timing tower del nuevo Dashboard. Es una vista resumida del mismo
-        // ObservableList; la clasificación original conserva todas sus columnas.
-        colDashboardPosicion.setCellValueFactory(f ->
-                new SimpleIntegerProperty(f.getValue().getPosicion()));
-        colDashboardPiloto.setCellValueFactory(f ->
-                new SimpleStringProperty(codigoPiloto(f.getValue())));
-        colDashboardGap.setCellValueFactory(f -> new SimpleStringProperty(
-                f.getValue().isVueltaValida()
-                        ? FormatUtils.formatGap(f.getValue().getGap()) : "—"));
-        colDashboardTiempo.setCellValueFactory(f -> new SimpleStringProperty(
-                FormatUtils.formatLapResult(f.getValue())));
-        colDashboardGap.getStyleClass().add("mono-col");
-        colDashboardTiempo.getStyleClass().add("mono-col");
-
-        // La pole se resalta con la clase .pole-row de la hoja de estilos.
-        // Cada fila lleva a la izquierda la franja del color de su escudería,
-        // igual que la tabla de tiempos del diseño.
-        tabla.setRowFactory(t -> {
-            TableRow<LapResult> fila = filaConColorDeEquipo();
-            // Doble clic sobre un piloto abre su ficha, como en cualquier
-            // tabla de resultados: la fila es el acceso natural al detalle.
-            fila.setOnMouseClicked(e -> {
-                if (e.getClickCount() == 2 && !fila.isEmpty() && fila.getItem() != null) {
-                    ExploreDriversController.abrirFicha(fila.getItem().getPilotoId());
-                }
-            });
-            return fila;
-        });
-        tablaDashboard.setRowFactory(t -> {
-            TableRow<LapResult> fila = filaConColorDeEquipo();
-            fila.setOnMouseClicked(e -> {
-                if (e.getClickCount() == 2 && !fila.isEmpty() && fila.getItem() != null) {
-                    ExploreDriversController.abrirFicha(fila.getItem().getPilotoId());
-                }
-            });
-            return fila;
-        });
-
-        colPosicion.setCellFactory(c -> new TableCell<>() {
-            @Override
-            protected void updateItem(Number valor, boolean vacia) {
-                super.updateItem(valor, vacia);
-                getStyleClass().removeAll("pos-badge", "p1", "p2", "p3");
-                if (vacia || valor == null) {
-                    setText(null);
-                    return;
-                }
-                setText(String.valueOf(valor.intValue()));
-                getStyleClass().add("pos-badge");
-                switch (valor.intValue()) {
-                    case 1 -> getStyleClass().add("p1");
-                    case 2 -> getStyleClass().add("p2");
-                    case 3 -> getStyleClass().add("p3");
-                    default -> { }
-                }
-            }
-        });
-        colTiempo.getStyleClass().add("mono-col");
-        colGap.getStyleClass().add("mono-col");
+        // Torre de tiempos del Dashboard, pintada como la señal de TV.
+        torreTiempos.setCellFactory(lista -> new FilaTorre());
+        torreTiempos.setItems(clasificacionVisible);
+        tablaEventos.setItems(eventosVisibles);
 
         selectorCircuito.valueProperty().addListener((o, a, b) -> actualizarMapaCircuito(b));
         selectorPiloto.valueProperty().addListener((o, a, b) -> actualizarTarjetasPilotos());
-        graficaDesgasteDashboard.getData().add(serieDesgasteDashboard);
-        graficaCombustibleDashboard.getData().add(serieCombustibleDashboard);
-
+        // Silueta del monoplaza del panel de telemetría: es decorativa y fija,
+        // así que se carga una vez desde la caché de imágenes.
+        siluetaCoche.setImage(Imagenes.cargar("/resource-new-dashboard/telemetry-car.jpg", 420, 0));
         precargarUltimaConfiguracion();
         actualizarMapaCircuito(selectorCircuito.getValue());
         actualizarTarjetasPilotos();
-        reiniciarGraficasDashboard();
+        reiniciarBaldosasTelemetria();
+        telemetryDetailPresenter.load(List.of());
     }
 
+    /**
+     * Abreviatura de tres letras del piloto (VER, HAM, LEC).
+     *
+     * La torre repinta sus veinte filas en cada segmento, así que la consulta
+     * al servicio se cachea: el código de un piloto no cambia en toda la sesión.
+     */
     private String codigoPiloto(LapResult resultado) {
-        return pilotos.porId(resultado.getPilotoId())
-                .map(Driver::getCodigo)
-                .filter(codigo -> codigo != null && !codigo.isBlank())
-                .orElse(resultado.getPiloto());
+        return codigosPiloto.computeIfAbsent(resultado.getPilotoId(), id ->
+                pilotos.porId(id)
+                        .map(Driver::getCodigo)
+                        .filter(codigo -> codigo != null && !codigo.isBlank())
+                        .orElse(resultado.getPiloto()));
+    }
+
+    /** Código de tres letras por identificador, para el mapa y la radio. */
+    private String codigoDe(Integer pilotoId) {
+        if (pilotoId == null) {
+            return "—";
+        }
+        return codigosPiloto.computeIfAbsent(pilotoId, id ->
+                pilotos.porId(id)
+                        .map(Driver::getCodigo)
+                        .filter(codigo -> codigo != null && !codigo.isBlank())
+                        .orElse("P" + id));
+    }
+
+    /**
+     * A quién escucha la radio: al piloto fijado si lo hay y, si no, al que
+     * se configuró, que es del único del que el motor emite telemetría.
+     */
+    private int pilotoDeRadio() {
+        if (pilotoFijado != null) {
+            return pilotoFijado;
+        }
+        return pilotoSesionActual == null ? -1 : pilotoSesionActual;
+    }
+
+    /** Pone la cabecera de la radio con el código y el color del piloto seguido. */
+    private void sintonizarRadio(Integer pilotoId) {
+        String equipo = pilotoId == null ? null
+                : pilotos.porId(pilotoId).map(Driver::getEquipo).orElse(null);
+        radioPresenter.seguirA(codigoDe(pilotoId), TeamColors.hex(equipo));
     }
 
     private void actualizarMapaCircuito(String nombre) {
         if (nombre == null) {
-            imagenMapaCircuito.setImage(null);
-            lblMapaTitulo.setText("MAPA DEL CIRCUITO");
+            circuitoEnVivo.mostrarCircuito(null);
+            lblMapaTitulo.setText("—");
+            lblMapaVueltas.setText("—");
             return;
         }
-        circuitos.porNombre(nombre).ifPresent(circuito -> {
-            lblMapaTitulo.setText(circuito.getNombre().toUpperCase() + " · MAPA");
-            lblMapaPista.setText("Pista: " + circuito.getLongitudKm() + " km");
-            imagenMapaCircuito.setImage(cargarImagenCircuito(circuito));
-        });
+        circuitos.porNombre(nombre).ifPresent(this::mostrarCircuitoEnMapa);
     }
 
-    private Image cargarImagenCircuito(Circuit circuito) {
-        if (circuito.getImagen() == null || circuito.getImagen().isBlank()) {
-            return null;
+    private void mostrarCircuitoEnMapa(Circuit circuito) {
+        lblMapaTitulo.setText(circuito.getNombre().toUpperCase());
+        lblMapaPista.setText("Pista: " + circuito.getLongitudKm() + " km");
+        lblMapaVueltas.setText(circuito.getVueltas() + " vueltas");
+        circuitoEnVivo.mostrarCircuito(circuito);
+    }
+
+    /**
+     * Fila de la torre de tiempos: posición, franja del color de la escudería,
+     * código de tres letras e intervalo, como la señal de televisión.
+     *
+     * El grafo se construye una sola vez por celda y {@code updateItem} solo
+     * reescribe textos y clases; con virtualización eso es un puñado de nodos
+     * aunque la sesión repinte veinte filas por segmento.
+     */
+    private final class FilaTorre extends ListCell<LapResult> {
+
+        private final Label posicion = new Label();
+        private final Region franja = new Region();
+        private final Label codigo = new Label();
+        private final Label intervalo = new Label();
+        private final Region estado = new Region();
+        private final HBox grafo = new HBox(8);
+
+        private FilaTorre() {
+            posicion.getStyleClass().add("tower-pos");
+            franja.getStyleClass().add("tower-team-bar");
+            codigo.getStyleClass().add("tower-code");
+            intervalo.getStyleClass().add("tower-gap");
+            estado.getStyleClass().add("tower-state");
+
+            Region espaciador = new Region();
+            HBox.setHgrow(espaciador, Priority.ALWAYS);
+
+            grafo.setAlignment(Pos.CENTER_LEFT);
+            grafo.getStyleClass().add("tower-row");
+            grafo.getChildren().addAll(posicion, franja, codigo, espaciador, intervalo, estado);
+
+            // La torre y el mapa son la misma información: señalar en una tiene
+            // que señalar en la otra. El hover es tanteo; el clic fija.
+            // Consultar no desfija: el ratón puede curiosear a otro piloto
+            // mientras el fijado sigue marcado en el mapa y en los sectores.
+            setOnMouseEntered(e -> {
+                if (getItem() != null) {
+                    circuitoEnVivo.resaltar(getItem().getPilotoId());
+                }
+            });
+            setOnMouseExited(e -> circuitoEnVivo.resaltar(null));
+            setOnMouseClicked(e -> {
+                if (getItem() == null) {
+                    return;
+                }
+                if (e.getClickCount() == 2) {
+                    ExploreDriversController.abrirFicha(getItem().getPilotoId());
+                    return;
+                }
+                seleccionarPiloto(getItem());
+            });
         }
-        var recurso = getClass().getResource(circuito.getImagen());
-        return recurso == null ? null : new Image(recurso.toExternalForm());
+
+        @Override
+        protected void updateItem(LapResult resultado, boolean vacia) {
+            super.updateItem(resultado, vacia);
+            grafo.getStyleClass().removeAll("lider", "invalida", "activo", "fijado");
+            if (vacia || resultado == null) {
+                setGraphic(null);
+                return;
+            }
+
+            posicion.setText(String.valueOf(resultado.getPosicion()));
+            franja.setStyle("-fx-background-color: " + TeamColors.hex(resultado.getEquipo()) + ";");
+            codigo.setText(codigoPiloto(resultado));
+
+            // La torre reserva este indicador al estado deportivo de la vuelta;
+            // el compuesto vigente se presenta en su lectura propia del Dashboard.
+            estado.getStyleClass().removeAll("valida", "invalidada", "fuera");
+            estado.getStyleClass().add(switch (resultado.getEstadoVuelta()) {
+                case VALID -> "valida";
+                case INVALID -> "invalidada";
+                case OUT -> "fuera";
+            });
+
+            if (!resultado.isVueltaValida()) {
+                intervalo.setText("INVALID");
+                grafo.getStyleClass().add("invalida");
+            } else if (resultado.getPosicion() == 1) {
+                // El líder no tiene intervalo contra nadie: se muestra su vuelta.
+                intervalo.setText(FormatUtils.formatLapResult(resultado));
+                grafo.getStyleClass().add("lider");
+            } else {
+                intervalo.setText(FormatUtils.formatGap(resultado.getGap()));
+            }
+
+            Integer resaltado = circuitoEnVivo == null ? null
+                    : circuitoEnVivo.pilotoResaltadoProperty().get();
+            if (resaltado != null && resaltado == resultado.getPilotoId()) {
+                grafo.getStyleClass().add("activo");
+            }
+            // El fijado se marca aparte y manda sobre el consultado.
+            if (pilotoFijado != null && pilotoFijado == resultado.getPilotoId()) {
+                grafo.getStyleClass().add("fijado");
+            }
+            setGraphic(grafo);
+        }
     }
 
     /**
@@ -344,53 +503,82 @@ public class SimulationController {
      * es esa la que la trae ya terminada.
      */
     public void mostrarSesion(QualifyingSession sesion) {
+        mostrarSesion(sesion, false);
+    }
+
+    /**
+     * @param manual si la sesión se cortó desde el botón Finalizar, en cuyo caso
+     *               los coches se quedan donde estaban en vez de saltar a la meta
+     */
+    public void mostrarSesion(QualifyingSession sesion, boolean manual) {
         if (sesion == null) {
             return;
         }
+        // El historial reproduce sesiones cuyo circuito puede no ser el que
+        // marca el selector: se pintaría la parrilla correcta sobre la pista
+        // equivocada.
+        circuitos.porNombre(sesion.getCircuito()).ifPresent(this::mostrarCircuitoEnMapa);
         lblClima.setText(resumenClimatico(sesion));
-        ObservableList<LapResult> resultados =
-                FXCollections.observableArrayList(sesion.getResultados());
-        tabla.setItems(resultados);
-        tablaDashboard.setItems(resultados);
-        tablaEventos.setItems(FXCollections.observableArrayList(sesion.getEventos()));
+        clasificacionVisible.setAll(sesion.getResultados());
+        eventosVisibles.setAll(sesion.getEventos());
+        btnVerEventos.setDisable(sesion.getEventos().isEmpty());
+        feedEventos.getChildren().clear();
+        sesion.getEventos().forEach(this::anadirAlFeed);
+        sesion.getParadasBoxes().forEach(pitStopPresenter::addToFeed);
+        sesion.getCambiosNeumaticos().forEach(tireChangePresenter::addToFeed);
+        pilotoSesionActual = sesion.getConfig() == null
+                ? null : sesion.getConfig().getPilotoId();
+        tireChangePresenter.showSession(
+                sesion.getCambiosNeumaticos(), pilotoSesionActual,
+                sesion.getConfig() == null
+                        ? TireCompound.MEDIUM
+                        : sesion.getConfig().getCompuestoInicial());
+        actualizarEtiquetasSector(sesion.getResultados());
         comparacionSectoresController.cargar(sesion.getResultados());
         mostrarPistaDeSesion(sesion);
+        telemetryDetailPresenter.load(sesion.getEvolucionVuelta());
         LapResult pole = sesion.getPole();
         lblEstado.setText(pole == null ? "Sesión sin resultados"
                 : "Pole: " + pole.getPiloto() + " — " + FormatUtils.formatLapTime(pole.getTiempoSegundos()));
         lblDashboardMensaje.setText(pole == null ? "Sesión terminada sin vueltas válidas"
                 : "Pole para " + pole.getPiloto() + " con "
                         + FormatUtils.formatLapTime(pole.getTiempoSegundos()));
-        lblDashboardEvento.setText(sesion.getEventos().isEmpty()
-                ? "SIN EVENTOS" : sesion.getEventos().size() + " EVENTOS");
+        int incidencias = sesion.getEventos().size() + sesion.getParadasBoxes().size()
+                + sesion.getCambiosNeumaticos().size();
+        lblDashboardEvento.setText(incidencias == 0
+                ? "SIN EVENTOS" : incidencias + " EVENTOS");
+        pitStopPresenter.showLatest(sesion.getParadasBoxes());
+        resultadosFinalesController.load(sesion, pilotoFijado);
+
+        // El piloto fijado sobrevive a la sesión: se vuelve a marcar sobre la
+        // parrilla final y su rótulo se pone al día con el resultado.
+        circuitoEnVivo.fijar(pilotoFijado);
+        refrescarSeleccion(sesion.getResultados());
+        radioPresenter.vaciarPendientes();
+        radioPresenter.encolar(radio.cierreDeSesion(
+                sesion.getResultados().stream()
+                        .filter(r -> r.getPilotoId() == pilotoDeRadio())
+                        .findFirst()
+                        .orElse(null),
+                MapaProgreso.TOTAL_SEGMENTOS));
+        tabResultadosFinales.setDisable(false);
+        lblPolePiloto.setText(pole == null ? "—" : pole.getPiloto());
+        lblPoleTiempo.setText(pole == null ? "—"
+                : FormatUtils.formatLapTime(pole.getTiempoSegundos()));
+        if (pole != null) {
+            lblMejorVueltaTiempo.setText(FormatUtils.formatLapTime(pole.getTiempoSegundos()));
+            lblMejorVueltaPiloto.setText(codigoPiloto(pole) + " · " + pole.getEquipo());
+        }
+        // Al terminar la vuelta completa el mapa se lleva a la parrilla final,
+        // para no quedarse con la foto del penúltimo segmento. Si el usuario
+        // cortó a mano no: nadie cruzó la meta, y saltar allí lo aparentaría.
+        if (!manual) {
+            circuitoEnVivo.publicar(mapaProgreso.construir(
+                    MapaProgreso.TOTAL_SEGMENTOS, sesion.getResultados()));
+        }
+        circuitoEnVivo.finalizar(manual);
         ShellController.estadoSesion(ShellController.Estado.TERMINADA);
         panelResultados.getSelectionModel().select(tabDashboard);
-    }
-
-    /**
-     * Fila con la franja del color de su escudería a la izquierda y la pole
-     * destacada, igual que la tabla de tiempos del diseño.
-     */
-    private TableRow<LapResult> filaConColorDeEquipo() {
-        return new TableRow<>() {
-            @Override
-            protected void updateItem(LapResult resultado, boolean vacia) {
-                super.updateItem(resultado, vacia);
-                getStyleClass().removeAll("pole-row", "invalid-row");
-                if (vacia || resultado == null) {
-                    setStyle("");
-                    return;
-                }
-                if (!resultado.isVueltaValida()) {
-                    getStyleClass().add("invalid-row");
-                } else if (resultado.getPosicion() == 1) {
-                    getStyleClass().add("pole-row");
-                }
-                setStyle("-fx-border-color: transparent transparent #17171B "
-                        + TeamColors.hex(resultado.getEquipo())
-                        + "; -fx-border-width: 0 0 1 3;");
-            }
-        };
     }
 
     /**
@@ -421,6 +609,7 @@ public class SimulationController {
         modo = DrivingMode.NORMAL;
         aero = AerodynamicLoad.MEDIA;
         presion = TirePressure.ESTANDAR;
+        compuestoInicial = TireCompound.MEDIUM;
         combustible = FuelStrategy.BALANCEADA;
 
         if (ultima == null) {
@@ -435,7 +624,8 @@ public class SimulationController {
     /** Resume la puesta a punto vigente, que se ajusta en la otra pantalla. */
     private void mostrarPuestaAPunto() {
         lblPuestaAPunto.setText(modo.getEtiqueta() + " · " + aero.getEtiqueta()
-                + " · " + presion.getEtiqueta() + " · " + combustible.getEtiqueta());
+                + " · " + presion.getEtiqueta() + " · " + compuestoInicial.getCodigo()
+                + " · " + combustible.getEtiqueta());
         if (lblPaceUno != null) {
             lblPaceUno.setText(etiquetaPaceInicial());
             lblFuelModeUno.setText(etiquetaCombustible(combustible));
@@ -531,17 +721,35 @@ public class SimulationController {
                 selectorCircuito.getValue(), selectorPiloto.getValue().getId(), selectorVehiculo.getValue(),
                 modo, aero, presion, combustible);
         config.setDuracionSegundos(duracionSegundos);
+        config.setCompuestoInicial(compuestoInicial);
         com.formula1.data.DataStore.getInstance().guardarConfiguracion(config);
         versionConfiguracionAplicada = com.formula1.data.DataStore.getInstance()
                 .versionConfiguracion();
         finalizarSolicitado.set(false);
+        pilotoSesionActual = config.getPilotoId();
         btnFinalizar.setText("Finalizar");
+        pitStopPresenter.reset();
+        tireChangePresenter.reset(compuestoInicial);
+        // La radio arranca escuchando al piloto configurado; si luego se fija
+        // otro desde la torre, el canal cambia con él.
+        radio.reiniciar();
+        radioPresenter.reiniciar();
+        sintonizarRadio(config.getPilotoId());
+        radioPresenter.encolar(radio.saludoInicial(codigoDe(config.getPilotoId())));
         iniciarContador();
 
         reiniciarEvolucion();
         reiniciarTelemetria();
         comparacionSectoresController.reiniciar();
         panelResultados.getSelectionModel().select(tabDashboard);
+        tabResultadosFinales.setDisable(true);
+
+        segmentoEnVivo = 0;
+        mapaProgreso.reiniciar();
+        circuitos.porNombre(config.getCircuito()).ifPresent(this::mostrarCircuitoEnMapa);
+        circuitoEnVivo.iniciarSesion(config.getPilotoId(), duracionSegundos);
+        lblMejorVueltaTiempo.setText("—");
+        lblMejorVueltaPiloto.setText("Sesión en curso");
 
         // La cabecera de la aplicación acompaña a la sesión: evento, estado,
         // contador de segmento, clima y bandera.
@@ -556,7 +764,10 @@ public class SimulationController {
                     mostrarClimaResumen(muestra.clima());
                 }),
                 muestra -> Platform.runLater(() -> mostrarEvolucionPista(muestra)),
-                resultados -> Platform.runLater(() -> mostrarClasificacionEnVivo(resultados)),
+                fotograma -> Platform.runLater(() -> mostrarClasificacionEnVivo(fotograma)),
+                evento -> Platform.runLater(() -> registrarEventoEnVivo(evento)),
+                parada -> Platform.runLater(() -> mostrarPitStop(parada)),
+                cambio -> Platform.runLater(() -> mostrarCambioNeumaticos(cambio)),
                 finalizarSolicitado::get);
 
         // Enlazar en vez de asignar: el Task publica sus cambios en el hilo
@@ -566,27 +777,35 @@ public class SimulationController {
         btnSimular.disableProperty().bind(tarea.runningProperty());
         btnFinalizar.disableProperty().bind(tarea.runningProperty().not());
         selectorDuracion.disableProperty().bind(tarea.runningProperty());
-        tabla.getItems().clear();
-        tablaDashboard.getItems().clear();
-        tablaEventos.getItems().clear();
+        clasificacionVisible.clear();
+        eventosVisibles.clear();
+        feedEventos.getChildren().clear();
+        pilotoFijado = null;
+        btnVerEventos.setDisable(true);
         lblClima.setText("");
 
         tarea.setOnSucceeded(e -> {
             boolean finalizadaManualmente = finalizarSolicitado.get();
             detenerContador(!finalizadaManualmente);
             desenlazar();
-            mostrarSesion(tarea.getValue());
+            // La sesión se lee una sola vez y aquí, en el hilo de JavaFX:
+            // Task.getValue() lanza si se consulta desde otro hilo, y el
+            // guardado de abajo corre en el pool.
+            QualifyingSession resultado = tarea.getValue();
+            mostrarSesion(resultado, finalizadaManualmente);
+            panelResultados.getSelectionModel().select(tabResultadosFinales);
             if (finalizadaManualmente) {
                 lblEstado.setText("Sesión finalizada manualmente · resultados guardados");
                 lblDashboardEvento.setText("FINALIZADA");
             }
             // Guardar en segundo plano: la parrilla ya está en pantalla.
-            Async.ejecutar(() -> sesiones.guardar(tarea.getValue()));
+            Async.ejecutar(() -> sesiones.guardar(resultado));
         });
 
         tarea.setOnFailed(e -> {
             detenerContador(false);
             desenlazar();
+            circuitoEnVivo.detener();
             progreso.setProgress(0);
             lblEstado.setText("La simulación falló");
             ShellController.estadoSesion(ShellController.Estado.REPOSO);
@@ -645,19 +864,71 @@ public class SimulationController {
         return String.format("%02d:%02d", totalSegundos / 60, totalSegundos % 60);
     }
 
-    /** Refresca las dos tablas mientras los pilotos van completando sus vueltas. */
-    private void mostrarClasificacionEnVivo(List<LapResult> resultados) {
-        ObservableList<LapResult> parcial = FXCollections.observableArrayList(resultados);
-        tabla.setItems(parcial);
-        tablaDashboard.setItems(parcial);
+    /** Refresca la torre mientras los pilotos van completando sus vueltas. */
+    private void mostrarClasificacionEnVivo(LiveClassificationFrame fotograma) {
+        List<LapResult> resultados = fotograma.classification();
+        segmentoEnVivo = fotograma.segment();
+
+        clasificacionVisible.setAll(resultados);
+
+        // El mapa se alimenta de esta misma lista: el marcador y la fila no son
+        // dos cálculos que puedan discrepar, son el mismo dato.
+        circuitoEnVivo.publicar(mapaProgreso.construir(fotograma.progress(), resultados));
+        actualizarVueltaHud();
+        actualizarEtiquetasSector(resultados);
+
         if (resultados.isEmpty()) {
             return;
         }
+        radioPresenter.encolar(radio.desdeClasificacion(resultados, pilotoDeRadio(),
+                segmentoEnVivo));
+        // El rótulo del piloto fijado se refresca con la parrilla: si no, se
+        // quedaría con la posición y el gap del instante en que se pulsó.
+        refrescarSeleccion(resultados);
+
         LapResult lider = resultados.get(0);
+        lblMejorVueltaTiempo.setText(FormatUtils.formatLapResult(lider));
+        lblMejorVueltaPiloto.setText(codigoPiloto(lider) + " · " + lider.getEquipo());
         lblDashboardEvento.setText("EN VIVO");
         lblDashboardMensaje.setText("Líder provisional: " + lider.getPiloto()
                 + " · " + FormatUtils.formatLapResult(lider)
                 + " · " + resultados.size() + " clasificados");
+    }
+
+    /**
+     * Alimenta los rótulos de sector del mapa.
+     *
+     * Con un piloto fijado se muestra su diferencia contra el mejor de ese
+     * sector; sin selección, el mejor tiempo absoluto. Ambos salen de
+     * {@code SectorTimes}, que el motor solo rellena en vueltas válidas.
+     */
+    private void actualizarEtiquetasSector(List<LapResult> resultados) {
+        TrackSector[] sectores = {TrackSector.SECTOR_1, TrackSector.SECTOR_2, TrackSector.SECTOR_3};
+        String[] valores = new String[3];
+        for (int i = 0; i < sectores.length; i++) {
+            Optional<LapResult> mejor = comparadorSectores.mejorEn(resultados, sectores[i]);
+            if (mejor.isEmpty()) {
+                continue;
+            }
+            double referencia = mejor.get().getSectorTimes().tiempoDe(sectores[i]);
+            LapResult elegido = pilotoFijado == null ? null : resultados.stream()
+                    .filter(r -> r.getPilotoId() == pilotoFijado)
+                    .filter(r -> r.isVueltaValida() && r.hasSectorTimes())
+                    .findFirst()
+                    .orElse(null);
+            valores[i] = elegido == null
+                    ? String.format(java.util.Locale.ROOT, "%.3f", referencia)
+                    : String.format(java.util.Locale.ROOT, "%+.3f",
+                            elegido.getSectorTimes().tiempoDe(sectores[i]) - referencia);
+        }
+        circuitoEnVivo.setEtiquetasSector(valores);
+    }
+
+    private void actualizarVueltaHud() {
+        lblHudVuelta.setText(segmentoEnVivo + " / " + MapaProgreso.TOTAL_SEGMENTOS);
+        lblHudSector.setText(com.formula1.model.TrackSector
+                .desdeSegmento(Math.max(1, segmentoEnVivo), MapaProgreso.TOTAL_SEGMENTOS)
+                .getEtiqueta().toUpperCase());
     }
 
     private void reiniciarEvolucion() {
@@ -666,6 +937,10 @@ public class SimulationController {
         consumoVueltaTotal = 0;
         lblDashboardMensaje.setText("Preparando datos de la vuelta seleccionada");
         lblDashboardEvento.setText("SIN EVENTOS");
+        eventosEnVivoRegistrados.clear();
+        colaNotificaciones.clear();
+        ocultarNotificacionEvento();
+        pitStopPresenter.reset();
         reiniciarPistaYClima();
     }
 
@@ -678,6 +953,8 @@ public class SimulationController {
     }
 
     private void reiniciarTelemetria() {
+        telemetriaSesionActual.clear();
+        telemetryDetailPresenter.load(List.of());
         lblTelemetriaPiloto.setText("Esperando datos del vehículo seleccionado");
         lblEstadoPista.setText("Estado de pista —");
         lblVelocidadTelemetria.setText("0 km/h");
@@ -702,11 +979,19 @@ public class SimulationController {
         barraTempNeumaticos.setProgress(0);
         barraTempMotor.setProgress(0);
         reiniciarTelemetriaTarjetas();
-        reiniciarGraficasDashboard();
+        reiniciarBaldosasTelemetria();
     }
 
     /** Representa una lectura ya calculada; no ejecuta lógica del motor en JavaFX. */
     private void mostrarTelemetria(TelemetrySnapshot muestra) {
+        // La telemetría sí trae el número de segmento y llega en el mismo
+        // fotograma que la clasificación: se aprovecha para resincronizar el
+        // contador en vez de fiarlo todo a ir sumando uno.
+        segmentoEnVivo = muestra.segmento();
+        actualizarVueltaHud();
+
+        telemetriaSesionActual.add(muestra);
+        telemetryDetailPresenter.append(muestra);
         actualizarVelocidadMaxima(muestra.velocidadKmh());
         lblTelemetriaPiloto.setText(muestra.piloto() + " · " + muestra.vehiculo());
         String bandera = muestra.evento().impacto().bandera() == TrackFlag.GREEN
@@ -738,12 +1023,17 @@ public class SimulationController {
                     + muestra.estadoVuelta().getEtiqueta());
         }
 
-        lblDashboardCombustible.setText(String.format("%.0f %%",
-                muestra.combustibleRestantePorcentaje()));
+        double combustibleRestante = muestra.combustibleRestantePorcentaje();
         double vidaNeumatico = Math.max(0, 100 - muestra.desgasteNeumaticosPorcentaje());
+        lblDashboardCombustible.setText(String.format("%.0f %%", combustibleRestante));
         lblDashboardDesgaste.setText(String.format("%.0f %%", vidaNeumatico));
-        actualizarGraficasDashboard(muestra.segmento(), vidaNeumatico,
-                muestra.combustibleRestantePorcentaje());
+        lblTempNeumaticoPanel.setText(String.format("%.0f °C", muestra.temperaturaNeumaticosC()));
+        lblTempMotorPanel.setText(String.format("%.0f °C", muestra.temperaturaMotorC()));
+        // Verde mientras hay holgura, ámbar al acercarse al límite, rojo al pasarlo.
+        estadoBaldosa(lblDashboardDesgaste, vidaNeumatico, 40, 20, false);
+        estadoBaldosa(lblDashboardCombustible, combustibleRestante, 25, 10, false);
+        estadoBaldosa(lblTempNeumaticoPanel, muestra.temperaturaNeumaticosC(), 100, 115, true);
+        estadoBaldosa(lblTempMotorPanel, muestra.temperaturaMotorC(), 105, 120, true);
 
         lblDelta.getStyleClass().removeAll("delta-faster", "delta-slower");
         lblDelta.getStyleClass().add(muestra.estadoVuelta() != LapStatus.VALID
@@ -755,6 +1045,9 @@ public class SimulationController {
         barraTempNeumaticos.setProgress(muestra.temperaturaNeumaticosC() / 125);
         barraTempMotor.setProgress(muestra.temperaturaMotorC() / 125);
         actualizarTelemetriaTarjetas(muestra);
+        // La telemetría es el reloj regular de la sesión (una muestra por
+        // segmento): es de donde salen los avisos de coche y bandera.
+        radioPresenter.encolar(radio.desdeTelemetria(muestra));
     }
 
     /** Precarga una configuración elegida en Historial sin iniciar ni borrar la sesión actual. */
@@ -772,6 +1065,7 @@ public class SimulationController {
         if (config.getModo() != null) modo = config.getModo();
         if (config.getAerodinamica() != null) aero = config.getAerodinamica();
         if (config.getPresion() != null) presion = config.getPresion();
+        compuestoInicial = config.getCompuestoInicial();
         if (config.getCombustible() != null) combustible = config.getCombustible();
         seleccionarDuracion(config.getDuracionSegundos());
         if (!lblEstado.textProperty().isBound()) {
@@ -797,22 +1091,50 @@ public class SimulationController {
         lblVelocidadMaximaTelemetria.setText(maxima);
     }
 
-    private void reiniciarGraficasDashboard() {
-        serieDesgasteDashboard.getData().clear();
-        serieCombustibleDashboard.getData().clear();
-        serieDesgasteDashboard.getData().add(new XYChart.Data<>(0, 100));
-        serieCombustibleDashboard.getData().add(new XYChart.Data<>(0, 100));
+    /** Deja las baldosas del panel derecho en su estado de reposo. */
+    private void reiniciarBaldosasTelemetria() {
         lblDashboardDesgaste.setText("100 %");
         lblDashboardCombustible.setText("100 %");
+        lblTempNeumaticoPanel.setText("— °C");
+        lblTempMotorPanel.setText("— °C");
+        for (Label baldosa : new Label[]{lblDashboardDesgaste, lblDashboardCombustible,
+                lblTempNeumaticoPanel, lblTempMotorPanel}) {
+            baldosa.getStyleClass().removeAll("ok", "warn", "crit");
+        }
     }
 
-    private void actualizarGraficasDashboard(int segmento, double vidaNeumatico,
-                                              double combustibleRestante) {
-        serieDesgasteDashboard.getData().add(
-                new XYChart.Data<>(segmento, vidaNeumatico));
-        serieCombustibleDashboard.getData().add(
-                new XYChart.Data<>(segmento, combustibleRestante));
+    /**
+     * Colorea una baldosa según su holgura. Los umbrales van en la unidad del
+     * dato, y {@code masEsPeor} distingue "queda poco" de "se calienta".
+     */
+    private void estadoBaldosa(Label baldosa, double valor, double aviso, double critico,
+                               boolean masEsPeor) {
+        baldosa.getStyleClass().removeAll("ok", "warn", "crit");
+        boolean critica = masEsPeor ? valor >= critico : valor <= critico;
+        boolean avisa = masEsPeor ? valor >= aviso : valor <= aviso;
+        baldosa.getStyleClass().add(critica ? "crit" : avisa ? "warn" : "ok");
     }
+
+    /** Abre el análisis sin abandonar la sesión ni crear otra pantalla. */
+    @FXML
+    private void onVerDetalles() {
+        if (telemetryDetailPresenter.hasData()) {
+            panelResultados.getSelectionModel().select(tabTelemetria);
+        }
+    }
+
+    /** Regresa al panel operativo conservando la vuelta elegida. */
+    @FXML
+    private void onVolverDashboard() {
+        panelResultados.getSelectionModel().select(tabDashboard);
+    }
+
+    /** Abre el historial completo desde el resumen compacto del Dashboard. */
+    @FXML
+    private void onVerEventos() {
+        panelResultados.getSelectionModel().select(tabEventos);
+    }
+
 
     /**
      * Vuelca la muestra climatica en la tarjeta del panel y en la cabecera.
@@ -833,6 +1155,20 @@ public class SimulationController {
                 muestra.intensidadLluviaPorcentaje(), muestra.humedadPorcentaje()));
         lblNeumaticoEvolucion.setText(muestra.neumaticoRecomendado());
         lblEstrategiaEvolucion.setText(muestra.estrategiaRecomendada());
+        // El panel de clima del deck se alimenta de la misma muestra.
+        lblHudClima.setText(String.format("%.0f °C", muestra.temperaturaC()));
+        lblHudClimaDetalle.setText(muestra.estado().getEtiqueta().toUpperCase()
+                + " · PISTA " + muestra.estadoPista().toUpperCase());
+        lblNeumaticoRecomendado.setText("NEUMÁTICO " + muestra.neumaticoRecomendado().toUpperCase()
+                + " · HUMEDAD " + String.format("%.0f %%", muestra.humedadPorcentaje()));
+        // Mismos glifos que la cabecera: los emojis de clima no los dibuja JavaFX.
+        lblIconoClimaPanel.setText(switch (muestra.estado()) {
+            case SECO -> "☀";
+            case NUBLADO -> "░";
+            case LLUVIA_LIGERA -> "▒";
+            case LLUVIA -> "▓";
+            case LLUVIA_INTENSA -> "█";
+        });
         lblMapaPista.setText("Pista: " + muestra.estadoPista());
     }
 
@@ -927,6 +1263,152 @@ public class SimulationController {
         return String.format("%+.3f s", evento.impacto().deltaTiempoSegundos());
     }
 
+    /** Registra toda incidencia, pero solo interrumpe visualmente si es importante. */
+    private void registrarEventoEnVivo(EventOccurrence evento) {
+        String clave = evento.tipo() + ":" + evento.pilotoId() + ":"
+                + evento.vuelta() + ":" + evento.sector();
+        if (!eventosEnVivoRegistrados.add(clave)) {
+            return;
+        }
+        tablaEventos.getItems().add(evento);
+        btnVerEventos.setDisable(false);
+        anadirAlFeed(evento);
+        radio.desdeEvento(evento, pilotoDeRadio()).ifPresent(radioPresenter::encolar);
+        if (esEventoImportante(evento.categoria())) {
+            colaNotificaciones.add(evento);
+            mostrarSiguienteNotificacion();
+        }
+    }
+
+    /** Presenta un cambio de fase sin trasladar reglas de boxes a JavaFX. */
+    private void mostrarPitStop(PitStopRecord parada) {
+        String clave = "PIT:" + parada.id() + ":" + parada.fase();
+        if (!eventosEnVivoRegistrados.add(clave)) {
+            return;
+        }
+        pitStopPresenter.present(parada);
+        radioPresenter.encolar(radio.desdeParada(parada, pilotoDeRadio()));
+    }
+
+    private void mostrarCambioNeumaticos(TireChangeRecord cambio) {
+        String clave = "TIRE:" + cambio.pitStopId();
+        if (eventosEnVivoRegistrados.add(clave)) {
+            tireChangePresenter.present(cambio, pilotoSesionActual);
+            radio.desdeCambioNeumaticos(cambio, pilotoDeRadio())
+                    .ifPresent(radioPresenter::encolar);
+        }
+    }
+
+    /**
+     * Añade una incidencia al feed del panel derecho, la más reciente arriba.
+     *
+     * Los eventos no llevan marca de tiempo —la clasificación es de una sola
+     * vuelta—, así que a la derecha va el sector, que sí es dato real y sitúa
+     * la incidencia igual de bien.
+     */
+    private void anadirAlFeed(EventOccurrence evento) {
+        if (feedEventos == null || !evento.ocurrio()) {
+            return;
+        }
+        Region punto = new Region();
+        punto.getStyleClass().addAll("feed-dot", switch (evento.categoria()) {
+            case POSITIVE -> "positivo";
+            case MAJOR_NEGATIVE, EXCEPTIONAL -> "grave";
+            case WEATHER_TRACK -> "clima";
+            default -> "leve";
+        });
+
+        Label texto = new Label(evento.tipo().getEtiqueta());
+        texto.getStyleClass().add("feed-text");
+        Label piloto = new Label(evento.piloto());
+        piloto.getStyleClass().add("feed-driver");
+        Label sector = new Label(evento.sector() == TrackSector.NONE ? "—"
+                : "S" + evento.sector().name().substring(evento.sector().name().length() - 1));
+        sector.getStyleClass().add("feed-time");
+
+        Region espaciador = new Region();
+        HBox.setHgrow(espaciador, Priority.ALWAYS);
+        VBox cuerpo = new VBox(texto, piloto);
+        HBox fila = new HBox(8, punto, cuerpo, espaciador, sector);
+        fila.setAlignment(Pos.CENTER_LEFT);
+        fila.getStyleClass().add("feed-row");
+
+        feedEventos.getChildren().add(0, fila);
+        // El feed es una vista, no un registro: la tabla de Eventos guarda todo.
+        while (feedEventos.getChildren().size() > 14) {
+            feedEventos.getChildren().remove(feedEventos.getChildren().size() - 1);
+        }
+
+        FadeTransition entrada = new FadeTransition(Duration.millis(200), fila);
+        entrada.setFromValue(0);
+        entrada.setToValue(1);
+        entrada.setInterpolator(Interpolator.EASE_BOTH);
+        entrada.play();
+    }
+
+    /** Los incidentes leves y positivos quedan en el historial sin generar toast. */
+    static boolean esEventoImportante(EventCategory categoria) {
+        return categoria == EventCategory.MAJOR_NEGATIVE
+                || categoria == EventCategory.WEATHER_TRACK
+                || categoria == EventCategory.EXCEPTIONAL;
+    }
+
+    /** Presenta cada aviso importante por turnos para que ninguno tape a otro. */
+    private void mostrarSiguienteNotificacion() {
+        if (notificacionEvento.isVisible() || colaNotificaciones.isEmpty()) {
+            return;
+        }
+        EventOccurrence evento = colaNotificaciones.removeFirst();
+        lblNotificacionTipo.setText(evento.tipo().getEtiqueta());
+        lblNotificacionCategoria.setText(evento.categoria().getEtiqueta().toUpperCase());
+        lblNotificacionPiloto.setText(evento.piloto());
+        lblNotificacionSector.setText(evento.sector().getEtiqueta().toUpperCase());
+        lblNotificacionImpacto.setText("Impacto · " + describirImpacto(evento));
+        notificacionEvento.getStyleClass().removeAll(
+                "event-toast-major", "event-toast-weather", "event-toast-exceptional");
+        notificacionEvento.getStyleClass().add(switch (evento.categoria()) {
+            case WEATHER_TRACK -> "event-toast-weather";
+            case EXCEPTIONAL -> "event-toast-exceptional";
+            default -> "event-toast-major";
+        });
+
+        if (temporizadorNotificacionEvento != null) {
+            temporizadorNotificacionEvento.stop();
+        }
+        notificacionEvento.setOpacity(0);
+        notificacionEvento.setVisible(true);
+        FadeTransition entrada = new FadeTransition(Duration.millis(160), notificacionEvento);
+        entrada.setToValue(1);
+        entrada.play();
+
+        temporizadorNotificacionEvento = new PauseTransition(Duration.seconds(4));
+        temporizadorNotificacionEvento.setOnFinished(e -> ocultarNotificacionEvento());
+        temporizadorNotificacionEvento.play();
+    }
+
+    private void ocultarNotificacionEvento() {
+        if (temporizadorNotificacionEvento != null) {
+            temporizadorNotificacionEvento.stop();
+        }
+        if (!notificacionEvento.isVisible()) {
+            return;
+        }
+        FadeTransition salida = new FadeTransition(Duration.millis(220), notificacionEvento);
+        salida.setToValue(0);
+        salida.setOnFinished(e -> {
+            notificacionEvento.setVisible(false);
+            mostrarSiguienteNotificacion();
+        });
+        salida.play();
+    }
+
+    /** Permite retirar el aviso inmediatamente sin afectar su registro. */
+    @FXML
+    private void onCerrarNotificacion() {
+        colaNotificaciones.clear();
+        ocultarNotificacionEvento();
+    }
+
     private boolean configuracionCompleta() {
         return selectorCircuito.getValue() != null
                 && selectorVehiculo.getValue() != null
@@ -959,6 +1441,7 @@ public class SimulationController {
 
         pintarTarjetaPiloto(seleccionado, lblPilotoUno, lblEquipoUno,
                 lblVehiculoUno, lblExperienciaUno);
+        pintarRetrato(seleccionado);
         pintarTarjetaPiloto(companero, lblPilotoDos, lblEquipoDos,
                 lblVehiculoDos, lblExperienciaDos);
         lblFuelModeUno.setText(etiquetaCombustible(combustible));
@@ -982,6 +1465,67 @@ public class SimulationController {
         dorsal.setText("#" + piloto.getNumero());
     }
 
+    /**
+     * Fija o suelta el piloto elegido en la torre.
+     *
+     * Fijar lo mantiene resaltado en el mapa aunque el ratón se vaya, y cambia
+     * los rótulos de sector a la diferencia de ese piloto contra el mejor. Las
+     * lecturas del coche no cambian: el motor solo emite telemetría del piloto
+     * configurado, así que atribuírsela a otro sería inventarla.
+     */
+    private void seleccionarPiloto(LapResult resultado) {
+        boolean mismo = pilotoFijado != null && pilotoFijado == resultado.getPilotoId();
+        pilotoFijado = mismo ? null : resultado.getPilotoId();
+        // Fijar y consultar son estados distintos: el mapa mantiene el fijado
+        // aunque el ratón se vaya a curiosear otro coche.
+        circuitoEnVivo.fijar(pilotoFijado);
+        torreTiempos.refresh();
+
+        // La radio cambia de canal con el piloto fijado; sin fijado, vuelve al
+        // configurado, que es del único del que hay telemetría.
+        sintonizarRadio(pilotoFijado != null ? pilotoFijado : pilotoSesionActual);
+
+        refrescarSeleccion(torreTiempos.getItems());
+        FadeTransition destello = new FadeTransition(Duration.millis(150), lblSeleccion);
+        destello.setFromValue(0.2);
+        destello.setToValue(1);
+        destello.setInterpolator(Interpolator.EASE_BOTH);
+        destello.play();
+
+        actualizarEtiquetasSector(torreTiempos.getItems());
+    }
+
+    /**
+     * Reescribe el rótulo del piloto fijado con su posición y gap vigentes.
+     *
+     * Se llama en cada actualización de la parrilla, no solo al pulsar: de otro
+     * modo el rótulo congelaría el momento del clic y acabaría mintiendo.
+     */
+    private void refrescarSeleccion(List<LapResult> clasificacion) {
+        if (pilotoFijado == null) {
+            lblSeleccion.setText("Sin piloto fijado");
+            return;
+        }
+        clasificacion.stream()
+                .filter(r -> r.getPilotoId() == pilotoFijado)
+                .findFirst()
+                .ifPresentOrElse(actual -> lblSeleccion.setText(
+                        "SIGUIENDO · " + codigoPiloto(actual) + " · P" + actual.getPosicion()
+                                + " · " + (actual.getPosicion() == 1
+                                        ? FormatUtils.formatLapResult(actual)
+                                        : FormatUtils.formatGap(actual.getGap()))),
+                        () -> lblSeleccion.setText("SIGUIENDO · " + codigoDe(pilotoFijado)));
+    }
+
+    /** Retrato del HUD inferior. El render oficial existe para los veinte códigos. */
+    private void pintarRetrato(Driver piloto) {
+        if (fotoPilotoUno == null) {
+            return;
+        }
+        fotoPilotoUno.setImage(piloto == null ? null
+                : Imagenes.cargar(F1Assets.render(piloto.getCodigo()), 140, 0));
+    }
+
     private void reiniciarTelemetriaTarjetas() {
         ersPiloto = 100;
         ersCompanero = 100;
@@ -993,6 +1537,8 @@ public class SimulationController {
                 lblTempMotorDos, lblMarchaDos, lblRpmDos, lblPaceDos,
                 lblErsDos, barraErsDos, 100, 0, 100, 0, "N", 0,
                 "NORMAL", ersCompanero);
+        barraLlantasUno.setProgress(1);
+        barraFuelUno.setProgress(1);
         lblFuelModeUno.setText(etiquetaCombustible(combustible));
         lblFuelModeDos.setText("BALANCEADA");
     }
@@ -1028,6 +1574,10 @@ public class SimulationController {
                 muestra.temperaturaMotorC(),
                 marchaPara(muestra.velocidadKmh()), muestra.rpm(), pacePara(muestra),
                 ersPiloto);
+        barraLlantasUno.setProgress(
+                Math.max(0, 100 - muestra.desgasteNeumaticosPorcentaje()) / 100);
+        barraFuelUno.setProgress(
+                combustibleVisible(muestra.combustibleRestantePorcentaje()) / 100);
 
         pintarLecturaTarjeta(lblLlantasDos, lblTempLlantasDos, lblFuelDos,
                 lblTempMotorDos, lblMarchaDos, lblRpmDos, lblPaceDos,

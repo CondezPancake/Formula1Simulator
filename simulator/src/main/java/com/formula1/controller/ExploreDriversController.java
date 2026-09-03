@@ -6,6 +6,7 @@ import com.formula1.service.DriverService;
 import com.formula1.service.TeamService;
 import com.formula1.service.ValidationException;
 import com.formula1.util.F1Assets;
+import com.formula1.util.Imagenes;
 import com.formula1.util.TeamColors;
 import com.formula1.util.InputValidation;
 
@@ -14,6 +15,7 @@ import javafx.animation.ScaleTransition;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.CacheHint;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -204,6 +206,10 @@ public class ExploreDriversController {
         vista.setEffect(new Blend(BlendMode.SRC_ATOP, null,
                 new ColorInput(0, 0, ANCHO_PATRON, ALTO, Color.web(colorEquipo))));
         vista.setOpacity(0.5);
+        // Sin esto el Blend se recompone en cada fotograma, y hay una tarjeta
+        // por piloto: veinte efectos de pixel vivos a la vez.
+        vista.setCache(true);
+        vista.setCacheHint(CacheHint.SPEED);
         StackPane.setAlignment(vista, Pos.CENTER_RIGHT);
         return java.util.Optional.of(vista);
     }
@@ -355,15 +361,7 @@ public class ExploreDriversController {
      * dimensión por proporción.
      */
     private static Image cargar(String ruta, double ancho, double alto) {
-        if (ruta == null) {
-            return null;
-        }
-        var recurso = ExploreDriversController.class.getResource(ruta);
-        if (recurso == null) {
-            return null;
-        }
-        Image imagen = new Image(recurso.toExternalForm(), ancho, alto, true, true, false);
-        return imagen.isError() || imagen.getWidth() <= 0 ? null : imagen;
+        return Imagenes.cargar(ruta, ancho, alto);
     }
 
     private String inicialesDe(String nombre) {

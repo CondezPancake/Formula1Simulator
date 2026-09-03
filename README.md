@@ -7,7 +7,7 @@
   <img alt="JavaFX" src="https://img.shields.io/badge/JavaFX-17.0.10-e10600?style=flat-square&logo=java&logoColor=white">
   <img alt="Maven" src="https://img.shields.io/badge/Maven-build-e10600?style=flat-square&logo=apachemaven&logoColor=white">
   <img alt="MongoDB" src="https://img.shields.io/badge/MongoDB-5.1.1-e10600?style=flat-square&logo=mongodb&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-121%20passing-2ea043?style=flat-square">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-128%20passing-2ea043?style=flat-square">
 </p>
 
 # Formula1Simulator
@@ -64,7 +64,7 @@ La aplicación **arranca y es plenamente usable con o sin MongoDB**: si no hay s
 | Archivos `.java` | 101 |
 | Paquetes | 6 |
 | Patrones de diseño | 2 (Repository, Singleton) |
-| Tests | 121, todos en verde |
+| Tests | 128, todos en verde |
 
 ## Funcionalidades
 
@@ -325,18 +325,39 @@ Formula1Simulator/
         │   ├── css/style.css
         │   ├── images/     # pilotos, monoplazas y trazados
         │   └── data/seed.json
-        └── test/java/      # 28 clases · 121 tests
+        └── test/java/      # 31 clases · 128 tests
 ```
 
 ## Instalación y ejecución
 
-```bash
-cd simulator
+Desde la raíz del repositorio:
 
+```bash
+./run.sh         # ejecutar
 mvn compile      # compilar
-mvn javafx:run   # ejecutar
 mvn test         # pruebas
+mvn javafx:run   # ejecutar (equivalente a run.sh)
 ```
+
+El `pom.xml` de la raíz solo agrega; el proyecto vive en `simulator/`. Existe
+para que estos comandos funcionen desde la carpeta del proyecto: antes había
+que acordarse de `cd simulator` o de `-f simulator/pom.xml`, y si no, Maven
+respondía *«there is no POM in this directory»*.
+
+### Si VS Code dice «Build failed» pero la terminal compila
+
+Le pasa al servidor de Java del editor, no al código: mantiene su propio índice
+del proyecto y se queda desfasado cuando se crean o borran clases desde fuera
+del editor. Se arregla regenerándolo:
+
+`Ctrl+Shift+P` → **Java: Clean Java Language Server Workspace** → *Restart and
+delete*.
+
+`.vscode/settings.json` deja la reindexación en automático para que no vuelva a
+ocurrir, y `.vscode/launch.json` hace que el botón **Run** arranque por
+`com.formula1.Main`. Esa clase existe a propósito: lanzar directamente
+`com.formula1.App`, que extiende `Application`, falla con *«JavaFX runtime
+components are missing»*.
 
 MongoDB es **opcional**. Por defecto se conecta a `mongodb://localhost:27017`; se puede cambiar con las variables de entorno `MONGO_URI` y `MONGO_DATABASE`. Sin servidor, la aplicación arranca igual en modo memoria y lo indica en la barra de estado.
 

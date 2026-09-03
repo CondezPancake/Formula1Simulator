@@ -6,6 +6,7 @@ import com.formula1.model.Circuit;
 import com.formula1.model.DrivingMode;
 import com.formula1.model.FuelStrategy;
 import com.formula1.model.SimulationConfig;
+import com.formula1.model.TireCompound;
 import com.formula1.model.TirePressure;
 import com.formula1.model.Vehicle;
 import com.formula1.model.WeatherCondition;
@@ -26,7 +27,7 @@ import java.util.function.Consumer;
 
 /**
  * Puesta a punto del monoplaza: modo de conducción, carga aerodinámica,
- * presión de neumáticos y estrategia de combustible.
+ * presión y compuesto inicial de neumáticos, y estrategia de combustible.
  *
  * El panel lateral no es decorativo: consumo y desgaste salen de
  * {@link LapTimeCalculator}, que expone ambos cálculos de forma pura y
@@ -41,6 +42,7 @@ public class ConfigController {
     @FXML private HBox segModo;
     @FXML private HBox segAero;
     @FXML private HBox segPresion;
+    @FXML private HBox segCompuesto;
     @FXML private HBox segCombustible;
     @FXML private Label lblNotaModo;
     @FXML private Label lblNotaCombustible;
@@ -61,6 +63,7 @@ public class ConfigController {
     @FXML private Label lblResumenModo;
     @FXML private Label lblResumenAero;
     @FXML private Label lblResumenPresion;
+    @FXML private Label lblResumenCompuesto;
     @FXML private Label lblResumenCombustible;
     @FXML private Label lblContexto;
 
@@ -71,6 +74,7 @@ public class ConfigController {
     private DrivingMode modo = DrivingMode.NORMAL;
     private AerodynamicLoad aero = AerodynamicLoad.MEDIA;
     private TirePressure presion = TirePressure.ESTANDAR;
+    private TireCompound compuestoInicial = TireCompound.MEDIUM;
     private FuelStrategy combustible = FuelStrategy.BALANCEADA;
     private int duracionSegundos = SimulationConfig.DURACION_PREDETERMINADA_SEGUNDOS;
 
@@ -99,6 +103,10 @@ public class ConfigController {
             presion = (TirePressure) v;
             refrescar();
         }, () -> presion);
+        construir(segCompuesto, TireCompound.values(), AMBAR, v -> {
+            compuestoInicial = (TireCompound) v;
+            refrescar();
+        }, () -> compuestoInicial);
         construir(segCombustible, FuelStrategy.values(), AMBAR, v -> {
             combustible = (FuelStrategy) v;
             refrescar();
@@ -123,6 +131,7 @@ public class ConfigController {
         modo = previa.getModo() == null ? modo : previa.getModo();
         aero = previa.getAerodinamica() == null ? aero : previa.getAerodinamica();
         presion = previa.getPresion() == null ? presion : previa.getPresion();
+        compuestoInicial = previa.getCompuestoInicial();
         combustible = previa.getCombustible() == null ? combustible : previa.getCombustible();
         duracionSegundos = previa.getDuracionSegundos();
     }
@@ -157,6 +166,7 @@ public class ConfigController {
         if (opcion instanceof DrivingMode m) return m.getEtiqueta();
         if (opcion instanceof AerodynamicLoad a) return a.getEtiqueta();
         if (opcion instanceof TirePressure p) return p.getEtiqueta();
+        if (opcion instanceof TireCompound c) return c.getEtiqueta();
         if (opcion instanceof FuelStrategy f) return f.getEtiqueta();
         return String.valueOf(opcion);
     }
@@ -183,6 +193,7 @@ public class ConfigController {
         lblResumenModo.setText(modo.getEtiqueta());
         lblResumenAero.setText(aero.getEtiqueta());
         lblResumenPresion.setText(presion.getEtiqueta());
+        lblResumenCompuesto.setText(compuestoInicial.toString());
         lblResumenCombustible.setText(combustible.getEtiqueta());
 
         estimarImpacto();
@@ -203,14 +214,17 @@ public class ConfigController {
 
         SimulationConfig config = configuracion();
         double consumo = calculadora.consumoPorVuelta(vehiculo, circuito, WeatherCondition.SECO, config);
-        double desgaste = calculadora.desgastePorVuelta(vehiculo, circuito, WeatherCondition.SECO, config);
+        double desgaste = calculadora.desgastePorVuelta(
+                vehiculo, circuito, WeatherCondition.SECO, config)
+                * compuestoInicial.getFactorDesgaste();
         int velocidad = vehiculo.rendimientoDe(modo).getVelocidadPromedioKmh();
 
         // Tiempo base del circuito ajustado por los factores elegidos: la
         // misma fórmula del motor, sin el ruido aleatorio del simulador.
         double base = 3600.0 * circuito.getLongitudKm() / velocidad;
         double tiempo = base * circuito.getFactorTecnico()
-                * aero.getFactorTiempo() * presion.getFactorTiempo() * combustible.getFactorTiempo();
+                * aero.getFactorTiempo() * presion.getFactorTiempo()
+                * combustible.getFactorTiempo() * compuestoInicial.getFactorTiempo();
 
         lblVelocidad.setText(String.valueOf(velocidad));
         lblConsumo.setText(String.format(Locale.ROOT, "%.2f", consumo));
@@ -248,6 +262,7 @@ public class ConfigController {
         config.setModo(modo);
         config.setAerodinamica(aero);
         config.setPresion(presion);
+        config.setCompuestoInicial(compuestoInicial);
         config.setCombustible(combustible);
         config.setDuracionSegundos(duracionSegundos);
         return config;

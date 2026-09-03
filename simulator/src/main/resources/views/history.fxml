@@ -72,6 +72,7 @@
                     <TableColumn fx:id="colClima" text="Clima" prefWidth="85"/>
                     <TableColumn fx:id="colPole" text="Pole" prefWidth="150"/>
                     <TableColumn fx:id="colTiempoPole" text="Tiempo" prefWidth="95"/>
+                    <TableColumn fx:id="colParadas" text="Boxes" prefWidth="65"/>
                     <TableColumn fx:id="colConfig" text="Configuración" prefWidth="300"/>
                 </columns>
             </TableView>
