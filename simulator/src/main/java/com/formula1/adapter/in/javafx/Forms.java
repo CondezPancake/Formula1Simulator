@@ -98,11 +98,13 @@ public final class Forms {
         InputValidation.texto(nombre, 60);
         ComboBox<String> selectorEquipo = new ComboBox<>();
         equipos.forEach(e -> selectorEquipo.getItems().add(e.getNombre()));
-        selectorEquipo.setValue(equipos.isEmpty() ? null : equipos.get(0).getNombre());
+        selectorEquipo.setValue(nuevo
+                ? (equipos.isEmpty() ? null : equipos.get(0).getNombre())
+                : piloto.getEquipo());
         ComboBox<DriverRole> selectorRol = new ComboBox<>();
         selectorRol.getItems().addAll(DriverRole.values());
         selectorRol.setValue(DriverRole.ESCUDERO);
-        Node campoEquipo = nuevo ? selectorEquipo : soloLectura(piloto.getEquipo());
+        Node campoEquipo = selectorEquipo;
         Node campoRol = nuevo ? selectorRol : soloLectura(
                 piloto.getRol() == null ? "Sin rol" : piloto.getRol().toString());
         Spinner<Integer> experiencia = spinner(0, 30, nuevo ? 0 : piloto.getExperiencia());
@@ -132,9 +134,9 @@ public final class Forms {
         dialogo.getDialogPane().setContent(rejilla);
         validarAlAceptar(dialogo, () -> {
             InputValidation.requerido(nombre, "El nombre del piloto", 60);
+            InputValidation.seleccionar(selectorEquipo.getValue() != null, selectorEquipo,
+                    "Debes seleccionar un equipo.");
             if (nuevo) {
-                InputValidation.seleccionar(selectorEquipo.getValue() != null, selectorEquipo,
-                        "Debes seleccionar un equipo.");
                 InputValidation.seleccionar(selectorRol.getValue() != null, selectorRol,
                         "Debes seleccionar un rol.");
             }
@@ -149,8 +151,8 @@ public final class Forms {
             }
             piloto.setId(nuevo ? idSugerido : piloto.getId());
             piloto.setNombre(nombre.getText().trim());
+            piloto.setEquipo(selectorEquipo.getValue());
             if (nuevo) {
-                piloto.setEquipo(selectorEquipo.getValue());
                 piloto.setRol(selectorRol.getValue());
             }
             piloto.setExperiencia(InputValidation.valorEntero(experiencia, "La experiencia", 0, 30));

@@ -88,12 +88,14 @@ public final class Navigator {
         if (VISTA_GESTION.equals(vista) && gestion != null) {
             ultimoControlador = controladorGestion;
             mostrarVista(gestion);
+            refrescarGestionPendiente();
             ShellController.sincronizarVista(vista);
             return;
         }
         if (VISTA_EXPLORAR.equals(vista) && explorar != null) {
             ultimoControlador = controladorExplorar;
             mostrarVista(explorar);
+            refrescarExplorarPendiente();
             ShellController.sincronizarVista(vista);
             return;
         }
@@ -120,6 +122,10 @@ public final class Navigator {
             mostrarVista(contenido);
             if (VISTA_SESION.equals(vista)) {
                 prepararSesionPendiente();
+            } else if (VISTA_GESTION.equals(vista)) {
+                refrescarGestionPendiente();
+            } else if (VISTA_EXPLORAR.equals(vista)) {
+                refrescarExplorarPendiente();
             }
             ShellController.sincronizarVista(vista);
         } catch (Exception e) {
@@ -176,6 +182,19 @@ public final class Navigator {
     private static void prepararSesionPendiente() {
         if (controladorSesion instanceof SimulationController simulacion) {
             simulacion.aplicarConfiguracionGuardadaPendiente();
+            simulacion.refrescarCatalogos();
+        }
+    }
+
+    private static void refrescarGestionPendiente() {
+        if (controladorGestion instanceof ManagementController gestionController) {
+            gestionController.refrescarVistaActual();
+        }
+    }
+
+    private static void refrescarExplorarPendiente() {
+        if (controladorExplorar instanceof ExploreController explorarController) {
+            explorarController.refrescarTodo();
         }
     }
 

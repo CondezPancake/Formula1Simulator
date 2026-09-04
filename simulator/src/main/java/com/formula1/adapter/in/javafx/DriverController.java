@@ -286,6 +286,15 @@ public class DriverController {
         aplicarFiltros();
     }
 
+    /** Vuelve a consultar el catálogo, preservando la selección actual si sigue existiendo. */
+    void refrescarVista() {
+        Driver seleccionado = tabla.getSelectionModel().getSelectedItem();
+        cargarDatos();
+        if (seleccionado != null) {
+            tabla.getSelectionModel().select(seleccionado);
+        }
+    }
+
     private void actualizarConteo() {
         lblConteo.setText(filtrados.size() + " / " + datos.size());
     }

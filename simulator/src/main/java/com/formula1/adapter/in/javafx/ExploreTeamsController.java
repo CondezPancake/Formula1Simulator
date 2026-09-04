@@ -73,7 +73,7 @@ public class ExploreTeamsController {
         refrescar();
     }
 
-    private void refrescar() {
+    void refrescar() {
         List<Team> resultado = equipos.buscar(buscador.getText());
         tarjetas.getChildren().setAll(resultado.stream().map(this::tarjeta).toList());
         lblConteo.setText(resultado.size() + " EQUIPOS");

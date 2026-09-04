@@ -226,11 +226,12 @@ public class TeamController {
         aplicarFiltros();
     }
 
-    /** Recalcula columnas derivadas cuando otro catálogo modifica pilotos. */
+    /** Vuelve a consultar el catálogo, preservando la selección actual si sigue existiendo. */
     void refrescarVista() {
-        tabla.refresh();
         Team seleccionado = tabla.getSelectionModel().getSelectedItem();
+        cargarDatos();
         if (seleccionado != null) {
+            tabla.getSelectionModel().select(seleccionado);
             mostrarDetalle(seleccionado);
         }
     }

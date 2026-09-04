@@ -343,6 +343,30 @@ public class SimulationController {
     }
 
     /**
+     * Vuelve a poblar circuitos y vehículos desde el catálogo en memoria.
+     *
+     * Estos combos se llenan una sola vez en {@link #initialize()}; si se da
+     * de alta un circuito o vehículo nuevo en Gestión mientras Carrera ya
+     * estaba cacheada, no aparecería sin esto. Lo llama Navigator al volver
+     * a entrar en la vista de sesión.
+     */
+    void refrescarCatalogos() {
+        String circuitoActual = selectorCircuito.getValue();
+        List<String> nombresCircuitos = circuitos.listar().stream().map(Circuit::getNombre).toList();
+        selectorCircuito.getItems().setAll(nombresCircuitos);
+        if (circuitoActual != null && selectorCircuito.getItems().contains(circuitoActual)) {
+            selectorCircuito.setValue(circuitoActual);
+        }
+
+        String vehiculoActual = selectorVehiculo.getValue();
+        List<String> modelosVehiculos = vehiculos.listar().stream().map(v -> v.getModelo()).toList();
+        selectorVehiculo.getItems().setAll(modelosVehiculos);
+        if (vehiculoActual != null && selectorVehiculo.getItems().contains(vehiculoActual)) {
+            selectorVehiculo.setValue(vehiculoActual);
+        }
+    }
+
+    /**
      * Abreviatura de tres letras del piloto (VER, HAM, LEC).
      *
      * La torre repinta sus veinte filas en cada segmento, así que la consulta
@@ -783,6 +807,9 @@ public class SimulationController {
         btnSimular.disableProperty().bind(tarea.runningProperty());
         btnFinalizar.disableProperty().bind(tarea.runningProperty().not());
         selectorDuracion.disableProperty().bind(tarea.runningProperty());
+        selectorCircuito.disableProperty().bind(tarea.runningProperty());
+        selectorVehiculo.disableProperty().bind(tarea.runningProperty());
+        selectorPiloto.disableProperty().bind(tarea.runningProperty());
         clasificacionVisible.clear();
         eventosVisibles.clear();
         feedEventos.getChildren().clear();
@@ -1423,6 +1450,10 @@ public class SimulationController {
     private void cargarPilotosDelVehiculo(String modelo) {
         selectorPiloto.getItems().clear();
         selectorPiloto.setValue(null);
+        if (modelo == null) {
+            selectorPiloto.setDisable(true);
+            return;
+        }
 
         vehiculos.porModelo(modelo).ifPresent(vehiculo ->
                 selectorPiloto.getItems().setAll(vehiculos.pilotosDe(vehiculo)));
@@ -1689,6 +1720,12 @@ public class SimulationController {
         btnFinalizar.setDisable(true);
         selectorDuracion.disableProperty().unbind();
         selectorDuracion.setDisable(false);
+        selectorCircuito.disableProperty().unbind();
+        selectorCircuito.setDisable(false);
+        selectorVehiculo.disableProperty().unbind();
+        selectorVehiculo.setDisable(false);
+        selectorPiloto.disableProperty().unbind();
+        selectorPiloto.setDisable(selectorPiloto.getItems().isEmpty());
     }
 
     private record OpcionDuracion(Integer segundos, String etiqueta) {

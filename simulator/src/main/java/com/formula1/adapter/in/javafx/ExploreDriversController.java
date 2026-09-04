@@ -125,7 +125,7 @@ public class ExploreDriversController {
         return boton;
     }
 
-    private void refrescar() {
+    void refrescar() {
         List<Driver> resultado = pilotos.buscar(buscador.getText()).stream()
                 .filter(p -> equipoSeleccionado == null || equipoSeleccionado.equalsIgnoreCase(p.getEquipo()))
                 .toList();
