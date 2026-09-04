@@ -44,7 +44,7 @@ Cada enum de configuración lleva sus propios coeficientes, de modo que la fórm
 **Cada opción tiene contrapartida** (aero baja mejora consumo pero penaliza tiempo; presión baja mejora tiempo pero dispara el desgaste), para que configurar importe de verdad.
 
 ### Mapeo Jackson
-Los enums llevan `@JsonValue`/`@JsonCreator` con la clave literal de la spec (`conduccion_normal`, `seco`, `Líder`…), así el mismo mapeo sirve para el seed **y** para la persistencia en Mongo. `Circuit.LapRecord` expone `tiempo` como `"1:10.166"` pero lo guarda en segundos, porque se compara con los tiempos simulados.
+Los enums llevan `@JsonValue`/`@JsonCreator` con la clave literal de la spec (`conduccion_normal`, `seco`, `Líder`…), para leer el seed sin traducciones ambiguas. El adaptador JDBC usa las mismas claves en los catálogos SQL. `Circuit.LapRecord` expone `tiempo` como `"1:10.166"` pero lo guarda en segundos, porque se compara con los tiempos simulados.
 
 ## Utilidades
 

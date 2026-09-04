@@ -1,0 +1,20 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            // Se arranca por com.formula1.bootstrap.Main, NO por
+            // com.formula1.bootstrap.App.
+            //
+            // Main es una clase normal que llama a Application.launch. Ejecutar
+            // directamente una subclase de Application con JavaFX en el
+            // classpath —como lo pone Maven— falla con "JavaFX runtime
+            // components are missing"; este rodeo lo evita.
+            "type": "java",
+            "name": "F1 Simulator",
+            "request": "launch",
+            "mainClass": "com.formula1.bootstrap.Main",
+            "projectName": "simulator",
+            "console": "internalConsole"
+        }
+    ]
+}

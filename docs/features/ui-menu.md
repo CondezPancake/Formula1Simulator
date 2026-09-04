@@ -2,135 +2,151 @@
 
 ## Qué es
 
-Antes de entrar al shell, la aplicación pasa por dos pantallas nuevas:
+Antes de entrar al shell, la aplicación pasa por dos pantallas:
 
 1. **Intro** (`IntroController`, Java puro, sin FXML): el logo de F1 aparece
-   con fundido y escala sobre un campo de brasas animado. Dura ~5,4 s y se
+   con fundido y escala sobre un campo de brasas animado. Dura ~6 s y se
    puede saltar con clic, `ESC`, `ENTER` o `ESPACIO`.
-2. **Menú principal** (`menu.fxml` + `MainMenuController`): hub estilo
-   videojuego con fondo de vídeo, cinco tarjetas y salida.
+2. **Menú principal** (`menu.fxml` + `MainMenuController`): reproducción del
+   menú del videojuego **F1 23**.
 
-`App` encadena intro → menú → shell sobre una única `Scene`, cruzando con
-fundidos de 400 ms. Mantener un solo `Stage`/`Scene` evita el parpadeo y el
-salto de tamaño que provocaría recrear la ventana estando maximizada.
+`App` encadena intro → menú → shell sobre una única `Scene`.
 
-## Geometría: por qué no hay `HBox`
+## Sin transiciones
 
-El diseño de referencia es `docs/assets/menu_mockup.png` (1672×941). Las cinco
-tarjetas **no** forman una rejilla: tienen anchos distintos (las tres oscuras
-se estrechan de izquierda a derecha), alturas distintas y bordes superiores
-distintos. Ningún contenedor estándar reproduce eso, así que van en un `Pane`
-con los hijos sin gestionar (`setManaged(false)`) y recolocados con
-`resizeRelocate` a partir de fracciones del lienzo.
+Los cambios de pantalla son **relevos secos** (`App.mostrar()`, un
+`getChildren().setAll(...)`), y dentro del shell también
+(`Navigator.mostrarVista()`). No hay fundidos ni deslizamientos en ningún
+punto: se retiraron a propósito. La intro conserva su animación interna,
+que es su razón de ser, y como termina desvaneciéndose sola antes de invocar
+su callback, el corte hacia el menú no llega a verse.
 
-> No se usa `layoutXProperty().bind(...)`: `Pane.layoutChildren()` llama a
-> `relocate()` sobre los hijos gestionados, lo que escribiría sobre una
-> propiedad enlazada y lanzaría una excepción.
+La única animación que queda en toda la aplicación es la de la intro.
 
-El **chaflán** (corte a 45° de 20 px en la esquina superior derecha) es un
-`Polygon` puesto como `clip`, con los puntos recalculados en cada cambio de
-tamaño para que el corte mida siempre lo mismo. Como el `clip` se aplica
-*después* del `effect`, el resplandor rojo de la tarjeta principal va en un
-`StackPane` envoltura y no en el `Button` recortado; si se pusieran juntos, el
-recorte se comería el resplandor. Por lo mismo, el contorno gris de AJUSTES es
-un `Polygon` hermano y no un borde CSS.
+## El menú
+
+Referencia: `docs/assets/f1-23-menu-referencia.jpg`.
+
+`GridPane` con dos columnas de `percentWidth` 47/53, la proporción de la
+captura. Es una rejilla de verdad, a diferencia del menú anterior, que
+posicionaba tarjetas por fracciones del lienzo porque no formaban rejilla.
+
+**Columna izquierda** — logo + `TEMPORADA 2025`, la lista de cinco opciones,
+la descripción de la resaltada y, abajo, `SALIR` con la barra de pistas de
+teclado.
+
+Cada fila se compone de dos piezas con una responsabilidad distinta:
+
+- la **fila** (`HBox`) ocupa todo el ancho y es la zona sensible al ratón, para
+  que el cursor la coja entera y no solo encima de la palabra;
+- el **marco** (`StackPane` interior) ciñe al texto y es quien recibe la clase
+  `menu-opcion-activa`. En la referencia el recuadro termina justo después de
+  la palabra, no en el borde de la columna.
+
+A la derecha del marco van tres **galones** (`SVGPath`) de opacidad
+decreciente, visibles solo en la fila activa: es el rasgo que más identifica
+al menú de F1 23.
+
+**Columna derecha** — el arte de la opción activa, a sangre, con la tira de
+contadores arriba a la derecha y el título de la sección abajo. Cada opción
+lleva su imagen (`images/menu-<opcion>.{png,jpg}`) y el panel la cambia al
+instante al moverse por la lista: sigue sin haber animación.
+
+Para que no parezca una lámina pegada, la imagen se encaja recortando —con el
+recorte sesgado hacia arriba, porque `menu-explorar.png` es vertical—, un
+`PerspectiveTransform` recoge las dos esquinas del lado izquierdo para que el
+plano se lea inclinado hacia la mitad negra, y un velo funde ese borde con el
+panel y oscurece la parte baja bajo el título.
+
+> Dos trampas que costaron una pasada. El margen estaba en el panel, así que
+> arte y velo se quedaban dentro del hueco y aparecía un marco del fondo
+> alrededor: ahora va en el contenido. Y el arte no aparecía hasta mover el
+> ratón, porque se pintaba desde el escalado —que se dispara con el tamaño de
+> la raíz— y el `GridPane` reparte el ancho a sus columnas en una pasada
+> posterior, cuando el panel derecho todavía mide cero; se escucha el tamaño
+> del propio panel.
+
+> **El orden de las capas de `-fx-background-color` importa y va al revés que
+> en CSS de web**: en JavaFX el primer fondo de la lista se pinta *abajo* y los
+> siguientes encima. Con la base opaca al final tapaba las franjas y el
+> resplandor, y el panel se veía plano.
+
+Los contadores (`21 PILOTOS · 11 EQUIPOS · …`) salen de `DataStore` y se
+pintan **una sola vez**. Si la carga aún no ha terminado quedan guiones: la
+intro dura ~6 s y la carga corre en paralelo desde `App.start()`, así que en
+la práctica siempre está lista, y montar un temporizador para un dato
+decorativo contradiría el «menú estático».
+
+## Interacción
+
+Ratón y teclado, como un menú de consola: el cursor solo **mueve** el
+resaltado y el clic **confirma**; `↑`/`↓` (o `W`/`S`) recorren la lista con
+envolvente, `ENTER`/`ESPACIO` confirman y `ESC` va a SALIR.
+
+> El teclado se engancha con un **filtro en la escena**, no con un manejador en
+> la raíz. Un manejador en la raíz solo dispara si el foco está justamente
+> ahí, y basta que lo tenga el botón SALIR para que las flechas dejen de
+> responder. Como la aplicación reutiliza una única `Scene` para todas las
+> pantallas, el filtro **se retira** cuando el menú la abandona; si no,
+> seguiría interceptando las flechas dentro del shell.
+
+Las cinco opciones y su destino, en el orden en que aparecen:
+
+| Opción | Destino |
+|---|---|
+| CLASIFICACIÓN | `ShellController.irACarrera()` → vista `simulation` |
+| GESTIÓN DE EQUIPOS | `ShellController.irAGestion()` → vista `gestion` |
+| EXPLORAR | `ShellController.irAExplorar()` → vista `explorar` |
+| HISTORIAL | `ShellController.irAHistorial()` → `config-historial`, pestaña Historial |
+| AJUSTES | `AjustesDialog.mostrar()` (modal; no navega) |
+
+El destino no se ejecuta directamente: se pasa a `App`, que se lo entrega a
+`ShellController.arrancar(destino)` para que el shell abra ya en la sección
+elegida. Ese rodeo existe porque, si los datos aún no han terminado de
+cargarse, el shell remataba volviendo a Carrera y se llevaba por delante la
+elección del usuario.
+
+`MenuNavegacionTest` cubre el orden de las opciones, la envolvente del teclado
+y que el panel derecho siga a la opción activa; se comprobó que falla contra
+implementaciones defectuosas antes de darlo por bueno.
 
 ## Tipografía
 
-JavaFX 17 **no tiene `-fx-letter-spacing`** (solo `-fx-line-spacing`), así que
-el tracking de `TEMPORADA 2025`, la línea de contadores y `SALIR` se compone
-carácter a carácter en un `HBox` de nodos `Text`.
-
 Los cuerpos de letra no están en el CSS: los calcula el controlador desde la
-altura de la escena, porque el mockup escala la tipografía con la ventana.
+altura de la escena, porque el menú escala con la ventana.
 
-El mockup usa una condensada que Titillium Web no es. Reproducir su métrica
-exacta exigiría comprimir al ~54 % y deformaría la letra, así que se reproduce
-el efecto —título grande, de sangrado a sangrado— con una compresión acotada
-(`Scale` con pivote en el borde izquierdo) y, si aun al máximo no cabe, se baja
-el cuerpo lo justo. Sin `setMinWidth(USE_PREF_SIZE)` el `Label` se recortaría
-con puntos suspensivos: la `Scale` comprime lo que se ve, pero no reduce los
-límites de layout.
+> Hay un tope de cordura (`medidaValida`, 8000 px). En algunos compositores
+> (visto en Hyprland/Wayland) `Stage.setMaximized` hace que, durante un único
+> pulso, la ventana informe un alto disparatado —miles de millones de px—
+> antes de que llegue el real. Sin el tope ese valor se propagaba a los
+> cuerpos de letra y reventaba el cálculo interno de ajuste de texto de
+> JavaFX de forma permanente: la pantalla se quedaba en blanco y no se
+> recuperaba sola.
 
-Los iconos son `SVGPath` escritos a mano en caja `0 0 24 24`, escalados con un
-`Scale` enlazado a la altura de la escena. Viven en el FXML para que
-`ViewsLoadTest` valide que las rutas parsean.
-
-## Fondo de vídeo
-
-`simulator/src/main/resources/videos/menu-loop.mp4` (~5 MB, 16 s, 1280×720,
-sin audio) se reproduce en bucle y mudo, con comportamiento *cover*: se escala
-por el lado que se queda corto y el sobrante se recorta, en vez de dejar bandas
-negras.
-
-### El clip original no se versiona
-
-El material de partida (`F1primerclip.mp4`, 410 MB, 15 min) vive en
-`media-src/`, que está en `.gitignore`. Estaba en `src/main/resources`, donde
-Maven lo copiaba a `target/` en cada compilación y donde habría bloqueado el
-push: GitHub rechaza ficheros de más de 100 MB.
-
-Para regenerar el bucle:
-
-```bash
-ffmpeg -y -ss 00:02:00 -t 16 -i media-src/F1primerclip.mp4 -an -sn -dn \
-  -vf "fps=30,scale=1280:720:flags=lanczos,eq=brightness=-0.08:saturation=0.72:contrast=1.06,format=yuv420p" \
-  -c:v libx264 -profile:v high -level 4.0 -pix_fmt yuv420p \
-  -crf 27 -preset slow -g 60 -keyint_min 60 -sc_threshold 0 -movflags +faststart \
-  simulator/src/main/resources/videos/menu-loop.mp4
-```
-
-`-profile:v high -pix_fmt yuv420p` no es opcional: el decodificador de JavaFX
-solo acepta H.264 de 8 bits en 4:2:0. El `eq=` acerca el metraje al tono
-apagado del mockup, y hacerlo aquí evita pagarlo en cada fotograma en runtime.
-
-### Códec: hace falta `ffmpeg4.4`
-
-`javafx-media` 17.0.10 trae `libavplugin-{54,56,57,58,59}.so`, que abren
-`libavcodec.so.{54..59}`. Un Arch al día tiene ffmpeg 9 y **solo**
-`libavcodec.so.63`, así que el H.264 no decodifica y salta
-`MediaException MEDIA_UNAVAILABLE`. (El MP3 no se ve afectado: lo decodifica
-`gstreamer-lite` de forma nativa.)
-
-```bash
-sudo pacman -S ffmpeg4.4
-pacman -Ql ffmpeg4.4 | grep libavcodec     # confirmar la ruta real
-LD_LIBRARY_PATH=/usr/lib/ffmpeg4.4 mvn -f simulator/pom.xml javafx:run
-```
-
-`-Djava.library.path` puede no bastar, porque quien hace el `dlopen` es el
-propio `.so` y no la JVM; `LD_LIBRARY_PATH` es la vía fiable.
-
-### Respaldo automático
-
-Si el vídeo no está o no decodifica, el menú cae **sin ruido** a
-`images/menu-fondo.jpg` con un paneo y zoom lentos (Ken Burns), y sigue siendo
-perfectamente usable. Se comprueban todas las vías de fallo —`Media.getError`,
-`setOnError`, `setOnHalted`, el estado `HALTED`, el recurso ausente y un
-vigilante de 2,5 s que verifica que se llegó a `PLAYING`— porque fallan en
-momentos distintos. El `catch` incluye `Error` a propósito: si faltan los `.so`
-nativos lo que salta es `UnsatisfiedLinkError`, que no es `RuntimeException`.
-
-Se descartó una secuencia de fotogramas como respaldo: costaba ~84 MB de heap
-para algo que, con `ffmpeg4.4` instalado, casi nunca se ve.
-
-`MainMenuController.liberar()` —invocado desde `App` al entrar al shell— suelta
-el reproductor y las animaciones; sin eso el vídeo seguiría decodificando
-durante toda la sesión.
+El tracking de `TEMPORADA 2025` se compone carácter a carácter en un `HBox` de
+nodos `Text`: JavaFX 17 no tiene `-fx-letter-spacing`, solo `-fx-line-spacing`.
 
 ## Sonido
 
-Solo hay dos efectos, y se usan al elegir opción:
-
 | Fichero | Uso |
 |---|---|
-| `audio/sound1.mp3` | Confirmar: entrar a una sección principal |
-| `audio/sound2.mp3` | Acción secundaria: AJUSTES y SALIR |
+| `audio/sound1.mp3` | Confirmar una opción |
+| `audio/sound2.mp3` | Recorrer la lista (al 35 %) y SALIR |
+| `audio/intro-sound.mp3` | Sonido de apertura de la intro |
 
-**No hay música de fondo**: no se ha entregado ninguna pista. `AudioManager`
-sigue ofreciendo `reproducirMusica`/`crossfadeMusica` para cuando se añada.
-Toda carga de audio es defensiva: si el fichero falta o no hay códec, se
-degrada a silencio y nunca tumba el arranque.
+El de la intro va por `reproducirMusica` y no por `reproducirSfx`: un
+`AudioClip` no se puede parar a media reproducción, así que al saltar la intro
+el sonido seguiría oyéndose ya dentro del menú. Se corta en `terminarUnaVez`.
 
-El volumen de música y efectos, y el silencio, se ajustan desde AJUSTES y se
-guardan con `java.util.prefs.Preferences`.
+> La intro estuvo muda mucho tiempo apuntando a `sound-intro.mp3` e
+> `intro-f1.mp3`, que nunca se empaquetaron. Como la carga de audio degrada a
+> silencio a propósito, una ruta mal escrita no da ningún error: simplemente no
+> se oye. `RecursosAudioTest` comprueba que las rutas existen.
+
+Toda carga de audio es defensiva —si el
+fichero falta o no hay códec, se degrada a silencio y nunca tumba el arranque—
+y `AudioManager` cachea cada efecto, porque construir un `AudioClip`
+decodifica el mp3 en el hilo de FX y hacerlo en cada pulsación metía un tirón.
+
+El volumen y el silencio se ajustan desde AJUSTES y se guardan con
+`java.util.prefs.Preferences`.

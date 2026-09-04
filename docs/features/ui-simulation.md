@@ -22,6 +22,26 @@ btnSimular.disableProperty().bind(tarea.runningProperty());
 
 Así la barra avanza, el texto va nombrando a cada piloto y el botón se deshabilita solo mientras la sesión corre, sin un solo `Platform.runLater`. Los enlaces se deshacen en `setOnSucceeded`/`setOnFailed` para poder volver a escribir en esos controles. El guardado posterior también va en segundo plano: la parrilla ya está en pantalla y no debe esperar a la base de datos.
 
+### Cadencia de simulación y renderizado
+
+La reproducción separa dos relojes que antes estaban acoplados:
+
+- El **dominio** conserva 20 microsectores por vuelta. Clima, eventos, boxes,
+  neumáticos, telemetría persistida y reglas deportivas solo avanzan al cruzar
+  uno de esos límites.
+- La **clasificación en vivo** publica 20 fotogramas por segundo, con tiempo y
+  progreso interpolados. Una sesión de 10 segundos produce 200 fotos visuales,
+  pero sigue guardando las mismas 20 muestras del dominio.
+- El **mapa JavaFX** pinta mediante `AnimationTimer` al pulso de la interfaz y
+  adapta automáticamente su interpolación al intervalo entre publicaciones.
+
+El cálculo y el reloj permanecen dentro del mismo `Task` de fondo. JavaFX solo
+recibe snapshots desprendidos del estado mutable y actualiza controles en su
+hilo; no se crean hilos por piloto ni se ejecutan reglas deportivas en el hilo
+gráfico. `LiveClassificationFrame` expone también el progreso continuo para que
+futuros consumidores, como una radio, puedan programar mensajes sin esperar al
+final de una vuelta.
+
 ## Un ajuste de realismo
 
 La primera prueba end-to-end destapó un problema de diseño: había **5,7 segundos** entre el coche del usuario y el resto de la parrilla. La causa era que el usuario elegía modo agresivo mientras los rivales corrían con la configuración neutra.
@@ -42,7 +62,20 @@ En una clasificación real todos los equipos aprietan, así que ahora los rivale
 
 Tabla de sesiones (fecha, circuito, clima, pole y configuración empleada), parrilla completa de la sesión seleccionada, `LineChart` que compara el tiempo de pole entre sesiones del mismo circuito, y reutilización de configuraciones previas. Cubre las tres HU de almacenamiento.
 
+## Mantenibilidad y actualización incremental
+
+`TelemetryDetailPresenter` es responsable de agrupar vueltas, gestionar el
+selector y mantener las siete series del detalle. `SimulationController` solo
+le entrega sesiones completas o nuevas muestras, por lo que ya no contiene el
+algoritmo de construcción de gráficas.
+
+Durante una sesión cada muestra se añade a las series existentes. Antes se
+reconstruían todas las vueltas y todos sus puntos en cada segmento. La torre de
+clasificación y la tabla de eventos también conservan una única
+`ObservableList` y actualizan su contenido con `setAll`, evitando sustituir el
+modelo visual y perder estado de selección en cada fotograma.
+
 ## Verificación
 
 - `mvn clean test` → **40 tests, 0 fallos**, incluida la carga real de `simulation.fxml` e `history.fxml`.
-- Prueba end-to-end ejecutada contra MongoDB: se simula una sesión completa, se ordenan los 20 pilotos, se persiste y el historial pasa de 1 a 2 entradas con su configuración guardada.
+- Prueba end-to-end ejecutada contra MySQL: se simula una sesión completa, se ordenan los 20 pilotos, se persiste y se recuperan todas sus relaciones.

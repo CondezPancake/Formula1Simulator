@@ -4,6 +4,8 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.chart.LineChart?>
 <?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.control.ProgressBar?>
@@ -12,17 +14,21 @@
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
-<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Priority?>
 <?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.ScrollPane?>
 
-<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-      fx:controller="com.formula1.controller.SimulationController"
-      spacing="0" styleClass="race-dashboard">
+<StackPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+           fx:controller="com.formula1.adapter.in.javafx.SimulationController"
+           styleClass="race-dashboard">
+<VBox spacing="0">
 
     <!-- Mismos controles y acciones del dashboard original, en una franja
          compacta como la consola superior de la referencia. -->
@@ -58,7 +64,7 @@
                     styleClass="primary,race-start-button" onAction="#onSimular"/>
             <Button fx:id="btnFinalizar" text="Finalizar"
                     disable="true" styleClass="race-stop-button" onAction="#onFinalizar"/>
-            <ProgressBar fx:id="progreso" progress="0" prefWidth="240"/>
+            <ProgressBar fx:id="progreso" progress="0" prefWidth="240" styleClass="race-progress"/>
             <Label fx:id="lblContador" text="00:00 / 00:10" styleClass="race-session-clock"/>
             <Label fx:id="lblEstado" text=""/>
             <Region HBox.hgrow="ALWAYS"/>
@@ -74,230 +80,296 @@
              VBox.vgrow="ALWAYS" tabClosingPolicy="UNAVAILABLE">
         <tabs>
             <Tab fx:id="tabDashboard" text="Dashboard">
-                <VBox spacing="10" styleClass="race-dashboard-content">
-                    <padding><Insets top="10" right="14" bottom="14" left="14"/></padding>
+                <!-- Un solo tablero: sin tarjetas ni cajas. Tres columnas
+                     separadas por filetes de 1 px sobre la misma superficie,
+                     con el trazado de protagonista al centro. -->
+                <VBox styleClass="race-hud-stage">
+                    <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
 
-                    <HBox spacing="10" VBox.vgrow="ALWAYS">
-                        <VBox spacing="8" styleClass="race-console-panel,race-standings-panel"
-                              prefWidth="330" minWidth="280" maxWidth="390">
-                            <HBox alignment="CENTER_LEFT">
-                                <Label text="CLASIFICACIÓN" styleClass="race-panel-title"/>
-                                <Region HBox.hgrow="ALWAYS"/>
-                                <Label text="TIEMPOS EN VIVO" styleClass="hint"/>
-                            </HBox>
-                            <TableView fx:id="tablaDashboard" VBox.vgrow="ALWAYS"
-                                       styleClass="race-compact-table">
-                                <placeholder><Label text="Inicia una clasificación"/></placeholder>
-                                <columns>
-                                    <TableColumn fx:id="colDashboardPosicion" text="P" prefWidth="38"/>
-                                    <TableColumn fx:id="colDashboardPiloto" text="PILOTO" prefWidth="120"/>
-                                    <TableColumn fx:id="colDashboardGap" text="INTERVALO" prefWidth="82"/>
-                                    <TableColumn fx:id="colDashboardTiempo" text="TIEMPO" prefWidth="86"/>
-                                </columns>
-                            </TableView>
+                    <HBox VBox.vgrow="ALWAYS">
+
+                        <!-- ============ Columna izquierda: sesión y torre ============ -->
+                        <VBox styleClass="hud-column" prefWidth="250" minWidth="220" maxWidth="280">
+                            <VBox styleClass="hud-group" spacing="1">
+                                <Label text="VUELTA" styleClass="hud-group-title"/>
+                                <Label fx:id="lblHudVuelta" text="—" styleClass="hud-value"/>
+                                <Label fx:id="lblHudSector" text="SECTOR —" styleClass="hud-accent"/>
+                            </VBox>
+
+                            <Region styleClass="hud-rule"/>
+
+                            <VBox styleClass="hud-group" spacing="6" VBox.vgrow="ALWAYS">
+                                <HBox alignment="CENTER_LEFT">
+                                    <Label text="CLASIFICACIÓN" styleClass="hud-group-title"/>
+                                    <Region HBox.hgrow="ALWAYS"/>
+                                    <Label text="EN VIVO" styleClass="hud-hint"/>
+                                </HBox>
+                                <!-- Torre de tiempos: posición · color de escudería ·
+                                     código de tres letras · intervalo. Las filas las
+                                     construye el ListCell de SimulationController. -->
+                                <ListView fx:id="torreTiempos" styleClass="timing-tower"
+                                          minHeight="90" VBox.vgrow="ALWAYS">
+                                    <placeholder><Label text="Inicia una clasificación" styleClass="hud-hint"/></placeholder>
+                                </ListView>
+                            </VBox>
+
+                            <Region styleClass="hud-rule"/>
+
+                            <VBox styleClass="hud-group" spacing="2">
+                                <Label text="CIRCUITO" styleClass="hud-group-title"/>
+                                <Label fx:id="lblMapaTitulo" text="—" styleClass="hud-value-sm"/>
+                                <HBox spacing="10">
+                                    <Label fx:id="lblMapaPista" text="Pista: —" styleClass="hud-hint"/>
+                                    <Label fx:id="lblMapaVueltas" text="—" styleClass="hud-hint"/>
+                                </HBox>
+                                <Label fx:id="lblMapaGrip" text="Grip: —" styleClass="hud-hint"/>
+                            </VBox>
                         </VBox>
 
-                        <!-- Solo el trazado. Los marcadores se reservan para una
-                             HU posterior y no se anticipan en este Dashboard. -->
-                        <VBox spacing="8" styleClass="race-console-panel,race-map-panel"
-                              HBox.hgrow="ALWAYS">
-                            <HBox alignment="CENTER_LEFT">
-                                <Label fx:id="lblMapaTitulo" text="MAPA DEL CIRCUITO"
-                                       styleClass="race-panel-title"/>
-                                <Region HBox.hgrow="ALWAYS"/>
-                                <Label fx:id="lblMapaPista" text="Pista: —" styleClass="hint"/>
-                                <Separator orientation="VERTICAL">
-                                    <HBox.margin><Insets left="10" right="10"/></HBox.margin>
-                                </Separator>
-                                <Label fx:id="lblMapaGrip" text="Grip: —" styleClass="hint"/>
-                            </HBox>
-                            <StackPane styleClass="race-map-canvas" VBox.vgrow="ALWAYS">
-                                <ImageView fx:id="imagenMapaCircuito" preserveRatio="true"
-                                           smooth="true" fitWidth="720" fitHeight="330"/>
+                        <Region styleClass="hud-rule-v"/>
+
+                        <!-- ============ Columna central: el trazado ============ -->
+                        <VBox styleClass="hud-column" minWidth="340" HBox.hgrow="ALWAYS">
+                            <!-- El trazado no es un PNG: lo dibuja CircuitoEnVivo
+                                 sobre dos lienzos creados en el controlador. -->
+                            <StackPane VBox.vgrow="ALWAYS">
+                                <StackPane fx:id="contenedorMapa" styleClass="race-map-canvas"/>
+
+                                <!-- Rótulo de radio sobre el trazado, como la banda
+                                     inferior de la retransmisión. Solo lo enciende
+                                     RadioPresenter para lo que interrumpe. -->
+                                <HBox fx:id="rotuloRadio" styleClass="radio-rotulo"
+                                      spacing="10" alignment="CENTER_LEFT"
+                                      visible="false" managed="false" mouseTransparent="true"
+                                      maxWidth="-Infinity" maxHeight="-Infinity"
+                                      StackPane.alignment="BOTTOM_CENTER">
+                                    <StackPane.margin><Insets bottom="18"/></StackPane.margin>
+                                    <Label text="TEAM RADIO" styleClass="radio-rotulo-kicker"/>
+                                    <Label fx:id="rotuloRadioPiloto" text="—"
+                                           styleClass="radio-rotulo-piloto"/>
+                                    <Label fx:id="rotuloRadioTexto" text=""
+                                           styleClass="radio-rotulo-texto"/>
+                                </HBox>
                             </StackPane>
+
+                            <Region styleClass="hud-rule"/>
+
+                            <!-- HUD inferior del coche: una sola franja horizontal,
+                                 sin celdas ni tarjetas, como la de un videojuego. -->
+                            <HBox styleClass="hud-car-strip" spacing="16" alignment="CENTER_LEFT">
+                                <StackPane styleClass="hud-portrait">
+                                    <ImageView fx:id="fotoPilotoUno" fitWidth="56" fitHeight="56"
+                                               preserveRatio="true"/>
+                                </StackPane>
+
+                                <VBox spacing="1" minWidth="170">
+                                    <Label fx:id="lblPilotoUno" text="Piloto seleccionado" styleClass="hud-driver-name"/>
+                                    <HBox spacing="6" alignment="CENTER_LEFT">
+                                        <Label fx:id="lblEquipoUno" text="—" styleClass="hud-hint"/>
+                                        <Label text="·" styleClass="hud-hint"/>
+                                        <Label fx:id="lblVehiculoUno" text="—" styleClass="hud-hint"/>
+                                        <Label fx:id="lblExperienciaUno" text="—" styleClass="hud-accent"/>
+                                    </HBox>
+                                    <!-- Piloto fijado desde la torre. Las lecturas de al lado
+                                         siguen siendo las del coche del usuario: el motor solo
+                                         emite telemetría del piloto configurado. -->
+                                    <Label fx:id="lblSeleccion" text="Sin piloto fijado"
+                                           styleClass="hud-selection"/>
+                                </VBox>
+
+                                <Region styleClass="hud-rule-v"/>
+
+                                <VBox spacing="1" minWidth="66">
+                                    <Label text="LLANTAS" styleClass="hud-group-title"/>
+                                    <Label fx:id="lblLlantasUno" text="100 %" styleClass="hud-readout"/>
+                                    <ProgressBar fx:id="barraLlantasUno" progress="1"
+                                                 styleClass="hud-bar" maxWidth="1.7976931348623157E308"/>
+                                    <Label fx:id="lblTempLlantasUno" text="— °C" styleClass="hud-hint"/>
+                                </VBox>
+                                <VBox spacing="1" minWidth="66">
+                                    <Label text="FUEL" styleClass="hud-group-title"/>
+                                    <Label fx:id="lblFuelUno" text="100 %" styleClass="hud-readout"/>
+                                    <ProgressBar fx:id="barraFuelUno" progress="1"
+                                                 styleClass="hud-bar,fuel" maxWidth="1.7976931348623157E308"/>
+                                    <Label fx:id="lblTempMotorUno" text="— °C motor" styleClass="hud-hint"/>
+                                </VBox>
+                                <VBox spacing="0" minWidth="58">
+                                    <Label text="MARCHA" styleClass="hud-group-title"/>
+                                    <Label fx:id="lblMarchaUno" text="N" styleClass="hud-gear"/>
+                                    <Label fx:id="lblRpmUno" text="0 RPM" styleClass="hud-hint"/>
+                                </VBox>
+                                <VBox spacing="1" minWidth="78">
+                                    <Label text="PACE" styleClass="hud-group-title"/>
+                                    <Label fx:id="lblPaceUno" text="NORMAL" styleClass="hud-readout-sm"/>
+                                    <Label text="MODO" styleClass="hud-group-title"/>
+                                    <Label fx:id="lblFuelModeUno" text="BALANCEADA" styleClass="hud-readout-sm"/>
+                                </VBox>
+                                <VBox spacing="1" minWidth="76">
+                                    <HBox>
+                                        <Label text="ERS" styleClass="hud-group-title"/>
+                                        <Region HBox.hgrow="ALWAYS"/>
+                                        <Label fx:id="lblErsUno" text="100 %" styleClass="hud-readout-sm"/>
+                                    </HBox>
+                                    <ProgressBar fx:id="barraErsUno" progress="1"
+                                                 styleClass="hud-bar,ers"
+                                                 maxWidth="1.7976931348623157E308"/>
+                                </VBox>
+
+                                <Region HBox.hgrow="ALWAYS"/>
+
+                                <VBox styleClass="hud-highlight" spacing="1" minWidth="150">
+                                    <Label text="MEJOR VUELTA" styleClass="hud-group-title"/>
+                                    <Label fx:id="lblMejorVueltaTiempo" text="—" styleClass="hud-value-best"/>
+                                    <Label fx:id="lblMejorVueltaPiloto" text="Sin sesión" styleClass="hud-hint"/>
+                                </VBox>
+                                <VBox styleClass="hud-highlight" spacing="1" minWidth="140">
+                                    <Label text="POLE POSITION" styleClass="hud-group-title"/>
+                                    <Label fx:id="lblPolePiloto" text="—" styleClass="hud-value-sm"/>
+                                    <Label fx:id="lblPoleTiempo" text="—" styleClass="hud-readout-sm"/>
+                                </VBox>
+                            </HBox>
                         </VBox>
-                    </HBox>
 
-                    <!-- La franja inferior conserva las dos tarjetas de pilotos,
-                         ahora sin fotografías y con la información operativa del coche. -->
-                    <HBox spacing="10" styleClass="race-lower-deck">
-                        <HBox spacing="10" HBox.hgrow="ALWAYS">
-                            <VBox spacing="7" styleClass="race-driver-card" HBox.hgrow="ALWAYS">
-                                <HBox alignment="CENTER_LEFT">
-                                    <VBox spacing="0">
-                                        <Label fx:id="lblPilotoUno" text="Piloto seleccionado"
-                                               styleClass="race-driver-name"/>
-                                        <Label fx:id="lblEquipoUno" text="—" styleClass="race-driver-team"/>
-                                    </VBox>
-                                    <Region HBox.hgrow="ALWAYS"/>
-                                    <VBox spacing="0" alignment="CENTER_RIGHT">
-                                        <Label fx:id="lblVehiculoUno" text="—" styleClass="race-car-name"/>
-                                        <Label fx:id="lblExperienciaUno" text="—" styleClass="race-driver-number"/>
-                                    </VBox>
-                                </HBox>
-                                <HBox spacing="6" styleClass="race-car-readings">
-                                    <VBox spacing="1" styleClass="race-car-reading" HBox.hgrow="ALWAYS">
-                                        <Label text="LLANTAS" styleClass="card-label"/>
-                                        <Label fx:id="lblLlantasUno" text="100 %" styleClass="race-reading-value"/>
-                                        <Label fx:id="lblTempLlantasUno" text="— °C" styleClass="race-reading-detail"/>
-                                    </VBox>
-                                    <VBox spacing="1" styleClass="race-car-reading" HBox.hgrow="ALWAYS">
-                                        <Label text="FUEL" styleClass="card-label"/>
-                                        <Label fx:id="lblFuelUno" text="100 %" styleClass="race-reading-value"/>
-                                        <Label fx:id="lblTempMotorUno" text="— °C motor" styleClass="race-reading-detail"/>
-                                    </VBox>
-                                    <VBox spacing="1" alignment="CENTER" styleClass="race-car-reading,race-gear-reading">
-                                        <Label text="MARCHA" styleClass="card-label"/>
-                                        <Label fx:id="lblMarchaUno" text="N" styleClass="race-gear-value"/>
-                                        <Label fx:id="lblRpmUno" text="0 RPM" styleClass="race-reading-detail"/>
-                                    </VBox>
-                                </HBox>
-                                <HBox spacing="6" styleClass="race-car-modes">
-                                    <VBox spacing="0" styleClass="race-mode-cell" HBox.hgrow="ALWAYS">
-                                        <Label text="PACE" styleClass="card-label"/>
-                                        <Label fx:id="lblPaceUno" text="NORMAL" styleClass="race-mode-value"/>
-                                    </VBox>
-                                    <VBox spacing="0" styleClass="race-mode-cell" HBox.hgrow="ALWAYS">
-                                        <Label text="FUEL" styleClass="card-label"/>
-                                        <Label fx:id="lblFuelModeUno" text="BALANCEADA" styleClass="race-mode-value"/>
-                                    </VBox>
-                                    <VBox spacing="0" styleClass="race-mode-cell" HBox.hgrow="ALWAYS">
-                                        <HBox><Label text="ERS" styleClass="card-label"/><Region HBox.hgrow="ALWAYS"/><Label fx:id="lblErsUno" text="100 %" styleClass="race-mode-value"/></HBox>
-                                        <ProgressBar fx:id="barraErsUno" progress="1" maxWidth="1.7976931348623157E308"/>
-                                    </VBox>
-                                </HBox>
-                            </VBox>
+                        <Region styleClass="hud-rule-v"/>
 
-                            <VBox spacing="7" styleClass="race-driver-card" HBox.hgrow="ALWAYS">
-                                <HBox alignment="CENTER_LEFT">
-                                    <VBox spacing="0">
-                                        <Label fx:id="lblPilotoDos" text="Compañero de equipo"
-                                               styleClass="race-driver-name"/>
-                                        <Label fx:id="lblEquipoDos" text="—" styleClass="race-driver-team"/>
-                                    </VBox>
-                                    <Region HBox.hgrow="ALWAYS"/>
-                                    <VBox spacing="0" alignment="CENTER_RIGHT">
-                                        <Label fx:id="lblVehiculoDos" text="—" styleClass="race-car-name"/>
-                                        <Label fx:id="lblExperienciaDos" text="—" styleClass="race-driver-number"/>
-                                    </VBox>
-                                </HBox>
-                                <HBox spacing="6" styleClass="race-car-readings">
-                                    <VBox spacing="1" styleClass="race-car-reading" HBox.hgrow="ALWAYS">
-                                        <Label text="LLANTAS" styleClass="card-label"/>
-                                        <Label fx:id="lblLlantasDos" text="100 %" styleClass="race-reading-value"/>
-                                        <Label fx:id="lblTempLlantasDos" text="— °C" styleClass="race-reading-detail"/>
-                                    </VBox>
-                                    <VBox spacing="1" styleClass="race-car-reading" HBox.hgrow="ALWAYS">
-                                        <Label text="FUEL" styleClass="card-label"/>
-                                        <Label fx:id="lblFuelDos" text="100 %" styleClass="race-reading-value"/>
-                                        <Label fx:id="lblTempMotorDos" text="— °C motor" styleClass="race-reading-detail"/>
-                                    </VBox>
-                                    <VBox spacing="1" alignment="CENTER" styleClass="race-car-reading,race-gear-reading">
-                                        <Label text="MARCHA" styleClass="card-label"/>
-                                        <Label fx:id="lblMarchaDos" text="N" styleClass="race-gear-value"/>
-                                        <Label fx:id="lblRpmDos" text="0 RPM" styleClass="race-reading-detail"/>
-                                    </VBox>
-                                </HBox>
-                                <HBox spacing="6" styleClass="race-car-modes">
-                                    <VBox spacing="0" styleClass="race-mode-cell" HBox.hgrow="ALWAYS">
-                                        <Label text="PACE" styleClass="card-label"/>
-                                        <Label fx:id="lblPaceDos" text="NORMAL" styleClass="race-mode-value"/>
-                                    </VBox>
-                                    <VBox spacing="0" styleClass="race-mode-cell" HBox.hgrow="ALWAYS">
-                                        <Label text="FUEL" styleClass="card-label"/>
-                                        <Label fx:id="lblFuelModeDos" text="BALANCEADA" styleClass="race-mode-value"/>
-                                    </VBox>
-                                    <VBox spacing="0" styleClass="race-mode-cell" HBox.hgrow="ALWAYS">
-                                        <HBox><Label text="ERS" styleClass="card-label"/><Region HBox.hgrow="ALWAYS"/><Label fx:id="lblErsDos" text="100 %" styleClass="race-mode-value"/></HBox>
-                                        <ProgressBar fx:id="barraErsDos" progress="1" maxWidth="1.7976931348623157E308"/>
-                                    </VBox>
-                                </HBox>
-                            </VBox>
-                        </HBox>
+                        <!-- ============ Columna derecha: estado de sesión ============
+                             Va dentro de un ScrollPane para que en ventanas pequeñas
+                             nada quede inaccesible en vez de recortarse. -->
+                        <ScrollPane fitToWidth="true" styleClass="edge-to-edge,hud-scroll"
+                                    prefWidth="272" minWidth="240" maxWidth="310">
+                            <VBox styleClass="hud-column">
+                                <!-- Clima -->
+                                <VBox styleClass="hud-group" spacing="1">
+                                    <Label text="CLIMA" styleClass="hud-group-title"/>
+                                    <HBox spacing="10" alignment="CENTER_LEFT">
+                                        <Label fx:id="lblHudClima" text="—" styleClass="hud-value"/>
+                                        <Region HBox.hgrow="ALWAYS"/>
+                                        <Label fx:id="lblIconoClimaPanel" text="☁" styleClass="hud-weather-glyph"/>
+                                    </HBox>
+                                    <Label fx:id="lblHudClimaDetalle" text="—" styleClass="hud-accent"/>
+                                    <Label fx:id="lblNeumaticoRecomendado" text="—" styleClass="hud-hint"/>
+                                </VBox>
 
-                        <VBox spacing="8" prefWidth="445" minWidth="390" maxWidth="480">
-                            <VBox spacing="6" styleClass="race-console-panel,race-engineer-panel">
-                                <HBox alignment="CENTER_LEFT">
-                                    <Label text="INGENIERÍA" styleClass="race-panel-title"/>
-                                    <Region HBox.hgrow="ALWAYS"/>
-                                    <Label fx:id="lblDashboardEvento" text="SIN EVENTOS"
-                                           styleClass="event-live"/>
-                                </HBox>
-                                <Label fx:id="lblDashboardMensaje" text="Esperando el inicio de la sesión"
-                                       wrapText="true" styleClass="race-engineer-message"/>
-                            </VBox>
+                                <Region styleClass="hud-rule"/>
 
-                            <VBox spacing="5" styleClass="race-console-panel,race-bottom-telemetry"
-                                  VBox.vgrow="ALWAYS">
-                                <Label text="TELEMETRÍA" styleClass="race-panel-title"/>
-                                <HBox spacing="8" VBox.vgrow="ALWAYS">
-                                    <VBox spacing="2" styleClass="race-chart-tile" HBox.hgrow="ALWAYS">
-                                        <HBox>
-                                            <Label text="VIDA DEL NEUMÁTICO" styleClass="card-label"/>
-                                            <Region HBox.hgrow="ALWAYS"/>
-                                            <Label fx:id="lblDashboardDesgaste" text="100 %" styleClass="stat-value"/>
-                                        </HBox>
-                                        <LineChart fx:id="graficaDesgasteDashboard" createSymbols="false"
-                                                   animated="false" legendVisible="false"
-                                                   horizontalGridLinesVisible="false"
-                                                   verticalGridLinesVisible="false"
-                                                   prefHeight="66" minHeight="48" maxHeight="66"
-                                                   styleClass="race-telemetry-chart">
-                                            <xAxis><NumberAxis autoRanging="false" lowerBound="0" upperBound="20"
-                                                               tickLabelsVisible="false" tickMarkVisible="false"/></xAxis>
-                                            <yAxis><NumberAxis autoRanging="false" lowerBound="0" upperBound="100"
-                                                               tickLabelsVisible="false" tickMarkVisible="false"/></yAxis>
-                                        </LineChart>
-                                    </VBox>
-                                    <VBox spacing="2" styleClass="race-chart-tile" HBox.hgrow="ALWAYS">
-                                        <HBox>
-                                            <Label text="COMBUSTIBLE" styleClass="card-label"/>
-                                            <Region HBox.hgrow="ALWAYS"/>
-                                            <Label fx:id="lblDashboardCombustible" text="100 %" styleClass="stat-value"/>
-                                        </HBox>
-                                        <LineChart fx:id="graficaCombustibleDashboard" createSymbols="false"
-                                                   animated="false" legendVisible="false"
-                                                   horizontalGridLinesVisible="false"
-                                                   verticalGridLinesVisible="false"
-                                                   prefHeight="66" minHeight="48" maxHeight="66"
-                                                   styleClass="race-telemetry-chart,fuel">
-                                            <xAxis><NumberAxis autoRanging="false" lowerBound="0" upperBound="20"
-                                                               tickLabelsVisible="false" tickMarkVisible="false"/></xAxis>
-                                            <yAxis><NumberAxis autoRanging="false" lowerBound="0" upperBound="100"
-                                                               tickLabelsVisible="false" tickMarkVisible="false"/></yAxis>
-                                        </LineChart>
-                                    </VBox>
-                                </HBox>
+                                <!-- Telemetría del coche -->
+                                <VBox styleClass="hud-group" spacing="6">
+                                    <HBox alignment="CENTER_LEFT">
+                                        <Label text="TELEMETRÍA" styleClass="hud-group-title"/>
+                                        <Region HBox.hgrow="ALWAYS"/>
+                                        <Button fx:id="btnVerDetalles" text="Ver detalles"
+                                                disable="true" onAction="#onVerDetalles"
+                                                styleClass="telemetry-details-button"/>
+                                    </HBox>
+                                    <StackPane styleClass="hud-car-frame">
+                                        <ImageView fx:id="siluetaCoche" fitWidth="200" fitHeight="110"
+                                                   preserveRatio="true"/>
+                                    </StackPane>
+                                    <Label text="TU COCHE" styleClass="hud-hint"/>
+                                    <HBox spacing="10">
+                                        <VBox spacing="0" HBox.hgrow="ALWAYS" styleClass="hud-tile">
+                                            <Label text="COMPUESTO" styleClass="hud-group-title"/>
+                                            <Label fx:id="lblCompuestoDashboard" text="M"
+                                                   styleClass="hud-tile-value,compound-badge,compound-medium"/>
+                                        </VBox>
+                                        <VBox spacing="0" HBox.hgrow="ALWAYS" styleClass="hud-tile">
+                                            <Label text="NEUMÁTICO" styleClass="hud-group-title"/>
+                                            <Label fx:id="lblDashboardDesgaste" text="100 %" styleClass="hud-tile-value"/>
+                                        </VBox>
+                                        <VBox spacing="0" HBox.hgrow="ALWAYS" styleClass="hud-tile">
+                                            <Label text="COMBUSTIBLE" styleClass="hud-group-title"/>
+                                            <Label fx:id="lblDashboardCombustible" text="100 %" styleClass="hud-tile-value"/>
+                                        </VBox>
+                                    </HBox>
+                                    <HBox spacing="10">
+                                        <VBox spacing="0" HBox.hgrow="ALWAYS" styleClass="hud-tile">
+                                            <Label text="TEMP. NEUMÁTICO" styleClass="hud-group-title"/>
+                                            <Label fx:id="lblTempNeumaticoPanel" text="— °C" styleClass="hud-tile-value"/>
+                                        </VBox>
+                                        <VBox spacing="0" HBox.hgrow="ALWAYS" styleClass="hud-tile">
+                                            <Label text="MOTOR" styleClass="hud-group-title"/>
+                                            <Label fx:id="lblTempMotorPanel" text="— °C" styleClass="hud-tile-value"/>
+                                        </VBox>
+                                    </HBox>
+                                </VBox>
+
+                                <Region styleClass="hud-rule"/>
+
+                                <!-- Mensajes de ingeniería y eventos -->
+                                <VBox styleClass="hud-group" spacing="5">
+                                    <HBox spacing="8" alignment="CENTER_LEFT">
+                                        <Label text="MENSAJES" styleClass="hud-group-title"/>
+                                        <Region HBox.hgrow="ALWAYS"/>
+                                        <Label fx:id="lblDashboardEvento" text="SIN EVENTOS"
+                                               styleClass="event-live"/>
+                                    </HBox>
+                                    <Label fx:id="lblDashboardMensaje" text="Esperando el inicio de la sesión"
+                                           wrapText="true" styleClass="race-engineer-message"/>
+                                    <HBox spacing="8" alignment="CENTER_LEFT" styleClass="pit-stop-status">
+                                        <Label text="BOX" styleClass="hud-group-title"/>
+                                        <Label fx:id="lblPitStopEstado" text="SIN PARADA"
+                                               styleClass="pit-stop-phase"/>
+                                        <Region HBox.hgrow="ALWAYS"/>
+                                        <Label fx:id="lblPitStopTiempo" text="—"
+                                               styleClass="pit-stop-time"/>
+                                    </HBox>
+                                    <!-- Feed de incidencias y decisiones automáticas de boxes. -->
+                                    <ScrollPane fitToWidth="true" styleClass="edge-to-edge,hud-scroll"
+                                                prefHeight="150" minHeight="90">
+                                        <VBox fx:id="feedEventos" spacing="0" styleClass="hud-feed"/>
+                                    </ScrollPane>
+                                    <HBox alignment="CENTER_LEFT">
+                                        <Button fx:id="btnVerEventos" text="Ver eventos"
+                                                disable="true" onAction="#onVerEventos"
+                                                styleClass="event-details-button"/>
+                                    </HBox>
+                                </VBox>
+
+                                <Region styleClass="hud-rule"/>
+
+                                <!-- Radio del box (HU-49). El hilo guarda la conversación
+                                     entera; lo urgente sale además sobre el trazado. -->
+                                <VBox styleClass="hud-group" spacing="6">
+                                    <HBox spacing="8" alignment="CENTER_LEFT">
+                                        <Region fx:id="radioBarraEquipo" styleClass="radio-barra-equipo"/>
+                                        <Label text="TEAM RADIO" styleClass="hud-group-title"/>
+                                        <Label fx:id="radioCabeceraPiloto" text="—"
+                                               styleClass="radio-cabecera-piloto"/>
+                                        <Region HBox.hgrow="ALWAYS"/>
+                                        <Label text="EN VIVO" styleClass="hud-hint"/>
+                                    </HBox>
+                                    <ScrollPane fx:id="radioScroll" fitToWidth="true"
+                                                styleClass="edge-to-edge,hud-scroll"
+                                                prefHeight="190" minHeight="110">
+                                        <VBox fx:id="radioHilo" spacing="6" styleClass="radio-hilo"/>
+                                    </ScrollPane>
+                                </VBox>
                             </VBox>
-                        </VBox>
+                        </ScrollPane>
                     </HBox>
                 </VBox>
             </Tab>
 
-            <!-- Vista original de clasificación completa, sin columnas eliminadas. -->
-            <Tab text="Clasificación completa">
-                <TableView fx:id="tabla">
-                    <columns>
-                        <TableColumn fx:id="colPosicion" text="Pos" prefWidth="45"/>
-                        <TableColumn fx:id="colPiloto" text="Piloto" prefWidth="145"/>
-                        <TableColumn fx:id="colEquipo" text="Equipo" prefWidth="145"/>
-                        <TableColumn fx:id="colVehiculo" text="Vehículo" prefWidth="75"/>
-                        <TableColumn fx:id="colTiempo" text="Tiempo" prefWidth="90"/>
-                        <TableColumn fx:id="colGap" text="Dif." prefWidth="65"/>
-                        <TableColumn fx:id="colConsumo" text="Consumo" prefWidth="75"/>
-                        <TableColumn fx:id="colDesgaste" text="Desgaste" prefWidth="75"/>
-                        <TableColumn fx:id="colEstadoVuelta" text="Estado" prefWidth="90"/>
-                        <TableColumn fx:id="colEventoResultado" text="Evento" prefWidth="145"/>
-                    </columns>
-                </TableView>
+            <Tab fx:id="tabResultadosFinales" text="Resultados" disable="true">
+                <fx:include fx:id="resultadosFinales" source="post-qualifying.fxml"/>
             </Tab>
 
-            <Tab fx:id="tabTelemetria" text="Telemetría en vivo">
-                <VBox spacing="12" styleClass="telemetry-panel">
-                    <HBox spacing="12" alignment="CENTER_LEFT">
-                        <VBox spacing="2">
-                            <Label text="LIVE TELEMETRY" styleClass="telemetry-title"/>
-                            <Label fx:id="lblTelemetriaPiloto" text="Esperando datos" styleClass="hint"/>
+            <Tab fx:id="tabTelemetria" text="Telemetría">
+                <ScrollPane fitToWidth="true" pannable="true" styleClass="telemetry-detail-scroll">
+                <VBox spacing="16" styleClass="telemetry-panel,telemetry-detail-panel">
+                    <HBox spacing="12" alignment="CENTER_LEFT" styleClass="telemetry-detail-toolbar">
+                        <Button text="← Volver al Dashboard" onAction="#onVolverDashboard"
+                                styleClass="telemetry-back-button"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label text="VUELTA CONSULTADA" styleClass="card-label"/>
+                        <ComboBox fx:id="selectorVueltaTelemetria" promptText="Sin telemetría"
+                                  prefWidth="150" disable="true" styleClass="telemetry-lap-selector"/>
+                    </HBox>
+                    <HBox spacing="12" alignment="CENTER_LEFT" styleClass="telemetry-detail-heading">
+                        <VBox spacing="3">
+                            <Label text="TELEMETRÍA DETALLADA" styleClass="telemetry-title"/>
+                            <Label text="Lecturas del monoplaza a lo largo de la vuelta" styleClass="telemetry-subtitle"/>
+                            <Label fx:id="lblTelemetriaPiloto" text="Esperando datos" styleClass="telemetry-driver"/>
                         </VBox>
                         <Region HBox.hgrow="ALWAYS"/>
                         <VBox spacing="2" alignment="CENTER_RIGHT">
@@ -306,57 +378,105 @@
                         </VBox>
                         <Label fx:id="lblEstadoPista" text="Estado de pista —" styleClass="track-state"/>
                     </HBox>
+
+                    <!-- Tarjeta del compañero de equipo. Vivía en el Dashboard, y
+                         se movió aquí al entrar el mapa con los veinte coches:
+                         sus lecturas se derivan de las del piloto seleccionado,
+                         así que su sitio está junto al detalle, no en la portada. -->
+                    <VBox spacing="7" styleClass="race-driver-card">
+                        <HBox alignment="CENTER_LEFT">
+                            <VBox spacing="0">
+                                <Label fx:id="lblPilotoDos" text="Compañero de equipo"
+                                       styleClass="race-driver-name"/>
+                                <Label fx:id="lblEquipoDos" text="—" styleClass="race-driver-team"/>
+                            </VBox>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <VBox spacing="0" alignment="CENTER_RIGHT">
+                                <Label fx:id="lblVehiculoDos" text="—" styleClass="race-car-name"/>
+                                <Label fx:id="lblExperienciaDos" text="—" styleClass="race-driver-number"/>
+                            </VBox>
+                        </HBox>
+                        <HBox spacing="6" styleClass="race-car-readings">
+                            <VBox spacing="1" styleClass="race-car-reading" HBox.hgrow="ALWAYS">
+                                <Label text="LLANTAS" styleClass="card-label"/>
+                                <Label fx:id="lblLlantasDos" text="100 %" styleClass="race-reading-value"/>
+                                <Label fx:id="lblTempLlantasDos" text="— °C" styleClass="race-reading-detail"/>
+                            </VBox>
+                            <VBox spacing="1" styleClass="race-car-reading" HBox.hgrow="ALWAYS">
+                                <Label text="FUEL" styleClass="card-label"/>
+                                <Label fx:id="lblFuelDos" text="100 %" styleClass="race-reading-value"/>
+                                <Label fx:id="lblTempMotorDos" text="— °C motor" styleClass="race-reading-detail"/>
+                            </VBox>
+                            <VBox spacing="1" alignment="CENTER" styleClass="race-car-reading,race-gear-reading">
+                                <Label text="MARCHA" styleClass="card-label"/>
+                                <Label fx:id="lblMarchaDos" text="N" styleClass="race-gear-value"/>
+                                <Label fx:id="lblRpmDos" text="0 RPM" styleClass="race-reading-detail"/>
+                            </VBox>
+                            <VBox spacing="0" styleClass="race-mode-cell" HBox.hgrow="ALWAYS">
+                                <Label text="PACE" styleClass="card-label"/>
+                                <Label fx:id="lblPaceDos" text="NORMAL" styleClass="race-mode-value"/>
+                            </VBox>
+                            <VBox spacing="0" styleClass="race-mode-cell" HBox.hgrow="ALWAYS">
+                                <Label text="FUEL" styleClass="card-label"/>
+                                <Label fx:id="lblFuelModeDos" text="BALANCEADA" styleClass="race-mode-value"/>
+                            </VBox>
+                            <VBox spacing="0" styleClass="race-mode-cell" HBox.hgrow="ALWAYS">
+                                <HBox><Label text="ERS" styleClass="card-label"/><Region HBox.hgrow="ALWAYS"/><Label fx:id="lblErsDos" text="100 %" styleClass="race-mode-value"/></HBox>
+                                <ProgressBar fx:id="barraErsDos" progress="1" maxWidth="1.7976931348623157E308"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
                     <HBox spacing="12">
-                        <VBox spacing="6" styleClass="telemetry-card" HBox.hgrow="ALWAYS">
+                        <VBox spacing="6" styleClass="telemetry-card,telemetry-speed-card" HBox.hgrow="ALWAYS" maxWidth="Infinity">
                             <Label text="VELOCIDAD ACTUAL" styleClass="card-label"/>
                             <Label fx:id="lblVelocidadTelemetria" text="0 km/h" styleClass="telemetry-value"/>
                             <Label fx:id="lblVelocidadMaximaTelemetria" text="Máxima alcanzada: 0 km/h" styleClass="hint"/>
                             <ProgressBar fx:id="barraVelocidadTelemetria" progress="0" maxWidth="Infinity" styleClass="metric-speed"/>
                         </VBox>
-                        <VBox spacing="6" styleClass="telemetry-card" HBox.hgrow="ALWAYS">
+                        <VBox spacing="6" styleClass="telemetry-card,telemetry-rpm-card" HBox.hgrow="ALWAYS" maxWidth="Infinity">
                             <Label text="RPM" styleClass="card-label"/>
                             <Label fx:id="lblRpm" text="0 rpm" styleClass="telemetry-value"/>
                             <ProgressBar fx:id="barraRpm" progress="0" maxWidth="Infinity" styleClass="metric-rpm"/>
                         </VBox>
-                        <VBox spacing="6" styleClass="telemetry-card" HBox.hgrow="ALWAYS">
+                        <VBox spacing="6" styleClass="telemetry-card,telemetry-fuel-card" HBox.hgrow="ALWAYS" maxWidth="Infinity">
                             <Label text="CONSUMO DE COMBUSTIBLE" styleClass="card-label"/>
                             <Label fx:id="lblCombustible" text="0.00 kg/v · 0 % consumido" styleClass="telemetry-value"/>
                             <ProgressBar fx:id="barraCombustible" progress="0" maxWidth="Infinity" styleClass="metric-fuel"/>
                         </VBox>
                     </HBox>
                     <HBox spacing="12">
-                        <VBox spacing="6" styleClass="telemetry-card" HBox.hgrow="ALWAYS">
+                        <VBox spacing="6" styleClass="telemetry-card,telemetry-wear-card" HBox.hgrow="ALWAYS" maxWidth="Infinity">
                             <Label text="DESGASTE DE NEUMÁTICOS" styleClass="card-label"/>
                             <Label fx:id="lblDesgasteTelemetria" text="0.0 %" styleClass="telemetry-value"/>
                             <ProgressBar fx:id="barraDesgasteTelemetria" progress="0" maxWidth="Infinity" styleClass="metric-wear"/>
                         </VBox>
-                        <VBox spacing="6" styleClass="telemetry-card" HBox.hgrow="ALWAYS">
+                        <VBox spacing="6" styleClass="telemetry-card,telemetry-tire-temp-card" HBox.hgrow="ALWAYS" maxWidth="Infinity">
                             <Label text="TEMP. NEUMÁTICOS" styleClass="card-label"/>
                             <Label fx:id="lblTempNeumaticos" text="0.0 °C" styleClass="telemetry-value"/>
                             <ProgressBar fx:id="barraTempNeumaticos" progress="0" maxWidth="Infinity" styleClass="metric-temperature"/>
                         </VBox>
-                        <VBox spacing="6" styleClass="telemetry-card" HBox.hgrow="ALWAYS">
+                        <VBox spacing="6" styleClass="telemetry-card,telemetry-engine-card" HBox.hgrow="ALWAYS" maxWidth="Infinity">
                             <Label text="TEMP. MOTOR" styleClass="card-label"/>
                             <Label fx:id="lblTempMotor" text="0.0 °C" styleClass="telemetry-value"/>
                             <ProgressBar fx:id="barraTempMotor" progress="0" maxWidth="Infinity" styleClass="metric-engine"/>
                         </VBox>
                     </HBox>
                     <HBox spacing="12">
-                        <VBox spacing="4" styleClass="telemetry-summary" HBox.hgrow="ALWAYS">
+                        <VBox spacing="4" styleClass="telemetry-summary" HBox.hgrow="ALWAYS" maxWidth="Infinity">
                             <Label text="SECTOR ACTUAL" styleClass="card-label"/>
                             <Label fx:id="lblSector" text="S—" styleClass="telemetry-value"/>
                         </VBox>
-                        <VBox spacing="4" styleClass="telemetry-summary" HBox.hgrow="ALWAYS">
+                        <VBox spacing="4" styleClass="telemetry-summary" HBox.hgrow="ALWAYS" maxWidth="Infinity">
                             <Label text="TIEMPO DE VUELTA" styleClass="card-label"/>
                             <Label fx:id="lblTiempoVuelta" text="0:00.000" styleClass="telemetry-value"/>
                         </VBox>
-                        <VBox spacing="4" styleClass="telemetry-summary" HBox.hgrow="ALWAYS">
+                        <VBox spacing="4" styleClass="telemetry-summary" HBox.hgrow="ALWAYS" maxWidth="Infinity">
                             <Label text="DELTA VS. RÉCORD" styleClass="card-label"/>
                             <Label fx:id="lblDelta" text="±0.000" styleClass="telemetry-value"/>
                         </VBox>
                     </HBox>
                     <HBox spacing="12">
-                        <VBox spacing="4" styleClass="telemetry-summary" HBox.hgrow="ALWAYS">
+                        <VBox spacing="4" styleClass="telemetry-summary" HBox.hgrow="ALWAYS" maxWidth="Infinity">
                             <Label text="GRIP DE PISTA" styleClass="card-label"/>
                             <Label fx:id="lblGripPista" text="—" styleClass="telemetry-value"/>
                             <ProgressBar fx:id="barraGripPista" progress="0" maxWidth="Infinity"
@@ -364,29 +484,86 @@
                             <Label fx:id="lblCambioGrip" text="Sin datos" styleClass="hint"/>
                             <Label fx:id="lblGomaPista" text="—" styleClass="hint"/>
                         </VBox>
-                        <VBox spacing="4" styleClass="telemetry-summary" HBox.hgrow="ALWAYS">
+                        <VBox spacing="4" styleClass="telemetry-summary" HBox.hgrow="ALWAYS" maxWidth="Infinity">
                             <Label text="CIELO Y ASFALTO" styleClass="card-label"/>
                             <Label fx:id="lblTempClimaEvolucion" text="—" styleClass="telemetry-value"/>
                             <Label fx:id="lblEstadoClimaEvolucion" text="Sin datos" styleClass="hint"/>
                             <Label fx:id="lblLluviaEvolucion" text="—" styleClass="hint"/>
                         </VBox>
-                        <VBox spacing="4" styleClass="telemetry-summary" HBox.hgrow="ALWAYS">
+                        <VBox spacing="4" styleClass="telemetry-summary" HBox.hgrow="ALWAYS" maxWidth="Infinity">
                             <Label text="NEUMÁTICO RECOMENDADO" styleClass="card-label"/>
                             <Label fx:id="lblNeumaticoEvolucion" text="—" styleClass="telemetry-value"/>
                             <Label fx:id="lblEstrategiaEvolucion" text="—" styleClass="hint"/>
                         </VBox>
                     </HBox>
+                    <HBox alignment="CENTER_LEFT" styleClass="telemetry-chart-heading">
+                        <Label text="EVOLUCIÓN POR SEGMENTO" styleClass="section-title"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label text="Eje horizontal: progreso de la vuelta" styleClass="hint"/>
+                    </HBox>
+                    <GridPane hgap="14" vgap="14" maxWidth="Infinity" styleClass="telemetry-chart-grid">
+                        <columnConstraints>
+                            <ColumnConstraints percentWidth="50" hgrow="ALWAYS" fillWidth="true"/>
+                            <ColumnConstraints percentWidth="50" hgrow="ALWAYS" fillWidth="true"/>
+                        </columnConstraints>
+                        <LineChart fx:id="graficaVelocidadDetalle" title="Velocidad (km/h)"
+                                   createSymbols="false" animated="false" legendVisible="false" maxWidth="Infinity"
+                                   GridPane.columnIndex="0" GridPane.rowIndex="0"
+                                   styleClass="telemetry-detail-chart">
+                            <xAxis><NumberAxis label="Segmento" forceZeroInRange="false"/></xAxis>
+                            <yAxis><NumberAxis forceZeroInRange="false"/></yAxis>
+                        </LineChart>
+                        <LineChart fx:id="graficaRpmDetalle" title="RPM"
+                                   createSymbols="false" animated="false" legendVisible="false" maxWidth="Infinity"
+                                   GridPane.columnIndex="1" GridPane.rowIndex="0"
+                                   styleClass="telemetry-detail-chart">
+                            <xAxis><NumberAxis label="Segmento" forceZeroInRange="false"/></xAxis>
+                            <yAxis><NumberAxis forceZeroInRange="false"/></yAxis>
+                        </LineChart>
+                        <LineChart fx:id="graficaCombustibleDetalle" title="Combustible restante (%)"
+                                   createSymbols="false" animated="false" legendVisible="false" maxWidth="Infinity"
+                                   GridPane.columnIndex="0" GridPane.rowIndex="1"
+                                   styleClass="telemetry-detail-chart">
+                            <xAxis><NumberAxis label="Segmento" forceZeroInRange="false"/></xAxis>
+                            <yAxis><NumberAxis forceZeroInRange="false"/></yAxis>
+                        </LineChart>
+                        <LineChart fx:id="graficaDesgasteDetalle" title="Desgaste de neumáticos (%)"
+                                   createSymbols="false" animated="false" legendVisible="false" maxWidth="Infinity"
+                                   GridPane.columnIndex="1" GridPane.rowIndex="1"
+                                   styleClass="telemetry-detail-chart">
+                            <xAxis><NumberAxis label="Segmento" forceZeroInRange="false"/></xAxis>
+                            <yAxis><NumberAxis forceZeroInRange="false"/></yAxis>
+                        </LineChart>
+                        <LineChart fx:id="graficaTemperaturasDetalle" title="Temperaturas (°C)"
+                                   createSymbols="false" animated="false" legendVisible="true" maxWidth="Infinity"
+                                   GridPane.columnIndex="0" GridPane.rowIndex="2"
+                                   styleClass="telemetry-detail-chart">
+                            <xAxis><NumberAxis label="Segmento" forceZeroInRange="false"/></xAxis>
+                            <yAxis><NumberAxis forceZeroInRange="false"/></yAxis>
+                        </LineChart>
+                        <LineChart fx:id="graficaDeltaDetalle" title="Delta vs. récord (s)"
+                                   createSymbols="false" animated="false" legendVisible="false" maxWidth="Infinity"
+                                   GridPane.columnIndex="1" GridPane.rowIndex="2"
+                                   styleClass="telemetry-detail-chart">
+                            <xAxis><NumberAxis label="Segmento" forceZeroInRange="false"/></xAxis>
+                            <yAxis><NumberAxis forceZeroInRange="false"/></yAxis>
+                        </LineChart>
+                    </GridPane>
                 </VBox>
+                </ScrollPane>
             </Tab>
 
-            <Tab text="Comparación de sectores">
+            <Tab text="Sectores">
                 <fx:include fx:id="comparacionSectores" source="sector-comparison.fxml"/>
             </Tab>
 
-            <Tab text="Eventos">
-                <VBox spacing="8">
+            <Tab fx:id="tabEventos" text="Eventos">
+                <VBox spacing="12" styleClass="event-detail-panel">
                     <HBox spacing="10" alignment="CENTER_LEFT">
-                        <Label text="Registro de eventos de la sesión" styleClass="section-title"/>
+                        <VBox spacing="2">
+                            <Label text="REGISTRO DE EVENTOS" styleClass="section-title"/>
+                            <Label text="Incidencias e impacto acumulado durante la sesión" styleClass="hint"/>
+                        </VBox>
                         <Region HBox.hgrow="ALWAYS"/>
                         <Label text="NO_EVENT no se almacena" styleClass="hint"/>
                     </HBox>
@@ -407,3 +584,25 @@
         </tabs>
     </TabPane>
 </VBox>
+
+    <!-- Aviso flotante: informa sin interrumpir ni desplazar el Dashboard. -->
+    <VBox fx:id="notificacionEvento" spacing="3" visible="false"
+          minWidth="290" prefWidth="310" maxWidth="310" maxHeight="128"
+          StackPane.alignment="TOP_RIGHT"
+          styleClass="event-toast">
+        <StackPane.margin><Insets top="72" right="16"/></StackPane.margin>
+        <HBox spacing="6" alignment="CENTER_LEFT">
+            <Label text="ALERTA DE CARRERA" styleClass="event-toast-kicker"/>
+            <Label fx:id="lblNotificacionCategoria" text="IMPORTANTE"
+                   styleClass="event-toast-category"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="lblNotificacionSector" text="SECTOR —" styleClass="event-toast-sector"/>
+            <Button text="×" onAction="#onCerrarNotificacion"
+                    focusTraversable="false" styleClass="event-toast-close"/>
+        </HBox>
+        <Label fx:id="lblNotificacionTipo" text="Evento" styleClass="event-toast-title"/>
+        <Label fx:id="lblNotificacionPiloto" text="Piloto" styleClass="event-toast-driver"/>
+        <Label fx:id="lblNotificacionImpacto" text="Impacto" wrapText="true"
+               styleClass="event-toast-impact"/>
+    </VBox>
+</StackPane>

@@ -1,0 +1,82 @@
+package com.formula1.domain.model;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+/**
+ * Parciales inmutables de una vuelta completa.
+ *
+ * <p>El tiempo total sigue perteneciendo a {@link LapResult}; este objeto
+ * agrupa los tres valores que siempre deben existir y ser válidos juntos.</p>
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
+public record SectorTimes(
+        double sector1Seconds,
+        double sector2Seconds,
+        double sector3Seconds) {
+
+    public SectorTimes {
+        requirePositive(sector1Seconds, "sector 1");
+        requirePositive(sector2Seconds, "sector 2");
+        requirePositive(sector3Seconds, "sector 3");
+    }
+
+    /** Devuelve el parcial solicitado y rechaza el valor NONE explícitamente. */
+    public double tiempoDe(TrackSector sector) {
+        if (sector == null) {
+            throw new IllegalArgumentException("El sector es obligatorio");
+        }
+        return switch (sector) {
+            case SECTOR_1 -> sector1Seconds;
+            case SECTOR_2 -> sector2Seconds;
+            case SECTOR_3 -> sector3Seconds;
+            case NONE -> throw new IllegalArgumentException("NONE no representa un parcial");
+        };
+    }
+
+    /** Devuelve nuevos parciales con una pérdida deportiva aplicada al sector. */
+    public SectorTimes conTiempoAdicional(TrackSector sector, double seconds) {
+        if (sector == null || sector == TrackSector.NONE) {
+            throw new IllegalArgumentException("La pérdida debe pertenecer a un sector");
+        }
+        if (!Double.isFinite(seconds) || seconds < 0) {
+            throw new IllegalArgumentException("El tiempo adicional debe ser finito y no negativo");
+        }
+        return switch (sector) {
+            case SECTOR_1 -> new SectorTimes(
+                    sector1Seconds + seconds, sector2Seconds, sector3Seconds);
+            case SECTOR_2 -> new SectorTimes(
+                    sector1Seconds, sector2Seconds + seconds, sector3Seconds);
+            case SECTOR_3 -> new SectorTimes(
+                    sector1Seconds, sector2Seconds, sector3Seconds + seconds);
+            case NONE -> throw new IllegalArgumentException("NONE no representa un parcial");
+        };
+    }
+
+    /** Aplica una ganancia o pérdida de rendimiento conservando parciales válidos. */
+    public SectorTimes conAjusteTiempo(TrackSector sector, double seconds) {
+        if (sector == null || sector == TrackSector.NONE || !Double.isFinite(seconds)) {
+            throw new IllegalArgumentException("El ajuste debe tener sector y valor finito");
+        }
+        return switch (sector) {
+            case SECTOR_1 -> new SectorTimes(
+                    sector1Seconds + seconds, sector2Seconds, sector3Seconds);
+            case SECTOR_2 -> new SectorTimes(
+                    sector1Seconds, sector2Seconds + seconds, sector3Seconds);
+            case SECTOR_3 -> new SectorTimes(
+                    sector1Seconds, sector2Seconds, sector3Seconds + seconds);
+            case NONE -> throw new IllegalArgumentException("NONE no representa un parcial");
+        };
+    }
+
+    @JsonIgnore
+    public double tiempoTotal() {
+        return sector1Seconds + sector2Seconds + sector3Seconds;
+    }
+
+    private static void requirePositive(double value, String name) {
+        if (!Double.isFinite(value) || value <= 0) {
+            throw new IllegalArgumentException("El tiempo de " + name + " debe ser positivo y finito");
+        }
+    }
+}

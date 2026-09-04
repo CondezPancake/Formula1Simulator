@@ -11,7 +11,7 @@
 <?import javafx.scene.layout.VBox?>
 
 <HBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-      fx:controller="com.formula1.controller.ConfigController" spacing="20">
+      fx:controller="com.formula1.adapter.in.javafx.ConfigController" spacing="20">
     <padding><Insets top="24" right="28" bottom="24" left="28"/></padding>
 
     <!-- ================= columna principal ================= -->
@@ -71,6 +71,16 @@
                             <Label fx:id="lblPresionDesgaste" text="—" styleClass="tile-value,v-wear"/>
                         </VBox>
                     </HBox>
+                </VBox>
+
+                <!-- compuesto para el piloto que el usuario seleccione en Carrera -->
+                <VBox spacing="12" styleClass="card">
+                    <HBox styleClass="section-header">
+                        <Label text="COMPUESTO INICIAL" styleClass="card-label"/>
+                    </HBox>
+                    <HBox fx:id="segCompuesto" styleClass="segmented"/>
+                    <Label text="Se aplicará al piloto seleccionado; los rivales mantienen su estrategia automática."
+                           styleClass="option-note" maxWidth="Infinity" wrapText="true"/>
                 </VBox>
 
                 <!-- estrategia de combustible -->
@@ -147,6 +157,11 @@
                 <Label text="Presión" styleClass="hint"/>
                 <Region HBox.hgrow="ALWAYS"/>
                 <Label fx:id="lblResumenPresion" text="—" style="-fx-text-fill: #FFC906; -fx-font-weight: bold;"/>
+            </HBox>
+            <HBox>
+                <Label text="Compuesto inicial" styleClass="hint"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="lblResumenCompuesto" text="—" style="-fx-text-fill: #FFC906; -fx-font-weight: bold;"/>
             </HBox>
             <HBox>
                 <Label text="Combustible" styleClass="hint"/>

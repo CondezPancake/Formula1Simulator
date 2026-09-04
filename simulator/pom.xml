@@ -16,33 +16,39 @@
     </properties>
 
     <dependencies>
+        <!-- El núcleo de componentes de UI:Button, TableView, Slider, ComboBox, Label, layout,etc. -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
             <version>${javafx.version}</version>
         </dependency>
+        <!-- Permite separar la definición de UI (.fxml, XML declarativo) de la lógica (Controller.java) -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
             <version>${javafx.version}</version>
         </dependency>
+        <!-- Es la que habilita todo el sistema de multimedia que diseñamos -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-media</artifactId>
             <version>${javafx.version}</version>
         </dependency>
 
+        <!-- Driver JDBC oficial de MySQL -->
         <dependency>
-            <groupId>org.mongodb</groupId>
-            <artifactId>mongodb-driver-sync</artifactId>
-            <version>5.1.1</version>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <version>9.5.0</version>
         </dependency>
 
+        <!-- Librería de serialización/deserialización JSON -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>${jackson.version}</version>
         </dependency>
+        <!-- framework estándar de pruebas unitarias en Java -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
@@ -67,7 +73,7 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>com.formula1.App</mainClass>
+                    <mainClass>com.formula1.bootstrap.App</mainClass>
                 </configuration>
             </plugin>
 

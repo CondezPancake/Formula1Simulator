@@ -13,7 +13,7 @@
 
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.formula1.controller.ShellController"
+            fx:controller="com.formula1.adapter.in.javafx.ShellController"
             prefWidth="1600" prefHeight="940">
 
     <top>
@@ -22,24 +22,24 @@
             <HBox fx:id="cabecera" styleClass="app-header" spacing="0" alignment="CENTER_LEFT">
                 <padding><Insets left="20" right="20"/></padding>
 
-                <Label text="F1" styleClass="brand-mark"/>
-
-                <Region styleClass="header-divider">
-                    <HBox.margin><Insets left="18" right="18"/></HBox.margin>
-                </Region>
+                <Button fx:id="btnMarca" styleClass="brand-mark-boton" onAction="#onVolverAlMenu"/>
 
                 <VBox spacing="1" alignment="CENTER_LEFT">
+                    <HBox.margin><Insets left="16"/></HBox.margin>
                     <Label fx:id="lblEvento" text="SIMULADOR DE CLASIFICACIÓN" styleClass="header-title"/>
                     <Label fx:id="lblCircuitoCabecera" text="SIN CIRCUITO SELECCIONADO" styleClass="header-subtitle"/>
                 </VBox>
 
                 <Label fx:id="lblEstadoSesion" text="● LISTO" styleClass="live-badge,off">
-                    <HBox.margin><Insets left="22"/></HBox.margin>
+                    <HBox.margin><Insets left="16"/></HBox.margin>
                 </Label>
 
+                <Region styleClass="header-divider">
+                    <HBox.margin><Insets left="18" right="18"/></HBox.margin>
+                </Region>
+
                 <VBox spacing="0" alignment="CENTER_LEFT">
-                    <HBox.margin><Insets left="18"/></HBox.margin>
-                    <Label text="SEGMENTO" styleClass="micro-label"/>
+                    <Label text="VUELTA" styleClass="micro-label"/>
                     <HBox spacing="2" alignment="BOTTOM_LEFT">
                         <Label fx:id="lblSegmentoActual" text="—" styleClass="counter-value"/>
                         <Label fx:id="lblSegmentoTotal" text="/20" styleClass="counter-total"/>
@@ -50,7 +50,7 @@
                     <HBox.margin><Insets left="18" right="18"/></HBox.margin>
                 </Region>
 
-                <Label fx:id="lblIconoClima" text="☁" style="-fx-font-size: 20px;"/>
+                <Label fx:id="lblIconoClima" text="☁" styleClass="header-weather-glyph"/>
                 <VBox spacing="1" alignment="CENTER_LEFT">
                     <HBox.margin><Insets left="10"/></HBox.margin>
                     <Label fx:id="lblClimaTemp" text="— · ASFALTO —" styleClass="header-value"/>
@@ -66,10 +66,19 @@
                 </HBox>
 
                 <VBox spacing="0" alignment="CENTER_RIGHT">
-                    <HBox.margin><Insets left="22"/></HBox.margin>
+                    <HBox.margin><Insets left="22" right="16"/></HBox.margin>
                     <Label fx:id="lblZonaHoraria" text="UTC" styleClass="micro-label"/>
                     <Label fx:id="lblReloj" text="--:--:--" styleClass="header-clock"/>
                 </VBox>
+
+                <!-- Ajustes y salida: reutilizan los handlers que ya existían
+                     en la barra de navegación. -->
+                <Button fx:id="btnAjustes" styleClass="header-icon-button"
+                        onAction="#onConfigHistorial">
+                    <HBox.margin><Insets right="8"/></HBox.margin>
+                </Button>
+                <Button fx:id="btnSalirCabecera" styleClass="header-icon-button,peligro"
+                        onAction="#onSalir"/>
             </HBox>
 
             <!-- ============ nav de secciones (44 px) ============ -->
@@ -80,9 +89,6 @@
                 <Button fx:id="btnGestion"  text="GESTIÓN"             styleClass="top-nav-item" onAction="#onGestion"/>
                 <Button fx:id="btnConfig"   text="CONFIG. &amp; HISTORIAL" styleClass="top-nav-item" onAction="#onConfigHistorial"/>
                 <Region HBox.hgrow="ALWAYS"/>
-                <Button text="SALIR" styleClass="top-nav-item,exit-nav-item" onAction="#onSalir">
-                    <HBox.margin><Insets right="20"/></HBox.margin>
-                </Button>
             </HBox>
         </VBox>
     </top>

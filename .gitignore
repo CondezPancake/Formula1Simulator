@@ -2,7 +2,14 @@ target/
 *.class
 .idea/
 *.iml
-.vscode/
+# Se ignora el CONTENIDO de .vscode, no la carpeta: git no puede volver a
+# incluir un fichero si su directorio padre esta excluido, asi que con
+# ".vscode/" las excepciones de abajo no harian nada.
+.vscode/*
+# La configuracion de arranque si se comparte: sin ella el boton Run de VS Code
+# no sabe por que clase empezar.
+!.vscode/launch.json
+!.vscode/settings.json
 .DS_Store
 
 # Originales de imagenes (18 MB). La aplicacion consume las copias
@@ -11,7 +18,12 @@ target/
 docs/assets/F1_Recursos_Multimedia/img-vehiculos/
 docs/assets/F1_Recursos_Multimedia/img-circuitos/
 
-# Material de video original (410 MB). La app consume el loop corto de
-# simulator/src/main/resources/videos/menu-loop.mp4, generado con ffmpeg
-# (ver docs/features/ui-menu.md).
+# Metraje original del fondo de vídeo que tuvo el menú (410 MB). Ya no se usa
+# -el fondo es un slideshow de fotos, ver docs/features/ui-menu.md- pero se
+# deja ignorado por si el fichero sigue en disco.
 media-src/
+
+# Binario de Piper (~40 MB) y modelo de voz (~60 MB): son la misma clase de
+# recurso pesado y regenerable que docs/assets de arriba. tools/setup_piper.ps1
+# los descarga; no tiene sentido llevarlos en el repo.
+tools/piper/

@@ -4,20 +4,20 @@
 <?import javafx.scene.control.TabPane?>
 
 <TabPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-         fx:id="secciones" fx:controller="com.formula1.controller.ManagementController"
+         fx:id="secciones" fx:controller="com.formula1.adapter.in.javafx.ManagementController"
          styleClass="subnav" tabClosingPolicy="UNAVAILABLE">
     <tabs>
         <Tab fx:id="tabEquipos" text="EQUIPOS">
             <fx:include fx:id="equiposView" source="teams.fxml"/>
         </Tab>
-        <Tab text="PILOTOS">
-            <fx:include source="drivers.fxml"/>
+        <Tab fx:id="tabPilotos" text="PILOTOS">
+            <fx:include fx:id="pilotosView" source="drivers.fxml"/>
         </Tab>
         <Tab fx:id="tabVehiculos" text="VEHÍCULOS">
-            <fx:include source="vehicles.fxml"/>
+            <fx:include fx:id="vehiculosView" source="vehicles.fxml"/>
         </Tab>
         <Tab fx:id="tabCircuitos" text="CIRCUITOS">
-            <fx:include source="circuits.fxml"/>
+            <fx:include fx:id="circuitosView" source="circuits.fxml"/>
         </Tab>
     </tabs>
 </TabPane>

@@ -1,0 +1,11 @@
+{
+    // Que el servidor de Java reindexe solo cuando cambie el pom.xml.
+    //
+    // Con el valor por defecto ("interactive") hay que aceptar un aviso a mano;
+    // si se ignora, el editor sigue compilando contra un modelo del proyecto
+    // viejo y aparece un "Build failed" que Maven no reproduce.
+    "java.configuration.updateBuildConfiguration": "automatic",
+
+    // El proyecto real está en simulator/; el pom de la raíz solo agrega.
+    "java.import.maven.enabled": true
+}

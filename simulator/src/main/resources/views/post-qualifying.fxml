@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.formula1.adapter.in.javafx.PostQualifyingController"
+      spacing="12" styleClass="post-qualifying">
+    <padding><Insets top="16" right="18" bottom="16" left="18"/></padding>
+
+    <HBox alignment="CENTER_LEFT" spacing="14" styleClass="post-header">
+        <VBox spacing="2">
+            <Label text="RESULTADOS DE CLASIFICACIÓN" styleClass="hud-group-title"/>
+            <Label fx:id="lblResultadoCircuito" text="RESULTADOS" styleClass="post-title"/>
+            <Label fx:id="lblResultadoSesion" text="Sin sesión terminada" styleClass="hint"/>
+        </VBox>
+        <Region HBox.hgrow="ALWAYS"/>
+        <VBox alignment="CENTER_RIGHT" spacing="2">
+            <Label fx:id="lblResultadoPole" text="—" styleClass="post-pole"/>
+            <Label fx:id="lblResultadoEstadisticas" text="—" styleClass="hint"/>
+            <Label fx:id="lblResultadoConfiguracion" text="—" wrapText="true"
+                   maxWidth="520" styleClass="post-config-summary"/>
+        </VBox>
+    </HBox>
+
+    <HBox spacing="14" VBox.vgrow="ALWAYS">
+        <VBox spacing="7" HBox.hgrow="ALWAYS">
+            <Label text="CLASIFICACIÓN FINAL · selecciona un piloto para ver su informe"
+                   styleClass="hud-group-title"/>
+            <TableView fx:id="tablaResultadoFinal" VBox.vgrow="ALWAYS"
+                       styleClass="post-results-table">
+                <placeholder><Label text="La sesión no contiene resultados"/></placeholder>
+                <columns>
+                    <TableColumn fx:id="colResultadoPosicion" text="Pos" prefWidth="42"/>
+                    <TableColumn fx:id="colResultadoPiloto" text="Piloto" prefWidth="145"/>
+                    <TableColumn fx:id="colResultadoTiempo" text="Tiempo" prefWidth="82"/>
+                    <TableColumn fx:id="colResultadoGap" text="Gap" prefWidth="63"/>
+                    <TableColumn fx:id="colResultadoS1" text="S1" prefWidth="76"/>
+                    <TableColumn fx:id="colResultadoS2" text="S2" prefWidth="76"/>
+                    <TableColumn fx:id="colResultadoS3" text="S3" prefWidth="76"/>
+                    <TableColumn fx:id="colResultadoCompuesto" text="Neum." prefWidth="55"/>
+                    <TableColumn fx:id="colResultadoParadas" text="Pits" prefWidth="47"/>
+                    <TableColumn fx:id="colResultadoEventos" text="Evt." prefWidth="47"/>
+                </columns>
+            </TableView>
+        </VBox>
+
+        <ScrollPane fitToWidth="true" prefWidth="350" minWidth="315" maxWidth="390"
+                    styleClass="edge-to-edge,hud-scroll">
+            <VBox spacing="11" styleClass="post-detail">
+                <VBox spacing="2">
+                    <Label text="INFORME DEL PILOTO" styleClass="hud-group-title"/>
+                    <Label fx:id="lblDetallePiloto" text="Sin resultado seleccionado"
+                           styleClass="post-driver"/>
+                    <Label fx:id="lblDetalleEquipo" text="—" styleClass="hint"/>
+                </VBox>
+
+                <VBox spacing="4" styleClass="post-section">
+                    <Label text="RESULTADO Y SECTORES" styleClass="hud-group-title"/>
+                    <Label fx:id="lblDetalleResultado" text="—" styleClass="post-value"/>
+                    <Label fx:id="lblDetalleSectores" text="—" wrapText="true" styleClass="post-mono"/>
+                </VBox>
+
+                <VBox spacing="4" styleClass="post-section">
+                    <Label text="ESTRATEGIA" styleClass="hud-group-title"/>
+                    <Label fx:id="lblDetalleNeumaticos" text="—" wrapText="true" styleClass="post-value-sm"/>
+                    <Label fx:id="lblDetalleBoxes" text="—" wrapText="true" styleClass="post-value-sm"/>
+                    <Label fx:id="lblDetalleEventos" text="—" styleClass="post-value-sm"/>
+                </VBox>
+
+                <VBox spacing="4" styleClass="post-section">
+                    <Label text="VEHÍCULO Y CONFIGURACIÓN" styleClass="hud-group-title"/>
+                    <Label fx:id="lblDetalleVehiculo" text="—" wrapText="true" styleClass="post-value-sm"/>
+                    <Label fx:id="lblDetalleConfiguracion" text="—" wrapText="true" styleClass="hint"/>
+                </VBox>
+
+                <VBox spacing="5" styleClass="post-section">
+                    <Label text="RADIO / BOX RELEVANTE" styleClass="hud-group-title"/>
+                    <VBox fx:id="listaRadioResultado" spacing="5"/>
+                </VBox>
+            </VBox>
+        </ScrollPane>
+    </HBox>
+</VBox>

@@ -6,8 +6,8 @@
   <img alt="Java" src="https://img.shields.io/badge/Java-17-e10600?style=flat-square&logo=openjdk&logoColor=white">
   <img alt="JavaFX" src="https://img.shields.io/badge/JavaFX-17.0.10-e10600?style=flat-square&logo=java&logoColor=white">
   <img alt="Maven" src="https://img.shields.io/badge/Maven-build-e10600?style=flat-square&logo=apachemaven&logoColor=white">
-  <img alt="MongoDB" src="https://img.shields.io/badge/MongoDB-5.1.1-e10600?style=flat-square&logo=mongodb&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-121%20passing-2ea043?style=flat-square">
+  <img alt="MySQL" src="https://img.shields.io/badge/MySQL-8.0+-e10600?style=flat-square&logo=mysql&logoColor=white">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-171%20passing-2ea043?style=flat-square">
 </p>
 
 # Formula1Simulator
@@ -57,14 +57,14 @@ La especificación que sigue el proyecto es [`f1project.md`](f1project.md).
 
 **Funcional de punta a punta.** Las 22 historias de usuario de `f1project.md` están implementadas: CRUD con búsqueda de las cuatro entidades, configuración del vehículo, simulación de clasificación con hilos y almacenamiento de resultados y configuraciones.
 
-La aplicación **arranca y es plenamente usable con o sin MongoDB**: si no hay servidor, se siembra desde un JSON incluido y todo funciona en memoria.
+La aplicación usa **MySQL como persistencia duradera**. Si el servidor no está disponible, conserva un modo memoria de contingencia alimentado desde el JSON incluido.
 
 | | |
 |---|---|
-| Archivos `.java` | 101 |
+| Archivos `.java` | 127 |
 | Paquetes | 6 |
 | Patrones de diseño | 2 (Repository, Singleton) |
-| Tests | 121, todos en verde |
+| Tests | 171, todos en verde |
 
 ## Funcionalidades
 
@@ -102,7 +102,7 @@ Una parrilla típica en Monza:
 
 ## Tecnologías
 
-**Java 17** · **JavaFX 17.0.10** (controls + fxml) · **MongoDB** (driver síncrono 5.1.1) · **Jackson** 2.17.2 · **Maven** · **JUnit 5**
+**Java 17** · **JavaFX 17.0.10** (controls + fxml) · **MySQL 8** · **Connector/J 9.5.0** · **Jackson** 2.17.2 · **Maven** · **JUnit 5**
 
 ## Arquitectura
 
@@ -110,18 +110,18 @@ Seis paquetes y **dos patrones de diseño**, los exigidos por el alcance princip
 
 | Patrón | Dónde | Por qué |
 |---|---|---|
-| **Repository** | `data.CrudRepository` + `data.MongoRepository<T,ID>` | Aísla MongoDB del resto y permite que la aplicación funcione sin él |
-| **Singleton** | `data.MongoConnection`, `data.DataStore` | Un solo cliente de Mongo (es caro y thread-safe por diseño) y un único almacén compartido |
+| **Ports and Adapters** | `data.PersistencePort` + `data.MySqlPersistenceAdapter` | Aísla JDBC y orienta las dependencias hacia la aplicación |
+| **Singleton** | `data.DataStore` | Mantiene un único almacén compartido durante la ejecución |
 
-### Datos: `HashMap` sobre MongoDB
+### Datos: `HashMap` sobre MySQL
 
 `f1project.md` pide «Map, HashMap: persistencia temporal de datos». Ambas cosas conviven sin contradicción:
 
 - **`DataStore` con `ConcurrentHashMap` es la fuente de verdad en ejecución.** Todas las lecturas y búsquedas salen de ahí.
-- **MongoDB es la persistencia duradera.** Las escrituras actualizan el mapa de forma síncrona (la tabla responde al instante) y se propagan a Mongo aparte.
-- Si Mongo no responde o su base está vacía, se siembra desde `seed.json`.
+- **MySQL es la persistencia duradera.** Las escrituras actualizan el mapa de forma síncrona (la tabla responde al instante) y se propagan mediante JDBC.
+- Si MySQL no responde, se siembra temporalmente desde `seed.json` para mantener usable la interfaz.
 
-`MongoConnection` recorta el `serverSelectionTimeout` del driver de 30 s a 2 s y expone `isDisponible()`. Sin ese ajuste la aplicación se bloquearía medio minuto en cada operación cuando no hubiera servidor.
+`DatabaseConnection` centraliza URL, usuario y contraseña mediante `DB_URL`, `DB_USER` y `DB_PASSWORD`. Cada operación usa conexiones JDBC de corta vida y las sesiones completas se escriben en una transacción.
 
 ### Concurrencia
 
@@ -259,15 +259,15 @@ sequenceDiagram
 | `service` | 13 | Las reglas. `QualifyingService` orquesta la sesión; `LapTimeCalculator` concentra la fórmula del tiempo de vuelta; los cuatro servicios de catálogo hacen el CRUD con validación; y `SessionAnalysisService`, `TrackEvolutionService`, `DynamicWeatherService` y `SectorComparisonService` derivan el análisis. No conoce JavaFX. |
 | `event` | 12 | Las incidencias de pista. `EventCatalog` define los 28 eventos, `WeightedEventSelector` los sortea con su peso y `EventEffectService` aplica el impacto sobre tiempo, desgaste, clima y validez de la vuelta. La jerarquía `SimulationEvent` permite añadir un evento nuevo sin tocar el motor. |
 | `controller` | 27 | La capa JavaFX: un controlador por pantalla más `Navigator` (navegación y pila de retorno) y `ShellController` (cabecera y secciones). Solo actualiza controles; ningún cálculo ocurre aquí. |
-| `data` | 6 | La persistencia. `DataStore` es la fuente de verdad en ejecución con mapas concurrentes, `MongoRepository` implementa `CrudRepository` sobre MongoDB y `SeedLoader` siembra desde `seed.json` cuando la base está vacía o no responde. |
+| `data` | 8 | La persistencia. `DataStore` mantiene mapas concurrentes, `PersistencePort` define el contrato y el adaptador MySQL divide catálogos y sesiones en repositorios JDBC especializados. |
 | `util` | 11 | Apoyo transversal sin dependencias entre sí: `ImageCrop` (encaje de imágenes), `TeamColors` (paleta oficial), `VehicleImages` (rutas de las vistas), `StartLightsSound` (síntesis del semáforo), `Async` (pool de hilos), `FormatUtils`, `DateUtils`, `MathUtils`, `RandomUtils` y las validaciones. |
 
 ### Patrones aplicados
 
 | Patrón | Dónde | Por qué |
 |---|---|---|
-| **Repository** | `data.CrudRepository` + `data.MongoRepository<T,ID>` | Aísla MongoDB del resto y deja que la aplicación funcione sin él |
-| **Singleton** | `data.MongoConnection`, `data.DataStore` | Un solo cliente de Mongo (caro y thread-safe por diseño) y un único almacén compartido |
+| **Ports and Adapters** | `data.PersistencePort` + `data.MySqlPersistenceAdapter` | Aísla JDBC de la aplicación y permite sustituir infraestructura |
+| **Singleton** | `data.DataStore` | Un único almacén compartido para el estado en ejecución |
 | **Strategy** | `DrivingMode`, `AerodynamicLoad`, `TirePressure`, `FuelStrategy` | Cada ajuste encapsula sus factores; añadir uno nuevo no toca el cálculo |
 | **Observer** | Callbacks `Progreso`, `Evolucion`, `Telemetria`, `EvolucionPista` | El motor publica su avance sin conocer a quién lo pinta |
 | **Factory** | `EventCatalog`, `EventContextFactory` | Centralizan la construcción de los eventos y su contexto |
@@ -315,7 +315,7 @@ Formula1Simulator/
         ├── main/java/com/formula1/
         │   ├── App.java, Main.java
         │   ├── model/      # entidades + enums con sus factores
-        │   ├── data/       # DataStore, MongoConnection, repositorios, seed
+        │   ├── data/       # DataStore, puerto, adaptador y repositorios MySQL
         │   ├── service/    # CRUD, búsquedas, motor de clasificación
         │   ├── event/      # catálogo, selección ponderada e impactos
         │   ├── controller/ # controladores JavaFX y componentes visuales
@@ -325,20 +325,41 @@ Formula1Simulator/
         │   ├── css/style.css
         │   ├── images/     # pilotos, monoplazas y trazados
         │   └── data/seed.json
-        └── test/java/      # 28 clases · 121 tests
+        └── test/java/      # 37 clases · 171 tests
 ```
 
 ## Instalación y ejecución
 
-```bash
-cd simulator
+Desde la raíz del repositorio:
 
+```bash
+./run.sh         # ejecutar
 mvn compile      # compilar
-mvn javafx:run   # ejecutar
 mvn test         # pruebas
+mvn javafx:run   # ejecutar (equivalente a run.sh)
 ```
 
-MongoDB es **opcional**. Por defecto se conecta a `mongodb://localhost:27017`; se puede cambiar con las variables de entorno `MONGO_URI` y `MONGO_DATABASE`. Sin servidor, la aplicación arranca igual en modo memoria y lo indica en la barra de estado.
+El `pom.xml` de la raíz solo agrega; el proyecto vive en `simulator/`. Existe
+para que estos comandos funcionen desde la carpeta del proyecto: antes había
+que acordarse de `cd simulator` o de `-f simulator/pom.xml`, y si no, Maven
+respondía *«there is no POM in this directory»*.
+
+### Si VS Code dice «Build failed» pero la terminal compila
+
+Le pasa al servidor de Java del editor, no al código: mantiene su propio índice
+del proyecto y se queda desfasado cuando se crean o borran clases desde fuera
+del editor. Se arregla regenerándolo:
+
+`Ctrl+Shift+P` → **Java: Clean Java Language Server Workspace** → *Restart and
+delete*.
+
+`.vscode/settings.json` deja la reindexación en automático para que no vuelva a
+ocurrir, y `.vscode/launch.json` hace que el botón **Run** arranque por
+`com.formula1.Main`. Esa clase existe a propósito: lanzar directamente
+`com.formula1.App`, que extiende `Application`, falla con *«JavaFX runtime
+components are missing»*.
+
+MySQL escucha por defecto en `jdbc:mysql://localhost:3307/formula1_simulator`, con usuario `root`. La configuración puede cambiarse mediante `DB_URL`, `DB_USER` y `DB_PASSWORD`. Los scripts de instalación están en `database/mysql_conectar facil/`; los dos entregables consolidados son `database/SQL/schema.sql` y `database/SQL/data.sql`.
 
 ## Datos
 
@@ -359,10 +380,10 @@ El archivo se genera con `tools/gen_seed.py` para que los datos sean reproducibl
 | Commit | Rama | Qué aportó |
 |---|---|---|
 | `feat: 🎉 Structure project_initializate` | — | Inicialización del repositorio |
-| `feat: 📦 Configurar dependencias y plugins de Maven` | `feature/pom-setup` | JavaFX, MongoDB, Jackson, JUnit |
+| `feat: 📦 Configurar dependencias y plugins de Maven` | `feature/pom-setup` | JavaFX, MySQL, Jackson, JUnit |
 | `feat: 🧱 Crear modelo de dominio` | `feature/model` | Primeras entidades |
 | `feat: 🔧 Crear excepciones y utilidades` | `feature/exceptions-util` | `util/` y excepciones |
-| `feat: 🗃️ Crear conexión Mongo y repositorios` | `feature/database-repository` | Esqueleto de persistencia |
+| `feat: 🗃️ Crear conexión SQL y repositorios` | `feature/database-repository` | Esqueleto de persistencia |
 | `feat: 🛰️ Crear adapter de OpenF1` | `feature/api-openf1` | *(retirado después)* |
 | `feat: ⚙️ Crear capa de servicios` | `feature/service` | Esqueleto de servicios |
 | `feat: 🏁 Crear motor de simulación y facade` | `feature/simulation-engine` | Esqueleto del motor |
@@ -371,10 +392,9 @@ El archivo se genera con `tools/gen_seed.py` para que los datos sean reproducibl
 | `docs: 📝 Crear README` | `feature/readme` | Documentación inicial |
 | **`refactor: 🔥 Recortar el alcance a f1project.md`** | `refactor/scope-cleanup` | Elimina OpenF1, Q1/Q2/Q3 y telemetría: 64 → 44 archivos, 4 → 2 patrones |
 | **`feat: 🧱 Rediseñar el modelo`** | `feature/model-redesign` | Encaje 1:1 con el JSON de la spec |
-| **`feat: 🗃️ Capa de datos con HashMap sobre MongoDB`** | `feature/data-layer` | Persistencia real, seed y búsquedas |
+| **`feat: 🗃️ Capa de datos con HashMap sobre MySQL`** | `feature/data-layer` | Persistencia real, seed y búsquedas |
 | **`feat: 🏁 Motor de clasificación con hilos`** | `feature/qualifying-engine` | Fórmula de tiempo de vuelta y `Task` |
 | **`feat: 🎨 Shell de navegación y carga asíncrona`** | `feature/ui-shell` | Navegación real y arranque no bloqueante |
 | **`feat: 🎮 Vistas CRUD, búsqueda y comparación`** | `feature/ui-catalogs` | Columnas reales, buscadores, comparador y ficha |
 | **`feat: ⚡ Simulación con hilos e historial`** | `feature/ui-simulation` | Sesión completa y almacenamiento |
 | **`docs: 📝 Realinear el README`** | `docs/realign` | Este documento |
-

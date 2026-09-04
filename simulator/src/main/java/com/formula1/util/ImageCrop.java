@@ -37,15 +37,16 @@ public final class ImageCrop {
      */
     public static Optional<ImageView> desdeClasspath(String ruta, double ancho, double alto,
                                                      double sesgoVertical) {
-        if (ruta == null || ruta.isBlank()) {
-            return Optional.empty();
-        }
-        var recurso = ImageCrop.class.getResourceAsStream(ruta);
-        if (recurso == null) {
-            return Optional.empty();
-        }
-        Image imagen = new Image(recurso);
-        if (imagen.isError() || imagen.getWidth() <= 0) {
+        // Se pide la decodificación acotada a la caja. Antes se cargaba a
+        // resolución nativa y el tamaño solo se usaba para el viewport: la
+        // foto de 3444x4429 del catálogo se abría entera —unos 61 MB— para
+        // acabar dibujada en 210x240.
+        //
+        // El límite va sobre el lado mayor y sin fijar el otro, para que
+        // JavaFX conserve la proporción: recorteDe() necesita las medidas
+        // reales de la imagen cargada para calcular bien el recorte.
+        Image imagen = Imagenes.cargar(ruta, Math.max(ancho, alto) * 2, 0);
+        if (imagen == null) {
             return Optional.empty();
         }
         return Optional.of(encajar(imagen, ancho, alto, sesgoVertical));

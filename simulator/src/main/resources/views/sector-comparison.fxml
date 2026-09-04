@@ -7,7 +7,7 @@
 <?import javafx.scene.layout.VBox?>
 
 <VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-      fx:controller="com.formula1.controller.SectorComparisonController"
+      fx:controller="com.formula1.adapter.in.javafx.SectorComparisonController"
       spacing="12" styleClass="sector-comparison-panel">
     <VBox spacing="2">
         <Label text="SECTOR COMPARISON" styleClass="telemetry-title"/>
