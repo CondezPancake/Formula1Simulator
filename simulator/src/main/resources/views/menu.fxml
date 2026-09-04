@@ -20,6 +20,10 @@
   lleva la lista de opciones, la derecha el escenario con el título de la
   sección. Las filas de la lista las construye MainMenuController, porque el
   texto, la descripción y el destino de cada una viven juntos allí.
+
+  El panel derecho no lleva fotografía: se retiró a propósito (antes mostraba
+  una imagen por opción). Se queda con el degradado y la rejilla de
+  .menu-escenario, más el velo y el título de la sección.
 -->
 <GridPane xmlns="http://javafx.com/javafx"
           xmlns:fx="http://javafx.com/fxml"
@@ -69,13 +73,8 @@
     <StackPane fx:id="escenario" styleClass="menu-escenario"
                GridPane.columnIndex="1" GridPane.rowIndex="0">
 
-        <!-- Arte de la opción activa. Va el primero: es el fondo, y todo lo
-             demás (velos, HUD, título) se pinta encima. Lo rellena el
-             controlador, que es quien sabe qué opción está seleccionada. -->
-        <Group fx:id="capaArte" managed="false"/>
-
-        <!-- Velos sobre la foto: funden su borde izquierdo con la mitad negra
-             del panel y oscurecen la parte baja para que el título se lea. -->
+        <!-- Velo: oscurece la parte baja para que el título se lea por
+             encima del degradado/rejilla de fondo. -->
         <Region fx:id="veloArte" styleClass="menu-arte-velo" mouseTransparent="true"/>
 
         <!-- tira de estado, arriba a la derecha -->
