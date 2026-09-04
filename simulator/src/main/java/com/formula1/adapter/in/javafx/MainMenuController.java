@@ -5,6 +5,11 @@ import com.formula1.util.AudioManager;
 import com.formula1.util.ImageCrop;
 import com.formula1.util.Imagenes;
 
+import javafx.animation.FadeTransition;
+import javafx.animation.ParallelTransition;
+import javafx.animation.ScaleTransition;
+import javafx.animation.SequentialTransition;
+import javafx.animation.TranslateTransition;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.event.EventHandler;
@@ -29,6 +34,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.shape.SVGPath;
 import javafx.scene.text.Text;
 import javafx.scene.transform.Scale;
+import javafx.util.Duration;
 
 import java.io.InputStream;
 import java.util.function.Consumer;
@@ -77,7 +83,7 @@ public class MainMenuController {
     private static final String RUTA_GALON = "M2 3 L10 12 L2 21";
 
     /** Se decodifica el arte por encima del tamaño de pintado, por nitidez. */
-    private static final double FACTOR_NITIDEZ_ARTE = 1.25;
+    private static final double FACTOR_NITIDEZ_ARTE = 2.0;
     /** Recorte sesgado hacia arriba: menu-explorar.png es vertical. */
     private static final double SESGO_ARTE = 0.18;
     /** Cuánto se recoge el lado izquierdo del arte, como fracción del alto. */
@@ -110,12 +116,12 @@ public class MainMenuController {
         new Opcion("HISTORIAL",
                 "Revisa las sesiones ya disputadas, con sus victorias, podios "
                         + "y tiempos por sector.",
-                "/images/menu-historial.jpg",
+                "/images/menu-historial.png",
                 () -> entrarAlShell(ShellController::irAHistorial)),
         new Opcion("AJUSTES",
                 "Ajusta el volumen de la música y de los efectos, o silencia "
                         + "el simulador por completo.",
-                "/images/menu-ajustes.jpg",
+                "/images/menu-ajustes.png",
                 AjustesDialog::mostrar),
     };
 
@@ -162,6 +168,8 @@ public class MainMenuController {
         rellenarHud();
         montarTeclado();
         montarEscalado();
+        montarHoverEfectos();
+        animarEntradaMenu();
         seleccionar(0);
     }
 
@@ -303,6 +311,7 @@ public class MainMenuController {
      * descripción y el escenario a partir del índice activo.
      */
     private void seleccionar(int indice) {
+        Opcion anterior = opciones[seleccionada];
         seleccionada = indice;
         for (int i = 0; i < filas.length; i++) {
             boolean activa = i == indice;
@@ -314,11 +323,15 @@ public class MainMenuController {
             galones[i].setVisible(activa);
             galones[i].setManaged(activa);
         }
+        // Animar galones al activar
+        animarGalonesActivacion();
+
         Opcion opcion = opciones[indice];
         lblDescripcion.setText(opcion.descripcion());
         lblTituloSeccion.setText(opcion.titulo());
         lblPieSeccion.setText("SIMULADOR DE FÓRMULA 1");
-        pintarArte(opcion);
+        // Transición suave del arte de panel derecho
+        transicionarArte(opcion, anterior);
         aplicarEscalado();
     }
 
@@ -339,7 +352,7 @@ public class MainMenuController {
             return;   // aún sin tamaño; el listener del panel repetirá
         }
 
-        Image imagen = Imagenes.cargar(opcion.arte(), w * FACTOR_NITIDEZ_ARTE, 0);
+        Image imagen = Imagenes.cargarDiferida(opcion.arte(), w * FACTOR_NITIDEZ_ARTE, 0);
         if (imagen == null) {
             capaArte.getChildren().clear();
             return;
@@ -351,6 +364,8 @@ public class MainMenuController {
         vista.setLayoutX(0);
         vista.setLayoutY(0);
         vista.setEffect(relieve(w, h));
+        vista.setPreserveRatio(false);
+        vista.setSmooth(true);
         // El arte no cambia salvo al elegir otra opción: se rasteriza una vez
         // en vez de recalcular la perspectiva en cada fotograma.
         vista.setCache(true);
@@ -474,6 +489,163 @@ public class MainMenuController {
         VBox.setMargin(lblTituloSeccion, new Insets(px(16, h), 0, 0, 0));
         estiloFuente(lblTituloSeccion, px(66, h));
         estiloFuente(lblPieSeccion, px(13, h));
+    }
+
+    // --- transiciones y animaciones ------------------------------------------------
+
+    /** Fade + slide suave al cambiar de opción en el panel derecho. */
+    private void transicionarArte(Opcion nueva, Opcion anterior) {
+        ImageView nuevoArte = crearVistaArte(nueva);
+        if (nuevoArte == null) {
+            if (anterior != null && !capaArte.getChildren().isEmpty()) {
+                capaArte.getChildren().remove(0);
+            }
+            return;
+        }
+
+        capaArte.getChildren().add(0, nuevoArte);
+        nuevoArte.setOpacity(0);
+        nuevoArte.setTranslateX(50);
+
+        // El arte anterior, si lo hay, quedó desplazado al índice 1 al insertar
+        // el nuevo en el 0. En la primerísima pintura (capaArte estaba vacío)
+        // no hay índice 1: sin esta comprobación, get(1) lanza
+        // IndexOutOfBoundsException y el menú no llega a mostrarse.
+        ImageView viejoArte = capaArte.getChildren().size() > 1
+                ? (ImageView) capaArte.getChildren().get(1)
+                : null;
+
+        FadeTransition fadeNuevo = new FadeTransition(Duration.millis(300), nuevoArte);
+        fadeNuevo.setFromValue(0);
+        fadeNuevo.setToValue(1);
+
+        TranslateTransition slideNuevo = new TranslateTransition(Duration.millis(300), nuevoArte);
+        slideNuevo.setFromX(50);
+        slideNuevo.setToX(0);
+
+        ParallelTransition pt = new ParallelTransition(fadeNuevo, slideNuevo);
+        if (viejoArte != null) {
+            FadeTransition fadeViejo = new FadeTransition(Duration.millis(200), viejoArte);
+            fadeViejo.setFromValue(1);
+            fadeViejo.setToValue(0);
+
+            TranslateTransition slideViejo = new TranslateTransition(Duration.millis(200), viejoArte);
+            slideViejo.setFromX(0);
+            slideViejo.setToX(-50);
+
+            ImageView viejoArteFinal = viejoArte;
+            ParallelTransition ptViejo = new ParallelTransition(fadeViejo, slideViejo);
+            SequentialTransition seq = new SequentialTransition(pt, ptViejo);
+            seq.setOnFinished(e -> {
+                capaArte.getChildren().remove(viejoArteFinal);
+                nuevoArte.setCache(true);
+            });
+            seq.play();
+        } else {
+            pt.setOnFinished(e -> nuevoArte.setCache(true));
+            pt.play();
+        }
+    }
+
+    private ImageView crearVistaArte(Opcion opcion) {
+        double w = escenario.getWidth();
+        double h = escenario.getHeight();
+        if (!medidaValida(w) || !medidaValida(h)) {
+            return null;
+        }
+
+        Image imagen = Imagenes.cargarDiferida(opcion.arte(), w * FACTOR_NITIDEZ_ARTE, 0);
+        if (imagen == null) {
+            return null;
+        }
+
+        ImageView vista = ImageCrop.encajar(imagen, w, h, SESGO_ARTE);
+        vista.setPreserveRatio(false);
+        vista.setSmooth(true);
+        vista.setCache(true);
+        vista.setCacheHint(CacheHint.SPEED);
+        return vista;
+    }
+
+    /** Animación de entrada escalonada al abrir el menú por primera vez. */
+    private void animarEntradaMenu() {
+        // Logo ya animado por IntroController, así que solo hacemos la lista y arte
+        for (int i = 0; i < filas.length; i++) {
+            filas[i].setTranslateY(50);
+            filas[i].setOpacity(0);
+            TranslateTransition tt = new TranslateTransition(Duration.millis(200 + i * 80), filas[i]);
+            tt.setFromY(50);
+            tt.setToY(0);
+            tt.play();
+        }
+
+        // Arte fade-in: en este punto de initialize() la escena puede no
+        // tener tamaño real todavía, así que capaArte puede seguir vacío
+        // (pintarArte(...) no hace nada hasta que montarEscalado() la
+        // repinte con medidas válidas). Sin esta comprobación, get(0) sobre
+        // una lista vacía lanza IndexOutOfBoundsException y el menú no carga.
+        if (!capaArte.getChildren().isEmpty()) {
+            capaArte.getChildren().get(0).setOpacity(0);
+        }
+        pintarArte(opciones[seleccionada]);
+        if (!capaArte.getChildren().isEmpty()) {
+            ImageView nuevoArte = (ImageView) capaArte.getChildren().get(0);
+            FadeTransition ft = new FadeTransition(Duration.millis(500), nuevoArte);
+            ft.setFromValue(0);
+            ft.setToValue(1);
+            ft.play();
+        }
+    }
+
+    /** Efectos de hover y press en las filas del menú. */
+    private void montarHoverEfectos() {
+        for (int i = 0; i < filas.length; i++) {
+            final int indice = i;
+
+            // Hover: al pasar el ratón, selecciona y hace efecto escala
+            filas[i].setOnMouseEntered(e -> {
+                seleccionar(indice);
+                // seleccionar(...) ya dejó indice == seleccionada: el efecto de
+                // escala se aplica siempre que el ratón entra a la fila activa.
+                ScaleTransition st = new ScaleTransition(Duration.millis(150), filas[indice]);
+                st.setToX(1.02);
+                st.setToY(1.02);
+                st.play();
+            });
+
+            filas[i].setOnMouseExited(e -> {
+                // Restaurar escala cuando el ratón sale (solo si no está activa)
+                ScaleTransition st = new ScaleTransition(Duration.millis(150), filas[indice]);
+                st.setToX(1.0);
+                st.setToY(1.0);
+                st.play();
+            });
+
+            // Press: efecto al hacer clic
+            filas[i].setOnMousePressed(e -> {
+                ScaleTransition st = new ScaleTransition(Duration.millis(100), filas[indice]);
+                st.setToX(0.97);
+                st.setToY(0.97);
+                st.play();
+            });
+
+            filas[i].setOnMouseReleased(e -> {
+                ScaleTransition st = new ScaleTransition(Duration.millis(150), filas[indice]);
+                st.setToX(1.02);
+                st.setToY(1.02);
+                st.play();
+            });
+        }
+    }
+
+    /** Animación de galones con ScaleTransition al activar fila. */
+    private void animarGalonesActivacion() {
+        for (int i = 0; i < galones.length; i++) {
+            ScaleTransition st = new ScaleTransition(Duration.millis(200), galones[i]);
+            st.setToX(i == seleccionada ? 1.0 : 0.0);
+            st.setToY(i == seleccionada ? 1.0 : 0.0);
+            st.play();
+        }
     }
 
     /** Convierte una medida de la referencia a píxeles reales de la ventana. */
